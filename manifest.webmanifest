@@ -1,0 +1,17 @@
+{
+  "name": "KAIA DESK · 코리아AI아카데미 멘토 업무",
+  "short_name": "KAIA DESK",
+  "description": "시간표 · 개강안내 · 학생 · 진도 · 알림을 한곳에서",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
