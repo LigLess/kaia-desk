@@ -3065,72 +3065,104 @@ function loaderPalette(){
   const P={
     jarvisLight:{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#eef2f5 70%,#e4eaef)',ink:'10,143,199',a1:'#0a8fc7',a2:'#2fc3f2',text:'#5a6a78',name:'#0f1d29',logo:'invert(37%) sepia(93%) saturate(1352%) hue-rotate(172deg) brightness(92%)',mono:true},
     jarvis:{bg:'radial-gradient(70% 70% at 50% 45%,#0a2f4a,#03111d 70%,#01060b)',ink:'91,225,255',a1:'#5be1ff',a2:'#9ef0ff',text:'rgba(127,227,255,.75)',name:'#d9f7ff',logo:'brightness(0) invert(84%) sepia(40%) saturate(900%) hue-rotate(160deg)',mono:true},
-    exec:{bg:'radial-gradient(70% 70% at 50% 45%,#fbfbf9,#f3f3ef 75%)',ink:'12,12,16',a1:'#0c0c10',a2:'#0c0c10',head:'#ff5a1f',text:'#6d6d76',name:'#0c0c10',logo:'brightness(0)'},
+    exec:{bg:'radial-gradient(70% 70% at 50% 45%,#fbfbf9,#f3f3ef 75%)',ink:'12,12,16',a1:'#0c0c10',a2:'#46464e',head:'#ff5a1f',text:'#6d6d76',name:'#0c0c10',logo:'brightness(0)'},
     aurora:{bg:'radial-gradient(80% 70% at 50% 40%,#16205a,#0a0d33 55%,#050a20)',ink:'120,235,230',a1:'#4fe3d6',a2:'#9b7bff',text:'rgba(210,225,255,.7)',name:'#f2f5ff',logo:'brightness(0) invert(1)'},
     sunset:{bg:'radial-gradient(80% 70% at 50% 40%,#3a1036,#1c0716 60%,#100410)',ink:'255,170,140',a1:'#ff8a5c',a2:'#ff4f7b',text:'rgba(255,220,210,.7)',name:'#fff3ee',logo:'brightness(0) invert(1)'},
     ocean:{bg:'radial-gradient(80% 70% at 50% 40%,#063453,#04243f 55%,#021626)',ink:'110,215,255',a1:'#3fd0ff',a2:'#2df0c0',text:'rgba(200,236,255,.7)',name:'#eefaff',logo:'brightness(0) invert(1)'},
     space:{bg:'radial-gradient(80% 70% at 50% 40%,#1b1238,#0a0716 60%,#030208)',ink:'200,185,255',a1:'#b39dff',a2:'#6aa8ff',text:'rgba(225,215,255,.7)',name:'#f5f2ff',logo:'brightness(0) invert(1)'}
   };
-  return P[k]||{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#f4f4f6 75%)',ink:'11,11,15',a1:'#0b0b0f',a2:'#0b0b0f',text:'#6b6b73',name:'#0b0b0f',logo:'brightness(0)'};
+  return P[k]||{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#f4f4f6 75%)',ink:'11,11,15',a1:'#0b0b0f',a2:'#4a4a52',text:'#6b6b73',name:'#0b0b0f',logo:'brightness(0)'};
 }
 function bootSequence(lines){
   let seen=false; try{ seen=sessionStorage.getItem('md.booted')==='1'; }catch(e){}
   if(seen) return Promise.resolve();
   try{ sessionStorage.setItem('md.booted','1'); }catch(e){}
-  const reduce=(()=>{ try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } })();
   return new Promise(res=>{
-    const P=loaderPalette();
+    const P=loaderPalette(); const light=/^(255|2[0-4]\d)/.test('')||['exec','jarvisLight'].includes(document.body.dataset.bg)||!['aurora','sunset','ocean','space','jarvis'].includes(document.body.dataset.bg);
+    const under=light?'brightness(0) invert(1)':'brightness(0) opacity(.78)';
     const el=document.createElement('div'); el.className='boot2'+(P.mono?' mono':''); el.id='boot'; el.style.background=P.bg;
-    el.innerHTML=`<canvas></canvas><img class="bl-logo" alt="" src="${LOGO}" style="filter:${P.logo}"><div class="bl-name" style="color:${P.name}">KAIA DESK</div><div class="bl-line" style="color:${P.text}"></div><div class="bl-skip" style="color:${P.text}">탭하면 건너뛰기</div>`;
+    el.innerHTML=`<canvas></canvas><img class="bl-logo" alt="" src="${LOGO}" style="filter:${P.logo}"><img class="bl-logo bl-under" alt="" src="${LOGO}" style="filter:${under}"><div class="bl-name" style="color:${P.name}">KAIA DESK</div><div class="bl-line" style="color:${P.text}"></div><div class="bl-skip" style="color:${P.text}">탭하면 건너뛰기</div>`;
     document.body.appendChild(el);
-    const cv=el.querySelector('canvas'), x=cv.getContext('2d'), logo=el.querySelector('.bl-logo'), nameEl=el.querySelector('.bl-name'), lineEl=el.querySelector('.bl-line');
-    let W,H,dpr,cx,cy,R;
-    const size=()=>{ dpr=Math.min(2,devicePixelRatio||1); W=innerWidth; H=innerHeight; cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px'; cx=W/2; cy=H*0.44; R=Math.max(46,Math.min(84,Math.min(W,H)*0.11));
-      const ls=R*0.62; Object.assign(logo.style,{width:ls+'px',left:(cx-ls/2)+'px',top:(cy-ls*0.4)+'px'}); nameEl.style.top=(cy+R+34)+'px'; lineEl.style.top=(cy+R+62)+'px'; };
+    const cv=el.querySelector('canvas'), x=cv.getContext('2d'), logos=[...el.querySelectorAll('.bl-logo')], logoU=logos[1], nameEl=el.querySelector('.bl-name'), lineEl=el.querySelector('.bl-line');
+    let W,H,dpr,cx,cy,R,LS,LT;
+    const size=()=>{ dpr=Math.min(2,devicePixelRatio||1); W=innerWidth; H=innerHeight; cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px'; cx=W/2; cy=H*0.44; R=Math.max(50,Math.min(88,Math.min(W,H)*0.12));
+      LS=R*0.62; LT=cy-LS*0.42; logos.forEach(l=>Object.assign(l.style,{width:LS+'px',left:(cx-LS/2)+'px',top:LT+'px'})); nameEl.style.top=(cy+R+34)+'px'; lineEl.style.top=(cy+R+62)+'px'; };
     size(); addEventListener('resize',size);
     const ink=a=>`rgba(${P.ink},${Math.max(0,a).toFixed(3)})`;
-    const FALL=reduce?0:0.62, G=()=>R*10;
-    const drops=[], rings=[]; let impact=false, jet=null;
-    const ring=(px,py,t0,max,amp,dur,w)=>rings.push({px,py,t0,max,amp,dur,w,seed:Math.random()*6});
-    const t0=performance.now(); let done=false, shown=0, prog=0, lastLine=0, raf, endAt=0;
-    const finish=(fast)=>{ if(done) return; done=true; endAt=(performance.now()-t0)/1000; if(!fast) ring(cx,cy,endAt,R*3.2,.35,1.1,1.2); setTimeout(()=>el.classList.add('out'),fast?0:260); setTimeout(()=>{ cancelAnimationFrame(raf); removeEventListener('resize',size); el.remove(); res(); },fast?420:900); };
-    el.addEventListener('click',()=>finish(true));
     const KO={'INITIALIZING KAIA DESK':'시작하는 중','LINKING DATA CORE…':'데이터 연결 중…','AUTHENTICATION REQUIRED':'로그인 확인 중'};
     const setLine=txt=>{ if(!P.mono&&KO[txt]) txt=KO[txt]; if(!P.mono) txt=txt.replace(/^SYSTEM ONLINE — /,''); lineEl.classList.remove('show'); void lineEl.offsetWidth; lineEl.textContent=txt; lineEl.classList.add('show'); };
+    /* 물리 상태 */
+    const BASE=0.07;                         // 첫 방울이 만드는 바닥 물
+    let level=0, lv=0, target=0;             // 0~1 물높이 (스프링)
+    let E=0;                                 // 출렁임 에너지
+    let tilt=0, tv=0;                        // 좌우 슬로시 (스프링)
+    const drops=[], spl=[], bubbles=[], rings=[];
+    let landed=0, spawned=0, lastSpawn=0, introDone=false, done=false, raf;
+    const t0=performance.now(); let tp=0;
+    const ring=(t,r0,r1,a,dur)=>rings.push({t,r0,r1,a,dur});
+    const lvlY=lv_=>cy+R-2*R*lv_;
+    const surf=(px,t)=>{ const k1=Math.PI*2/(1.7*R), k2=Math.PI*2/(0.95*R), k3=Math.PI*2/(0.55*R);
+      const amp=R*0.012+E*0.55+Math.min(R*0.05,Math.abs(lv)*R*0.9);
+      return lvlY(level)+Math.sin(px*k1+t*2.3)*amp*0.55+Math.sin(px*k2-t*3.4+1.3)*amp*0.35+Math.sin(px*k3+t*5.1)*E*0.25+tilt*(px-cx)/R*R*0.22; };
+    const spawnDrop=(big)=>{ const off=big?0:(Math.random()-.5)*R*0.5; drops.push({x:cx+off,y:big?cy-H*0.3:cy-R-H*0.12-Math.random()*20,vy:big?R*3:R*1.6,r:big?R*0.085:R*(0.05+Math.random()*0.015),big}); spawned++; };
+    const finish=fast=>{ if(done) return; done=true; setTimeout(()=>el.classList.add('out'),fast?0:380); setTimeout(()=>{ cancelAnimationFrame(raf); removeEventListener('resize',size); el.remove(); res(); },fast?420:1000); };
+    el.addEventListener('click',()=>finish(true));
+    spawnDrop(true);
     const frame=now=>{
-      const t=(now-t0)/1000; x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,W,H);
-      // 1) 떨어지는 물방울
-      if(t<FALL){ const p=t/FALL, e=p*p; const y=cy-H*0.34+(H*0.34)*e, r=R*0.085;
-        x.save(); x.translate(cx,y); x.scale(1-0.18*e,1+0.55*e); const g=x.createRadialGradient(-r*0.3,-r*0.3,0,0,0,r); g.addColorStop(0,ink(.55)); g.addColorStop(1,ink(.95)); x.fillStyle=g; x.beginPath(); x.arc(0,0,r,0,Math.PI*2); x.fill(); x.restore(); }
-      // 2) 착수: 튀는 방울 + 물결
-      if(t>=FALL&&!impact){ impact=true;
-        for(let i=0;i<7;i++){ const a=-Math.PI/2+(i-3)*0.32+(Math.random()-.5)*0.2, v=R*(2.4+Math.random()*1.3); drops.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:R*(0.022+Math.random()*0.025),t:t}); }
-        jet={y:cy,vy:-R*3.6,r:R*0.05,t:t+0.1};
-        ring(cx,cy,t,R*2.1,.5,1.3,1.4); ring(cx,cy,t+0.12,R*1.6,.35,1.2,1); ring(cx,cy,t+0.26,R*1.25,.22,1.1,.8);
-      }
-      let dt=1/60;
-      for(let i=drops.length-1;i>=0;i--){ const d=drops[i]; d.vy+=G()*dt; d.x+=d.vx*dt; d.y+=d.vy*dt;
-        if(d.y>=cy&&d.vy>0){ ring(d.x,cy,t,R*0.32,.28,.7,.7); drops.splice(i,1); continue; }
-        x.fillStyle=ink(.8); x.beginPath(); x.arc(d.x,d.y,d.r,0,Math.PI*2); x.fill(); }
-      if(jet&&t>=jet.t){ jet.vy+=G()*dt; jet.y+=jet.vy*dt; if(jet.y>=cy&&jet.vy>0){ ring(cx,cy,t,R*1.15,.3,1,.9); jet=null; } else { x.fillStyle=ink(.85); x.beginPath(); x.ellipse(cx,jet.y,jet.r*0.85,jet.r*1.15,0,0,Math.PI*2); x.fill(); } }
-      // 3) 물결 (살짝 일렁이는 원)
-      for(let i=rings.length-1;i>=0;i--){ const r=rings[i]; const p=(t-r.t0)/r.dur; if(p<0) continue; if(p>=1){ rings.splice(i,1); continue; }
-        const e=1-Math.pow(1-p,3), rad=r.max*e, a=r.amp*Math.pow(1-p,1.6); x.strokeStyle=ink(a); x.lineWidth=r.w*(1.6-p);
-        x.beginPath(); for(let s=0;s<=72;s++){ const ang=s/72*Math.PI*2; const wob=Math.sin(ang*4+r.seed+t*3)*R*0.03*(1-p); const rr=rad+wob; s?x.lineTo(r.px+Math.cos(ang)*rr,r.py+Math.sin(ang)*rr*(r.px===cx?1:0.42)):x.moveTo(r.px+rr,r.py); } x.closePath(); x.stroke(); }
-      // 4) 로딩 링: 물결이 R에서 멈추며 자리잡고, 진행만큼 차오름
-      if(impact){ const p=Math.max(0,t-FALL); const settle=1-Math.exp(-5*p)*Math.cos(9*p); const breath=Math.exp(-1.6*p)*R*0.05+R*0.008;
-        const rad=R*Math.min(1.08,settle);
-        const path=(a0,a1)=>{ x.beginPath(); const n=Math.max(8,Math.ceil((a1-a0)/(Math.PI*2)*96)); for(let s=0;s<=n;s++){ const ang=a0+(a1-a0)*s/n; const rr=rad+Math.sin(ang*3+t*2.2)*breath; s?x.lineTo(cx+Math.cos(ang)*rr,cy+Math.sin(ang)*rr):x.moveTo(cx+Math.cos(ang)*rr,cy+Math.sin(ang)*rr); } };
-        x.lineCap='round'; path(0,Math.PI*2); x.strokeStyle=ink(.14*Math.min(1,p*3)); x.lineWidth=2; x.stroke();
-        const target=lines.length?Math.min(1,shown/Math.max(lines.length,1))*(lines.ready?1:0.9):0; prog+=(target-prog)*0.06; if(done) prog+=(1-prog)*0.2;
-        if(prog>0.002){ const a0=-Math.PI/2, a1=a0+prog*Math.PI*2; path(a0,a1); const gr=x.createLinearGradient(cx-R,cy-R,cx+R,cy+R); gr.addColorStop(0,P.a1); gr.addColorStop(1,P.a2); x.strokeStyle=gr; x.lineWidth=2.6; x.stroke();
-          const hr=rad+Math.sin(a1*3+t*2.2)*breath; x.fillStyle=P.head||P.a2; x.beginPath(); x.arc(cx+Math.cos(a1)*hr,cy+Math.sin(a1)*hr,3,0,Math.PI*2); x.fill(); }
-        const lo=Math.min(1,Math.max(0,(p-0.15)/0.55)); logo.style.opacity=lo; logo.style.transform=`scale(${0.86+0.14*(1-Math.pow(1-lo,3))}) translateY(${Math.sin(t*2.2)*1.2}px)`;
-        nameEl.style.opacity=Math.min(1,Math.max(0,(p-0.35)/0.5));
-        // 상태 문구
-        if(t-lastLine>0.38&&p>0.45&&shown<lines.length){ setLine(lines[shown]); shown++; lastLine=t; }
-        if(!done&&((lines.ready&&shown>=lines.length&&prog>0.985&&t>2.1)||t>8)) finish(false);
-      }
+      const t=(now-t0)/1000; const dt=Math.min(0.033,t-tp||0.016); tp=t;
+      x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,W,H);
+      const G=R*11;
+      /* 스프링: 물높이 · 기울기, 에너지 감쇠 */
+      lv+=((target-level)*28-lv*8.5)*dt; level+=lv*dt;
+      tv+=(-tilt*30-tv*2.6)*dt; tilt+=tv*dt;
+      E*=Math.exp(-1.25*dt);
+      /* 다음 방울: 상태 문구마다 한 방울 */
+      if(introDone&&!done&&spawned-1<lines.length&&t-lastSpawn>0.34){ setLine(lines[spawned-1]); spawnDrop(false); lastSpawn=t; }
+      /* 유리 원 (아주 옅게) */
+      x.lineWidth=1.5; x.strokeStyle=ink(.16); x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.stroke();
+      /* 물 */
+      if(level>0.002){
+        x.save(); x.beginPath(); x.arc(cx,cy,R-1.5,0,Math.PI*2); x.clip();
+        const step=3, L=cx-R, Rr=cx+R;
+        // 뒤쪽 물결 (깊이감)
+        x.beginPath(); x.moveTo(L,cy+R); for(let px=L;px<=Rr;px+=step){ const y=surf(px*0.93+R*0.37,t*0.85+2)-R*0.025; x.lineTo(px,y); } x.lineTo(Rr,cy+R); x.closePath();
+        x.fillStyle=P.a2; x.globalAlpha=light?0.28:0.32; x.fill(); x.globalAlpha=1;
+        // 앞쪽 물
+        const top=lvlY(level)-R*0.1; const g=x.createLinearGradient(0,top,0,cy+R); g.addColorStop(0,P.a2); g.addColorStop(1,P.a1);
+        x.beginPath(); x.moveTo(L,cy+R); const pts=[]; for(let px=L;px<=Rr;px+=step){ const y=surf(px,t); pts.push([px,y]); x.lineTo(px,y); } x.lineTo(Rr,cy+R); x.closePath();
+        x.fillStyle=g; x.globalAlpha=light?0.9:0.88; x.fill(); x.globalAlpha=1;
+        // 수면 하이라이트
+        x.beginPath(); pts.forEach(([px,y],n)=>n?x.lineTo(px,y):x.moveTo(px,y)); x.strokeStyle=`rgba(255,255,255,${light?0.55:0.45})`; x.lineWidth=1.4; x.stroke();
+        // 기포
+        if(level>0.12&&Math.random()<dt*2.2) bubbles.push({x:cx+(Math.random()-.5)*R*1.1,y:cy+R*0.9,r:0.8+Math.random()*1.8,vy:-R*(0.35+Math.random()*0.4),ph:Math.random()*6});
+        for(let n=bubbles.length-1;n>=0;n--){ const b=bubbles[n]; b.y+=b.vy*dt; b.x+=Math.sin(t*6+b.ph)*0.25; if(b.y<surf(b.x,t)+2){ bubbles.splice(n,1); continue; } x.beginPath(); x.arc(b.x,b.y,b.r,0,Math.PI*2); x.strokeStyle='rgba(255,255,255,.55)'; x.lineWidth=0.8; x.stroke(); }
+        // 유리 안쪽 반사
+        x.restore();
+        x.beginPath(); x.arc(cx,cy,R-5,Math.PI*1.08,Math.PI*1.42); x.strokeStyle=`rgba(255,255,255,${light?0.75:0.22})`; x.lineWidth=2.2; x.lineCap='round'; x.stroke();
+        // 로고: 물에 잠긴 부분은 반전색
+        const cut=[]; for(let s=0;s<=12;s++){ const px=cx-LS/2+LS*s/12; const yy=(surf(px,t)-LT)/(LS*0.82)*100; cut.push(`${(s/12*100).toFixed(1)}% ${Math.max(-5,Math.min(105,yy)).toFixed(1)}%`); }
+        logoU.style.clipPath=`polygon(${cut.join(',')},100% 105%,0% 105%)`;
+      } else logoU.style.clipPath='inset(100% 0 0 0)';
+      /* 떨어지는 방울 */
+      for(let n=drops.length-1;n>=0;n--){ const d=drops[n]; d.vy+=G*dt*(d.big?1.05:1); d.y+=d.vy*dt; const sy=d.big?lvlY(Math.max(level,0)):surf(d.x,t);
+        if(d.y+d.r>=sy){ drops.splice(n,1); landed++;
+          const imp=d.big?R*0.11:R*0.05; E+=imp; tv+=(d.x-cx)/R*(d.big?1.2:2.4)*(Math.random()<.5?1:-1)*0.6+((Math.random()-.5)*1.2);
+          target=d.big?BASE:Math.min(1,BASE+(1-BASE)*Math.min(1,(landed-1)/Math.max(1,lines.length)*(lines.ready?1:0.92)));
+          if(d.big){ introDone=true; lastSpawn=t-0.12; ring(t,R,R*1.9,.28,1.2); ring(t+0.1,R,R*1.45,.18,1); }
+          const k=d.big?6:3; for(let s=0;s<k;s++){ const a=-Math.PI/2+(s-(k-1)/2)*(d.big?0.42:0.6)+(Math.random()-.5)*0.25, v=R*(d.big?2.6:1.6)*(0.8+Math.random()*0.5); spl.push({x:d.x,y:sy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:d.r*(0.28+Math.random()*0.22)}); }
+          for(let s=0;s<(d.big?4:2);s++) bubbles.push({x:d.x+(Math.random()-.5)*R*0.2,y:sy+R*0.12+Math.random()*R*0.15,r:0.8+Math.random()*1.6,vy:-R*0.5,ph:Math.random()*6});
+          continue; }
+        x.save(); x.translate(d.x,d.y); const st=Math.min(0.6,d.vy/(R*12)); x.scale(1-st*0.3,1+st);
+        x.beginPath(); x.moveTo(0,-d.r*1.25); x.bezierCurveTo(d.r*0.9,-d.r*0.2,d.r,d.r*0.9,0,d.r); x.bezierCurveTo(-d.r,d.r*0.9,-d.r*0.9,-d.r*0.2,0,-d.r*1.25);
+        x.fillStyle=P.a1; x.globalAlpha=.92; x.fill(); x.globalAlpha=1; x.restore(); }
+      /* 튀는 물방울 */
+      for(let n=spl.length-1;n>=0;n--){ const s=spl[n]; s.vy+=G*dt; s.x+=s.vx*dt; s.y+=s.vy*dt; if(s.vy>0&&s.y>=surf(s.x,t)){ spl.splice(n,1); E+=R*0.006; continue; } if(s.y>cy+R+40){ spl.splice(n,1); continue; } x.beginPath(); x.arc(s.x,s.y,s.r,0,Math.PI*2); x.fillStyle=P.a2; x.globalAlpha=.9; x.fill(); x.globalAlpha=1; }
+      /* 바깥 잔물결 */
+      for(let n=rings.length-1;n>=0;n--){ const r=rings[n]; const p=(t-r.t)/r.dur; if(p<0) continue; if(p>=1){ rings.splice(n,1); continue; } const e=1-Math.pow(1-p,3); x.beginPath(); x.arc(cx,cy,r.r0+(r.r1-r.r0)*e,0,Math.PI*2); x.strokeStyle=ink(r.a*Math.pow(1-p,1.7)); x.lineWidth=1.2; x.stroke(); }
+      /* 로고 · 이름 */
+      const lo=introDone?Math.min(1,Math.max(0,(t-0.75)/0.6)):0; logos.forEach(l=>{ l.style.opacity=lo; l.style.transform=`scale(${0.9+0.1*(1-Math.pow(1-lo,3))})`; });
+      nameEl.style.opacity=Math.min(1,Math.max(0,(t-0.95)/0.5));
+      if(!done&&((lines.ready&&landed-1>=lines.length&&Math.abs(level-target)<0.01&&target>0.99&&t>2)||t>9)) finish(false);
       raf=requestAnimationFrame(frame);
     };
     raf=requestAnimationFrame(frame);
