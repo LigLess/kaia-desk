@@ -1487,6 +1487,7 @@ e1:'안녕하세요 {이름}님, {지점} {멘토}입니다.\n내일 {종강일}
 const OLD_S7='안녕하세요 {이름}님, {지점} {멘토}입니다.\n신청하신 「{과정}」 과정 개강 일정 안내드립니다.\n\n· 개강일: {개강일}\n· 수업 요일·시간: {요일} {시간}\n· 수업 기간: {개강일} ~ {종강일} (총 {회차}회)\n· 강의실: {강의실}\n\n개강 전 궁금하신 점은 언제든 편하게 연락 주세요.';
 const TPL_LABEL={s7:'개강안내',s7z:'개강안내 (비대면)',s1:'개강 전날',e7:'종강 안내',e1:'종강 전날'};
 const DEFAULT_SETTINGS={zoomsV2:true,rooms:{B:'4층 B강의장'},theme:'aurora',fx:'shard',themeV2:true,themeV3:true,themeV4:true,sfx:true,zooms:[],name:'김병로',role:'코리아AI아카데미 · 멘토',mentor:'김병로 멘토',branch:'코리아AI아카데미',offsets:[7,1],icsTime:'09:30',pin:'',tpl:clone(TPL_DEFAULT),acks:{},started:false};
+const DEFAULT_SERVER='https://script.google.com/macros/s/AKfycbyEKOo2BCCLq4WhcI6a_ZQQ5n_4cx09EqKmw2CaLI9-JjZJ3Tv7R07llaHHd5MSfMZ-CQ/exec';
 /* 팀 동기화 때도 기기·사람마다 따로 유지되는 설정 */
 const PERSONAL_KEYS=['theme','fx','sfx','name','role','mentor','pin','acks','offsets','icsTime'];
 const DEFAULT_SNIPPETS=[
@@ -1572,7 +1573,7 @@ const gas={
   q:null,timer:null,poll:null,busy:false,
   cfg(){ try{ const c=JSON.parse(lsGet('md.sync')||'null'); return c&&c.url&&c.token?c:null; }catch(e){ return null; } },
   /* 팀 서버 주소: 로그인 기록 → 초대 링크(?server=) → 이전에 입력한 주소 */
-  server(){ const c=this.cfg(); if(c) return c.url; let q=''; try{ q=new URLSearchParams(location.search).get('server')||''; }catch(e){} if(/^https:\/\/script\.google/.test(q)){ lsSet('md.server',q); return q; } return lsGet('md.server')||''; },
+  server(){ const c=this.cfg(); if(c) return c.url; let q=''; try{ q=new URLSearchParams(location.search).get('server')||''; }catch(e){} if(/^https:\/\/script\.google/.test(q)){ lsSet('md.server',q); return q; } return lsGet('md.server')||DEFAULT_SERVER; },
   async call(method,params,body,cfgOverride){
     const c=cfgOverride||this.cfg(); if(!c) throw new Error('not_configured');
     const qs=new URLSearchParams({token:c.token,...(params||{})}).toString();
