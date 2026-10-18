@@ -2107,7 +2107,7 @@ function vSettings(){
     <label class="field"><span>안내 문구 {지점}</span><input class="in" data-set="branch" value="${esc(s.branch)}"></label>
     <label class="field"><span>안내 문구 {멘토}</span><input class="in" data-set="mentor" value="${esc(s.mentor)}"></label></div></section>
   <section class="pane"><h2>배경 <small>움직이는 배경 테마 · PC와 휴대폰에 함께 적용돼요</small></h2>${themes}<div class="btns" style="margin-top:16px"><label class="check"><input type="checkbox" data-act="sfxToggle" ${s.sfx?'checked':''}>J.A.R.V.I.S. 효과음</label><button class="btn sm" data-act="brief">${ic('send')}음성 브리핑 미리 듣기</button><button class="btn sm" data-act="replayBoot">부팅 화면 다시 보기</button></div>
-    <div class="field" style="margin-top:18px"><span>화면 전환 효과</span><div class="seg">${[['shard','파편 조립'],['rise','스르륵'],['off','끄기']].map(([k,l])=>`<button class="${(s.fx||'rise')===k?'on':''}" data-act="fxMode" data-k="${k}">${l}</button>`).join('')}</div><span style="font-size:12px;color:var(--faint);font-weight:400">파편 조립: 메뉴를 옮기면 창이 유리 파편으로 흩어졌다가, 새 창의 파편들이 하나씩 날아와 맞춰져요. 효과음을 켜 두면 조립 소리도 나요.</span></div></section>
+    <div class="field" style="margin-top:18px"><span>화면 전환 효과</span><div class="seg">${[['shard','파편 조립'],['stack','차곡차곡'],['rise','스르륵'],['off','끄기']].map(([k,l])=>`<button class="${(s.fx||'rise')===k?'on':''}" data-act="fxMode" data-k="${k}">${l}</button>`).join('')}</div><span style="font-size:12px;color:var(--faint);font-weight:400">파편 조립: 메뉴를 옮기면 창이 유리 파편으로 흩어졌다가, 새 창의 파편들이 하나씩 날아와 맞춰져요. 차곡차곡: 각 창이 아래에서 하나씩 올라와 제자리에 딱 맞물려요. 효과음을 켜 두면 조립 소리도 나요.</span></div></section>
   <section class="pane"><h2>알림</h2><div class="form">
     <div class="field full"><span>개강·종강 며칠 전에 알릴까요</span><div class="btns">${[14,7,3,1].map(o=>`<label class="check"><input type="checkbox" data-act="offToggle" data-o="${o}" ${offs.includes(o)?'checked':''}>${o}일 전</label>`).join('')}</div></div>
     <label class="field"><span>휴대폰 달력 알림 시각</span><input class="in" type="time" data-set="icsTime" value="${esc(s.icsTime)}"></label>
@@ -2985,7 +2985,7 @@ document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&(e.key==='k'
 const FX={
   mode(){ return S.settings.fx||'rise'; },
   reduced(){ try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } },
-  on(){ return this.mode()==='shard'&&!this.reduced()&&typeof Element.prototype.animate==='function'; },
+  on(){ return (this.mode()==='shard'||this.mode()==='stack')&&!this.reduced()&&typeof Element.prototype.animate==='function'; },
   SEL:'.hero,.hpanel,.core-wrap,.pane,.banner,.stat,.pcard,.snip,.vh',
   visible(el){ const r=el.getBoundingClientRect(); return r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight; },
   targets(root){
@@ -3016,6 +3016,7 @@ const FX={
   /* new screen: shards fly in one by one, lock into the panel outline, then the panel lights up */
   assemble(els,opt={}){
     if(!this.on()) return Promise.resolve();
+    if(this.mode()==='stack') return this.stack(els,opt);
     const list=(opt.raw?els:this.targets(els[0]&&els[0].closest?document.querySelector('#view'):document)).filter(e=>this.visible(e));
     if(!list.length) return Promise.resolve();
     sfx('roll');
@@ -3047,8 +3048,26 @@ const FX={
     }));
   },
   /* leaving screen: panels burst into shards */
+  /* 차곡차곡: 각 창이 화면 아래에서 하나씩 올라와 제자리에 딱 맞물림 */
+  stack(els,opt={}){
+    const list=(opt.raw?els:this.targets(document.querySelector('#view')||document)).filter(e=>this.visible(e));
+    if(!list.length) return Promise.resolve();
+    const stagger=opt.raw?0:85, dur=opt.raw?380:440;
+    return Promise.all(list.map((el,k)=>{
+      const r=el.getBoundingClientRect(); const dy=Math.max(140,innerHeight-r.top+40)*(opt.raw?.45:1);
+      const delay=k*stagger;
+      if(!opt.raw) setTimeout(()=>sfx('shard'),delay+dur*0.78);
+      const a=el.animate([
+        {transform:`translateY(${dy}px) scale(.97)`,opacity:0},
+        {offset:.5,opacity:1},
+        {offset:.8,transform:'translateY(-7px) scale(1.004)'},
+        {transform:'none',opacity:1}],{duration:dur,delay,easing:'cubic-bezier(.22,.9,.28,1)',fill:'backwards'});
+      return a.finished.then(()=>{ el.animate([{filter:'brightness(1.12)'},{filter:'brightness(1)'}],{duration:180,easing:'ease-out'}); },()=>{});
+    }));
+  },
   shatter(){
     if(!this.on()) return;
+    if(this.mode()==='stack'){ this.targets(document.querySelector('#view')||document).forEach(el=>el.animate([{opacity:1},{opacity:0,transform:'translateY(-14px)'}],{duration:110,fill:'forwards'})); return; }
     const list=this.targets(document.querySelector('#view')||document);
     list.forEach((el,k)=>{
       const r=el.getBoundingClientRect();
@@ -3064,7 +3083,7 @@ const FX={
     sfx('burst');
   }
 };
-function applyFx(){ document.body.classList.toggle('fx-shard',FX.mode()==='shard'); document.body.classList.toggle('fx-off',FX.mode()==='off'); }
+function applyFx(){ document.body.classList.toggle('fx-shard',FX.mode()==='shard'||FX.mode()==='stack'); document.body.classList.toggle('fx-off',FX.mode()==='off'); }
 /* ===== EVENTS ===== */
 function ackToggle(key){
   const acks={...(S.settings.acks||{})}; if(acks[key]) delete acks[key]; else acks[key]=todayStr();
@@ -3140,7 +3159,7 @@ const ACT={
   imSheet:el=>{ IM.si=+el.dataset.i; drawImport(); },
   imDo:()=>doImport(),
   cmd:()=>openCmd(),
-  fxMode:el=>{ S.settings.fx=el.dataset.k; store.saveSettings(); applyFx(); if(el.dataset.k==='shard'){ S._fxAssemble=true; } render(); },
+  fxMode:el=>{ S.settings.fx=el.dataset.k; store.saveSettings(); applyFx(); if(el.dataset.k==='shard'||el.dataset.k==='stack'){ S._fxAssemble=true; } render(); },
   brief:()=>{ sfx('ok'); speak(briefingText()); },
   replayBoot:()=>{ try{ sessionStorage.removeItem('md.booted'); }catch(e){} if(!isHud()){ toast('홀로그램 테마에서만 보여요','설정 → 배경 → J.A.R.V.I.S.를 고르세요.'); return; } sfx('boot'); const L=bootLines(); L.ready=true; bootSequence(L); },
   syncOn:async el=>{ const u=$('#syncUrl').value, k=$('#syncKey').value; if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u.trim())){ toast('웹 앱 주소를 확인해 주세요','https://script.google.com/macros/s/…/exec 형식이에요.'); return; } if(!k.trim()){ toast('비밀 키를 넣어 주세요',''); return; } el.disabled=true; await gas.connect(u,k); el.disabled=false; },
