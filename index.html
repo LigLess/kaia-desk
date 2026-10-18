@@ -139,7 +139,9 @@ body.dark .tn-nav .pill{box-shadow:inset 0 1px 0 rgba(255,255,255,.3);border:1px
 /* phone */
 .dock,.scrim,.sheetnav{display:none}
 @media (max-width:900px){
-  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:calc(env(safe-area-inset-top,0px) + 26px);z-index:59;pointer-events:none;background:linear-gradient(180deg,var(--bg) 0,var(--bg) calc(env(safe-area-inset-top,0px) + 12px),color-mix(in srgb,var(--bg) 0%,transparent) 100%)}
+  .pane h2{flex-wrap:wrap;row-gap:4px}
+  .pane h2 small{flex-basis:100%;order:3;line-height:1.5}
   .shell{display:block;padding:0}
   .main{height:100%;padding:82px max(16px,env(safe-area-inset-right,0px)) 112px max(16px,env(safe-area-inset-left,0px))}
   .topnav{position:fixed;z-index:60;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 10px);width:auto;height:56px;padding:0 6px 0 12px;border-radius:18px;gap:10px}
@@ -908,6 +910,9 @@ body.gate .tn-nav,body.gate .tn-right,body.gate .tn-title,body.gate #dock,body.g
 .login-link{display:block;margin:14px auto 0;background:none;border:0;color:var(--faint);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .login-link+.login-link{margin-top:6px}
 .login-link:hover{color:var(--fg)}
+/* iOS 날짜·시간 입력이 칸 밖으로 튀어나가는 문제 */
+input[type=time].in,input[type=date].in,input[type=datetime-local].in,input[type=month].in{-webkit-appearance:none;appearance:none;display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;text-align:left;line-height:40px}
+input[type=time].in::-webkit-date-and-time-value,input[type=date].in::-webkit-date-and-time-value{text-align:left;margin:0}
 </style>
 </head>
 <body>
