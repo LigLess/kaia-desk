@@ -1,5 +1,5 @@
 /* KAIA DESK service worker — 앱 화면을 저장해 두고 오프라인에서도 열리게 해요 */
-const VER='kaia-desk-261018-1628';
+const VER='kaia-desk-261018-1632';
 const SHELL=['./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/apple-touch-icon.png','./icons/favicon-64.png'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(VER).then(c=>Promise.all([c.addAll(SHELL),fetch('./index.html',{cache:'no-store'}).then(r=>c.put('./index.html',r))])).then(()=>self.skipWaiting())); });
 self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VER).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
