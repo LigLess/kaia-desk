@@ -3071,7 +3071,8 @@ function loaderPalette(){
     ocean:{bg:'radial-gradient(80% 70% at 50% 40%,#063453,#04243f 55%,#021626)',ink:'110,215,255',a1:'#3fd0ff',a2:'#2df0c0',text:'rgba(200,236,255,.7)',name:'#eefaff',logo:'brightness(0) invert(1)'},
     space:{bg:'radial-gradient(80% 70% at 50% 40%,#1b1238,#0a0716 60%,#030208)',ink:'200,185,255',a1:'#b39dff',a2:'#6aa8ff',text:'rgba(225,215,255,.7)',name:'#f5f2ff',logo:'brightness(0) invert(1)'}
   };
-  return P[k]||{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#f4f4f6 75%)',ink:'11,11,15',a1:'#0b0b0f',a2:'#4a4a52',text:'#6b6b73',name:'#0b0b0f',logo:'brightness(0)'};
+  const FX={jarvisLight:'hudL',jarvis:'hud',exec:'exec',dotwave:'dots',contour:'contour',bloom:'bloom',network:'net',studio:'strand',aurora:'glow',sunset:'glow',ocean:'caustic',space:'stars'};
+  const o=P[k]||{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#f4f4f6 75%)',ink:'11,11,15',a1:'#0b0b0f',a2:'#4a4a52',text:'#6b6b73',name:'#0b0b0f',logo:'brightness(0)'}; o.fx=FX[k]||'plain'; return o;
 }
 function bootSequence(lines){
   let seen=false; try{ seen=sessionStorage.getItem('md.booted')==='1'; }catch(e){}
@@ -3097,6 +3098,8 @@ function bootSequence(lines){
     let E=0;                                 // 출렁임 에너지
     let tilt=0, tv=0;                        // 좌우 슬로시 (스프링)
     const drops=[], spl=[], bubbles=[], rings=[];
+    const stars=Array.from({length:26},()=>({x:(Math.random()-.5)*1.8,y:Math.random()*0.95,r:Math.random()<.2?2:1,s:1+Math.random()*3,p:Math.random()*6}));
+    const net=Array.from({length:9},()=>({x:0,y:0,ox:(Math.random()-.5)*1.5,oy:0.15+Math.random()*0.8,ph:Math.random()*6}));
     let landed=0, spawned=0, lastSpawn=0, introDone=false, done=false, raf;
     const t0=performance.now(); let tp=0;
     const ring=(t,r0,r1,a,dur)=>rings.push({t,r0,r1,a,dur});
@@ -3119,7 +3122,10 @@ function bootSequence(lines){
       /* 다음 방울: 상태 문구마다 한 방울 */
       if(introDone&&!done&&spawned-1<lines.length&&t-lastSpawn>0.34){ setLine(lines[spawned-1]); spawnDrop(false); lastSpawn=t; }
       /* 유리 원 (아주 옅게) */
-      x.lineWidth=1.5; x.strokeStyle=ink(.16); x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.stroke();
+      x.lineWidth=1.5; x.strokeStyle=ink(P.fx==='exec'?.35:.16); x.beginPath(); x.arc(cx,cy,R,0,Math.PI*2); x.stroke();
+      if(P.fx==='hud'||P.fx==='hudL'){ const rot=t*0.15; for(let k=0;k<60;k++){ const a=rot+k/60*Math.PI*2, l=k%5?4:8; x.beginPath(); x.moveTo(cx+Math.cos(a)*(R+8),cy+Math.sin(a)*(R+8)); x.lineTo(cx+Math.cos(a)*(R+8+l),cy+Math.sin(a)*(R+8+l)); x.strokeStyle=ink(k%5?.18:.4); x.lineWidth=1; x.stroke(); }
+        x.beginPath(); x.arc(cx,cy,R+24,-rot*2,-rot*2+Math.PI*2*Math.max(0.02,level)); x.strokeStyle=ink(.55); x.lineWidth=1.5; if(P.fx==='hud'){ x.shadowColor=P.a1; x.shadowBlur=8; } x.stroke(); x.shadowBlur=0; }
+      net.forEach(n=>{ n.x=cx+n.ox*R+Math.sin(t*0.8+n.ph)*R*0.06; n.y=cy+n.oy*R+Math.cos(t*0.7+n.ph)*R*0.05; });
       /* 물 */
       if(level>0.002){
         x.save(); x.beginPath(); x.arc(cx,cy,R-1.5,0,Math.PI*2); x.clip();
@@ -3130,15 +3136,29 @@ function bootSequence(lines){
         // 앞쪽 물
         const top=lvlY(level)-R*0.1; const g=x.createLinearGradient(0,top,0,cy+R); g.addColorStop(0,P.a2); g.addColorStop(1,P.a1);
         x.beginPath(); x.moveTo(L,cy+R); const pts=[]; for(let px=L;px<=Rr;px+=step){ const y=surf(px,t); pts.push([px,y]); x.lineTo(px,y); } x.lineTo(Rr,cy+R); x.closePath();
-        x.fillStyle=g; x.globalAlpha=light?0.9:0.88; x.fill(); x.globalAlpha=1;
+        const sty=P.fx, lineArt=['dots','contour','strand','net'].includes(sty);
+        if(sty==='bloom'){ x.shadowColor=P.a1; x.shadowBlur=R*0.25; }
+        x.fillStyle=lineArt?ink(.1):g; x.globalAlpha=lineArt?1:(light?0.9:0.88); x.fill(); x.globalAlpha=1; x.shadowBlur=0;
+        if(lineArt||sty==='caustic'||sty==='stars'){ x.save(); x.clip(); const yTop=lvlY(level)-R*0.15;
+          if(sty==='dots'){ const sp=Math.max(5,R*0.085); x.fillStyle=ink(.85); for(let yy=cy+R;yy>yTop;yy-=sp) for(let px=L+((yy/sp)%2?sp/2:0);px<Rr;px+=sp){ const d=(cy+R-yy)/(2*R); x.beginPath(); x.arc(px,yy+Math.sin(px*0.05+t*2)*1.2,sp*0.22*(0.65+0.35*(1-d)),0,Math.PI*2); x.fill(); } }
+          if(sty==='contour'){ x.strokeStyle=ink(.7); x.lineWidth=1; for(let k=0;k<26;k++){ x.beginPath(); pts.forEach(([px],n)=>{ const y=surf(px,t-k*0.09)+k*R*0.075; n?x.lineTo(px,y):x.moveTo(px,y); }); x.globalAlpha=Math.max(.15,1-k*0.04); x.stroke(); } x.globalAlpha=1; }
+          if(sty==='strand'){ x.strokeStyle=ink(.55); x.lineWidth=1; const sp=Math.max(4,R*0.07), sh=(t*8)%sp; for(let k=-2*R;k<2*R;k+=sp){ x.beginPath(); x.moveTo(L+k+sh,cy+R); x.lineTo(L+k+sh+R*1.2,yTop); x.stroke(); } }
+          if(sty==='net'){ const nodes=net; x.fillStyle=ink(.9); nodes.forEach(n=>{ x.beginPath(); x.arc(n.x,n.y,1.6,0,Math.PI*2); x.fill(); }); x.strokeStyle=ink(.35); x.lineWidth=0.8; for(let a=0;a<nodes.length;a++) for(let b=a+1;b<nodes.length;b++){ const dx=nodes[a].x-nodes[b].x, dy=nodes[a].y-nodes[b].y; if(dx*dx+dy*dy<(R*0.45)**2){ x.beginPath(); x.moveTo(nodes[a].x,nodes[a].y); x.lineTo(nodes[b].x,nodes[b].y); x.stroke(); } } }
+          if(sty==='caustic'){ x.strokeStyle='rgba(255,255,255,.22)'; x.lineWidth=1.2; for(let k=1;k<6;k++){ x.beginPath(); for(let px=L;px<=Rr;px+=4){ const y=lvlY(level)+k*R*0.28+Math.sin(px*0.06+t*1.6+k)*R*0.05+Math.sin(px*0.023-t*0.9+k*2)*R*0.07; px===L?x.moveTo(px,y):x.lineTo(px,y); } x.stroke(); } }
+          if(sty==='stars'){ stars.forEach(s=>{ const a=0.3+0.6*Math.abs(Math.sin(t*s.s+s.p)); x.fillStyle=`rgba(255,255,255,${a.toFixed(2)})`; x.fillRect(cx+s.x*R,cy+s.y*R,s.r,s.r); }); }
+          x.restore(); }
         // 수면 하이라이트
-        x.beginPath(); pts.forEach(([px,y],n)=>n?x.lineTo(px,y):x.moveTo(px,y)); x.strokeStyle=`rgba(255,255,255,${light?0.55:0.45})`; x.lineWidth=1.4; x.stroke();
+        x.beginPath(); pts.forEach(([px,y],n)=>n?x.lineTo(px,y):x.moveTo(px,y)); const lineArtS=['dots','contour','strand','net'].includes(P.fx);
+        if(P.fx==='exec'){ x.strokeStyle=P.head; x.lineWidth=1.6; }
+        else if(lineArtS){ x.strokeStyle=ink(.95); x.lineWidth=1.6; }
+        else { x.strokeStyle=`rgba(255,255,255,${light?0.55:0.45})`; x.lineWidth=1.4; if(P.fx==='hud'||P.fx==='glow'){ x.shadowColor=P.a2; x.shadowBlur=10; } }
+        x.stroke(); x.shadowBlur=0;
         // 기포
         if(level>0.12&&Math.random()<dt*2.2) bubbles.push({x:cx+(Math.random()-.5)*R*1.1,y:cy+R*0.9,r:0.8+Math.random()*1.8,vy:-R*(0.35+Math.random()*0.4),ph:Math.random()*6});
         for(let n=bubbles.length-1;n>=0;n--){ const b=bubbles[n]; b.y+=b.vy*dt; b.x+=Math.sin(t*6+b.ph)*0.25; if(b.y<surf(b.x,t)+2){ bubbles.splice(n,1); continue; } x.beginPath(); x.arc(b.x,b.y,b.r,0,Math.PI*2); x.strokeStyle='rgba(255,255,255,.55)'; x.lineWidth=0.8; x.stroke(); }
         // 유리 안쪽 반사
         x.restore();
-        x.beginPath(); x.arc(cx,cy,R-5,Math.PI*1.08,Math.PI*1.42); x.strokeStyle=`rgba(255,255,255,${light?0.75:0.22})`; x.lineWidth=2.2; x.lineCap='round'; x.stroke();
+        if(!['exec','dots','contour','strand','net'].includes(P.fx)){ x.beginPath(); x.arc(cx,cy,R-5,Math.PI*1.08,Math.PI*1.42); x.strokeStyle=`rgba(255,255,255,${light?0.75:0.22})`; x.lineWidth=2.2; x.lineCap='round'; x.stroke(); }
         // 로고: 물에 잠긴 부분은 반전색
         const cut=[]; for(let s=0;s<=12;s++){ const px=cx-LS/2+LS*s/12; const yy=(surf(px,t)-LT)/(LS*0.82)*100; cut.push(`${(s/12*100).toFixed(1)}% ${Math.max(-5,Math.min(105,yy)).toFixed(1)}%`); }
         logoU.style.clipPath=`polygon(${cut.join(',')},100% 105%,0% 105%)`;
