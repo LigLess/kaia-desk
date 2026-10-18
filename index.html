@@ -1464,6 +1464,8 @@ e1:'안녕하세요 {이름}님, {지점} {멘토}입니다.\n내일 {종강일}
 const OLD_S7='안녕하세요 {이름}님, {지점} {멘토}입니다.\n신청하신 「{과정}」 과정 개강 일정 안내드립니다.\n\n· 개강일: {개강일}\n· 수업 요일·시간: {요일} {시간}\n· 수업 기간: {개강일} ~ {종강일} (총 {회차}회)\n· 강의실: {강의실}\n\n개강 전 궁금하신 점은 언제든 편하게 연락 주세요.';
 const TPL_LABEL={s7:'개강안내',s7z:'개강안내 (비대면)',s1:'개강 전날',e7:'종강 안내',e1:'종강 전날'};
 const DEFAULT_SETTINGS={zoomsV2:true,rooms:{B:'4층 B강의장'},theme:'jarvisLight',fx:'shard',themeV2:true,themeV3:true,themeV4:true,sfx:true,zooms:[],name:'김병로',role:'코리아AI아카데미 · 멘토',mentor:'김병로 멘토',branch:'코리아AI아카데미',offsets:[7,1],icsTime:'09:30',pin:'',tpl:clone(TPL_DEFAULT),acks:{},started:false};
+/* 팀 동기화 때도 기기·사람마다 따로 유지되는 설정 */
+const PERSONAL_KEYS=['theme','fx','sfx','name','role','mentor','pin','acks','offsets','icsTime'];
 const DEFAULT_SNIPPETS=[
 {title:'국비 상담 준비물',text:'국비 상담 오실 때 준비해 주세요.\n· 신분증\n· 국민내일배움카드(없으시면 발급 절차 함께 안내드려요)\n· 최종학력 확인 가능한 서류(필요 시)'},
 {title:'학원 위치 안내',text:'학원 위치 안내드립니다.\n· 주소: (주소를 입력해 주세요)\n· 대중교통: (가까운 역 · 출구)\n· 주차: (주차 안내)'},
@@ -1569,7 +1571,7 @@ const gas={
     const q=this.loadQ(); let n=0;
     for(const d of docs){
       if(q[d.col+'/'+d.id]) continue;
-      if(d.col==='meta'){ if(d.id==='settings'&&d.data){ S.settings=normSettings(d.data); applyTheme(); n++; } continue; }
+      if(d.col==='meta'){ if(d.id==='settings'&&d.data){ const keep={}; PERSONAL_KEYS.forEach(k=>{ if(S.settings[k]!==undefined) keep[k]=S.settings[k]; }); S.settings=normSettings({...d.data,...keep}); applyTheme(); n++; } continue; }
       if(!COLS.includes(d.col)) continue;
       if(d.del) delete S.real[d.col][d.id]; else S.real[d.col][d.id]=d.data; n++;
     }
