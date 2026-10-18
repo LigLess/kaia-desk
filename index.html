@@ -1507,7 +1507,9 @@ const store={db:null,base:null,setRef:null,dl:null,chains:{},
     let id=null; try{ id=user?await user.id():null }catch(e){}
     if(db&&id){ S.mode='db'; this.db=db; this.base=db.doc(`data/users/${id}/app`); this.setRef=db.doc(`data/users/${id}/settings`); await this.subscribe(); }
     else if(gas.cfg()){ S.mode='gas'; this.loadLocal(); try{ await Promise.race([gas.pull(true),new Promise(r=>setTimeout(r,6000))]); }catch(e){ this.syncState='off'; } gas.start(); }
-    else { S.mode='local'; this.loadLocal(); if(gas.server()&&!lsGet('md.localOnly')) S.gate=true; }
+    else { const fresh=!lsGet('md.data'); S.mode='local'; this.loadLocal(); if(gas.server()&&!lsGet('md.localOnly')) S.gate=true;
+      /* 처음 여는 기기: 초대 링크의 ?theme= 로 시작 테마 지정 */
+      if(fresh){ let qt=''; try{ qt=new URLSearchParams(location.search).get('theme')||''; }catch(e){} if(BG_THEMES[qt]){ S.settings.theme=qt; lsSet('md.bg',qt); } else if(BG_THEMES[lsGet('md.bg')]) S.settings.theme=lsGet('md.bg'); } }
     const empty=COLS.every(c=>!Object.keys(S.real[c]).length);
     if(empty&&!S.settings.started&&!S.gate){ S.demo=true; S.ex=makeDemo(); }
   },
@@ -3248,7 +3250,7 @@ const ACT={
     el.disabled=true; el.textContent='확인 중…'; const ok=await gas.signIn(url,body); if(!ok){ el.disabled=false; el.textContent=body.a==='signup'?'가입하고 시작하기':'로그인'; }
   },
   signOut:async()=>{ if(await confirmBox('로그아웃할까요?','이 기기에서 내 데이터를 지워요. 서버에는 그대로 있어서 다시 로그인하면 불러와요.','로그아웃',true)) gas.signOut(); },
-  copyInvite:()=>{ const c=gas.cfg(); if(!c) return; const link=location.origin+location.pathname+'?server='+encodeURIComponent(c.url); copyText(link); toast('초대 링크를 복사했어요','팀원에게 이 링크와 팀 가입 코드를 보내 주세요.'); },
+  copyInvite:()=>{ const c=gas.cfg(); if(!c) return; const link=location.origin+location.pathname+'?server='+encodeURIComponent(c.url)+'&theme=aurora'; copyText(link); toast('초대 링크를 복사했어요','팀원에게 이 링크와 팀 가입 코드를 보내 주세요.'); },
   syncOff:async()=>{ if(await confirmBox('동기화를 끌까요?','이 기기의 데이터는 그대로 남고, 다른 기기와는 더 이상 맞춰지지 않아요.','끄기',true)) gas.disconnect(); },
   syncNow:async()=>{ try{ await gas.flush(); const n=await gas.pull(false); toast('동기화했어요',n?`바뀐 내용 ${n}건을 받았어요.`:'바뀐 내용이 없어요.'); render(); }catch(e){ toast('동기화하지 못했어요','인터넷 연결을 확인해 주세요.'); } },
   install:async()=>{ const p=window._installPrompt; if(!p) return; p.prompt(); try{ await p.userChoice; }catch(e){} window._installPrompt=null; render(); },
