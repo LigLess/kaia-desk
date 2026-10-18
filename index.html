@@ -3119,7 +3119,25 @@ const bgfx={
     const prog=segs.length?segs.reduce((s,g)=>s+Math.min(1,g.p||0),0)/segs.length:0;
     const rR=S*0.43, lw=S*0.042;
     x.lineCap='round'; x.strokeStyle=`rgba(${P.ln},${G?.09:.07})`; x.lineWidth=lw; x.beginPath(); x.arc(0,0,rR,0,Math.PI*2); x.stroke();
-    if(prog>0){ const a0=-Math.PI/2+t*0.05, span=Math.PI*2*Math.max(0.03,prog); const gr=x.createLinearGradient(-rR,-rR,rR,rR); gr.addColorStop(0,P.w1); gr.addColorStop(1,late?P.al:P.w2); x.strokeStyle=gr; x.beginPath(); x.arc(0,0,rR,a0,a0+span); x.stroke(); }
+    if(prog>0){
+      // 물처럼 일렁이는 진행 링: 두께가 끝으로 갈수록 출렁이고, 끝은 물방울처럼 부풀었다 가라앉음
+      const a0=-Math.PI/2+t*0.05, span=Math.PI*2*Math.max(0.03,prog), a1=a0+span; const N=Math.max(24,Math.ceil(span/(Math.PI*2)*180));
+      const half=a=>{ const dE=Math.min(a-a0,a1-a), e=Math.exp(-Math.pow(dE/0.38,2));
+        return lw*0.6*(1+0.28*e*Math.sin(t*3.2+a*7)+0.10*Math.sin(a*5-t*1.8)+0.06*Math.sin(a*11+t*2.6)); };
+      const gr=x.createLinearGradient(-rR,-rR,rR,rR); gr.addColorStop(0,P.w1); gr.addColorStop(1,late?P.al:P.w2);
+      x.beginPath();
+      for(let i=0;i<=N;i++){ const a=a0+span*i/N, h=half(a), r=rR+h; i?x.lineTo(Math.cos(a)*r,Math.sin(a)*r):x.moveTo(Math.cos(a)*r,Math.sin(a)*r); }
+      // 끝(머리) 둥근 캡 — 물방울처럼 출렁
+      const hb=half(a1)*(1+0.12*Math.sin(t*4.1)), hx=Math.cos(a1)*rR+Math.cos(a1+Math.PI/2)*hb*0.18*Math.sin(t*2.7), hy=Math.sin(a1)*rR+Math.sin(a1+Math.PI/2)*hb*0.18*Math.sin(t*2.7);
+      x.arc(hx,hy,hb,a1,a1+Math.PI,false);
+      for(let i=N;i>=0;i--){ const a=a0+span*i/N, h=half(a), r=rR-h; x.lineTo(Math.cos(a)*r,Math.sin(a)*r); }
+      const tb=half(a0)*(1+0.12*Math.sin(t*3.6+1.3)); x.arc(Math.cos(a0)*rR,Math.sin(a0)*rR,tb,a0+Math.PI,a0+Math.PI*2,false);
+      x.closePath(); x.fillStyle=gr; x.fill();
+      // 머리 끝에서 가끔 튀는 작은 물방울
+      const ph=(t*0.9)%1; if(ph<0.6){ const q=ph/0.6, da=0.05+q*0.16; const rr=rR+Math.sin(q*Math.PI)*lw*0.9; x.globalAlpha=0.7*(1-q); x.fillStyle=late?P.al:P.w2; x.beginPath(); x.arc(Math.cos(a1+da)*rr,Math.sin(a1+da)*rr,lw*0.16*(1-q*0.5),0,Math.PI*2); x.fill(); x.globalAlpha=1; }
+      // 표면 반짝임
+      x.strokeStyle='rgba(255,255,255,.35)'; x.lineWidth=1.2*d; x.beginPath(); for(let i=0;i<=N;i++){ const a=a0+span*i/N, r=rR-half(a)*0.35; i?x.lineTo(Math.cos(a)*r,Math.sin(a)*r):x.moveTo(Math.cos(a)*r,Math.sin(a)*r); } x.stroke();
+    }
     x.lineCap='butt';
     // 물방울: 몇 초마다 위에서 연못으로
     if(t>st.next){ st.drops.push({y:-S*0.46,vy:S*0.2,born:t}); st.next=t+3.2+Math.random()*1.6; }
@@ -5021,6 +5039,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261018-2217';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261018-2219';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
