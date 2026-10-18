@@ -1486,7 +1486,7 @@ e7:'안녕하세요 {이름}님, {지점} {멘토}입니다.\n수강 중이신 �
 e1:'안녕하세요 {이름}님, {지점} {멘토}입니다.\n내일 {종강일}이 「{과정}」 과정 마지막 수업입니다.\n그동안 정말 수고 많으셨어요. 수료 후 다음 단계도 함께 챙겨드릴게요.'};
 const OLD_S7='안녕하세요 {이름}님, {지점} {멘토}입니다.\n신청하신 「{과정}」 과정 개강 일정 안내드립니다.\n\n· 개강일: {개강일}\n· 수업 요일·시간: {요일} {시간}\n· 수업 기간: {개강일} ~ {종강일} (총 {회차}회)\n· 강의실: {강의실}\n\n개강 전 궁금하신 점은 언제든 편하게 연락 주세요.';
 const TPL_LABEL={s7:'개강안내',s7z:'개강안내 (비대면)',s1:'개강 전날',e7:'종강 안내',e1:'종강 전날'};
-const DEFAULT_SETTINGS={zoomsV2:true,rooms:{B:'4층 B강의장'},theme:'jarvisLight',fx:'shard',themeV2:true,themeV3:true,themeV4:true,sfx:true,zooms:[],name:'김병로',role:'코리아AI아카데미 · 멘토',mentor:'김병로 멘토',branch:'코리아AI아카데미',offsets:[7,1],icsTime:'09:30',pin:'',tpl:clone(TPL_DEFAULT),acks:{},started:false};
+const DEFAULT_SETTINGS={zoomsV2:true,rooms:{B:'4층 B강의장'},theme:'aurora',fx:'shard',themeV2:true,themeV3:true,themeV4:true,sfx:true,zooms:[],name:'김병로',role:'코리아AI아카데미 · 멘토',mentor:'김병로 멘토',branch:'코리아AI아카데미',offsets:[7,1],icsTime:'09:30',pin:'',tpl:clone(TPL_DEFAULT),acks:{},started:false};
 /* 팀 동기화 때도 기기·사람마다 따로 유지되는 설정 */
 const PERSONAL_KEYS=['theme','fx','sfx','name','role','mentor','pin','acks','offsets','icsTime'];
 const DEFAULT_SNIPPETS=[
@@ -1514,7 +1514,7 @@ const store={db:null,base:null,setRef:null,dl:null,chains:{},
     else if(gas.cfg()){ S.mode='gas'; this.loadLocal(); try{ await Promise.race([gas.pull(true),new Promise(r=>setTimeout(r,6000))]); }catch(e){ this.syncState='off'; } gas.start(); }
     else { const fresh=!lsGet('md.data'); S.mode='local'; this.loadLocal(); if(gas.server()&&!lsGet('md.localOnly')) S.gate=true;
       /* 처음 여는 기기: 초대 링크의 ?theme= 로 시작 테마 지정 */
-      if(fresh){ let qt=''; try{ qt=new URLSearchParams(location.search).get('theme')||''; }catch(e){} if(BG_THEMES[qt]){ S.settings.theme=qt; lsSet('md.bg',qt); } else if(BG_THEMES[lsGet('md.bg')]) S.settings.theme=lsGet('md.bg'); } }
+      if(fresh){ let qt=''; try{ qt=new URLSearchParams(location.search).get('theme')||''; }catch(e){} if(BG_THEMES[qt]){ S.settings.theme=qt; lsSet('md.bg',qt); } else if(BG_THEMES[lsGet('md.bg')]) S.settings.theme=lsGet('md.bg'); else S.settings.theme='aurora'; } }
     const empty=COLS.every(c=>!Object.keys(S.real[c]).length);
     if(empty&&!S.settings.started&&!S.gate){ S.demo=true; S.ex=makeDemo(); }
   },
@@ -3350,7 +3350,7 @@ async function boot(){
   const h=(location.hash||'').slice(1); if(TITLES[h]) S.view=h;
   renderSide();
   $('#view').innerHTML='<div class="loading"><div><i></i>데이터를 불러오는 중…</div></div>';
-  bgfx.init(); applyTheme(lsGet('md.bg'));
+  bgfx.init(); applyTheme(lsGet('md.bg')||'aurora');
   const BL=['INITIALIZING KAIA DESK','LINKING DATA CORE…']; const bootP=isHud()?bootSequence(BL):Promise.resolve();
   await store.init();
   applyTheme();
