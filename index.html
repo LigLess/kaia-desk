@@ -2145,12 +2145,13 @@ function noticeDays(c){
   if(c.dayText&&c.dayText.trim()) return c.dayText.trim();
   const ord=d=>[...d].sort((x,y)=>((x+6)%7)-((y+6)%7));
   const A=c.days&&c.days.length?c.days:defaultDays(c);
-  if(c.daysB&&c.daysB.length) return ord(A).map(x=>DOW[x]).join('')+ord(c.daysB).map(x=>DOW[x]).join('');
+  if(c.daysB&&c.daysB.length) return ord(A).map(x=>DOW[x]).join('')+' / '+ord(c.daysB).map(x=>DOW[x]).join('')+' (격주)';
   if(ord(A).join(',')==='1,2,3,4,5') return '월~금';
   return ord(A).map(x=>DOW[x]).join('');
 }
 const isOnline=c=>/비대면|온라인|zoom|줌/i.test(String(c.room||'')+' '+String(c.name||''));
-function roomLabel(c){ const r=String(c.room||'').trim(); if(!r) return ''; const m=(S.settings.rooms||{})[r]; if(m) return m; if(/^[A-Za-z]$/.test(r)) return r.toUpperCase()+'강의장'; if(r==='비대면') return '비대면(ZOOM)'; return r; }
+function roomLabel(c){ const r=String(c.room||'').trim(); if(!r) return ''; const m=(S.settings.rooms||{})[r]; if(m) return m; if(/^[A-Za-z]$/.test(r)) return r.toUpperCase()+'강의장'; if(r==='비대면'||/온라인|비대면|zoom|줌/i.test(r)) return '비대면 (ZOOM 실시간)'; return r.replace(/\[|\]/g,' ').replace(/\s+/g,' ').trim(); }
+function noticeTime(c){ let t=String(c.time||'').trim(); if(!t) return '(추후 안내)'; t=t.replace(/\s*[–\-∼]\s*/g,'~'); if(!/~/.test(t)&&/^\d{1,2}:\d{2}$/.test(t)&&c.hours) t=`${t}~${addHours(t,c.hours+(c.hours>=6?1:0))}`; return t; }
 function tplFor(c,type,off){ const k=tplKey(type,off); return k==='s7'&&isOnline(c)?'s7z':k; }
 const yyDot=s=>s?s.slice(2).replace(/-/g,'.'):'';
 function zoomOf(c){
@@ -2164,7 +2165,7 @@ function fillTpl(tpl,c,s){
   const ss=sessionsOf(c); const z=zoomOf(c);
   const map={'이름':s?s.name.replace(/^예시\s/,''):'○○○','과정':c.name,'과목':subjectOf(c),'기간':`${yyDot(c.start)}~${yyDot(courseEnd(c))}`,'날짜':`${yyDot(c.start)}~${yyDot(courseEnd(c))}`,
     '개강일':fmtKo(c.start),'종강일':fmtKo(courseEnd(c)),'요일':noticeDays(c),
-    '시간':(c.time||'(추후 안내)').replace(/\s*[–\-∼]\s*/g,'~'),'강의실':roomLabel(c)||'(추후 안내)','수업일':ss.map(d=>+d.slice(8)).join(','),'강사':c.teacher||'','회차':c.total||ss.length,'멘토':S.settings.mentor||'','지점':S.settings.branch||'',
+    '시간':noticeTime(c),'강의실':roomLabel(c)||'(추후 안내)','수업일':ss.map(d=>+d.slice(8)).join(','),'강사':c.teacher||'','회차':c.total||ss.length,'멘토':S.settings.mentor||'','지점':S.settings.branch||'',
     '줌계정':z?z.k+'계정':'','회의ID':z?z.id:'','회의PW':z?z.pw:''};
   return String(tpl||'').replace(/\{([^}]+)\}/g,(m,k)=>map[k]!=null?map[k]:m);
 }
@@ -2419,7 +2420,7 @@ function vNotice(){
     const sentKey=`${c.id}|${S.ntTpl}`;
     const sts=studentsIn(c.id).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
     right=`<h2>${esc(S.ntSubj)}<button class="btn sm ghost r" data-act="openCourse" data-id="${c.id}">과정 정보</button></h2>
-      <p style="margin:-6px 0 14px;font-size:12.5px;color:var(--muted)">${esc(roomLabel(c)||'강의실 미정')}${c.teacher?' · '+esc(c.teacher):''} · ${esc(daysLabel(c.days,c.daysB))} ${esc(c.time||'')} · ${sessionsOf(c).length}회${c.cap?` · 배정 ${c.assigned??'-'}/${c.cap}`:''}</p>
+      <p style="margin:-6px 0 14px;font-size:12.5px;color:var(--muted)">${esc(roomLabel(c)||'강의실 미정')}${c.teacher?' · '+esc(c.teacher):''} · ${esc(daysLabel(c.days,c.daysB))} ${esc(c.time?noticeTime(c):'')} · ${sessionsOf(c).length}회${c.cap?` · 배정 ${c.assigned??'-'}/${c.cap}`:''}</p>
       <div class="field" style="margin-bottom:12px"><span>개강 월</span><div class="seg" style="flex-wrap:wrap">${months.map(m=>`<button class="${m===S.ntMonth?'on':''}" data-act="ntMonth" data-k="${m}">${monthLabel(m)}</button>`).join('')}</div></div>
       ${classes.length>1?`<div class="field" style="margin-bottom:12px"><span>이 달 수업 ${classes.length}개</span><div class="seg" style="flex-wrap:wrap">${classes.map(x=>`<button class="${x.id===c.id?'on':''}" data-act="ntClass" data-id="${x.id}">${fmtMD(x.start)} ${esc(x.kind||'')} ${esc((x.time||'').split(/[–~\-]/)[0])}</button>`).join('')}</div></div>`:''}
       <div class="field" style="margin-bottom:10px"><span>문자 종류</span><div class="seg" style="flex-wrap:wrap">${Object.entries(TPL_LABEL).map(([k,l])=>`<button class="${k===S.ntTpl?'on':''}" data-act="ntTpl" data-k="${k}">${l}</button>`).join('')}</div></div>
@@ -5039,6 +5040,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261018-2219';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261018-2238';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
