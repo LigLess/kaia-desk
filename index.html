@@ -713,6 +713,7 @@ function parseNoticeText(text,ctx){
 /* ---------- 이전 프로그램 학생 JSON 분석 ---------- */
 const nk=k=>String(k).toLowerCase().replace(/[\s_\-.]/g,'');
 const STU_KEYS={
+  appno:['원서번호','appno','applicationno','접수번호','원서no'],
   name:['name','이름','성명','학생명','학생이름','studentname','fullname','nm','수강생','수강생명'],
   phone:['phone','tel','mobile','연락처','전화','전화번호','휴대폰','핸드폰','휴대폰번호','phonenumber','contact','hp','cellphone','학생연락처'],
   status:['status','상태','수강상태','진행상태','state','등록상태','구분'],
@@ -761,7 +762,7 @@ function detectStuMap(items){
   // "일반 / 국비" 같은 값만 들어 있는 칸은 수강 구분으로
   for(const k of keys){ if(Object.values(map).includes(k)) continue; const v=vals(k); if(v.length&&v.every(x=>/^(일반|국비|국비지원|재직자|기업|단과|패키지|무료|유료)$/.test(x.trim()))) map.type=k; }
   if(!map.type){ for(const k of courseKeys){ if(k===map.course) continue; const v=vals(k); if(v.length&&v.every(x=>/^(일반|국비|국비지원|재직자|기업|단과|패키지)$/.test(x.trim()))) map.type=k; } }
-  for(const k of keys){ if(/^(fundingtype|funding|지원유형|국비유형|훈련유형|지원구분)$/.test(nk(k))) map.funding=k; }
+  for(const k of keys){ if(/^(fundingtype|funding|지원유형|국비유형|훈련유형|지원구분|국비지원|국비)$/.test(nk(k))) map.funding=k; }
   for(const k of keys){ const n=nk(k); if(Object.values(map).includes(k)) continue; if(/^(개강일|개강|시작일|수강시작일|수강시작|수업시작일)$/.test(n)) map.cstart=k; else if(/^(종강일|종강|종료일|수강종료일|수강종료|수업종료일)$/.test(n)) map.cend=k; }
   return {map,keys:[...keys]};
 }
@@ -787,9 +788,9 @@ function logsOf(v){
 function courseObjsOf(v){
   if(v==null||v==='') return [];
   if(Array.isArray(v)) return v.flatMap(courseObjsOf);
-  if(typeof v==='object'){ const n=v.title||v.name||v.short||v['과정명']||v['과목']||v.course; if(!n) return [];
+  if(typeof v==='object'){ const n=v.title||v.name||v.short||v['과정명']||v['과목']||v.course||''; if(!n&&!v.start&&!v.startDate) return [];
     const att=v.attendance&&typeof v.attendance==='object'?Object.values(v.attendance).filter(Boolean).length:0;
-    return [{name:String(n).trim(),start:normDate(v.startDate||v.start||v.from||v['개강일']||(Array.isArray(v.dates)&&v.dates[0])),end:normDate(v.endDate||v.end||v.to||v['종강일']||(Array.isArray(v.dates)&&v.dates[v.dates.length-1])),att}]; }
+    return [{name:String(n).trim(),start:normDate(v.startDate||v.start||v.from||v['개강일']||(Array.isArray(v.dates)&&v.dates[0])),end:normDate(v.endDate||v.end||v.to||v['종강일']||(Array.isArray(v.dates)&&v.dates[v.dates.length-1])),att,room:v.room||v['강의실']||'',time:v.time||v['강의시간']||'',kind:v.kind||v['반구분']||''}]; }
   return String(v).split(/[,\n|]+/).map(x=>x.trim()).filter(Boolean).map(name=>({name,start:'',end:'',att:0}));
 }
 function convertStudent(o,map,today){
@@ -808,7 +809,7 @@ function convertStudent(o,map,today){
   const extras=[]; for(const k in o){ if(used.has(k)||/^(id|_id|uid|key|version|sent|cat|sub|startdate|enddate|attendance|notified|cid)$/i.test(k)) continue; const v=o[k]; if(v==null||v==='') continue;
     if(typeof v!=='object'){ extras.push(`${k}: ${v}`); } else if(Array.isArray(v)&&v.length&&v.length<=20&&v.every(x=>typeof x!=='object')) extras.push(`${k}: ${v.join(', ')}`); }
   return {name,phone:toText(g('phone')).trim(),status:st.status,origStatus:st.orig,goal:toText(g('goal')).trim(),memo:toText(g('memo')).trim(),
-    type:toText(g('type')).trim(),funding:toText(g('funding')).trim(),
+    type:toText(g('type')).trim()||(/^(비대상|해당없음|없음|미대상|-)$/.test(toText(g('funding')).trim())?'일반':(toText(g('funding')).trim()?'국비':'')),funding:/^(비대상|해당없음|없음|미대상|-)$/.test(toText(g('funding')).trim())?'':toText(g('funding')).trim(),appNo:toText(g('appno')).trim(),
     courses,courseNames:courses.map(c=>c.name),logs:logsOf(g('logs')),regDate:normDate(g('date')),extras};
 }
 
@@ -926,6 +927,48 @@ function studentsFromPaste(html,text){
     const dg=ph.replace(/\D/g,''); items.push({이름:name,연락처:dg?dg.replace(/^(\d{3})(\d{3,4})(\d{4})$/,'$1-$2-$3'):'',메모:l});
   }
   return {items,how:'글'};
+}
+
+
+/* ---------- 인트라넷 "수강생 상세" 화면 (수강생명 · 수강정보(평일/주말)) ---------- */
+function gridFromTable(tb){
+  const g=[]; const val=c=>{ const i=c.querySelector('input:not([type=checkbox]):not([type=radio]):not([type=hidden]),select,textarea');
+    if(i){ if(i.tagName==='SELECT'){ const o=i.querySelector('option[selected]')||i.options&&i.options[i.selectedIndex]; return o?o.textContent.trim():''; } return (i.getAttribute('value')||i.value||'').trim(); }
+    return (c.textContent||'').replace(/\s+/g,' ').trim(); };
+  [...tb.rows].forEach((r,ri)=>{ g[ri]=g[ri]||[]; let ci=0; [...r.cells].forEach(c=>{ while(g[ri][ci]!==undefined) ci++; const v=val(c), rs=+c.rowSpan||1, cs=+c.colSpan||1; for(let a=0;a<rs;a++) for(let b=0;b<cs;b++){ g[ri+a]=g[ri+a]||[]; g[ri+a][ci+b]=v; } ci+=cs; }); });
+  return g;
+}
+function intranetRowFromText(line){
+  const dates=line.match(/20\d\d[-.]\d{1,2}[-.]\d{1,2}/g)||[];
+  const code=line.match(/(?:^|\s)(\d{5})(?=\s)/);
+  if(!dates.length&&!(code&&/\d{1,3}(,\d{3})+/.test(line))) return null;
+  const room=(line.match(/20\d\d[-.]\d{1,2}[-.]\d{1,2}\s+([A-Za-z]|비대면)(?=\s|\[|$)/)||[])[1]||'';
+  const tm=line.match(/(\d{1,2}:\d{2})\s*[~∼\-]\s*(\d{1,2}:\d{2})/);
+  let name=''; if(code){ const rest=line.slice(code.index+code[0].length); name=(rest.split(/\s+\d{1,3}(?:,\d{3})+|\s+0\s|\t\d/)[0]||'').replace(/[⊗×✕]/g,'').trim(); }
+  return {name,start:dates[0]?normDate(dates[0]):'',end:dates[1]?normDate(dates[1]):'',room:room.toUpperCase(),time:tm?`${tm[1]}~${tm[2]}`:'',kind:(line.match(/평일|주말/)||[''])[0]};
+}
+function parseIntranet(html,text){
+  const T=String(text||''); let full=T;
+  let tables=[];
+  if(html){ try{ const doc=new DOMParser().parseFromString(html,'text/html'); full=full||doc.body.innerText||doc.body.textContent; tables=[...doc.querySelectorAll('table')]; }catch(e){} }
+  if(!/수강생명|수강정보/.test(full)) return null;
+  const lab=k=>{ const m=full.match(new RegExp(k+'\\s*[:：\\t ]\\s*([^\\t\\n]+)')); return m?m[1].trim().split(/\s{2,}|\t/)[0]:''; };
+  const name=((lab('수강생명').match(/[가-힣]{2,5}|[A-Za-z][A-Za-z ]{1,20}/)||[''])[0]).trim();
+  const courses=[];
+  // 1) 표(HTML): 제목줄에 과목 · 개강일 · 종강일이 있는 표
+  for(const tb of tables){
+    const g=gridFromTable(tb); const hi=g.findIndex(r=>r&&r.some(c=>/^개강일/.test(c))&&r.some(c=>/^종강일/.test(c))); if(hi<0) continue;
+    const H=g[hi].map(c=>c.replace(/[⇅↕▲▼\s]/g,'')); const col=k=>H.findIndex(c=>c===k||c.startsWith(k));
+    const iN=H.findIndex(c=>c==='과목'), iS=col('개강일'), iE=col('종강일'), iR=col('강의실'), iT=col('강의시간'), iK=col('반구분');
+    for(const r of g.slice(hi+1)){ if(!r) continue; const nm=iN>=0?(r[iN]||'').replace(/\s+/g,' ').trim():''; const st=normDate(r[iS]||''); if(!nm&&!st) continue;
+      const tm=(r[iT]||'').match(/(\d{1,2}:\d{2})\s*[~∼\-]\s*(\d{1,2}:\d{2})/);
+      courses.push({name:nm,start:st,end:normDate(r[iE]||''),room:((r[iR]||'').match(/^\s*([A-Za-z]|비대면)/)||['',''])[1].toUpperCase(),time:tm?`${tm[1]}~${tm[2]}`:'',kind:iK>=0?r[iK]||'':''}); }
+  }
+  // 2) 글(Ctrl+A 복사): 날짜 · 강의실 · 시간이 있는 줄
+  if(!courses.length){ for(const ln of full.split(/\r?\n/)){ const c=intranetRowFromText(ln); if(c&&(c.start||c.name)) courses.push(c); } }
+  if(!name&&!courses.length) return null;
+  const seen=new Set(); const uniq=courses.filter(c=>{ const k=c.name+'|'+c.start+'|'+c.room; if(seen.has(k)) return false; seen.add(k); return true; });
+  return {이름:name,원서번호:(lab('원서번호').match(/\d+/)||[''])[0],담당멘토:lab('담당멘토'),국비지원:lab('국비지원'),수강과정:uniq};
 }
 /* ===== APP ===== */
 const LOGO='data:image/png;base64,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';
@@ -2080,10 +2123,16 @@ const normName=s=>String(s||'').toLowerCase().replace(/[\s()\[\]·\-_.,]/g,'');
 function matchCourseIds(cobjs,status){
   const t=todayStr(); const cs=list('courses'); const ids=[],miss=[];
   for(const raw of cobjs){
-    const co=typeof raw==='string'?{name:raw}:raw; if(!co||!co.name) continue;
+    const co=typeof raw==='string'?{name:raw}:raw; if(!co||(!co.name&&!co.start)) continue;
     let best=null,bs=0;
     if(co.start){ // 날짜가 있으면 같은 날(±3일) 개강한 수업 중에서만 찾기
-      for(const c of cs){ if(!c.start||Math.abs(diffDays(c.start,co.start))>3) continue; const sc=Math.max(nameSim(co.name,c.name),nameSim(co.name,subjectOf(c)))-Math.abs(diffDays(c.start,co.start))*0.05; if(sc>bs){ bs=sc; best=c; } }
+      for(const c of cs){ if(!c.start||Math.abs(diffDays(c.start,co.start))>3) continue;
+        let sc=co.name?Math.max(nameSim(co.name,c.name),nameSim(co.name,subjectOf(c))):0;
+        const sameRoom=co.room&&c.room&&String(co.room).trim().toUpperCase()===String(c.room).trim().toUpperCase();
+        if(co.room&&c.room&&!sameRoom) sc-=0.4;                       // 강의실이 다르면 다른 반
+        if(sameRoom) sc+=0.6;
+        if(co.time&&c.time&&co.time.replace(/\s/g,'').slice(0,5)===String(c.time).replace(/\s/g,'').slice(0,5)) sc+=0.3;
+        sc-=Math.abs(diffDays(c.start,co.start))*0.05; if(sc>bs){ bs=sc; best=c; } }
       if(best&&bs>=0.5){ ids.push(best.id); continue; }
       miss.push(co); continue;
     }
@@ -2117,7 +2166,7 @@ async function handleStudentJson(file){
 }
 function stuPreview(){
   return SIM.items.map((o,i)=>{ const c=convertStudent(o,SIM.map,todayStr()); if(!c) return null; const m=matchCourseIds(c.courses,c.status);
-    const ex=list('students').find(s=>s.name===c.name&&(!c.phone||!s.phone||s.phone.replace(/\D/g,'')===c.phone.replace(/\D/g,'')));
+    const ex=list('students').find(s=>(c.appNo&&s.appNo===c.appNo)||(s.name===c.name&&(!c.phone||!s.phone||s.phone.replace(/\D/g,'')===c.phone.replace(/\D/g,''))));
     return {i,c,m,ex}; }).filter(Boolean);
 }
 function drawStuImport(){
@@ -2128,11 +2177,11 @@ function drawStuImport(){
     <details ${Object.keys(SIM.map).length<3?'open':''} style="font-size:13px"><summary style="cursor:pointer;color:var(--muted)">칸 연결 확인 · 고치기</summary>
       <div class="form" style="margin-top:12px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">${Object.keys(labels).map(f=>`<label class="field"><span>${labels[f]}</span><select class="in" data-smap="${f}"><option value="">없음</option>${SIM.keys.map(k=>`<option value="${esc(k)}" ${SIM.map[f]===k?'selected':''}>${esc(k)}</option>`).join('')}</select></label>`).join('')}</div></details>
     ${noCourses?'<div class="banner"><p>아직 등록된 시간표가 없어서 수강 과정을 연결할 수 없어요. 그대로 가져와도 과정 이름은 기억해 두었다가, 시간표 엑셀을 올리면 자동으로 연결돼요.</p></div>':''}
-    <label class="check"><input type="checkbox" id="simMerge" ${SIM.merge?'checked':''}>이미 있는 학생(이름 · 연락처 같음)은 새로 만들지 않고 내용을 합치기</label>
+    <label class="check"><input type="checkbox" id="simMerge" ${SIM.merge?'checked':''}>이미 있는 학생(원서번호 또는 이름 · 연락처 같음)은 새로 만들지 않고 내용을 합치기</label>
     <div class="tablewrap"><table class="t"><thead><tr><th><label class="check"><input type="checkbox" data-act="simAll" ${nSel===rows.length?'checked':''} aria-label="전체 선택"></label></th><th>이름</th><th class="hide-m">연락처</th><th>상태</th><th>수강 과정</th><th class="hide-m">상담 기록</th><th></th></tr></thead><tbody>
     ${rows.slice(0,300).map(({i,c,m,ex})=>`<tr><td><label class="check"><input type="checkbox" data-act="simSel" data-i="${i}" ${SIM.sel[i]?'checked':''}></label></td><td>${esc(c.name)}</td><td class="hide-m num">${esc(c.phone)}</td>
       <td><span class="chip ${STATUS_CHIP[c.status]||''}">${esc(c.status)}</span>${c.origStatus&&c.origStatus!==c.status?`<div style="font-size:11px;color:var(--faint)">원래: ${esc(c.origStatus)}</div>`:''}${c.type||c.funding?`<div style="font-size:11px;color:var(--faint)">${esc([c.type,c.funding].filter(Boolean).join(' · '))}</div>`:''}</td>
-      <td class="wrap">${m.ids.map(id=>`<span class="chip ok" style="margin:2px 4px 2px 0">${esc(D().courses[id].name)} ${fmtMD(D().courses[id].start)}</span>`).join('')}${m.miss.map(n=>`<span class="chip warn" style="margin:2px 4px 2px 0" title="시간표에 없는 수업 · 기억해 뒀다가 시간표가 올라오면 연결">${esc(n.name)}${n.start?` ${fmtMD(n.start)}`:''}</span>`).join('')}${!m.ids.length&&!m.miss.length?'<span style="color:var(--faint)">없음</span>':''}</td>
+      <td class="wrap">${m.ids.map(id=>`<span class="chip ok" style="margin:2px 4px 2px 0">${esc(D().courses[id].name)} ${fmtMD(D().courses[id].start)}</span>`).join('')}${m.miss.map(n=>`<span class="chip warn" style="margin:2px 4px 2px 0" title="시간표에 없는 수업 · 기억해 뒀다가 시간표가 올라오면 연결">${esc(n.name||'과목명 없음')}${n.start?` ${fmtMD(n.start)}`:''}${n.room?` ${esc(n.room)}`:''}</span>`).join('')}${!m.ids.length&&!m.miss.length?'<span style="color:var(--faint)">없음</span>':''}</td>
       <td class="hide-m num">${c.logs.length?c.logs.length+'건':''}</td><td>${ex?'<span class="chip cyan">이미 있음</span>':''}</td></tr>`).join('')}
     </tbody></table></div>${rows.length>300?`<p style="margin:0;font-size:12px;color:var(--faint)">미리보기는 300명까지 보여요. 가져오기는 전체에 적용돼요.</p>`:''}
     <p style="margin:0;font-size:12px;color:var(--faint)">초록 수업은 시간표의 같은 날짜 · 비슷한 이름 수업과 연결된 것, 노란 수업은 시간표에 아직 없는 것(지난 수업 등)이에요. 상태 칸이 없으면 수업 날짜로 수강중 · 등록대기 · 수료를 정해요.</p>
@@ -2151,11 +2200,11 @@ async function doStuImport(){
       const seen=new Set((ex.logs||[]).map(l=>l.d+'|'+l.t));
       ps.push(store.put('students',{...ex,phone:ex.phone||c.phone,status:c.status||ex.status,goal:ex.goal||c.goal,type:ex.type||c.type,funding:ex.funding||c.funding,
         memo:ex.memo&&memo&&!ex.memo.includes(memo)?ex.memo+'\n'+memo:(ex.memo||memo),
-        courses:[...new Set([...(ex.courses||[]),...m.ids])],prevCourses:[...(ex.prevCourses||[]).filter(p=>!m.miss.some(q=>q.name===(p.name||p)&&q.start===p.start)),...m.miss],
+        appNo:ex.appNo||c.appNo||'',courses:[...new Set([...(ex.courses||[]),...m.ids])],prevCourses:[...(ex.prevCourses||[]).filter(p=>!m.miss.some(q=>q.name===(p.name||p)&&q.start===p.start)),...m.miss],
         logs:[...(ex.logs||[]),...logs.filter(l=>!seen.has(l.d+'|'+l.t))]}));
       merged++;
     } else {
-      ps.push(store.put('students',{id:uid('s'),name:c.name,phone:c.phone,status:c.status,goal:c.goal,type:c.type,funding:c.funding,memo,courses:m.ids,prevCourses:m.miss,logs,sent:{},src:SIM.file,at:Date.now()-add}));
+      ps.push(store.put('students',{id:uid('s'),name:c.name,phone:c.phone,status:c.status,goal:c.goal,type:c.type,funding:c.funding,appNo:c.appNo||'',memo,courses:m.ids,prevCourses:m.miss,logs,sent:{},src:SIM.file,at:Date.now()-add}));
       add++;
     }
   }
@@ -2166,17 +2215,27 @@ async function doStuImport(){
 }
 
 /* ===== 인트라넷 화면 복사 → 붙여넣기 등록 ===== */
+// 인트라넷 화면에서 누르는 북마크: 입력칸 값을 글자로 바꾼 복사본을 클립보드에 담아요 (원래 화면은 건드리지 않음)
+const BOOKMARKLET="javascript:(()=>{const c=document.body.cloneNode(true);const src=[...document.body.querySelectorAll('input,select,textarea')];const dst=[...c.querySelectorAll('input,select,textarea')];dst.forEach((e,i)=>{const o=src[i];if(!o||o.type==='checkbox'||o.type==='radio'||o.type==='hidden'){if(o&&o.type==='hidden')e.remove();return}const v=o.tagName==='SELECT'?(o.options[o.selectedIndex]||{}).text||'':o.value;const s=document.createElement('span');s.textContent=v;e.replaceWith(s)});c.querySelectorAll('script,style,button').forEach(e=>e.remove());const box=document.createElement('div');box.style.cssText='position:fixed;left:-99999px;top:0;width:1600px';box.appendChild(c);document.body.appendChild(box);const html=box.innerHTML,text=box.innerText;box.remove();const ok=()=>alert('KAIA DESK로 복사했어요. 앱에서 Ctrl+V 하세요.');const fb=()=>{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();ok()};try{navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([text],{type:'text/plain'})})]).then(ok,fb)}catch(e){fb()}})()";
 function openPasteStudents(){
   openModal(`${mHead('인트라넷에서 복사해 등록')}<div class="body">
     <ol style="margin:0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.9"><li>인트라넷의 학생 목록(또는 학생 상세) 화면에서 표를 마우스로 드래그해 고르거나 <b style="color:var(--fg)">Ctrl+A</b></li><li><b style="color:var(--fg)">Ctrl+C</b>로 복사</li><li>아래 칸을 누르고 <b style="color:var(--fg)">Ctrl+V</b> — 이름 · 연락처 · 과정 · 개강일 칸을 알아서 찾아요</li></ol>
     <textarea id="pasteStu" class="in" rows="10" placeholder="여기에 붙여 넣으세요"></textarea>
-    <p id="pasteInfo" style="margin:0;font-size:12px;color:var(--faint)">표가 아니라 "홍길동 010-1234-5678 DBMS 10/19"처럼 한 줄씩 적어도 돼요.</p></div>
+    <p id="pasteInfo" style="margin:0;font-size:12px;color:var(--faint)">수강생 상세 화면을 통째로 복사해도 되고, "홍길동 010-1234-5678 DBMS 10/19"처럼 한 줄씩 적어도 돼요.</p>
+    <details style="font-size:13px"><summary style="cursor:pointer;font-weight:600">과목 이름까지 정확히 복사하는 북마크 버튼</summary>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;color:var(--muted);line-height:1.7">
+        <span>인트라넷의 과목 칸은 입력칸이라 Ctrl+C로는 이름이 빠질 수 있어요. 아래 버튼을 브라우저 <b style="color:var(--fg)">북마크바로 끌어다 놓고</b>, 수강생 상세 화면에서 그 북마크를 한 번 누른 뒤 여기서 Ctrl+V 하면 입력칸 안의 값까지 들어와요. (끌어다 놓기가 안 되면 "코드 복사" → 새 북마크의 URL 칸에 붙여넣기)</span>
+        <div class="btns"><a class="btn pri" href="${esc(BOOKMARKLET)}" onclick="event.preventDefault();toast('북마크바로 끌어다 놓으세요','클릭이 아니라 드래그예요.')" draggable="true">KAIA 복사</a><button class="btn sm" data-act="copyBm">코드 복사</button></div>
+      </div></details></div>
     <footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="pasteStuGo">읽어 오기</button></footer>`,'');
   modalEl._kind='pastestu'; const ta=$('#pasteStu'); ta.focus();
   ta.addEventListener('paste',e=>{ const h=e.clipboardData&&e.clipboardData.getData('text/html'); if(h&&/<table/i.test(h)){ ta._html=h; setTimeout(()=>{ $('#pasteInfo').textContent='표를 읽었어요. "읽어 오기"를 누르세요.'; },0); } else ta._html=null; });
 }
 function pasteStudentsGo(){
-  const ta=$('#pasteStu'); const r=studentsFromPaste(ta._html,ta.value);
+  const ta=$('#pasteStu');
+  const one=parseIntranet(ta._html,ta.value);
+  if(one){ const items=[one]; const {map,keys}=detectStuMap(items); closeModal(); SIM={file:'인트라넷',path:`수강생 상세 화면 · ${one.이름||'이름 없음'} · 수업 ${one.수강과정.length}개`,items,map,keys,merge:true,sel:{0:true}}; drawStuImport(); return; }
+  const r=studentsFromPaste(ta._html,ta.value);
   if(!r.items.length){ toast('학생을 찾지 못했어요','이름이 있는 표나 "이름 전화번호" 줄이 있어야 해요.'); return; }
   const {map,keys}=detectStuMap(r.items);
   // 붙여 넣은 글에서 과정 이름 찾기 (표에 과정 칸이 없을 때)
@@ -2283,6 +2342,7 @@ const ACT={
   simDo:()=>doStuImport(),
   pasteStudents:()=>openPasteStudents(),
   pasteStuGo:()=>pasteStudentsGo(),
+  copyBm:()=>copyText(BOOKMARKLET),
 };
 document.addEventListener('click',e=>{
   if(S.locked) return;
