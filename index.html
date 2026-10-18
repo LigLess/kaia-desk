@@ -916,6 +916,93 @@ input[type=time].in,input[type=date].in,input[type=datetime-local].in,input[type
 input[type=time].in::-webkit-date-and-time-value,input[type=date].in::-webkit-date-and-time-value{text-align:left;margin:0}
 .topnav.fit1 .tn-nav a.sec .tx{display:none}.topnav.fit1 .tn-nav a.sec{padding:0 12px}
 .topnav.fit2 .tn-nav a .tx,.topnav.fit2 .tn-nav a .badge{display:none}.topnav.fit2 .tn-nav a{padding:0 12px}.topnav.fit2 .tn-nav a .dot.has{opacity:1}
+
+/* ===== J.A.R.V.I.S. 라이트 v2 — 밝은 화이트 · 박스 볼륨감 · 테두리=박스색 ===== */
+body.hud.hlight{
+  --bg:#f1f4f7; --bg-soft:#e9eef2;
+  --surface:#ffffff; --surface-2:#f3f6f8; --surface-3:#e9eef2;
+  --fg:#0f1d29; --fg-2:#2c3e4e; --muted:#5a6a78; --faint:#8b98a4;
+  --line:rgba(15,29,41,.06); --line-2:rgba(15,29,41,.1);
+  --accent:#0a8fc7; --accent-2:#0a6f9a; --accent-soft:rgba(10,143,199,.09);
+  --bar:#ffffff; --bar-line:#ffffff; --overlay:rgba(120,140,155,.35);
+  --pill-bg:#ffffff; --pill-fg:#0f1d29;
+  --vol:0 1px 1px rgba(15,29,41,.04),0 2px 4px rgba(15,29,41,.04),0 8px 18px -6px rgba(15,29,41,.08),0 22px 44px -18px rgba(15,29,41,.14);
+  --vol-hi:inset 0 1px 0 #fff,inset 0 -1px 0 rgba(15,29,41,.035);
+  --vol-sm:0 1px 2px rgba(15,29,41,.07),0 4px 10px -4px rgba(15,29,41,.12);
+  --shadow-md:var(--vol); --shadow-lg:0 2px 6px rgba(15,29,41,.05),0 30px 70px -22px rgba(15,29,41,.28);
+  --spot:rgba(10,143,199,.05);
+}
+body.hud.hlight .space::after{display:none}
+body.hud.hlight .veil{background:radial-gradient(120% 90% at 50% 35%,rgba(255,255,255,.35),transparent 60%)}
+/* 박스: 흰 면 + 같은 색 테두리 + 겹 그림자로 볼륨 */
+body.hud.hlight .pane,body.hud.hlight .stat,body.hud.hlight .pcard,body.hud.hlight .snip,body.hud.hlight .alarm,body.hud.hlight .hpanel{
+  background:linear-gradient(180deg,#ffffff 0%,#fcfdfe 60%,#f8fafb 100%);border:1px solid #ffffff;
+  box-shadow:var(--vol),var(--vol-hi);backdrop-filter:none;-webkit-backdrop-filter:none}
+body.hud.hlight .pane::after,body.hud.hlight .hpanel::after,body.hud.hlight .stat::after,body.hud.hlight .pcard::after{display:none}
+body.hud.hlight .pane h2{color:var(--fg);letter-spacing:.04em}
+body.hud.hlight .pane h2::before{background:var(--accent);box-shadow:none}
+body.hud.hlight .pane h2 small{color:var(--faint)}
+body.hud.hlight .vh h1{color:var(--fg);text-shadow:none}
+body.hud.hlight .vh .sub{color:var(--muted)}
+/* 버튼 */
+body.hud.hlight .btn{background:linear-gradient(180deg,#ffffff,#f7f9fa);border:1px solid #ffffff;color:var(--fg);box-shadow:var(--vol-sm),inset 0 1px 0 #fff;transition:transform .2s,box-shadow .2s,background .2s}
+body.hud.hlight .btn:hover{background:#ffffff;color:var(--fg);transform:translateY(-1px);box-shadow:0 2px 4px rgba(15,29,41,.07),0 10px 20px -8px rgba(15,29,41,.18),inset 0 1px 0 #fff}
+body.hud.hlight .btn:active{transform:translateY(0);box-shadow:var(--vol-sm)}
+body.hud.hlight .btn.pri{background:linear-gradient(180deg,#22b4ec,#0a8fc7);border-color:#0f9ad3;color:#fff;box-shadow:0 1px 2px rgba(10,111,154,.25),0 8px 18px -6px rgba(10,143,199,.5),inset 0 1px 0 rgba(255,255,255,.35)}
+body.hud.hlight .btn.ghost{background:transparent;border-color:transparent;box-shadow:none}
+body.hud.hlight .btn.danger{color:#c9382c}
+/* 입력칸: 살짝 들어간 느낌 */
+body.hud.hlight .in,body.hud.hlight select.in,body.hud.hlight textarea.in,body.hud.hlight .msgbox{background:#f3f6f8;border:1px solid #f3f6f8;color:var(--fg);box-shadow:inset 0 1px 2px rgba(15,29,41,.06)}
+body.hud.hlight .in:focus,body.hud.hlight textarea.in:focus{background:#fff;border-color:#fff;box-shadow:0 0 0 3px rgba(10,143,199,.18),inset 0 1px 2px rgba(15,29,41,.04)}
+body.hud.hlight .in::placeholder{color:#a3aeb8}
+/* 세그먼트 */
+body.hud.hlight .seg{background:#eef2f5;border:1px solid #eef2f5;box-shadow:inset 0 1px 2px rgba(15,29,41,.06)}
+body.hud.hlight .seg button{color:var(--muted)}
+body.hud.hlight .seg button.on{background:#ffffff;color:var(--fg);box-shadow:var(--vol-sm)}
+/* 상단 바 */
+body.hud.hlight .topnav{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.92);box-shadow:var(--vol),var(--vol-hi);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%)}
+body.hud.hlight .topnav::after{display:none}
+body.hud.hlight .wordmark b{color:var(--fg);text-shadow:none}
+body.hud.hlight .wordmark img{filter:invert(37%) sepia(93%) saturate(1352%) hue-rotate(172deg) brightness(92%)}
+body.hud.hlight .tn-nav a{color:var(--muted)}
+body.hud.hlight .tn-nav a.pon{color:var(--fg)}
+body.hud.hlight .tn-nav .pill{background:linear-gradient(180deg,#ffffff,#f6f8fa);border:1px solid #ffffff;box-shadow:0 1px 2px rgba(15,29,41,.08),0 6px 14px -6px rgba(15,29,41,.18),inset 0 1px 0 #fff}
+body.hud.hlight .tn-btn{color:var(--fg-2)}
+body.hud.hlight .who .mark{background:#fff;color:var(--accent-2);box-shadow:var(--vol-sm)}
+body.hud.hlight .sync{background:#f3f6f8}
+/* 팝업 · 토스트 · 독 */
+body.hud.hlight .sheet{background:#ffffff;border:1px solid #ffffff;box-shadow:var(--shadow-lg)}
+body.hud.hlight .sheet header,body.hud.hlight .sheet footer,body.hud.hlight .tabs{background:#fafbfc}
+body.hud.hlight .toast{background:#ffffff;border:1px solid #ffffff;color:var(--fg-2);box-shadow:0 2px 6px rgba(15,29,41,.06),0 18px 40px -14px rgba(15,29,41,.25)}
+body.hud.hlight .toast.alarm-t{border-color:#ffffff;box-shadow:inset 3px 0 0 var(--amber),0 2px 6px rgba(15,29,41,.06),0 18px 40px -14px rgba(15,29,41,.25)}
+body.hud.hlight .dock,body.hud.hlight .sheetnav{background:rgba(255,255,255,.94);border-color:rgba(255,255,255,.94);box-shadow:var(--vol)}
+body.hud.hlight .dock a.on,body.hud.hlight .sheet-grid a.on{background:#fff;color:var(--fg);box-shadow:var(--vol-sm)}
+body.hud.hlight .cmd-box{background:#ffffff;border-color:#ffffff}
+/* 안쪽 작은 칸들 */
+body.hud.hlight .readout div{background:#f5f7f9;border:1px solid #f5f7f9;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(15,29,41,.04)}
+body.hud.hlight .readout b{color:var(--fg)}
+body.hud.hlight .readout span{color:var(--muted)}
+body.hud.hlight .hpanel .aitem{background:#f5f7f9;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(15,29,41,.04)}
+body.hud.hlight .hpanel .aitem .n{color:var(--fg)}
+body.hud.hlight .hpanel .aitem .s{color:var(--muted)}
+body.hud.hlight .cal .c{background:#f7f9fa;border-color:#f7f9fa}
+body.hud.hlight .cal .c:hover{background:#ffffff;box-shadow:var(--vol-sm)}
+body.hud.hlight .banner{background:#fff8ee;border-color:#fff8ee;box-shadow:var(--vol-sm)}
+body.hud.hlight .hpanel .greet,body.hud.hlight .hpanel .clock{color:var(--fg);text-shadow:none}
+body.hud.hlight .core-label{color:var(--muted)}
+body.hud.hlight .lock{background:rgba(241,244,247,.92)}
+body.hud.hlight .lock .clock{color:var(--fg);text-shadow:none}
+body.hud.hlight .boot{background:radial-gradient(60% 60% at 50% 50%,#ffffff,#e6ecf1 75%)}
+body.hud.hlight table th{color:var(--muted)}
+body.hud.hlight .login-mark{background:#fff;border-color:#fff;box-shadow:var(--vol-sm)}
+body.hud.hlight .alarm::before{display:none}
+body.hud.hlight .alarm{background:#f7f9fa;border:1px solid #f7f9fa;box-shadow:inset 0 1px 0 #fff,0 1px 2px rgba(15,29,41,.05)}
+body.hud.hlight .chip{background:#eef2f5;border:0;color:var(--fg-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+body.hud.hlight .chip.blue,body.hud.hlight .chip.cyan{background:rgba(10,143,199,.1);color:#0a6f9a}
+body.hud.hlight .chip.ok{background:rgba(11,158,108,.1);color:#07865b}
+body.hud.hlight .chip.warn{background:rgba(232,137,12,.12);color:#b56500}
+body.hud.hlight .chip.bad{background:rgba(224,72,59,.1);color:#c3392c}
+body.hud.hlight .chip.violet{background:#eef2f5;color:var(--fg-2)}
 </style>
 </head>
 <body>
@@ -2463,7 +2550,7 @@ const BG_THEMES={
   exec:{name:'이그제큐티브',hud:true,exec:true,light:true,
     preview:'radial-gradient(circle at 50% 50%,transparent 30%,rgba(12,12,16,.8) 31%,transparent 32%,transparent 38%,rgba(53,84,255,.9) 39%,transparent 40.5%),radial-gradient(circle at 20% 20%,rgba(53,84,255,.18),transparent 45%),radial-gradient(circle at 85% 80%,rgba(255,150,110,.2),transparent 45%),#f6f6f3'},
   jarvisLight:{name:'J.A.R.V.I.S. 라이트',hud:true,hlight:true,light:true,
-    preview:'radial-gradient(circle at 50% 50%,transparent 26%,rgba(8,150,205,.85) 27%,transparent 28.5%,transparent 36%,rgba(8,150,205,.3) 37%,transparent 39%),linear-gradient(180deg,transparent 60%,rgba(8,150,205,.12)),radial-gradient(circle at 50% 45%,#e6edf1,#bccbd6 75%)'},
+    preview:'radial-gradient(circle at 50% 50%,transparent 26%,rgba(8,150,205,.85) 27%,transparent 28.5%,transparent 36%,rgba(8,150,205,.3) 37%,transparent 39%),linear-gradient(180deg,transparent 60%,rgba(8,150,205,.12)),radial-gradient(circle at 50% 45%,#ffffff,#e3e9ee 75%)'},
   jarvis:{name:'J.A.R.V.I.S. 나이트',hud:true,
     preview:'radial-gradient(circle at 50% 50%,transparent 26%,rgba(91,225,255,.9) 27%,transparent 28.5%,transparent 36%,rgba(91,225,255,.35) 37%,transparent 39%),linear-gradient(180deg,transparent 60%,rgba(91,225,255,.18)),radial-gradient(circle at 50% 50%,#06243a,#01060b 70%)'},
   dotwave:{name:'도트 웨이브',light:true,kind:'dotwave',
@@ -2631,9 +2718,9 @@ const bgfx={
   },
   /* ---- J.A.R.V.I.S. background: deep field · holo floor · giant ring · dust · scan beam ---- */
   hudBg(x,W,H,t){
-    const s=this.s, L=!!this.theme.hlight, C=L?'8,150,205':'91,225,255', k=L?1.4:1;
+    const s=this.s, L=!!this.theme.hlight, C=L?'40,120,170':'91,225,255', k=L?0.75:1;
     let g=x.createRadialGradient(W*0.5,H*0.42,0,W*0.5,H*0.42,Math.max(W,H)*0.75);
-    if(L){ g.addColorStop(0,'#e6edf1'); g.addColorStop(.5,'#d5e0e8'); g.addColorStop(1,'#bccbd6'); } else { g.addColorStop(0,'#0e3d5e'); g.addColorStop(.45,'#082a44'); g.addColorStop(1,'#041726'); }
+    if(L){ g.addColorStop(0,'#fbfcfd'); g.addColorStop(.55,'#f1f4f7'); g.addColorStop(1,'#e3e9ee'); } else { g.addColorStop(0,'#0e3d5e'); g.addColorStop(.45,'#082a44'); g.addColorStop(1,'#041726'); }
     x.fillStyle=g; x.fillRect(0,0,W,H);
     // perspective floor grid
     const hz=H*0.62, vx=W*0.5;
@@ -2773,7 +2860,7 @@ function applyTheme(name){
   const k=name||S.settings.theme||'studio'; const key=BG_THEMES[k]?k:'studio';
   const was=document.body.classList.contains('hud');
   document.body.dataset.bg=key; document.body.classList.toggle('dark',!BG_THEMES[key].light); document.body.classList.toggle('hud',!!BG_THEMES[key].hud); document.body.classList.toggle('hlight',!!BG_THEMES[key].hlight); document.body.classList.toggle('exec',!!BG_THEMES[key].exec); if(BG_THEMES[key].hlight||BG_THEMES[key].exec) document.body.classList.remove('dark'); lsSet('md.bg',key); bgfx.set(key);
-  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',BG_THEMES[key].exec?'#f6f6f3':BG_THEMES[key].hlight?'#d7e2ea':BG_THEMES[key].light?'#ffffff':BG_THEMES[key].hud?'#082a44':'#05040f');
+  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',BG_THEMES[key].exec?'#f6f6f3':BG_THEMES[key].hlight?'#f1f4f7':BG_THEMES[key].light?'#ffffff':BG_THEMES[key].hud?'#082a44':'#05040f');
   if(was!==!!BG_THEMES[key].hud&&typeof render==='function'&&S.mode!=='loading'&&$('#view .view')) render();
 }
 /* ===== 이전 프로그램 학생 데이터(JSON) 가져오기 ===== */
