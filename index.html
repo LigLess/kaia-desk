@@ -1203,6 +1203,40 @@ body.hud.gold .dock,body.hud.gold .sheetnav{background:rgba(14,12,7,.92);border-
 body.hud.gold .toast{background:rgba(16,13,7,.96);border-color:rgba(212,175,55,.4)}
 body.hud.gold .wordmark img{filter:brightness(0) invert(82%) sepia(52%) saturate(620%) hue-rotate(2deg)}
 body.hud.gold .hpanel .aitem{background:linear-gradient(90deg,rgba(212,175,55,.1),transparent)}
+
+/* ===== 블랙골드 v2 — 메탈 블랙 + 골드 헤어라인 ===== */
+body.hud.gold{--bg:#000;--bg-soft:#070707;--surface:rgba(255,255,255,.025);--surface-2:rgba(255,255,255,.04);--surface-3:rgba(255,255,255,.07);
+--fg:#f4efe4;--fg-2:#cfc6b4;--muted:#9a917f;--faint:#6b6458;--line:rgba(212,175,55,.16);--line-2:rgba(212,175,55,.32);
+--accent:#d4af37;--accent-2:#ecd18a;--accent-soft:rgba(212,175,55,.1);--bar:rgba(0,0,0,.78);--bar-line:rgba(212,175,55,.28);--pill-bg:rgba(212,175,55,.12)}
+body.hud.gold,body.hud.gold .space{background:#000}
+body.hud.gold .veil{background:radial-gradient(120% 90% at 50% 40%,transparent 50%,rgba(0,0,0,.85))}
+body.hud.gold .pane,body.hud.gold .stat,body.hud.gold .pcard,body.hud.gold .snip,body.hud.gold .alarm,body.hud.gold .hpanel{
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));border:1px solid rgba(212,175,55,.18);
+  box-shadow:inset 0 1px 0 rgba(236,209,138,.12),0 24px 50px -28px rgba(0,0,0,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+body.hud.gold .pane::after,body.hud.gold .hpanel::after,body.hud.gold .stat::after,body.hud.gold .pcard::after{background:linear-gradient(90deg,transparent 10%,rgba(236,209,138,.55) 50%,transparent 90%) center top/100% 1px no-repeat;opacity:.8}
+body.hud.gold .pane h2{color:#ecd18a}
+body.hud.gold .pane h2::before{background:#d4af37;box-shadow:0 0 8px rgba(212,175,55,.7)}
+body.hud.gold .vh h1,body.hud.gold .hpanel .greet,body.hud.gold .hpanel .clock{color:#f4efe4;text-shadow:none}
+body.hud.gold .hl,body.hud.gold .core-label{color:#b9a477;text-shadow:none}
+body.hud.gold .readout div,body.hud.gold .hpanel .aitem{background:rgba(255,255,255,.03);border-color:rgba(212,175,55,.14)}
+body.hud.gold .in,body.hud.gold select.in,body.hud.gold textarea.in,body.hud.gold .msgbox{background:#050505;border-color:rgba(212,175,55,.2)}
+body.hud.gold .in:focus{border-color:#d4af37;box-shadow:0 0 0 3px rgba(212,175,55,.15)}
+body.hud.gold .btn{background:rgba(255,255,255,.03);border-color:rgba(212,175,55,.3);color:#f4efe4}
+body.hud.gold .btn:hover{background:rgba(212,175,55,.1);border-color:#d4af37}
+body.hud.gold .btn.pri{background:linear-gradient(180deg,#f0d27a,#c79a2e);color:#120d02;border-color:#f0d27a;box-shadow:0 8px 24px -10px rgba(212,175,55,.7)}
+body.hud.gold .topnav{background:rgba(0,0,0,.82);border-color:rgba(212,175,55,.25);box-shadow:inset 0 -1px 0 rgba(212,175,55,.35)}
+body.hud.gold .tn-nav .pill{background:linear-gradient(180deg,rgba(212,175,55,.04),rgba(212,175,55,.16));box-shadow:inset 0 -2px 0 #d4af37}
+body.hud.gold .tn-nav a.pon{color:#fff7e0;text-shadow:none}
+body.hud.gold .seg{background:#050505;border-color:rgba(212,175,55,.18)}
+body.hud.gold .seg button.on{background:rgba(212,175,55,.14);color:#fff7e0}
+body.hud.gold .sheet,body.hud.gold .cmd-box{background:#050505;border-color:rgba(212,175,55,.3)}
+body.hud.gold .sheet header,body.hud.gold .sheet footer,body.hud.gold .tabs{background:#030303}
+body.hud.gold .dock,body.hud.gold .sheetnav{background:rgba(0,0,0,.9);border-color:rgba(212,175,55,.25)}
+body.hud.gold .toast{background:#060606;border-color:rgba(212,175,55,.35);color:var(--fg-2)}
+body.hud.gold .banner{background:rgba(212,175,55,.06);border-color:rgba(212,175,55,.3)}
+body.hud.gold .banner p,body.hud.gold .banner p b{color:#ecd18a}
+body.hud.gold .chip{border-color:currentColor}
+body.hud.gold .lock{background:rgba(0,0,0,.92)}
 </style>
 </head>
 <body>
@@ -2920,9 +2954,9 @@ const bgfx={
   },
   /* ---- J.A.R.V.I.S. background: deep field · holo floor · giant ring · dust · scan beam ---- */
   hudBg(x,W,H,t){
-    const s=this.s, L=!!this.theme.hlight, C=L?'40,120,170':'212,175,55', k=L?0.75:1;
+    const s=this.s, L=!!this.theme.hlight, C=L?'40,120,170':'212,175,55', k=L?0.75:0.6;
     let g=x.createRadialGradient(W*0.5,H*0.42,0,W*0.5,H*0.42,Math.max(W,H)*0.75);
-    if(L){ g.addColorStop(0,'#fbfcfd'); g.addColorStop(.55,'#f1f4f7'); g.addColorStop(1,'#e3e9ee'); } else { g.addColorStop(0,'#1c170c'); g.addColorStop(.45,'#0d0b07'); g.addColorStop(1,'#040403'); }
+    if(L){ g.addColorStop(0,'#fbfcfd'); g.addColorStop(.55,'#f1f4f7'); g.addColorStop(1,'#e3e9ee'); } else { g.addColorStop(0,'#0a0906'); g.addColorStop(.45,'#030303'); g.addColorStop(1,'#000000'); }
     x.fillStyle=g; x.fillRect(0,0,W,H);
     // perspective floor grid
     const hz=H*0.62, vx=W*0.5;
@@ -3062,7 +3096,7 @@ function applyTheme(name){
   const k=name||S.settings.theme||'studio'; const key=BG_THEMES[k]?k:'studio';
   const was=document.body.classList.contains('hud');
   document.body.dataset.bg=key; document.body.classList.toggle('dark',!BG_THEMES[key].light); document.body.classList.toggle('hud',!!BG_THEMES[key].hud); document.body.classList.toggle('hlight',!!BG_THEMES[key].hlight); document.body.classList.toggle('exec',!!BG_THEMES[key].exec); document.body.classList.toggle('gold',!!BG_THEMES[key].gold); if(BG_THEMES[key].hlight||BG_THEMES[key].exec) document.body.classList.remove('dark'); lsSet('md.bg',key); bgfx.set(key);
-  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',BG_THEMES[key].exec?'#f6f6f3':BG_THEMES[key].hlight?'#f1f4f7':BG_THEMES[key].light?'#ffffff':BG_THEMES[key].hud?'#0b0a07':'#05040f');
+  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',BG_THEMES[key].exec?'#f6f6f3':BG_THEMES[key].hlight?'#f1f4f7':BG_THEMES[key].light?'#ffffff':BG_THEMES[key].hud?'#000000':'#05040f');
   if(was!==!!BG_THEMES[key].hud&&typeof render==='function'&&S.mode!=='loading'&&$('#view .view')) render();
 }
 /* ===== 이전 프로그램 학생 데이터(JSON) 가져오기 ===== */
@@ -3254,7 +3288,7 @@ function loaderPalette(){
   const k=document.body.dataset.bg||'aurora';
   const P={
     jarvisLight:{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#eef2f5 70%,#e4eaef)',ink:'10,143,199',a1:'#0a8fc7',a2:'#2fc3f2',text:'#5a6a78',name:'#0f1d29',logo:'invert(37%) sepia(93%) saturate(1352%) hue-rotate(172deg) brightness(92%)',mono:true},
-    jarvis:{bg:'radial-gradient(70% 70% at 50% 45%,#1c170c,#0b0a07 70%,#030302)',ink:'212,175,55',a1:'#b8912b',a2:'#f0d27a',text:'rgba(232,205,130,.75)',name:'#f6e7bd',logo:'brightness(0) invert(82%) sepia(52%) saturate(620%) hue-rotate(2deg)',mono:true},
+    jarvis:{bg:'radial-gradient(70% 70% at 50% 45%,#0b0a07,#020202 70%,#000)',ink:'212,175,55',a1:'#b8912b',a2:'#f0d27a',text:'rgba(232,205,130,.75)',name:'#f6e7bd',logo:'brightness(0) invert(82%) sepia(52%) saturate(620%) hue-rotate(2deg)',mono:true},
     exec:{bg:'radial-gradient(70% 70% at 50% 45%,#fbfbf9,#f3f3ef 75%)',ink:'12,12,16',a1:'#0c0c10',a2:'#46464e',head:'#ff5a1f',text:'#6d6d76',name:'#0c0c10',logo:'brightness(0)'},
     aurora:{bg:'radial-gradient(80% 70% at 50% 40%,#16205a,#0a0d33 55%,#050a20)',ink:'120,235,230',a1:'#4fe3d6',a2:'#9b7bff',text:'rgba(210,225,255,.7)',name:'#f2f5ff',logo:'brightness(0) invert(1)'},
     sunset:{bg:'radial-gradient(80% 70% at 50% 40%,#3a1036,#1c0716 60%,#100410)',ink:'255,170,140',a1:'#ff8a5c',a2:'#ff4f7b',text:'rgba(255,220,210,.7)',name:'#fff3ee',logo:'brightness(0) invert(1)'},
@@ -4824,6 +4858,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261018-1653';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261018-1655';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
