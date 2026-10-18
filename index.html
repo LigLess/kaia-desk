@@ -71,7 +71,7 @@ button{cursor:pointer;background:none;border:0;padding:0}
 .space{position:fixed;inset:0;overflow:hidden;z-index:0;background:var(--bg)}
 #bgfx{position:absolute;inset:0;width:100%;height:100%;display:block}
 .veil{position:absolute;inset:0;pointer-events:none}
-body:not(.dark) .veil{background:linear-gradient(180deg,rgba(255,255,255,0) 0,rgba(255,255,255,.5) 60%,rgba(255,255,255,.85))}
+body:not(.dark) .veil{background:none}
 body.dark .veil{background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(2,2,12,.35))}
 .planet,.stars{display:none}
 body[data-bg="space"] .planet,body[data-bg="space"] .stars{display:block}
@@ -762,6 +762,7 @@ function detectStuMap(items){
   for(const k of keys){ if(Object.values(map).includes(k)) continue; const v=vals(k); if(v.length&&v.every(x=>/^(일반|국비|국비지원|재직자|기업|단과|패키지|무료|유료)$/.test(x.trim()))) map.type=k; }
   if(!map.type){ for(const k of courseKeys){ if(k===map.course) continue; const v=vals(k); if(v.length&&v.every(x=>/^(일반|국비|국비지원|재직자|기업|단과|패키지)$/.test(x.trim()))) map.type=k; } }
   for(const k of keys){ if(/^(fundingtype|funding|지원유형|국비유형|훈련유형|지원구분)$/.test(nk(k))) map.funding=k; }
+  for(const k of keys){ const n=nk(k); if(Object.values(map).includes(k)) continue; if(/^(개강일|개강|시작일|수강시작일|수강시작|수업시작일)$/.test(n)) map.cstart=k; else if(/^(종강일|종강|종료일|수강종료일|수강종료|수업종료일)$/.test(n)) map.cend=k; }
   return {map,keys:[...keys]};
 }
 const STATUS_MAP=[[/환불|취소|철회/,'환불'],[/수료|종강|완료|졸업/,'수료'],[/보류|휴강|휴원|중단|중도|정지|휴학/,'보류'],[/대기|예정|등록완료|결제/,'등록대기'],[/수강|재원|진행|국비|연계|학습중|재학/,'수강중'],[/상담|문의|신규|관심|가망/,'상담중']];
@@ -795,6 +796,7 @@ function convertStudent(o,map,today){
   const g=f=>map[f]!=null?o[map[f]]:undefined;
   const name=toText(g('name')).trim(); if(!name) return null;
   const courses=courseObjsOf(g('course'));
+  if(map.cstart!=null||map.cend!=null){ const cs=normDate(g('cstart'))||(parseDateCell(g('cstart'),{today})||{}).date||'', ce=normDate(g('cend'))||(parseDateCell(g('cend'),{today})||{}).date||''; courses.forEach(c=>{ if(!c.start) c.start=cs; if(!c.end) c.end=ce; }); }
   let st=mapStatus(toText(g('status')));
   if(map.status==null||!toText(g('status')).trim()){ // 상태 칸이 없으면 수업 날짜로 판단
     const t=today||ymd(new Date()); const dated=courses.filter(c=>c.start);
@@ -891,6 +893,39 @@ function nameSim(a,b){
   const bg=s=>{ const o=[]; for(let i=0;i<s.length-1;i++) o.push(s.slice(i,i+2)); return o; };
   const A=bg(x),B=bg(y); if(!A.length||!B.length) return 0; const pool=[...B]; let hit=0; for(const t of A){ const i=pool.indexOf(t); if(i>=0){ hit++; pool.splice(i,1); } }
   return 2*hit/(A.length+B.length);
+}
+
+
+/* ---------- 인트라넷 화면에서 복사해 온 표 · 글 읽기 ---------- */
+function rowsFromHtml(html){
+  try{ const doc=new DOMParser().parseFromString(html,'text/html'); const tb=[...doc.querySelectorAll('table')].sort((a,b)=>b.rows.length-a.rows.length)[0]; if(!tb) return null;
+    return [...tb.rows].map(r=>[...r.cells].map(c=>c.innerText!==undefined?c.innerText.trim():c.textContent.trim())); }catch(e){ return null; }
+}
+function rowsFromText(text){
+  const lines=String(text||'').split(/\r?\n/).map(l=>l.replace(/\s+$/,'')).filter(l=>l.trim());
+  if(lines.filter(l=>l.includes('\t')).length>=Math.max(1,lines.length*0.5)) return lines.map(l=>l.split('\t').map(x=>x.trim()));
+  return null;
+}
+const PHONE_RE=/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/;
+const NAME_STOP=/^(과정|과목|수강|국비|일반|단과|평일|주말|상담|등록|수료|환불|대기|완료|비대면|강의실|강의장|오전|오후|저녁|월요일|화요일|수요일|목요일|금요일|토요일|일요일|학생|이름|연락처|메모|코리아|아카데미)$/;
+function studentsFromPaste(html,text){
+  let rows=(html&&rowsFromHtml(html))||rowsFromText(text);
+  if(rows&&rows.length>=2){
+    // 제목줄 찾기: 학생 칸 이름이 2개 이상 있는 첫 줄
+    let hi=rows.findIndex(r=>r.filter(c=>stuKeyOf(c)).length>=2);
+    if(hi<0) hi=rows.findIndex(r=>r.some(c=>stuKeyOf(c)==='name'));
+    if(hi>=0){ const head=rows[hi].map((h,i)=>h||`칸${i+1}`); const items=rows.slice(hi+1).filter(r=>r.some(c=>c)).map(r=>{ const o={}; head.forEach((h,i)=>{ if(r[i]!=null&&r[i]!=='') o[h]=r[i]; }); return o; }); return {items,how:'표'}; }
+  }
+  // 표가 아니면 줄마다 이름 · 전화번호 찾기
+  const items=[];
+  for(const line of String(text||'').split(/\r?\n/)){
+    const l=line.trim(); if(!l) continue;
+    const ph=(l.match(PHONE_RE)||[])[0]||'';
+    const name=(l.replace(PHONE_RE,' ').match(/[가-힣]{2,4}/g)||[]).find(w=>!NAME_STOP.test(w))||'';
+    if(!name||(!ph&&l.length>40)) continue;
+    const dg=ph.replace(/\D/g,''); items.push({이름:name,연락처:dg?dg.replace(/^(\d{3})(\d{3,4})(\d{4})$/,'$1-$2-$3'):'',메모:l});
+  }
+  return {items,how:'글'};
 }
 /* ===== APP ===== */
 const LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEYAAAA4CAYAAABABo41AAAKvUlEQVR4nM1bbYxcZRV+nnPv7nbpbj/mY2d2WVqVglBEEIpQUIp8KISg/hAUAUuIYDQEQaEpkRKKtATdthAT+WFiJEaIigFNJECiaAxBAk0wpnxIDSEuZWd3dgu00u7O3HP8cd+7Mzu73bn3zuzWJ7nZ3bfvx33PPec557zvKXD04QFALtd3ay5XuLy+LSYIQFL8W9NJjyYEgK1YUVzledhD2qtLlnRsGB4engRg7mk2XgEgl8udoOqvF0EW4EGSL42N7XulsV9c+Mn20VbQPep5tkNElgJy1uHD1W8D2IlQa4Im4zWTGTxWpLLNDFd6Ho8Jmw1mGmSzhWfMeMfExMirSCico6kxHoAgny9+BeBvzSxA+PIHgOq6crm8173fXJshAFu+vPBR3+fTInKimcL1jbTMIwVmNqYafHFiYvTvSCCcVPbXBriNrVpphgfMzFybklwG+DtQ22DjxyMAbNiwwfd9/MIJpeL6C0KBewBgphUSeVJ+OTAwkHV9YinD0RKMAFDfn9xC8mMIv6IA8MwsIHlFLlf4al1741jbs+f1S0XkfDMNAHRg7g13mFlVhGsmJ4MbUBNerBdcbAiAoK+v7xySN1toA/VeiE6DHujtHchitnAMAMzwJcQjaAIwkpe6v/8vTckR7tpOVdlFsuMI76SkrO7q0q2Yqf7TnENyTW2+5mua2WAms2YZYprTYgtGAAS53MTNJM+pI9xGeKEm8Vu5XPF8hN7JQ92mVOf1WLNAIujoOBB7zGIKRgBoPp8/HsAWZ0LzfjkSPmA7BgcHu6MmNw9IvIZ4pmQAzAxvl0ql/7rxzcYsqmAIwMy8IZIr0JwIJSRiWXfoUOW7CLVmuj+Jx1Ezpfk2agBIyhN179EUiyWY6ZiF5JedCcUJ+2lmSnJzLpc7EbWAj+XyyF9V9XFSPABVzCZVA1Ah6ZvpyytWLH0ER46LZmExBEMA2ts7kFW1HaHDiR1YCkKPstzM3+naIp5htbrkRjN9TkQ6SEYm4oI8kpQOM9tj5l27d+/eybrxsRZeaAgA6+wMtojIKjSYRAx4ZhaI8PJcrvA11H3x999/+z3PsytU9X4zvAUnjfCn7TMLHvZ9fG58fN8biMktERY6JXAm1H+emf0F4cvFcbGNMJIw0+HOTu9T+/bt24/aJg0Ali9fvaKr69DJQeDnSX1PRN8YHR0tuT6Jk8iFFAwBcO1a+KOjxb+R/LTzRGm1NCDpmenD5XLpO6glmZGnmssVe5iZP8XGQpqSANBSqXiLE0pSE5o1n4ttbspmCxdgZmwTCcire+jaEwsFWDiNcTHLccebVV4GsAzpTKgRSlLMdHe53HsesDdKHlNtfj4slMYQAMwqO13MMt3WIqLY5sxs9sBtmDvJbAsWQmM8AEEuV7iKlF+3yCtzIYpkPySrZ5TL5TeRglybod3SFgDW09OfM8OP0JqKRzFJgJkESgAmwh4z2YX2mOgstFswBKBLltg9It7qlNoyTaYkhaQXxSaokamEsY13eTZbvAY1Im4b2ilpR7j9nzGzP7u/ow3FhctrCDOdMuPrJMpmyJP4OMlOFzkbwtiGZvaO59mZpVKp7OZoi0m1S2Pc5td0qepD7pwlqYpHof6UmQ6ZVT/Z09N1drk8clF3t382UD3VTIcATEVzh3mUDAYBfohQIG370O2ayAMQZLOFTSLyQIIkMYI56ngfwDXl8shTR+qYzRYuJPkoyT530ufI2D4/Pl56Dm0i4ra4UAAaZr/+SwB6kFxblISY6dfL5dHHEJ7hNgZnUQBXCS/m+CRqSaanav/o7vbXJ7iTarqpVlB35OgPhSf88U/iHZSkqNpTTig+ascIVveoa/fL5dIfzexJR8pwSeZpH34YtC22aXUCAaDZbP/VJK9IEfa7g207JKI/QO285Ehfe9pli/Cx6Hc4vhGxzYVC4RQkz+BnoZXBBKDFYjEP6P3A9N1QYm0x05+NjY29gnj8oABMtfKqqlZQ83xGsrdaxY/r2lJTRUtJHQCrVu0+EVlllliFFYCo2ojnYTuaH1HOQLXqTWGmEL1Qa+SyTKZ4LVrUmrQDXdhf3EDyhpSZs5EkYPe5c5O43oQA6PtcTUoXGjjNzEwE2wuFQh9acOFpBEMANjg42G1mO83oI50JeWa6u7u74+dI7mKN5GUMV6wf5+6keGy1atuR4OaxEWkGCQA9dKhyi4icAaQjXAAWBLxreHj4EOKbkQDQlSv7VwF2g4uCG9d2R6GyMZvtuwgp04WkghEAQTbbfxLAu1yAlXQOR7j2h/37R56O5ow51iWQuoWULGoHVHP0ow9wqFAoLK0bGxspOUZ3irAHyW3YANAMB1VxZ8KxAiDI5/Pnktw4x533jL5Oa04PAt6GFESc6LQegGazxetE5LIUYT/gtAWwn05MjLyG5NxCM2+by8WaVls54W0uFotrkVA4cTsKAO3r6yuQtq2uniUJopjlP76PISRzz/WB5AUxP0oU2yytVvFgXVvsBeOAAEyVW0k5DunCbidMuXdkZGQMydwzstlsL6D3miVKOaJ6m0symcL1SEDEcTYXZc4XkPLNlDFL4BK9F1evfvcRJDMh54I7bhOR412EnWR9hrENt+VyuX7E/KjNOhCA9ff3HwNgF2rXEikI1wDYnbt3o4KE7nnZsvwawG6NUyFxpDlIDpj59wHxNC6OYLRSCb4nIqen1BbHLfhN3XlJIvfc2Sl3k7ISyTP3CBKmC7g+k+m7BDFMar5FBIBmMsWTRfAigKVIpy0G4CDgrSuX35mvErMR02kHgD/VrZ02MYzip396nq0vlUqHMU8mP19FddhBbBfJXqT7WkqKmNlPyuV3klxzRKbmmdl2kjOqqVLC3Unx1GoVm9DEfR/pHyJt2UjKF1qJWVT135VKx06kINxcrrBRRM5tEswlQXTN+/2VKwufwDzCmasxOqrsF8E25x7TRMjRF976wQfDE0hIuMuXr1oJcEuKdecDAUCESz2Pu1Db1yxNnGvDUUnYVpLHAqk8gYbuWZ8fHx95FMm0xRHu5O0kP9KGYoBGRCZ1cSZT2IgjuO/GDXsAgr6+gYtV9VnUVS8lXFwRRp0bxsbefR61ko2mL43WCT8ODCDMrGTmr5uYGN6HBqdQL6npc5Yg0KHwECkV4QWO/X/lhJLUPYPEPS0Qfsx1TEVYJKtzxjbS8LsePlzdJMLTUhJudH263/dxT+NiTTCtrSSuWoBigEZEsc038vnipWiIbaTuZ5DJFNcCuKOFl1JSCGBXqVR6C8ncs4Y3mcF2kvXtCwU3N8UMQy66n9acelamCB4imepgB4ACFNXgX2aVB5HcPVs2e/B6Us5aBG2ZXtcR8SlTU7oZdUQscCqcyRQ2kry4BS+gJEji7vHx8QNIdqzg/n8ArsQCVUjNA3G1xLcXCrXYZjpmIbm97m4oCaYLjVX1mXK59DhSuGc3VTcWVyjR+iDZHQR8CO5OytW+eltE2G+GKdTqU+I+JKVD1d5U9W5ETSBxN2iokd4L7to1KhharMfMbIrkhZlM8ToAAXO5vqtJ/9G0H8rVsfzObGrTxMTEMBJenDkQAAYGBjKTk8ETIvLZVC/TIkgiCPSgqq1nJtN/p4idYJb0wNiU5LCIPjs6OvqCa2ylBIMALJ/P95h5N5E4STVx4VGrUNI6VfX3/wOiIRoT9tiohAAAAABJRU5ErkJggg==';
@@ -1464,7 +1499,7 @@ function vStudents(){
   if(q) st=st.filter(s=>(s.name+' '+(s.phone||'')+' '+(s.memo||'')+' '+(s.goal||'')).toLowerCase().includes(q.toLowerCase()));
   st.sort((a,b)=>(b.at||0)-(a.at||0));
   const counts={}; list('students').forEach(s=>counts[s.status]=(counts[s.status]||0)+1);
-  return `<div class="view">${vh('학생',`전체 ${list('students').length}명 · 수강 중 ${counts['수강중']||0}명`,`<label class="btn" for="stuJson">${ic('up')}이전 프로그램에서 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><button class="btn pri" data-act="newStudent">${ic('plus')}학생 추가</button>`)}
+  return `<div class="view">${vh('학생',`전체 ${list('students').length}명 · 수강 중 ${counts['수강중']||0}명`,`<button class="btn" data-act="pasteStudents">${ic('copy')}인트라넷에서 복사해 등록</button><label class="btn" for="stuJson">${ic('up')}이전 프로그램에서 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><button class="btn pri" data-act="newStudent">${ic('plus')}학생 추가</button>`)}
   <section class="pane">
     <div class="btns" style="margin-bottom:14px">
       <div style="position:relative;flex:1;min-width:200px"><input id="stuQ" class="in" placeholder="이름 · 연락처 · 메모 검색" value="${esc(S.stuQ)}" style="padding-left:38px"><span style="position:absolute;left:12px;top:11px;width:18px;height:18px;color:var(--faint)">${ic('search')}</span></div>
@@ -1566,14 +1601,15 @@ function vSettings(){
   const s=S.settings; const offs=s.offsets||[];
   const tplF=(k,l)=>`<label class="field full"><span>${l}</span><textarea class="in" data-set="tpl.${k}" rows="6">${esc(s.tpl[k])}</textarea></label>`;
   const zoomRows=(s.zooms||[]).map((z,i)=>`<div class="btns" style="flex-wrap:nowrap"><input class="in" data-zoom="${i}" data-f="k" value="${esc(z.k)}" style="width:64px;text-align:center" maxlength="3" aria-label="계정 이름"><input class="in" data-zoom="${i}" data-f="id" value="${esc(z.id)}" placeholder="회의 ID" style="flex:1;min-width:0"><input class="in" data-zoom="${i}" data-f="pw" value="${esc(z.pw)}" placeholder="회의 PW" style="width:120px"><button class="btn sm ghost" data-act="zoomDel" data-i="${i}" aria-label="삭제">${ic('x')}</button></div>`).join('');
-  const themes=Object.entries(BG_THEMES).map(([k,th])=>`<button class="swatch ${s.theme===k?'on':''}" data-act="theme" data-k="${k}" style="background:${th.preview}"><span>${th.name}</span></button>`).join('');
+  const sw=(light)=>Object.entries(BG_THEMES).filter(([k,th])=>!!th.light===light).map(([k,th])=>`<button class="swatch ${s.theme===k?'on':''}" data-act="theme" data-k="${k}" style="background:${th.preview}"><span>${th.name}</span></button>`).join('');
+  const themes=`<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">화이트</div><div class="swatches">${sw(true)}</div><div style="font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 8px">다크</div><div class="swatches">${sw(false)}</div>`;
   return `<div class="view">${vh('설정',S.mode==='db'?'내 Claude 계정에 저장돼서 PC와 휴대폰에서 같은 데이터가 보여요':S.mode==='local'?'지금 화면은 이 기기에만 저장돼요':'')}
   <section class="pane"><h2>내 정보</h2><div class="form">
     <label class="field"><span>이름</span><input class="in" data-set="name" value="${esc(s.name)}"></label>
     <label class="field"><span>소속 · 직함 (사이드바 표시)</span><input class="in" data-set="role" value="${esc(s.role)}"></label>
     <label class="field"><span>안내 문구 {지점}</span><input class="in" data-set="branch" value="${esc(s.branch)}"></label>
     <label class="field"><span>안내 문구 {멘토}</span><input class="in" data-set="mentor" value="${esc(s.mentor)}"></label></div></section>
-  <section class="pane"><h2>배경 <small>움직이는 배경 테마 · PC와 휴대폰에 함께 적용돼요</small></h2><div class="swatches">${themes}</div></section>
+  <section class="pane"><h2>배경 <small>움직이는 배경 테마 · PC와 휴대폰에 함께 적용돼요</small></h2>${themes}</section>
   <section class="pane"><h2>알림</h2><div class="form">
     <div class="field full"><span>개강·종강 며칠 전에 알릴까요</span><div class="btns">${[14,7,3,1].map(o=>`<label class="check"><input type="checkbox" data-act="offToggle" data-o="${o}" ${offs.includes(o)?'checked':''}>${o}일 전</label>`).join('')}</div></div>
     <label class="field"><span>휴대폰 달력 알림 시각</span><input class="in" type="time" data-set="icsTime" value="${esc(s.icsTime)}"></label>
@@ -1840,7 +1876,15 @@ document.addEventListener('click',e=>{
 },true);
 /* ===== MOTION BACKGROUND ===== */
 const BG_THEMES={
-  studio:{name:'스튜디오 화이트',light:true,
+  dotwave:{name:'도트 웨이브',light:true,kind:'dotwave',
+    preview:'radial-gradient(circle,rgba(11,11,15,.55) 1.2px,transparent 1.6px) 0 0/10px 10px,linear-gradient(180deg,#fff 0%,#fff 35%,#f1f1f4)'},
+  contour:{name:'토포그래피',light:true,kind:'contour',
+    preview:'repeating-radial-gradient(circle at 75% 60%,transparent 0 7px,rgba(11,11,15,.22) 7px 8px),#fff'},
+  bloom:{name:'잉크 블룸',light:true,kind:'bloom',
+    preview:'radial-gradient(circle at 30% 70%,rgba(11,11,15,.28),transparent 45%),radial-gradient(circle at 75% 35%,rgba(47,91,255,.25),transparent 40%),radial-gradient(circle at 60% 80%,rgba(11,11,15,.18),transparent 40%),#fff'},
+  network:{name:'컨스텔레이션',light:true,kind:'network',
+    preview:'linear-gradient(32deg,transparent 48%,rgba(11,11,15,.25) 49%,rgba(11,11,15,.25) 51%,transparent 52%) 0 0/34px 26px,radial-gradient(circle,rgba(11,11,15,.6) 1.5px,transparent 2px) 0 0/17px 13px,#fff'},
+  studio:{name:'잉크 스트랜드',light:true,
     preview:'repeating-linear-gradient(160deg,transparent 0 9px,rgba(11,11,15,.14) 9px 10px),linear-gradient(#fff,#f4f4f6)'},
   aurora:{name:'오로라',base:['#050a2c','#160c4a','#041a3a'],blobs:['#2b6cff','#00d0ff','#ff3fbf','#7a55ff','#1fe0b4'],silk:['#8beeff','#ff92e2','#bfaeff'],
     preview:'radial-gradient(circle at 20% 30%,#00d0ff 0,transparent 55%),radial-gradient(circle at 80% 70%,#ff3fbf 0,transparent 55%),radial-gradient(circle at 60% 20%,#7a55ff 0,transparent 60%),#0a0f3a'},
@@ -1880,7 +1924,7 @@ const bgfx={
   frame(now){
     const x=this.x,W=this.W,H=this.H,th=this.theme,t=(now-this.t0)/1000;
     x.globalCompositeOperation='source-over';
-    if(th.light){ this.studio(x,W,H,t); return; }
+    if(th.light){ const k=th.kind||'strands'; if(k==='strands') this.studio(x,W,H,t); else this[k](x,W,H,t); return; }
     if(th.space){ x.clearRect(0,0,W,H); }
     else{
       const g=x.createLinearGradient(0,0,W,H); th.base.forEach((c,i)=>g.addColorStop(i/(th.base.length-1),c)); x.fillStyle=g; x.fillRect(0,0,W,H);
@@ -1932,6 +1976,66 @@ const bgfx={
         x.fillStyle='#2f5bff'; x.beginPath(); x.arc(px,y,2.2*s,0,6.283); x.fill();
       }
     }
+  },
+  /* perspective dot field rolling like a slow sea */
+  dotwave(x,W,H,t){
+    const s=this.s; x.clearRect(0,0,W,H);
+    const rows=26, cols=Math.ceil(W/(22*s))+4, horizon=H*0.48;
+    for(let r=0;r<rows;r++){
+      const z=r/(rows-1); const persp=0.25+z*z*1.6;
+      const yBase=horizon+Math.pow(z,1.6)*(H*0.56);
+      for(let c=0;c<cols;c++){
+        const u=(c-cols/2)/(cols/2);
+        const px=W/2+u*W*0.55*persp;
+        if(px<-10||px>W+10) continue;
+        const wv=Math.sin(u*3.2+t*0.6+z*5)*Math.cos(z*4-t*0.35)*H*0.035*persp+Math.sin(u*7-t*0.9)*H*0.006*persp;
+        const py=yBase+wv; const a=(0.08+0.42*z)*(0.55+0.45*Math.sin(u*3.2+t*0.6+z*5));
+        const hot=Math.abs(u-Math.sin(t*0.15)*0.6)<0.05&&r%3===0;
+        x.fillStyle=hot?`rgba(47,91,255,${Math.min(.9,a*2.2).toFixed(3)})`:`rgba(11,11,15,${Math.max(0,a).toFixed(3)})`;
+        const sz=(0.7+persp*1.1)*s; x.fillRect(px-sz/2,py-sz/2,sz,sz);
+      }
+    }
+  },
+  /* drifting topographic rings */
+  contour(x,W,H,t){
+    const s=this.s; x.clearRect(0,0,W,H);
+    const centers=[[W*0.86,H*0.78,1],[W*0.08,H*0.18,0.7]];
+    for(const [cx,cy,sc] of centers){
+      const L=22;
+      for(let l=1;l<=L;l++){
+        const R=l*Math.min(W,H)*0.032*sc+8*s; x.beginPath();
+        for(let i=0;i<=120;i++){
+          const th=i/120*Math.PI*2;
+          const n=Math.sin(th*3+t*0.25+l*0.35)*0.09+Math.sin(th*5-t*0.18+l*0.2)*0.05+Math.sin(th*2+l*0.5+t*0.1)*0.07;
+          const rr=R*(1+n); const px=cx+Math.cos(th)*rr, py=cy+Math.sin(th)*rr*0.82;
+          i?x.lineTo(px,py):x.moveTo(px,py);
+        }
+        const hi=l===14; x.strokeStyle=hi?'rgba(47,91,255,.5)':`rgba(11,11,15,${(0.15-l*0.005).toFixed(3)})`; x.lineWidth=(hi?1.3:0.9)*s; x.stroke();
+      }
+    }
+  },
+  /* soft ink drops spreading in water */
+  bloom(x,W,H,t){
+    x.clearRect(0,0,W,H); const R=Math.max(W,H);
+    const orbs=[[0.82,0.82,0.42,'11,11,15',0.10],[0.12,0.9,0.3,'11,11,15',0.07],[0.9,0.12,0.26,'11,11,15',0.06],[0.7,0.62,0.22,'47,91,255',0.10],[0.25,0.3,0.18,'47,91,255',0.05]];
+    orbs.forEach(([ox,oy,r,c,a],i)=>{
+      const cx=W*(ox+0.05*Math.sin(t*0.13+i*1.7)), cy=H*(oy+0.05*Math.cos(t*0.11+i*2.3)), rr=R*r*(1+0.08*Math.sin(t*0.2+i));
+      const g=x.createRadialGradient(cx,cy,0,cx,cy,rr); g.addColorStop(0,`rgba(${c},${a})`); g.addColorStop(.55,`rgba(${c},${a*0.35})`); g.addColorStop(1,`rgba(${c},0)`); x.fillStyle=g; x.fillRect(0,0,W,H);
+    });
+    // fine rings rippling out of the main drop
+    const cx=W*0.82, cy=H*0.82;
+    for(let i=0;i<5;i++){ const k=((t*0.06+i/5)%1); const rr=R*0.05+k*R*0.45; x.beginPath(); x.arc(cx,cy,rr,0,Math.PI*2); x.strokeStyle=`rgba(11,11,15,${(0.12*(1-k)).toFixed(3)})`; x.lineWidth=this.s; x.stroke(); }
+  },
+  /* sparse drifting nodes joined by hairlines */
+  network(x,W,H,t){
+    const s=this.s; x.clearRect(0,0,W,H);
+    if(!this.nodes||this.nodesW!==W){ this.nodesW=W; const n=Math.round(Math.min(90,W*H/(16000*s*s))); this.nodes=[...Array(n)].map(()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*0.25*s,vy:(Math.random()-.5)*0.25*s,p:Math.random()*6.28})); }
+    const N=this.nodes, D=150*s;
+    for(const p of N){ p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>W) p.vx*=-1; if(p.y<0||p.y>H) p.vy*=-1; }
+    for(let i=0;i<N.length;i++) for(let j=i+1;j<N.length;j++){ const a=N[i],b=N[j]; const d=Math.hypot(a.x-b.x,a.y-b.y); if(d>D) continue;
+      x.strokeStyle=`rgba(11,11,15,${(0.14*(1-d/D)).toFixed(3)})`; x.lineWidth=0.8*s; x.beginPath(); x.moveTo(a.x,a.y); x.lineTo(b.x,b.y); x.stroke(); }
+    N.forEach((p,i)=>{ const acc=i%11===0; const pr=acc?2.6+Math.sin(t*2+p.p)*0.8:1.6; x.fillStyle=acc?'#2f5bff':'rgba(11,11,15,.55)'; x.beginPath(); x.arc(p.x,p.y,pr*s,0,6.283); x.fill();
+      if(acc){ x.strokeStyle=`rgba(47,91,255,${(0.25+0.2*Math.sin(t*2+p.p)).toFixed(3)})`; x.beginPath(); x.arc(p.x,p.y,(7+3*Math.sin(t*2+p.p))*s,0,6.283); x.stroke(); } });
   },
   /* ---- home hero: white silk lines on ink ---- */
   heroFrame(now){
@@ -2061,6 +2165,25 @@ async function doStuImport(){
   toast('학생 데이터를 가져왔어요',`새로 ${add}명${merged?` · 합친 학생 ${merged}명`:''}. 시간표에 없는 과정은 시간표를 올리면 자동 연결돼요.`);
 }
 
+/* ===== 인트라넷 화면 복사 → 붙여넣기 등록 ===== */
+function openPasteStudents(){
+  openModal(`${mHead('인트라넷에서 복사해 등록')}<div class="body">
+    <ol style="margin:0;padding-left:18px;font-size:13px;color:var(--muted);line-height:1.9"><li>인트라넷의 학생 목록(또는 학생 상세) 화면에서 표를 마우스로 드래그해 고르거나 <b style="color:var(--fg)">Ctrl+A</b></li><li><b style="color:var(--fg)">Ctrl+C</b>로 복사</li><li>아래 칸을 누르고 <b style="color:var(--fg)">Ctrl+V</b> — 이름 · 연락처 · 과정 · 개강일 칸을 알아서 찾아요</li></ol>
+    <textarea id="pasteStu" class="in" rows="10" placeholder="여기에 붙여 넣으세요"></textarea>
+    <p id="pasteInfo" style="margin:0;font-size:12px;color:var(--faint)">표가 아니라 "홍길동 010-1234-5678 DBMS 10/19"처럼 한 줄씩 적어도 돼요.</p></div>
+    <footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="pasteStuGo">읽어 오기</button></footer>`,'');
+  modalEl._kind='pastestu'; const ta=$('#pasteStu'); ta.focus();
+  ta.addEventListener('paste',e=>{ const h=e.clipboardData&&e.clipboardData.getData('text/html'); if(h&&/<table/i.test(h)){ ta._html=h; setTimeout(()=>{ $('#pasteInfo').textContent='표를 읽었어요. "읽어 오기"를 누르세요.'; },0); } else ta._html=null; });
+}
+function pasteStudentsGo(){
+  const ta=$('#pasteStu'); const r=studentsFromPaste(ta._html,ta.value);
+  if(!r.items.length){ toast('학생을 찾지 못했어요','이름이 있는 표나 "이름 전화번호" 줄이 있어야 해요.'); return; }
+  const {map,keys}=detectStuMap(r.items);
+  // 붙여 넣은 글에서 과정 이름 찾기 (표에 과정 칸이 없을 때)
+  if(map.course==null&&r.how==='글'){ const subs=[...new Set(list('courses').map(subjectOf))].sort((a,b)=>b.length-a.length); r.items.forEach(o=>{ const t=aliasNorm(o.메모||''); const hit=subs.find(x=>aliasNorm(x).length>=2&&t.includes(aliasNorm(x))); if(hit){ o.과정=hit; const d=(o.메모.match(/(\d{1,2})[\/.](\d{1,2})/)||[]); if(d[0]) o.개강일=d[0]; } }); const m2=detectStuMap(r.items); Object.assign(map,m2.map); keys.push(...m2.keys.filter(k=>!keys.includes(k))); }
+  closeModal(); SIM={file:'인트라넷 복사',path:r.how==='표'?'붙여 넣은 표':'붙여 넣은 글',items:r.items,map,keys,merge:true,sel:{}}; r.items.forEach((_,i)=>SIM.sel[i]=true); drawStuImport();
+}
+
 /* ===== 끌어다 놓기 ===== */
 let dragDepth=0;
 const hasFiles=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
@@ -2158,6 +2281,8 @@ const ACT={
   pasteImport:()=>openPasteImport(),
   pasteParse:()=>pasteParse(),
   simDo:()=>doStuImport(),
+  pasteStudents:()=>openPasteStudents(),
+  pasteStuGo:()=>pasteStudentsGo(),
 };
 document.addEventListener('click',e=>{
   if(S.locked) return;
