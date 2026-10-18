@@ -14,7 +14,7 @@ const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
 const DATA = 'kaia_data';
 const USERS = 'kaia_users';
 const TEAM_OWNER = '_team';
-const SHARED = { courses: true }; // 팀 공용 컬렉션 (meta/team 도 공용)
+const SHARED = { courses: true, inbox: true }; // 팀 공용 컬렉션 (meta/team 도 공용, inbox = 진단 결과 수신함)
 
 function ss_() { return SpreadsheetApp.getActive(); }
 function dataSheet_() {
@@ -92,6 +92,17 @@ function doPost(e) {
       const u = findUser_(user);
       if (!u || hash_(u.r[2], String(b.pw || '')) !== u.r[3]) { fail_(user); return out_({ error: 'login' }); }
       return out_({ ok: true, user: user, name: u.r[1], token: newToken_(u) });
+    }
+    if (b.a === 'submit') {   // 진단 · 테스트 페이지에서 보내는 결과 (로그인 없이)
+      const c = CacheService.getScriptCache(); const n = Number(c.get('sub_rate') || 0);
+      if (n > 60) return out_({ error: 'busy' }); c.put('sub_rate', String(n + 1), 60);
+      const f = b.form || {}; const clip = (v, m) => String(v == null ? '' : v).slice(0, m);
+      const data = { test: clip(f.test, 80), name: clip(f.name, 40), phone: clip(f.phone, 30), score: clip(f.score, 80),
+        summary: clip(f.summary, 600), detail: clip(f.detail, 4000), url: clip(f.url, 600), at: Date.now(), done: false };
+      if (!data.name && !data.phone && !data.score) return out_({ error: 'empty' });
+      const id = 'r' + Utilities.getUuid().replace(/-/g, '').slice(0, 16);
+      dataSheet_().appendRow([TEAM_OWNER, 'inbox', id, JSON.stringify(data), Date.now(), '']);
+      return out_({ ok: true });
     }
     if (b.a === 'logout') {
       const uid = auth_(b.token); if (!uid) return out_({ ok: true });

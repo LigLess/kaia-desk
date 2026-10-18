@@ -1015,6 +1015,55 @@ body.hud.hlight .chip.violet{background:#eef2f5;color:var(--fg-2)}
 .boot2.mono .bl-line{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.08em}
 .bl-skip{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);text-align:center;font-size:11px;letter-spacing:.12em;opacity:.45}
 @keyframes blIn{from{opacity:0;transform:translateY(6px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+
+/* ===== 학생 업무 (기록 · 과제 · 첨삭 · 수신함) ===== */
+.wk-tabs{top:0}
+.wk-tabs small{font-size:11px;color:var(--faint);margin-left:2px}
+.wk{display:flex;flex-direction:column;gap:14px}
+.wk-hint{font-size:12.5px;color:var(--muted);line-height:1.6;padding:10px 12px;border-radius:12px;background:var(--surface-2)}
+.wk-hint b{color:var(--fg)}
+.wk-add{display:flex;flex-direction:column;gap:10px}
+.wk-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.wk-row .in{flex:1;min-width:130px}
+.wk-row input[type=date].in,.wk-row input[type=time].in{flex:0 0 auto;width:auto;min-width:150px}
+.wk-hide{display:none!important}
+.wk-kinds{align-self:flex-start;flex-wrap:wrap}
+.wk-panel{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;background:var(--surface-2)}
+.wk-panel>b{font-size:13.5px}
+.wk-panel>p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.6}
+.wk-cbs{display:flex;flex-direction:column;gap:6px}
+.wk-cb{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--warn-soft);font-size:13px}
+.wk-cb .grow{flex:1;min-width:0}
+.wk-tl{display:flex;flex-direction:column}
+.wk-it{display:grid;grid-template-columns:52px 14px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
+.wk-it:first-child{border-top:0}
+.wk-d{font-size:12px;color:var(--muted);padding-top:3px;font-variant-numeric:tabular-nums}
+.wk-dot{width:9px;height:9px;border-radius:50%;margin-top:6px;background:var(--faint)}
+.wk-dot.blue{background:var(--accent)}.wk-dot.ok{background:var(--ok)}.wk-dot.cyan{background:var(--cyan)}.wk-dot.warn{background:var(--warn)}.wk-dot.violet{background:var(--violet)}
+.wk-c{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+.wk-txt{font-size:13.5px;line-height:1.65;white-space:pre-wrap;word-break:break-word;color:var(--fg)}
+.wk-more summary{list-style:none;cursor:pointer}
+.wk-more summary::-webkit-details-marker{display:none}
+.wk-more summary b{display:inline-block;margin-top:4px;font-size:12px;color:var(--accent);font-weight:600}
+.wk-more[open] summary{display:none}
+.wk-link{font-size:12.5px;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+.wk-as,.wk-ver{display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;background:var(--surface-2)}
+.wk-as.done{opacity:.85}
+.wk-as-h{display:flex;align-items:center;gap:8px}
+.wk-as-h .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk-as-m{font-size:12px;color:var(--muted)}
+.wk-steps{align-self:flex-start}
+.wk-cnt{font-size:12px;color:var(--muted);margin-left:auto}
+.wk-in .wk-insel{width:auto;max-width:140px;height:34px}
+.wk-hub{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.wk-hub-c{padding:14px 16px;border-radius:14px;background:var(--surface-2);display:flex;flex-direction:column;gap:4px;min-width:0}
+.wk-hub-n{font-size:26px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.wk-hub-c.warn .wk-hub-n{color:var(--warn)}.wk-hub-c.bad .wk-hub-n{color:var(--bad)}
+.wk-hub-t{font-size:12.5px;color:var(--muted)}
+.wk-hub-l{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.wk-hub-l button{text-align:left;font-size:12.5px;color:var(--fg-2);padding:4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:0;cursor:pointer}
+.wk-hub-l button:hover{color:var(--accent)}
+@media (max-width:640px){.wk-it{grid-template-columns:44px 10px minmax(0,1fr) auto;gap:8px}.wk-row input[type=date].in,.wk-row input[type=time].in{flex:1;min-width:0}}
 </style>
 </head>
 <body>
@@ -1640,9 +1689,9 @@ const store={db:null,base:null,setRef:null,dl:null,chains:{},
     });
   },
   loadLocal(){
-    try{ const raw=lsGet('md.data'); if(raw){ const o=JSON.parse(raw); COLS.forEach(c=>S.real[c]=o[c]||{}); if(o.settings) S.settings=normSettings(o.settings); } }catch(e){}
+    try{ const raw=lsGet('md.data'); if(raw){ const o=JSON.parse(raw); COLS.forEach(c=>S.real[c]=o[c]||{}); if(o.settings) S.settings=normSettings(o.settings); if(o.inbox) S.inbox=o.inbox; } }catch(e){}
   },
-  saveLocal(){ clearTimeout(this._lt); this._lt=setTimeout(()=>lsSet('md.data',JSON.stringify({...S.real,settings:S.settings})),250); },
+  saveLocal(){ clearTimeout(this._lt); this._lt=setTimeout(()=>lsSet('md.data',JSON.stringify({...S.real,settings:S.settings,inbox:S.inbox||{}})),250); },
   write(key,fn){
     const run=async()=>{ try{ await fn(); }catch(e){ if(e&&e.code==='unavailable'){ await new Promise(r=>setTimeout(r,600+Math.random()*800)); try{ await fn(); return; }catch(e2){ e=e2; } }
       console.warn(e); toast('저장하지 못했어요', e&&e.code==='quota_exceeded'?'저장 공간이 가득 찼어요. 오래된 과정을 지워 주세요.':'잠시 후 다시 시도해 주세요.'); } };
@@ -1705,9 +1754,11 @@ const gas={
         if(d.id==='settings'&&d.data){ const keep={zooms:S.settings.zooms,rooms:S.settings.rooms}; S.settings=normSettings({...d.data,...(this._team?keep:{})}); applyTheme(); n++; }
         if(d.id==='team'&&d.data){ this._team=true; if(Array.isArray(d.data.zooms)) S.settings.zooms=d.data.zooms; if(d.data.rooms) S.settings.rooms=d.data.rooms; this._teamSent=JSON.stringify({zooms:S.settings.zooms,rooms:S.settings.rooms}); n++; }
         continue; }
+      if(d.col==='inbox'){ S.inbox=S.inbox||{}; const was=S.inbox[d.id]; if(d.del) delete S.inbox[d.id]; else { S.inbox[d.id]={...d.data,id:d.id,at:d.data&&d.data.at||d.t}; if(!was&&!d.data.done) this._newIn=(this._newIn||0)+1; } n++; continue; }
       if(!COLS.includes(d.col)) continue;
       if(d.del) delete S.real[d.col][d.id]; else S.real[d.col][d.id]=d.data; n++;
     }
+    if(this._newIn){ const k=this._newIn; this._newIn=0; setTimeout(()=>{ try{ toast(`새 진단 결과 ${k}건`,'알림 화면의 수신함에서 학생에게 붙여 주세요.','alarm-t'); }catch(e){} },400); }
     if(n){ store.saveLocal(); if(S.demo&&COLS.some(c=>Object.keys(S.real[c]).length)){ S.demo=false; S.ex=null; } }
     return n;
   },
@@ -1748,7 +1799,7 @@ const gas={
     const localData=up?clone(S.real):null, localSettings=up?clone(S.settings):null;
     lsSet('md.sync',JSON.stringify(c)); lsSet('md.server',url); lsSet('md.lastUser',j.user); lsSet('md.localOnly','');
     this.q={}; this.saveQ(); this._team=false; this._teamSent='';
-    COLS.forEach(col=>S.real[col]={}); S.settings=normSettings({...keepUi});
+    COLS.forEach(col=>S.real[col]={}); S.inbox={}; S.settings=normSettings({...keepUi});
     this.apply(d.docs||[]);
     if(!mine.some(x=>x.col==='meta'&&x.id==='settings')){ if(localSettings) S.settings=normSettings({...localSettings,...(this._team?{zooms:S.settings.zooms,rooms:S.settings.rooms}:{})}); if(body.a==='signup'||!localSettings){ if(j.name){ S.settings.name=j.name; S.settings.mentor=j.name+' 멘토'; } } S.settings.started=true; this.enqueue('meta','settings',clone(S.settings),false); }
     if(localData){ COLS.forEach(col=>Object.values(localData[col]).forEach(o=>{ S.real[col][o.id]=o; this.loadQ()[col+'/'+o.id]={col,id:o.id,data:o,del:false,v:Date.now()}; })); this.saveQ(); }
@@ -1765,7 +1816,7 @@ const gas={
     if(c){ try{ await this.auth(c.url,{a:'logout',token:c.token}); }catch(e){} }
     clearInterval(this.poll); lsSet('md.sync',''); lsSet('md.syncq',''); lsSet('md.syncAt',''); lsSet('md.data',''); this.q={};
     const keepUi={theme:S.settings.theme,fx:S.settings.fx,sfx:S.settings.sfx};
-    COLS.forEach(col=>S.real[col]={}); S.settings=normSettings(keepUi); S.mode='local'; S.gate=true; S.demo=false; S.ex=null;
+    COLS.forEach(col=>S.real[col]={}); S.inbox={}; S.settings=normSettings(keepUi); S.mode='local'; S.gate=true; S.demo=false; S.ex=null;
     toast('로그아웃했어요','이 기기에서 데이터를 지웠어요. 다시 로그인하면 그대로 불러와요.'); render();
   },
   useLocal(){ lsSet('md.localOnly','1'); S.gate=false; render(); }
@@ -1894,7 +1945,7 @@ function dueLabel(tk){
 /* ---------- toast / copy / confirm ---------- */
 function toast(title,body,cls=''){
   const box=$('#toasts'); const el=document.createElement('div'); el.className='toast '+cls;
-  el.innerHTML=`<b>${esc(title)}</b>${body?esc(body):''}`; box.appendChild(el);
+  el.innerHTML=`<b>${esc(title)}</b>${body?esc(body):''}`; box.appendChild(el); const plain=[...box.children].filter(x=>!x.classList.contains('alarm-t')); if(plain.length>3) plain.slice(0,plain.length-3).forEach(x=>x.remove());
   setTimeout(()=>{el.style.transition='opacity .4s, transform .4s';el.style.opacity='0';el.style.transform='translateY(8px)';setTimeout(()=>el.remove(),450)},cls?7000:3800);
 }
 function copyText(txt){
@@ -2162,7 +2213,7 @@ function vStudents(){
   if(q) st=st.filter(s=>(s.name+' '+(s.phone||'')+' '+(s.memo||'')+' '+(s.goal||'')).toLowerCase().includes(q.toLowerCase()));
   st.sort((a,b)=>(b.at||0)-(a.at||0));
   const counts={}; list('students').forEach(s=>counts[s.status]=(counts[s.status]||0)+1);
-  return `<div class="view">${vh('학생',`전체 ${list('students').length}명 · 수강 중 ${counts['수강중']||0}명`,`<button class="btn" data-act="pasteStudents">${ic('copy')}인트라넷에서 복사해 등록</button><label class="btn" for="stuJson">${ic('up')}이전 프로그램에서 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><button class="btn pri" data-act="newStudent">${ic('plus')}학생 추가</button>`)}
+  return `<div class="view">${vh('학생',`전체 ${list('students').length}명 · 수강 중 ${counts['수강중']||0}명`,`<button class="btn" data-act="wLead">${ic('plus')}빠른 상담 등록</button><button class="btn" data-act="pasteStudents">${ic('copy')}인트라넷에서 복사해 등록</button><label class="btn" for="stuJson">${ic('up')}이전 프로그램에서 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><button class="btn pri" data-act="newStudent">${ic('plus')}학생 추가</button>`)}
   <section class="pane">
     <div class="btns" style="margin-bottom:14px">
       <div style="position:relative;flex:1;min-width:200px"><input id="stuQ" class="in" placeholder="이름 · 연락처 · 메모 검색" value="${esc(S.stuQ)}" style="padding-left:38px"><span style="position:absolute;left:12px;top:11px;width:18px;height:18px;color:var(--faint)">${ic('search')}</span></div>
@@ -2180,7 +2231,7 @@ function vAlarms(){
   const all=alarmsAll(); const t=todayStr();
   const now=activeAlarms(); const un=now.filter(a=>!a.ack), ack=now.filter(a=>a.ack);
   const soon=all.filter(a=>a.state==='soon'&&diffDays(t,a.ad)<=45);
-  return `<div class="view">${vh('알림',`개강·종강 ${(S.settings.offsets||[]).map(o=>o+'일 전').join(', ')}에 알림이 떠요`,`<button class="btn" data-act="ics">${ic('cal')}휴대폰 달력으로 보내기</button><button class="btn ghost" data-go="settings">알림 설정</button>`)}
+  return `<div class="view">${vh('알림',`개강·종강 ${(S.settings.offsets||[]).map(o=>o+'일 전').join(', ')}에 알림이 떠요`,`<button class="btn" data-act="ics">${ic('cal')}휴대폰 달력으로 보내기</button><button class="btn ghost" data-go="settings">알림 설정</button>`)}${inboxSection()}
   <section class="pane"><h2>지금 확인할 알림 <small>${un.length}건</small></h2>${un.length?un.map(a=>alarmRow(a)).join(''):'<div class="empty"><b>모두 확인했어요</b>새 알림이 생기면 메뉴의 알림 옆에 숫자가 떠요.</div>'}</section>
   ${ack.length?`<section class="pane"><h2>확인한 알림 <small>개강·종강일이 지나면 사라져요</small></h2>${ack.map(a=>alarmRow(a)).join('')}</section>`:''}
   <section class="pane"><h2>예정된 알림 <small>45일 이내 · ${soon.length}건</small></h2>
@@ -2221,7 +2272,7 @@ function vTasks(){
   const g={over:open.filter(k=>k.due&&k.due<t),today:open.filter(k=>k.due===t),later:open.filter(k=>k.due&&k.due>t),none:open.filter(k=>!k.due)};
   const sec=(title,arr)=>arr.length?`<h2 style="margin-top:14px">${title} <small>${arr.length}</small></h2><div class="list">${arr.map(taskRow).join('')}</div>`:'';
   const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-  return `<div class="view">${vh('업무','콜백 약속 · 개강 준비 · 서류 같은 할 일을 날짜와 시간으로 관리해요')}
+  return `<div class="view">${vh('업무','콜백 약속 · 개강 준비 · 서류 같은 할 일을 날짜와 시간으로 관리해요',`<button class="btn pri" data-act="wLead">${ic('plus')}빠른 상담 등록</button>`)}${workHub()}
   <section class="pane"><form id="taskForm" class="form" style="grid-template-columns:minmax(0,2.2fr) repeat(4,minmax(0,1fr)) auto;align-items:end">
     <label class="field"><span>할 일</span><input id="tkText" class="in" placeholder="예: 한도윤 학생 3시 콜백" required></label>
     <label class="field"><span>날짜</span><input id="tkDue" class="in" type="date" value="${t}"></label>
@@ -2303,7 +2354,7 @@ function vSettings(){
   <section class="pane"><h2>문자 양식 <small>중괄호 칸은 수업마다 자동으로 채워져요: {과목} {기간} {시간} {요일} {강의실} {줌계정} {회의ID} {회의PW} {이름} {개강일} {종강일} {회차} {강사}</small></h2><div class="form">
     ${tplF('s7','개강안내 (기본 양식 · D-7 알림에 연결)')}${tplF('s7z','개강안내 (비대면 수업용 · 강의실이 "비대면"이면 자동 선택) — {수업일}은 19,24,26처럼 수업 날짜가 들어가요')}${tplF('s1','개강 전날 (D-1)')}${tplF('e7','종강 안내 (D-7)')}${tplF('e1','종강 전날 (D-1)')}
     <div class="full"><button class="btn sm ghost" data-act="tplReset">기본 문구로 되돌리기</button></div></div></section>
-  ${syncSection()}
+  ${syncSection()}${inboxSettings()}
   <section class="pane"><h2>데이터</h2><p style="margin:0 0 14px;color:var(--muted);font-size:13px">과정 ${list('courses').length}개 · 학생 ${list('students').length}명 · 할 일 ${list('tasks').length}건${S.demo?' (예시)':''}</p>
     <div class="btns"><button class="btn" data-act="backup">${ic('dl')}백업 파일 받기</button><label class="btn" for="restoreFile">${ic('up')}백업에서 복원</label><label class="btn" for="stuJson">${ic('users')}이전 프로그램 학생 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><input id="restoreFile" type="file" accept=".json" hidden>
     ${S.demo?'':`<button class="btn danger" data-act="wipe">${ic('trash')}모두 지우기</button>`}</div></section>
@@ -2380,13 +2431,14 @@ function saveCourseNow(){ const c=CM.draft; store.put('courses',clone(c)); }
 let SM=null;
 function openStudent(id,preCid){
   const s=id?D().students[id]:null;
-  SM=s?clone(s):{id:null,name:'',phone:'',status:'상담중',courses:preCid?[preCid]:[],goal:'',memo:'',logs:[],sent:{}};
+  SM=wNorm(s?clone(s):{id:null,name:'',phone:'',status:'상담중',courses:preCid?[preCid]:[],goal:'',memo:'',logs:[],sent:{}});
   drawStudent();
 }
 function drawStudent(){
   const s=SM; const cs=list('courses').sort((a,b)=>(b.start||'').localeCompare(a.start||'')); const t=todayStr();
   const relevant=cs.filter(c=>s.courses.includes(c.id)||courseEnd(c)>=addDays(t,-30));
-  const html=`${mHead(s.id?esc(s.name):'학생 추가')}<div class="body"><div class="form">
+  const tab=s._tab||'info';
+  const html=`${mHead(s.id?esc(s.name):'학생 추가')}${stuTabs(s)}${tab!=='info'?(tab==='log'?stuLogTab(s):tab==='as'?stuAssignTab(s):stuDocTab(s)):`<div class="body"><div class="form">
     <label class="field"><span>이름</span><input id="sfName" class="in" value="${esc(s.name)}"></label>
     <label class="field"><span>연락처</span><input id="sfPhone" class="in" inputmode="tel" value="${esc(s.phone)}" placeholder="010-0000-0000"></label>
     <label class="field"><span>상태</span><select id="sfStatus" class="in">${STATUSES.map(x=>`<option ${s.status===x?'selected':''}>${x}</option>`).join('')}</select></label>
@@ -2396,10 +2448,8 @@ function drawStudent(){
     <div class="field full"><span>수강 과정 <small style="color:var(--faint)">(최근 · 예정 과정)</small></span><div style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow:auto;padding:4px 2px">${relevant.length?relevant.map(c=>`<label class="check"><input type="checkbox" class="sfC" value="${c.id}" ${s.courses.includes(c.id)?'checked':''}>${esc(c.name)} <span style="color:var(--faint);font-size:12px">${fmtMD(c.start)}~${fmtMD(courseEnd(c))}</span></label>`).join(''):'<span style="color:var(--faint);font-size:13px">등록된 과정이 없어요. 시간표를 먼저 올려 주세요.</span>'}</div></div>
     ${(s.prevCourses||[]).length?`<div class="field full"><span>시간표에 없는 수강 이력 <small style="color:var(--faint)">(이전 프로그램 · 같은 날짜 수업이 시간표에 올라오면 자동 연결)</small></span><div class="btns">${s.prevCourses.map(p=>typeof p==='string'?{name:p}:p).map(p=>`<span class="chip">${esc(p.name)}${p.start?` ${yyDot(p.start)}~${yyDot(p.end)}`:''}${p.att?` · 출석 ${p.att}회`:''}</span>`).join('')}</div></div>`:''}
     <label class="field full"><span>메모</span><textarea id="sfMemo" class="in" rows="5">${esc(s.memo||'')}</textarea></label>
-    <div class="field full"><span>상담 기록</span>
-      <div class="btns"><input id="lgDate" class="in" type="date" value="${t}" style="width:160px"><input id="lgText" class="in" placeholder="상담 내용 한 줄" style="flex:1;min-width:160px"><button class="btn sm" data-act="addLog">기록</button></div>
-      <div class="list" style="margin-top:6px">${(s.logs||[]).slice().sort((a,b)=>a.d<b.d?1:-1).map((l,i)=>`<div class="row"><span class="num" style="width:70px;color:var(--muted);font-size:12.5px">${fmtMD(l.d)}</span><div class="grow" style="white-space:normal">${esc(l.t)}</div><button class="btn sm ghost" data-act="rmLog" data-i="${s.logs.indexOf(l)}" aria-label="삭제">${ic('x')}</button></div>`).join('')}</div></div>
-  </div></div><footer>${s.id?`<button class="btn danger" data-act="delStudent" style="margin-right:auto">${ic('trash')}삭제</button>`:''}<button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="saveStudent">${s.id?'저장':'추가'}</button></footer>`;
+    <div class="field full wk-hint">상담 · 통화 · 진단 기록과 콜백은 <b>기록</b> 탭, 과제는 <b>과제</b> 탭, 자소서 · 면접 첨삭은 <b>첨삭</b> 탭에서 관리해요.</div>
+  </div></div>`}<footer>${s.id?`<button class="btn danger" data-act="delStudent" style="margin-right:auto">${ic('trash')}삭제</button>`:''}<button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="saveStudent">${s.id?'저장':'추가'}</button></footer>`;
   if(modalEl&&modalEl._kind==='student'){ modalEl.querySelector('.sheet').innerHTML=html; } else { openModal(html); modalEl._kind='student'; }
 }
 function readStudentForm(){ const s=SM; if(!$('#sfName')) return s; s.name=$('#sfName').value.trim(); s.phone=$('#sfPhone').value.trim(); s.status=$('#sfStatus').value; s.goal=$('#sfGoal').value.trim(); s.memo=$('#sfMemo').value; s.type=$('#sfType').value.trim(); s.funding=$('#sfFunding').value.trim();
@@ -3383,6 +3433,266 @@ const FX={
   }
 };
 function applyFx(){ document.body.classList.toggle('fx-shard',FX.mode()==='shard'||FX.mode()==='stack'); document.body.classList.toggle('fx-off',FX.mode()==='off'); }
+/* ===== 학생 업무: 기록 타임라인 · 콜백 · 과제 · 첨삭 · Claude 요청문 · 진단 수신함 ===== */
+const LOG_KINDS={memo:['상담','blue'],call:['통화','ok'],msg:['문자','cyan'],note:['메모',''],diag:['진단','warn'],task:['과제','violet'],review:['첨삭','violet'],cb:['콜백','warn']};
+const DOC_KINDS=['자기소개서','학업계획서','면접 답변','기타'];
+const DOC_LABELS=['학생 원본','학생 수정본','첨삭본','최종본'];
+const AS_STEPS=[['set','출제'],['sub','제출'],['done','채점 완료']];
+const WACT={};
+const nowHM=()=>{ const d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); };
+const wid=p=>uid(p||'w');
+const wMD=d=>{ try{ const x=parseYmd(d); return (x.getMonth()+1)+'/'+x.getDate(); }catch(e){ return d||''; } };
+function wNorm(s){
+  s.logs=(s.logs||[]).map(l=>({id:l.id||wid('l'),k:l.k||'memo',d:l.d||todayStr(),t:l.t||'',url:l.url||'',at:l.at||0}));
+  s.assigns=s.assigns||[]; s.docs=s.docs||[]; return s;
+}
+function wClamp(txt,n=220){ txt=String(txt||''); if(txt.length<=n) return `<div class="wk-txt">${esc(txt)}</div>`; return `<details class="wk-more"><summary><span class="wk-txt">${esc(txt.slice(0,n))}…</span><b>더 보기</b></summary><div class="wk-txt">${esc(txt)}</div></details>`; }
+function stuCallbacks(sid){ return list('tasks').filter(k=>k.sid===sid&&k.cat==='콜백').sort((a,b)=>((a.due||'')+(a.time||'')).localeCompare((b.due||'')+(b.time||''))); }
+
+/* ---------- 탭 머리 ---------- */
+function stuTabs(s){
+  const tab=s._tab||'info';
+  const n={log:(s.logs||[]).length,as:(s.assigns||[]).length,doc:(s.docs||[]).length};
+  return `<div class="tabs wk-tabs">${[['info','정보'],['log','기록',n.log],['as','과제',n.as],['doc','첨삭',n.doc]].map(([k,l,c])=>`<button class="${tab===k?'on':''}" data-act="wTab" data-k="${k}">${l}${c?` <small>${c}</small>`:''}</button>`).join('')}</div>`;
+}
+
+/* ---------- 기록 탭 ---------- */
+function stuLogTab(s){
+  const t=todayStr(); const kind=s._lk||'memo';
+  const cbs=s.id?stuCallbacks(s.id):[]; const openCb=cbs.filter(k=>!k.done);
+  const items=[];
+  (s.logs||[]).forEach(l=>items.push({d:l.d,at:l.at||0,k:l.k,t:l.t,url:l.url,id:l.id,del:true}));
+  (s.assigns||[]).forEach(a=>{ if(a.setAt) items.push({d:a.setAt,k:'task',t:`${a.week}주차 과제 출제 · ${a.title||''}`}); if(a.subAt) items.push({d:a.subAt,k:'task',t:`${a.week}주차 과제 제출`}); if(a.doneAt) items.push({d:a.doneAt,k:'task',t:`${a.week}주차 채점 완료${a.score?` · ${a.score}`:''}${a.fb?`\n${a.fb}`:''}`}); });
+  (s.docs||[]).forEach(v=>items.push({d:v.d,at:v.at||0,k:'review',t:`${v.kind} · ${v.label}${v.text?` (${v.text.replace(/\s/g,'').length}자)`:''}`}));
+  cbs.filter(k=>k.done).forEach(k=>items.push({d:k.due||t,k:'cb',t:`콜백 완료 · ${k.time||''} ${k.text}`}));
+  items.sort((a,b)=>(b.d||'').localeCompare(a.d||'')||(b.at||0)-(a.at||0));
+  return `<div class="body wk">
+   <div class="wk-add">
+     <div class="seg wk-kinds">${['memo','call','msg','diag','note'].map(k=>`<button class="${kind===k?'on':''}" data-act="wLogKind" data-k="${k}">${LOG_KINDS[k][0]}</button>`).join('')}</div>
+     <div class="wk-row"><input id="wlDate" class="in" type="date" value="${t}"><input id="wlUrl" class="in ${kind==='diag'?'':'wk-hide'}" placeholder="결과 링크 (있으면)"></div>
+     <textarea id="wlText" class="in" rows="3" placeholder="${kind==='diag'?'진단 결과 · 점수 · 보완할 영역':kind==='call'?'통화 내용':kind==='msg'?'보낸 문자 내용':'상담 내용'}"></textarea>
+     <div class="btns"><button class="btn pri sm" data-act="wLogAdd">${ic('plus')}기록 추가</button><button class="btn sm" data-act="wPasteToggle">${ic('copy')}녹취 붙여넣기</button><button class="btn sm" data-act="wCbToggle">${ic('bell')}콜백 잡기</button><button class="btn sm ghost" data-act="wPrompt" data-k="prep">${ic('send')}상담 준비 요청문</button></div>
+   </div>
+   ${s._paste?`<div class="wk-panel"><b>클로바노트 녹취 붙여넣기</b><p>시간 표시와 줄바꿈을 정리해서 상담 기록으로 저장해요. 대사가 이상하게 인식된 부분은 Claude에게 정리를 맡길 수 있어요.</p>
+     <textarea id="wlRaw" class="in" rows="7" placeholder="클로바노트에서 복사한 텍스트를 붙여넣으세요"></textarea>
+     <div class="btns"><button class="btn sm pri" data-act="wPasteSave">정리해서 기록</button><button class="btn sm" data-act="wPrompt" data-k="transcript">${ic('send')}Claude 정리 요청문 복사</button></div></div>`:''}
+   ${s._cb?`<div class="wk-panel"><b>콜백 잡기</b><p>정한 시간이 되면 앱이 소리와 함께 알려 줘요. 업무 화면의 할 일에도 들어가요.</p>
+     <div class="wk-row"><input id="wcDate" class="in" type="date" value="${t}"><input id="wcTime" class="in" type="time" value="${(()=>{ const d=new Date(Date.now()+36e5); return pad(d.getHours())+':00'; })()}"></div>
+     <input id="wcNote" class="in" placeholder="메모 (예: 국비 서류 안내)"><div class="btns"><button class="btn sm pri" data-act="wCbSave">콜백 등록</button></div></div>`:''}
+   ${openCb.length?`<div class="wk-cbs">${openCb.map(k=>`<div class="wk-cb"><span class="chip warn">콜백</span><span class="grow">${esc(dueLabel(k))} · ${esc(k.text)}</span><button class="btn sm" data-act="wCbDone" data-id="${k.id}">${ic('check')}완료</button></div>`).join('')}</div>`:''}
+   <div class="wk-tl">${items.length?items.map(it=>`<div class="wk-it"><div class="wk-d">${wMD(it.d)}</div><div class="wk-dot ${LOG_KINDS[it.k]?LOG_KINDS[it.k][1]:''}"></div><div class="wk-c"><span class="chip ${LOG_KINDS[it.k]?LOG_KINDS[it.k][1]:''}">${LOG_KINDS[it.k]?LOG_KINDS[it.k][0]:'기록'}</span>${wClamp(it.t)}${it.url?`<a class="wk-link" href="${esc(it.url)}" target="_blank" rel="noopener">결과 링크 열기</a>`:''}</div>${it.del?`<button class="btn sm ghost" data-act="wLogDel" data-id="${it.id}" aria-label="삭제">${ic('x')}</button>`:'<span></span>'}</div>`).join(''):'<div class="empty"><b>아직 기록이 없어요</b>상담·통화·문자·진단 결과를 쌓아 두면 다음 상담 때 한눈에 보여요.</div>'}</div>
+  </div>`;
+}
+function cleanTranscript(raw){
+  const lines=String(raw||'').replace(/\r/g,'').split('\n');
+  const out=[]; let cur=null;
+  const spk=/^\s*(.{1,14}?)\s+(\d{1,2}:\d{2}(?::\d{2})?)\s*$/;
+  for(let ln of lines){
+    ln=ln.replace(/\s+/g,' ').trim(); if(!ln) continue;
+    const m=ln.match(spk);
+    if(m){ const who=m[1].trim(); if(cur&&cur.who===who) continue; cur={who,t:[]}; out.push(cur); continue; }
+    if(/^\d{1,2}:\d{2}(:\d{2})?$/.test(ln)) continue;
+    if(/^(클로바노트|CLOVA Note|녹음|참석자\s*\d*\s*$)/i.test(ln)) continue;
+    if(!cur){ cur={who:'',t:[]}; out.push(cur); }
+    cur.t.push(ln);
+  }
+  return out.filter(o=>o.t.length).map(o=>(o.who?o.who+': ':'')+o.t.join(' ')).join('\n');
+}
+
+/* ---------- 과제 탭 ---------- */
+function stuAssignTab(s){
+  const t=todayStr(); const as=(s.assigns||[]).slice().sort((a,b)=>(b.week||0)-(a.week||0));
+  const next=(as[0]?+as[0].week||0:0)+1;
+  return `<div class="body wk">
+   <div class="btns"><button class="btn pri sm" data-act="wAsNew">${ic('plus')}과제 추가</button><button class="btn sm" data-act="wPrompt" data-k="asMake">${ic('send')}다음 과제 출제 요청문</button></div>
+   ${s._asNew?`<div class="wk-panel"><b>${next}주차 과제</b>
+     <div class="wk-row"><input id="waWeek" class="in" type="number" min="1" value="${next}" style="max-width:90px" aria-label="주차"><input id="waTitle" class="in" placeholder="범위 · 제목 (예: 리스트 · 딕셔너리)"><input id="waDue" class="in" type="date" value="${addDays(t,7)}" aria-label="마감"></div>
+     <textarea id="waBody" class="in" rows="4" placeholder="과제 내용 (Claude가 만든 문제를 붙여넣어도 돼요)"></textarea>
+     <div class="btns"><button class="btn sm pri" data-act="wAsAdd">추가</button></div></div>`:''}
+   ${as.length?as.map(a=>{ const late=a.st==='set'&&a.due&&a.due<t;
+     return `<div class="wk-as ${a.st}">
+       <div class="wk-as-h"><b>${a.week}주차</b><span class="grow">${esc(a.title||'')}</span>${late?'<span class="chip bad">마감 지남</span>':''}<span class="chip ${a.st==='done'?'ok':a.st==='sub'?'warn':'blue'}">${AS_STEPS.find(x=>x[0]===a.st)[1]}</span></div>
+       <div class="wk-as-m">마감 ${a.due?fmtMD(a.due):'—'}${a.subAt?` · 제출 ${fmtMD(a.subAt)}`:''}${a.doneAt?` · 채점 ${fmtMD(a.doneAt)}`:''}</div>
+       ${a.body?wClamp(a.body,160):''}
+       <div class="seg wk-steps">${AS_STEPS.map(([k,l])=>`<button class="${a.st===k?'on':''}" data-act="wAsStep" data-id="${a.id}" data-k="${k}">${l}</button>`).join('')}</div>
+       ${a.st!=='set'?`<label class="field"><span>제출 답안 · 리포트</span><textarea class="in" rows="4" data-wa="${a.id}" data-f="ans" placeholder="학생이 보낸 코드와 리포트를 붙여넣으세요">${esc(a.ans||'')}</textarea></label>`:''}
+       ${a.st==='done'||a.st==='sub'?`<div class="wk-row"><input class="in" data-wa="${a.id}" data-f="score" value="${esc(a.score||'')}" placeholder="점수 (예: 8/10)" style="max-width:150px"><input class="in" data-wa="${a.id}" data-f="fb" value="${esc(a.fb||'')}" placeholder="한 줄 피드백"></div>`:''}
+       <div class="btns">${a.st!=='set'?`<button class="btn sm" data-act="wPrompt" data-k="asGrade" data-id="${a.id}">${ic('send')}첨삭 요청문 복사</button>`:''}<button class="btn sm ghost" data-act="wAsCopy" data-id="${a.id}">${ic('copy')}과제 복사</button><button class="btn sm ghost" data-act="wAsDel" data-id="${a.id}">${ic('trash')}</button></div>
+     </div>`; }).join(''):'<div class="empty"><b>등록된 과제가 없어요</b>주차별 과제를 쌓아 두면 다음 과제 출제 요청문에 지난 진도와 점수가 자동으로 들어가요.</div>'}
+  </div>`;
+}
+
+/* ---------- 첨삭 탭 ---------- */
+function stuDocTab(s){
+  const dk=s._dk||'자기소개서'; const vs=(s.docs||[]).filter(v=>v.kind===dk).sort((a,b)=>(b.at||0)-(a.at||0));
+  const nextLabel=vs.length?DOC_LABELS[Math.min(DOC_LABELS.length-1,DOC_LABELS.indexOf(vs[0].label)+1)]||'첨삭본':'학생 원본';
+  const interview=dk==='면접 답변';
+  return `<div class="body wk">
+   <div class="seg wk-kinds">${DOC_KINDS.map(k=>`<button class="${dk===k?'on':''}" data-act="wDocKind" data-k="${k}">${k} <small>${(s.docs||[]).filter(v=>v.kind===k).length||''}</small></button>`).join('')}</div>
+   <div class="wk-panel"><div class="wk-row"><select id="wdLabel" class="in" style="max-width:170px">${DOC_LABELS.map(l=>`<option ${l===nextLabel?'selected':''}>${l}</option>`).join('')}</select><span class="wk-cnt" id="wdCnt">0자</span></div>
+     <textarea id="wdText" class="in" rows="7" placeholder="${interview?'면접 체크리스트 답변을 붙여넣으세요':dk+' 글을 붙여넣으세요'}"></textarea>
+     <div class="btns"><button class="btn sm pri" data-act="wDocAdd">${ic('plus')}버전 저장</button></div></div>
+   <div class="btns">${interview?`<button class="btn sm" data-act="wPrompt" data-k="docInterview">${ic('send')}소견서 요청문</button><button class="btn sm" data-act="wPrompt" data-k="docOnsite">${ic('send')}현장 피드백 정리 요청문</button>`
+     :`<button class="btn sm" data-act="wPrompt" data-k="docFeedback">${ic('send')}피드백 요청문</button><button class="btn sm" data-act="wPrompt" data-k="docFinal">${ic('send')}최종본 다듬기 요청문</button>`}</div>
+   ${vs.length?vs.map(v=>`<div class="wk-ver"><div class="wk-as-h"><b>${esc(v.label)}</b><span class="grow wk-as-m">${fmtMD(v.d)} · 공백 포함 ${v.text.length}자</span><button class="btn sm ghost" data-act="wDocCopy" data-id="${v.id}">${ic('copy')}</button><button class="btn sm ghost" data-act="wDocDel" data-id="${v.id}">${ic('trash')}</button></div>${wClamp(v.text,180)}</div>`).join('')
+     :`<div class="empty"><b>${dk} 버전이 없어요</b>학생 원본 → 첨삭본 → 최종본 순서로 저장해 두면 요청문에 가장 최근 글이 자동으로 들어가요.</div>`}
+  </div>`;
+}
+
+/* ---------- Claude 요청문 ---------- */
+function stuProfile(s){
+  const cs=(s.courses||[]).map(id=>D().courses[id]).filter(Boolean).map(c=>`${c.name} (${fmtMD(c.start)}~${fmtMD(courseEnd(c))})`);
+  const recent=(s.logs||[]).slice().sort((a,b)=>(b.d||'').localeCompare(a.d||'')).slice(0,6).map(l=>`- ${l.d} [${(LOG_KINDS[l.k]||['기록'])[0]}] ${String(l.t).replace(/\n+/g,' ').slice(0,180)}`);
+  return [`학생: ${s.name||'(이름)'}${s.status?` · ${s.status}`:''}${s.type?` · ${s.type}`:''}`,
+    s.goal?`목표 · 관심: ${s.goal}`:'', cs.length?`수강: ${cs.join(', ')}`:'', s.memo?`메모: ${String(s.memo).replace(/\n+/g,' ').slice(0,300)}`:'',
+    recent.length?`최근 기록:\n${recent.join('\n')}`:''].filter(Boolean).join('\n');
+}
+function buildPrompt(k,s,id){
+  const as=(s.assigns||[]).slice().sort((a,b)=>(a.week||0)-(b.week||0));
+  const latest=kind=>(s.docs||[]).filter(v=>v.kind===kind).sort((a,b)=>(b.at||0)-(a.at||0))[0];
+  const dk=s._dk||'자기소개서';
+  if(k==='asMake'){ const next=(as.length?+as[as.length-1].week||0:0)+1;
+    return `[과제 출제 요청]\n${stuProfile(s)}\n\n지금까지 과제:\n${as.length?as.map(a=>`- ${a.week}주차 ${a.title||''} · ${(AS_STEPS.find(x=>x[0]===a.st)||[])[1]||''}${a.score?` · 점수 ${a.score}`:''}${a.fb?` · ${a.fb}`:''}`).join('\n'):'- 없음 (첫 과제)'}\n\n이번에 공부한 범위:\n(학생이 보낸 정리 내용을 여기에 붙여넣어 주세요)\n\n요청:\n- 위 범위에 맞춘 ${next}주차 과제를 만들어 주세요. 기본 문제 8~10개와 심화 2~3개, 난이도는 중간으로 해 주세요.\n- 지난 과제에서 약했던 부분이 있으면 한두 문제 다시 다뤄 주세요.\n- 학원 유인물 형태로, AI가 만든 티가 나지 않게 작성하고 워드 파일로 만들어 주세요.\n- 정답보다 코드 이해가 중점입니다. 틀려도 되니 코드를 어떻게 분석했는지, 구조를 어떻게 짰는지 리포트 형식으로 제출하라는 안내를 넣어 주세요.`; }
+  if(k==='asGrade'){ const a=(s.assigns||[]).find(x=>x.id===id)||{};
+    return `[과제 첨삭 요청]\n${stuProfile(s)}\n\n과제: ${a.week}주차 ${a.title||''}\n\n[과제 내용]\n${a.body||'(과제 내용)'}\n\n[학생 제출 답안 · 리포트]\n${a.ans||'(학생 답안을 붙여넣어 주세요)'}\n\n요청:\n- 정답 여부보다 코드 이해와 구조 설계를 중심으로 문항별로 판독해 주세요.\n- 잘한 점, 잘못 이해한 개념, 다음 과제에서 보완할 점을 짧게 정리해 주세요.\n- 끝에 총평 3줄과 10점 만점 점수를 붙여 주세요.`; }
+  if(k==='docFeedback'){ const v=latest(dk);
+    return `[${dk} 피드백 요청]\n${stuProfile(s)}\n\n아래는 학생이 쓴 ${dk}${v?` (${v.label}, 공백 포함 ${v.text.length}자)`:''}입니다.\n---\n${v?v.text:'(글을 붙여넣어 주세요)'}\n---\n\n요청 양식:\n- 자기소개서는 소프트웨어 역량·경험 / 인성·공동체 / 진학 이유, 학업계획서는 지원동기 / 3개년 로드맵 / 졸업 후 진로 항목별로 좋은 점 · 아쉬운 점 · 핵심 문제를 짧은 메모체로 적어 주세요.\n- 끝에 공백 포함 글자수와, 1000자 이내 · '문제→해결' 흐름에 대한 코멘트를 붙여 주세요.\n- 학생이 쓰지 않은 사실(경험·장면)은 절대 추가하지 마세요.`; }
+  if(k==='docFinal'){ const v=latest(dk);
+    return `[${dk} 최종본 다듬기 요청]\n${stuProfile(s)}\n\n---\n${v?v.text:'(글을 붙여넣어 주세요)'}\n---\n\n요청:\n- 중학생 수준의 문장을 유지하고, AI가 쓴 티가 나지 않게 해 주세요.\n- 학생 내용은 바꾸지 말고 흐름과 문장만 다듬어 주세요. 학생이 쓰지 않은 사실은 절대 추가하지 마세요.\n- 결과는 이름 등 정보표가 있는 이력서식 격식 양식의 워드 파일로 만들어 주세요.`; }
+  if(k==='docInterview'){ const v=latest('면접 답변');
+    return `[면접 답변 첨삭 · 소견서 요청]\n${stuProfile(s)}\n\n아래는 학생의 면접 체크리스트 답변입니다.\n---\n${v?v.text:'(답변을 붙여넣어 주세요)'}\n---\n\n요청:\n- 문항별로 첨삭하고, 학생별 소견서를 작성해 주세요.\n- 문체는 '~니다'체가 아닌 문어체(다나까)로, 격식 있게, AI가 쓴 티가 나지 않게 써 주세요.\n- 소견서는 멘토 본인이 직접 쓴 것처럼 써 주세요. "학생에게 전달", "멘토가 ~" 같은 제3자 지시 문구는 쓰지 마세요.\n- 학생이 쓰지 않은 사실은 추가하지 마세요.\n- PDF로 만들 수 있게 정리해 주세요.`; }
+  if(k==='docOnsite'){ const v=latest('면접 답변');
+    return `[현장 피드백 정리 요청]\n${stuProfile(s)}\n\n오늘 학생과 대면으로 피드백했습니다. 원고는 더 바꾸지 말고, 학생이 스스로 고칠 포인트만 정리해 주세요.\n---\n${v?v.text:'(학생 답변 또는 현장 메모를 붙여넣어 주세요)'}\n---\n\n요청:\n- 멘토 본인이 직접 쓴 문서처럼 써 주세요. "학생에게 전달", "멘토가 ~" 같은 제3자 지시 문구는 쓰지 마세요.\n- 고칠 포인트는 짧고 구체적으로, 우선순위 순서로 정리해 주세요.`; }
+  if(k==='transcript'){ const raw=($('#wlRaw')&&$('#wlRaw').value)||'';
+    return `[상담 녹취 정리 요청]\n${stuProfile(s)}\n\n아래는 클로바노트로 뽑은 상담 녹취 스크립트입니다.\n---\n${raw||'(녹취 텍스트를 붙여넣어 주세요)'}\n---\n\n요청:\n- 대사가 이상하게 인식된 부분과 오탈자를 고치고, 상담자와 학생 화자를 바로잡아 자연스러운 대화문으로 정리해 주세요.\n- 끝에 상담 요약(학생 상황 · 관심 과정 · 걸림돌 · 다음 할 일)을 5줄 이내로 붙여 주세요.`; }
+  if(k==='prep'){
+    return `[상담 준비 요청]\n${stuProfile(s)}\n${as.length?`\n과제 진행: ${as.map(a=>`${a.week}주차 ${(AS_STEPS.find(x=>x[0]===a.st)||[])[1]}${a.score?`(${a.score})`:''}`).join(', ')}`:''}\n\n요청:\n- 위 기록을 바탕으로 이번 상담에서 꼭 확인할 것 3가지와, 학생이 망설일 만한 부분에 대한 답변 포인트를 정리해 주세요.\n- 국비지원(내일배움카드 · KDT 등)과 연결할 수 있으면 함께 짚어 주세요.\n- 상담 후 보낼 짧은 문자 초안도 하나 써 주세요.`; }
+  return '';
+}
+function copyPrompt(txt){
+  const ok=()=>toast('요청문을 복사했어요','Claude 대화창에 붙여넣으면 돼요. 받은 결과는 다시 여기에 저장해 두세요.');
+  try{ navigator.clipboard.writeText(txt).then(ok,()=>{ copyText(txt); }); }catch(e){ copyText(txt); }
+}
+
+/* ---------- 빠른 상담 등록 ---------- */
+function openQuickLead(){
+  const t=todayStr(); const d=new Date(Date.now()+36e5);
+  openModal(`${mHead('빠른 상담 등록')}<div class="body"><div class="form">
+    <label class="field"><span>이름</span><input id="qlName" class="in" autocomplete="off"></label>
+    <label class="field"><span>연락처</span><input id="qlPhone" class="in" inputmode="tel" placeholder="010-0000-0000"></label>
+    <label class="field full"><span>관심 과정 · 목표</span><input id="qlGoal" class="in" placeholder="예: 정처기 · 비전공 백엔드 취업 · 국비 문의"></label>
+    <label class="field full"><span>상담 메모</span><textarea id="qlMemo" class="in" rows="3"></textarea></label>
+    <label class="field"><span>콜백 날짜</span><input id="qlDate" class="in" type="date" value="${t}"></label>
+    <label class="field"><span>콜백 시간 <small style="color:var(--faint)">(비우면 콜백 없이 저장)</small></span><input id="qlTime" class="in" type="time" value="${pad(d.getHours())}:00"></label>
+  </div></div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="wLeadSave">등록</button></footer>`);
+  setTimeout(()=>{ const i=$('#qlName'); i&&i.focus(); },60);
+}
+
+/* ---------- 진단 결과 수신함 ---------- */
+S.inbox=S.inbox||{};
+function inboxList(all){ return Object.values(S.inbox||{}).filter(x=>x&&(all||!x.done)).sort((a,b)=>(b.at||0)-(a.at||0)); }
+const digits=v=>String(v||'').replace(/\D/g,'');
+function inboxMatch(r){ const p=digits(r.phone); const st=list('students');
+  return (p.length>=8&&st.find(s=>digits(s.phone).slice(-8)===p.slice(-8)))||(r.name&&st.find(s=>s.name.replace(/\s/g,'')===String(r.name).replace(/\s/g,'')))||null; }
+function inboxSection(){
+  if(S.mode!=='gas') return '';
+  const items=inboxList(); const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  return `<section class="pane"><h2>진단 결과 수신함 <small>학생이 진단 · 테스트를 마치면 여기로 들어와요</small>${items.length?`<span class="chip warn r">새 결과 ${items.length}</span>`:''}</h2>
+    ${items.length?`<div class="list">${items.map(r=>{ const m=inboxMatch(r); return `<div class="row wk-in"><div class="grow"><div class="t1">${esc(r.test||'진단')} · ${esc(r.name||'이름 없음')}${r.score?` · <b>${esc(r.score)}</b>`:''}</div><div class="t2">${r.phone?esc(r.phone)+' · ':''}${r.at?new Date(r.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}${r.summary?' · '+esc(String(r.summary).slice(0,120)):''}</div></div>
+      ${m?`<button class="btn sm pri" data-act="wInAttach" data-id="${r.id}" data-sid="${m.id}">${esc(m.name)}에게 붙이기</button>`:`<select class="in wk-insel" id="wis_${r.id}"><option value="">학생 선택</option>${sts.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><button class="btn sm" data-act="wInAttach" data-id="${r.id}">붙이기</button><button class="btn sm" data-act="wInLead" data-id="${r.id}">새 상담 학생</button>`}
+      <button class="btn sm ghost" data-act="wInHide" data-id="${r.id}" aria-label="숨기기">${ic('x')}</button></div>`; }).join('')}</div>`
+    :'<div class="empty">새로 들어온 결과가 없어요. 진단 페이지에 연결하는 방법은 설정 → 진단 결과 받기에 있어요.</div>'}
+  </section>`;
+}
+function inboxAttach(rid,sid){
+  const r=S.inbox[rid]; const s=D().students[sid]; if(!r||!s) return;
+  const o=wNorm(clone(s)); const txt=[`${r.test||'진단'}${r.score?` · ${r.score}`:''}`,r.summary||'',r.detail||''].filter(Boolean).join('\n');
+  o.logs.push({id:wid('l'),k:'diag',d:r.at?ymd(new Date(r.at)):todayStr(),t:txt,url:r.url||'',at:Date.now()}); store.put('students',o);
+  inboxDone(rid,sid); toast('학생 기록에 붙였어요',`${s.name} · ${r.test||'진단'}`); render();
+}
+function inboxDone(rid,sid){ const r=S.inbox[rid]; if(!r) return; const c=gas.cfg(); S.inbox[rid]={...r,done:true,sid:sid||'',by:c?c.user:''}; store.saveLocal(); if(S.mode==='gas') gas.enqueue('inbox',rid,S.inbox[rid],false); }
+function submitSnippet(){
+  const url=gas.server()||'(팀 서버 주소)';
+  return `<scr`+`ipt>
+/* KAIA DESK 진단 결과 보내기 — 결과가 나오면 KAIA_SUBMIT({...}) 한 번 호출 */
+window.KAIA_SUBMIT=function(r){try{fetch('${url}',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({a:'submit',form:Object.assign({url:location.href},r)})});}catch(e){}};
+</scr`+`ipt>
+<!-- 예: KAIA_SUBMIT({test:'리눅스 역량 진단',name:'홍길동',phone:'010-0000-0000',score:'72점 · 중급',summary:'권한 · 프로세스 보완 필요',detail:'영역별 점수 …'}) -->`;
+}
+function inboxSettings(){
+  if(S.mode!=='gas') return '';
+  return `<section class="pane"><h2>진단 결과 받기 <small>리눅스 진단 · 언어 성향 테스트 같은 페이지의 결과를 자동으로 받아요</small></h2>
+    <p style="margin:0 0 10px;font-size:13px;color:var(--muted);line-height:1.7">진단 페이지 HTML의 &lt;/body&gt; 바로 앞에 아래 코드를 넣고, 결과가 나오는 순간 <b style="color:var(--fg)">KAIA_SUBMIT({...})</b>을 한 번 부르게 하면 돼요. 들어온 결과는 <b style="color:var(--fg)">알림</b> 화면의 수신함에 뜨고, 연락처나 이름이 같은 학생에게 바로 붙일 수 있어요. (팀 서버 코드를 최신 버전으로 다시 배포해야 동작해요)</p>
+    <textarea class="in" rows="6" readonly style="font-family:'JetBrains Mono',monospace;font-size:11.5px">${esc(submitSnippet())}</textarea>
+    <div class="btns" style="margin-top:10px"><button class="btn sm" data-act="wSnipCopy">${ic('copy')}코드 복사</button></div></section>`;
+}
+
+/* ---------- 업무 허브 (업무 화면 위쪽) ---------- */
+function workHub(){
+  const t=todayStr(); const st=list('students'); const rows=[];
+  st.forEach(s=>(s.assigns||[]).forEach(a=>{ if(a.st==='sub') rows.push({g:'grade',s,a,txt:`${a.week}주차 ${a.title||''}`}); else if(a.st==='set'&&a.due&&a.due<t) rows.push({g:'late',s,a,txt:`${a.week}주차 ${a.title||''} · 마감 ${fmtMD(a.due)}`}); }));
+  const recentDocs=[]; st.forEach(s=>{ const v=(s.docs||[]).slice().sort((a,b)=>(b.at||0)-(a.at||0))[0]; if(v&&v.label!=='최종본'&&diffDays(v.d,t)<=21) recentDocs.push({s,v}); });
+  const inbox=S.mode==='gas'?inboxList().length:0;
+  const g=k=>rows.filter(r=>r.g===k);
+  const card=(title,n,body,cls='')=>`<div class="wk-hub-c ${cls}"><div class="wk-hub-n">${n}</div><div class="wk-hub-t">${title}</div>${body}</div>`;
+  const lst=arr=>arr.length?`<div class="wk-hub-l">${arr.slice(0,4).map(r=>`<button data-act="wOpen" data-id="${r.s.id}" data-tab="${r.tab||'as'}">${esc(r.s.name)} · ${esc(r.txt)}</button>`).join('')}</div>`:'';
+  if(!rows.length&&!recentDocs.length&&!inbox) return '';
+  return `<section class="pane"><h2>학생 업무 <small>과제 · 첨삭 · 진단 결과</small><button class="btn sm r" data-act="wLead">${ic('plus')}빠른 상담 등록</button></h2><div class="wk-hub">
+    ${card('채점 대기',g('grade').length,lst(g('grade')),g('grade').length?'warn':'')}
+    ${card('마감 지난 과제',g('late').length,lst(g('late')),g('late').length?'bad':'')}
+    ${card('첨삭 진행 중',recentDocs.length,lst(recentDocs.map(x=>({s:x.s,tab:'doc',txt:`${x.v.kind} · ${x.v.label}`}))))}
+    ${S.mode==='gas'?card('새 진단 결과',inbox,inbox?'<div class="wk-hub-l"><button data-go="alarms">수신함 열기</button></div>':'',inbox?'warn':''):''}
+  </div></section>`;
+}
+
+/* ---------- 동작 ---------- */
+function wSync(){ if($('#sfName')) readStudentForm(); }
+function wPersist(){ if(!SM||!SM.id||!D().students[SM.id]) return false; const o=clone(SM); ['_tab','_lk','_paste','_cb','_asNew','_dk'].forEach(k=>delete o[k]); store.put('students',o); return true; }
+const wSaved=()=>SM&&SM.id&&D().students[SM.id]?'자동으로 저장했어요.':'아래 추가 버튼을 누르면 학생과 함께 저장돼요.';
+function wRedraw(){ wPersist(); drawStudent(); }
+Object.assign(WACT,{
+  wTab:el=>{ wSync(); SM._tab=el.dataset.k; wRedraw(); },
+  wLogKind:el=>{ SM._lk=el.dataset.k; const keep=$('#wlText')&&$('#wlText').value; wRedraw(); if(keep&&$('#wlText')) $('#wlText').value=keep; },
+  wLogAdd:()=>{ const t=$('#wlText').value.trim(); if(!t){ toast('내용을 적어 주세요',''); return; } wNorm(SM); SM.logs.push({id:wid('l'),k:SM._lk||'memo',d:$('#wlDate').value||todayStr(),t,url:($('#wlUrl')&&$('#wlUrl').value.trim())||'',at:Date.now()}); wRedraw(); toast('기록했어요',wSaved()); },
+  wLogDel:el=>{ SM.logs=(SM.logs||[]).filter(l=>l.id!==el.dataset.id); wRedraw(); },
+  wPasteToggle:()=>{ SM._paste=!SM._paste; SM._cb=false; wRedraw(); },
+  wPasteSave:()=>{ const raw=$('#wlRaw').value; const c=cleanTranscript(raw); if(!c){ toast('붙여넣은 내용이 없어요',''); return; } wNorm(SM); SM.logs.push({id:wid('l'),k:'memo',d:todayStr(),t:'[녹취] '+c,at:Date.now()}); SM._paste=false; wRedraw(); toast('녹취를 정리해서 기록했어요',`${c.split('\n').length}줄 · `+wSaved()); },
+  wCbToggle:()=>{ SM._cb=!SM._cb; SM._paste=false; wRedraw(); },
+  wCbSave:()=>{ wSync(); if(!SM.name){ toast('먼저 정보 탭에서 이름을 적어 주세요',''); return; }
+    const due=$('#wcDate').value||todayStr(), time=$('#wcTime').value||'', note=$('#wcNote').value.trim();
+    if(!SM.id){ SM.id=uid('s'); SM.at=Date.now(); const o=clone(SM); ['_tab','_lk','_paste','_cb','_asNew','_dk'].forEach(k=>delete o[k]); store.put('students',o); }
+    store.put('tasks',{id:uid('t'),text:`${SM.name} 콜백${note?' · '+note:''}`,due,time,cat:'콜백',sid:SM.id,done:false,at:Date.now()});
+    SM._cb=false; wRedraw(); toast('콜백을 잡았어요',time?`${dueLabel({due,time})}에 알려 드릴게요.`:'업무 화면에 추가했어요.'); },
+  wCbDone:el=>{ const k=D().tasks[el.dataset.id]; if(k){ store.put('tasks',{...k,done:true,doneAt:Date.now()}); } wRedraw(); },
+  wPrompt:el=>{ wSync(); const txt=buildPrompt(el.dataset.k,SM,el.dataset.id); if(txt) copyPrompt(txt); },
+  wAsNew:()=>{ SM._asNew=!SM._asNew; wRedraw(); },
+  wAsAdd:()=>{ const title=$('#waTitle').value.trim(), body=$('#waBody').value.trim(); if(!title&&!body){ toast('제목이나 내용을 적어 주세요',''); return; }
+    wNorm(SM); SM.assigns.push({id:wid('a'),week:+$('#waWeek').value||1,title,body,due:$('#waDue').value||'',st:'set',setAt:todayStr(),at:Date.now()}); SM._asNew=false; wRedraw(); },
+  wAsStep:el=>{ const a=(SM.assigns||[]).find(x=>x.id===el.dataset.id); if(!a) return; a.st=el.dataset.k; const t=todayStr(); if(a.st==='sub'&&!a.subAt) a.subAt=t; if(a.st==='done'&&!a.doneAt){ a.doneAt=t; if(!a.subAt) a.subAt=t; } if(a.st==='set'){ a.subAt=''; a.doneAt=''; } wRedraw(); },
+  wAsDel:async el=>{ if(!await confirmBox('이 과제를 지울까요?','제출 답안과 점수도 함께 지워져요.','지우기',true)) return; SM.assigns=(SM.assigns||[]).filter(x=>x.id!==el.dataset.id); wRedraw(); },
+  wAsCopy:el=>{ const a=(SM.assigns||[]).find(x=>x.id===el.dataset.id); if(a) copyText(`${a.week}주차 과제${a.title?' · '+a.title:''}${a.due?`\n제출 마감: ${fmtMD(a.due)}`:''}\n\n${a.body||''}`); },
+  wDocKind:el=>{ SM._dk=el.dataset.k; wRedraw(); },
+  wDocAdd:()=>{ const text=$('#wdText').value.trim(); if(!text){ toast('글을 붙여넣어 주세요',''); return; } SM.docs=SM.docs||[]; SM.docs.push({id:wid('v'),kind:SM._dk||'자기소개서',label:$('#wdLabel').value,text,d:todayStr(),at:Date.now()}); wRedraw(); toast('버전을 저장했어요',wSaved()); },
+  wDocCopy:el=>{ const v=(SM.docs||[]).find(x=>x.id===el.dataset.id); if(v) copyText(v.text); },
+  wDocDel:async el=>{ if(!await confirmBox('이 버전을 지울까요?','','지우기',true)) return; SM.docs=(SM.docs||[]).filter(x=>x.id!==el.dataset.id); wRedraw(); },
+  wLead:()=>openQuickLead(),
+  wLeadSave:()=>{ const name=$('#qlName').value.trim(); if(!name){ toast('이름을 적어 주세요',''); return; }
+    const s={id:uid('s'),name,phone:$('#qlPhone').value.trim(),status:'상담중',courses:[],goal:$('#qlGoal').value.trim(),memo:'',logs:[],sent:{},at:Date.now()};
+    const memo=$('#qlMemo').value.trim(); if(memo) s.logs.push({id:wid('l'),k:'memo',d:todayStr(),t:memo,at:Date.now()});
+    store.put('students',s); const due=$('#qlDate').value, time=$('#qlTime').value;
+    if(time) store.put('tasks',{id:uid('t'),text:`${name} 콜백${s.goal?' · '+s.goal:''}`,due:due||todayStr(),time,cat:'콜백',sid:s.id,done:false,at:Date.now()});
+    closeModal(); toast('상담 학생을 등록했어요',time?`${dueLabel({due:due||todayStr(),time})} 콜백 알림을 잡았어요.`:''); render(); },
+  wOpen:el=>{ openStudent(el.dataset.id); SM._tab=el.dataset.tab||'info'; drawStudent(); },
+  wInAttach:el=>{ const sid=el.dataset.sid||($('#wis_'+el.dataset.id)||{}).value; if(!sid){ toast('붙일 학생을 골라 주세요',''); return; } inboxAttach(el.dataset.id,sid); },
+  wInLead:el=>{ const r=S.inbox[el.dataset.id]; if(!r) return; const s={id:uid('s'),name:r.name||'이름 없음',phone:r.phone||'',status:'상담중',courses:[],goal:r.test?`${r.test} 응시`:'',memo:'',logs:[],sent:{},at:Date.now()}; store.put('students',s); inboxAttach(r.id,s.id); },
+  wInHide:el=>{ inboxDone(el.dataset.id,''); render(); },
+  wSnipCopy:()=>copyText(submitSnippet())
+});
+/* 과제 입력칸: 고칠 때마다 바로 반영 */
+document.addEventListener('input',e=>{ const el=e.target;
+  if(el.dataset&&el.dataset.wa&&SM){ const a=(SM.assigns||[]).find(x=>x.id===el.dataset.wa); if(a){ a[el.dataset.f]=el.value; clearTimeout(window._wap); window._wap=setTimeout(wPersist,700); } }
+  if(el.id==='wdText'){ const c=$('#wdCnt'); if(c) c.textContent=`공백 포함 ${el.value.length}자 · 제외 ${el.value.replace(/\s/g,'').length}자`; }
+});
 /* ===== EVENTS ===== */
 function ackToggle(key){
   const acks={...(S.settings.acks||{})}; if(acks[key]) delete acks[key]; else acks[key]=todayStr();
@@ -3452,7 +3762,7 @@ const ACT={
   rmLog:el=>{ readStudentForm(); SM.logs.splice(+el.dataset.i,1); drawStudent(); },
   saveStudent:()=>{ const s=readStudentForm(); if(!s.name){ toast('이름을 적어 주세요',''); return; }
     const lg=$('#lgText')&&$('#lgText').value.trim(); if(lg) s.logs=[...(s.logs||[]),{d:$('#lgDate').value||todayStr(),t:lg}];
-    const isNew=!s.id; if(isNew){ s.id=uid('s'); s.at=Date.now(); } store.put('students',clone(s)); closeModal(); toast(isNew?'학생을 추가했어요':'저장했어요',''); render(); },
+    const isNew=!s.id; if(isNew){ s.id=uid('s'); s.at=Date.now(); } const o=clone(s); ['_tab','_lk','_paste','_cb','_asNew','_dk'].forEach(k=>delete o[k]); store.put('students',o); closeModal(); toast(isNew?'학생을 추가했어요':'저장했어요',''); render(); },
   delStudent:async()=>{ if(!await confirmBox('이 학생을 지울까요?',SM.name+' · 상담 기록도 함께 사라져요.','지우기',true)) return; store.del('students',SM.id); closeModal(); render(); },
   /* import */
   imSheet:el=>{ IM.si=+el.dataset.i; drawImport(); },
@@ -3494,7 +3804,7 @@ document.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]'); if(g){ e.preventDefault(); if(modalEl&&g.closest('.modal')) closeModal(); go(g.dataset.go); return; }
   const a=e.target.closest('[data-act]'); if(!a) return;
   if(a.tagName==='INPUT'&&(a.type==='checkbox'||a.type==='text'||a.type==='date')) return; // handled on change
-  const f=ACT[a.dataset.act]; if(f){ e.preventDefault(); f(a,e); }
+  const f=ACT[a.dataset.act]||WACT[a.dataset.act]; if(f){ e.preventDefault(); f(a,e); }
 });
 document.addEventListener('change',e=>{
   const el=e.target;
@@ -3580,6 +3890,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261018-1533';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261018-1545';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
