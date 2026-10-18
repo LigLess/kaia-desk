@@ -890,6 +890,24 @@ body.fx-shard .view>*,body.fx-off .view>*{animation:none!important}
 body.fx-shard .sheet{animation:none!important}
 .shard{position:fixed;z-index:95;pointer-events:none;will-change:transform,opacity;box-shadow:none}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------- 로그인 ---------- */
+body.gate .tn-nav,body.gate .tn-right,body.gate .tn-title,body.gate #dock,body.gate #sheetnav{display:none!important}
+.login-wrap{min-height:calc(100vh - 160px);display:grid;place-items:center;padding:24px 0}
+.pane.login{width:min(420px,100%);padding:34px 30px 24px;text-align:center}
+.login-mark{width:52px;height:52px;margin:0 auto 16px;border-radius:16px;display:grid;place-items:center;background:var(--cyan-soft);color:var(--cyan);border:1px solid var(--line)}
+.login-mark svg{width:24px;height:24px}
+.pane.login h1{font-size:24px;letter-spacing:-.02em;margin:0 0 8px;color:var(--fg)}
+.login-sub{margin:0 0 20px;font-size:13px;line-height:1.65;color:var(--muted)}
+.login-seg{margin:0 auto 18px}
+.login-form{display:grid;gap:12px;text-align:left}
+.login-form .field{display:grid;gap:6px}
+.login-form .field>span{font-size:12px;color:var(--muted)}
+.login-hide{display:none!important}
+.login-go{height:46px;margin-top:6px;justify-content:center;font-size:15px}
+.login-link{display:block;margin:14px auto 0;background:none;border:0;color:var(--faint);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.login-link+.login-link{margin-top:6px}
+.login-link:hover{color:var(--fg)}
 </style>
 </head>
 <body>
@@ -1489,9 +1507,9 @@ const store={db:null,base:null,setRef:null,dl:null,chains:{},
     let id=null; try{ id=user?await user.id():null }catch(e){}
     if(db&&id){ S.mode='db'; this.db=db; this.base=db.doc(`data/users/${id}/app`); this.setRef=db.doc(`data/users/${id}/settings`); await this.subscribe(); }
     else if(gas.cfg()){ S.mode='gas'; this.loadLocal(); try{ await Promise.race([gas.pull(true),new Promise(r=>setTimeout(r,6000))]); }catch(e){ this.syncState='off'; } gas.start(); }
-    else { S.mode='local'; this.loadLocal(); }
+    else { S.mode='local'; this.loadLocal(); if(gas.server()&&!lsGet('md.localOnly')) S.gate=true; }
     const empty=COLS.every(c=>!Object.keys(S.real[c]).length);
-    if(empty&&!S.settings.started){ S.demo=true; S.ex=makeDemo(); }
+    if(empty&&!S.settings.started&&!S.gate){ S.demo=true; S.ex=makeDemo(); }
   },
   subscribe(){
     return new Promise(res=>{
@@ -1538,18 +1556,20 @@ const store={db:null,base:null,setRef:null,dl:null,chains:{},
   saveSettings(){
     if(S.demo) return;
     if(S.mode==='local'){ this.saveLocal(); return; }
-    if(S.mode==='gas'){ this.saveLocal(); clearTimeout(this._st); this._st=setTimeout(()=>gas.enqueue('meta','settings',clone(S.settings),false),400); return; }
+    if(S.mode==='gas'){ this.saveLocal(); clearTimeout(this._st); this._st=setTimeout(()=>{ gas.enqueue('meta','settings',clone(S.settings),false); gas.pushTeam(); },400); return; }
     clearTimeout(this._st); this._st=setTimeout(()=>{ const data=clone(S.settings); this.write('settings',()=>this.setRef.set(data)); },400);
   }
 };
 /* ---------- 구글 시트 동기화 (GitHub 등 Claude 밖에서 쓸 때) ---------- */
 const gas={
   q:null,timer:null,poll:null,busy:false,
-  cfg(){ try{ const c=JSON.parse(lsGet('md.sync')||'null'); return c&&c.url&&c.key?c:null; }catch(e){ return null; } },
+  cfg(){ try{ const c=JSON.parse(lsGet('md.sync')||'null'); return c&&c.url&&c.token?c:null; }catch(e){ return null; } },
+  /* 팀 서버 주소: 로그인 기록 → 초대 링크(?server=) → 이전에 입력한 주소 */
+  server(){ const c=this.cfg(); if(c) return c.url; let q=''; try{ q=new URLSearchParams(location.search).get('server')||''; }catch(e){} if(/^https:\/\/script\.google/.test(q)){ lsSet('md.server',q); return q; } return lsGet('md.server')||''; },
   async call(method,params,body,cfgOverride){
     const c=cfgOverride||this.cfg(); if(!c) throw new Error('not_configured');
-    const qs=new URLSearchParams({key:c.key,...(params||{})}).toString();
-    const opt=method==='GET'?{method:'GET',redirect:'follow'}:{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:c.key,...body})};
+    const qs=new URLSearchParams({token:c.token,...(params||{})}).toString();
+    const opt=method==='GET'?{method:'GET',redirect:'follow'}:{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:c.token,...body})};
     const r=await fetch(method==='GET'?`${c.url}${c.url.includes('?')?'&':'?'}${qs}`:c.url,opt);
     const j=await r.json(); if(j&&j.error) throw new Error(j.error); return j;
   },
@@ -1571,7 +1591,10 @@ const gas={
     const q=this.loadQ(); let n=0;
     for(const d of docs){
       if(q[d.col+'/'+d.id]) continue;
-      if(d.col==='meta'){ if(d.id==='settings'&&d.data){ const keep={}; PERSONAL_KEYS.forEach(k=>{ if(S.settings[k]!==undefined) keep[k]=S.settings[k]; }); S.settings=normSettings({...d.data,...keep}); applyTheme(); n++; } continue; }
+      if(d.col==='meta'){
+        if(d.id==='settings'&&d.data){ const keep={zooms:S.settings.zooms,rooms:S.settings.rooms}; S.settings=normSettings({...d.data,...(this._team?keep:{})}); applyTheme(); n++; }
+        if(d.id==='team'&&d.data){ this._team=true; if(Array.isArray(d.data.zooms)) S.settings.zooms=d.data.zooms; if(d.data.rooms) S.settings.rooms=d.data.rooms; this._teamSent=JSON.stringify({zooms:S.settings.zooms,rooms:S.settings.rooms}); n++; }
+        continue; }
       if(!COLS.includes(d.col)) continue;
       if(d.del) delete S.real[d.col][d.id]; else S.real[d.col][d.id]=d.data; n++;
     }
@@ -1593,22 +1616,49 @@ const gas={
     addEventListener('online',()=>{ this.flush(); tick(); });
     if(Object.keys(this.loadQ()).length) this.flush();
   },
-  /* 처음 연결: 시트가 비어 있으면 이 기기 데이터를 올리고, 데이터가 있으면 어느 쪽을 쓸지 묻기 */
-  async connect(url,key){
-    const c={url:url.trim(),key:key.trim()};
-    let j; try{ j=await this.call('GET',{since:0},null,c); }catch(e){ toast('연결하지 못했어요',/auth/.test(e.message)?'비밀 키가 Apps Script의 KEY와 달라요.':'웹 앱 주소를 확인해 주세요. 배포 시 "액세스: 모든 사용자"여야 해요.'); return false; }
-    const remote=(j.docs||[]).filter(d=>!d.del);
-    const localHas=COLS.some(c=>Object.keys(S.real[c]).length);
-    let mode='upload';
-    if(remote.length&&localHas){ const ok=await confirmBox('시트에 이미 데이터가 있어요',`구글 시트에 ${remote.length}건이 있어요. "시트 데이터 쓰기"를 누르면 이 기기 데이터 대신 시트 데이터를 써요. 취소하면 이 기기 데이터를 시트에 합쳐 올려요.`,'시트 데이터 쓰기'); mode=ok?'download':'upload'; }
-    else if(remote.length) mode='download';
-    lsSet('md.sync',JSON.stringify(c)); this.q={}; this.saveQ(); S.mode='gas';
-    if(mode==='download'){ COLS.forEach(col=>S.real[col]={}); this.apply(j.docs||[]); S.demo=false; S.ex=null; }
-    else { if(S.demo) startReal(true); COLS.forEach(col=>Object.values(S.real[col]).forEach(o=>this.loadQ()[col+'/'+o.id]={col,id:o.id,data:o,del:false,v:Date.now()})); this.loadQ()['meta/settings']={col:'meta',id:'settings',data:S.settings,del:false,v:Date.now()}; this.saveQ(); this.flush(); }
-    lsSet('md.syncAt',String(j.now||Date.now())); store.saveLocal(); this.start();
-    toast('구글 시트와 연결했어요',mode==='download'?'시트의 데이터를 불러왔어요.':'이 기기 데이터를 시트에 올리는 중이에요.'); render(); return true;
+  pushTeam(){ const t=JSON.stringify({zooms:S.settings.zooms||[],rooms:S.settings.rooms||{}}); if(t===this._teamSent) return; this._teamSent=t; this.enqueue('meta','team',JSON.parse(t),false); },
+  async auth(url,body){
+    const r=await fetch(url,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+    return r.json();
   },
-  disconnect(){ lsSet('md.sync',''); clearInterval(this.poll); S.mode='local'; store.saveLocal(); toast('동기화를 껐어요','데이터는 이 기기에 그대로 남아 있어요.'); render(); }
+  /* 로그인 · 가입: 성공하면 그 계정의 데이터만 이 기기에 받아요 */
+  async signIn(url,body){
+    url=url.trim();
+    let j; try{ j=await this.auth(url,body); }catch(e){ toast('서버에 연결하지 못했어요','팀 서버 주소를 확인해 주세요. 배포 시 "액세스: 모든 사용자"여야 해요.'); return false; }
+    const msg={team:'팀 가입 코드가 맞지 않아요.',userfmt:'아이디는 영문 소문자 · 숫자 3~30자로 만들어 주세요.',pwshort:'비밀번호는 6자 이상이어야 해요.',exists:'이미 있는 아이디예요. 로그인해 주세요.',login:'아이디 또는 비밀번호가 맞지 않아요.',locked:'여러 번 틀려서 10분 동안 잠겼어요.'};
+    if(!j||j.error||!j.token){ toast(body.a==='signup'?'가입하지 못했어요':'로그인하지 못했어요',msg[j&&j.error]||'서버 코드가 최신 버전인지 확인해 주세요.'); return false; }
+    const c={url,token:j.token,user:j.user,name:j.name||''};
+    let d; try{ d=await this.call('GET',{since:0},null,c); }catch(e){ toast('데이터를 불러오지 못했어요','잠시 후 다시 시도해 주세요.'); return false; }
+    const remote=(d.docs||[]).filter(x=>!x.del);
+    const mine=remote.filter(x=>x.col!=='courses'&&!(x.col==='meta'&&x.id==='team'));
+    const localHas=!S.demo&&(Object.keys(S.real.students).length||Object.keys(S.real.tasks).length||Object.keys(S.real.courses).length);
+    let up=false;
+    if(localHas&&lsGet('md.lastUser')!==j.user){ up=await confirmBox('이 기기 데이터를 계정에 올릴까요?',mine.length?`계정에 이미 ${mine.length}건이 있어요. "올리기"를 누르면 이 기기 데이터를 계정에 합쳐요. 취소하면 이 기기 데이터는 지우고 계정 데이터만 써요.`:'이 기기에 저장된 학생 · 업무 · 시간표를 내 계정으로 옮겨요. 취소하면 빈 계정으로 시작해요.','올리기'); }
+    const keepUi={theme:S.settings.theme,fx:S.settings.fx,sfx:S.settings.sfx};
+    const localData=up?clone(S.real):null, localSettings=up?clone(S.settings):null;
+    lsSet('md.sync',JSON.stringify(c)); lsSet('md.server',url); lsSet('md.lastUser',j.user); lsSet('md.localOnly','');
+    this.q={}; this.saveQ(); this._team=false; this._teamSent='';
+    COLS.forEach(col=>S.real[col]={}); S.settings=normSettings({...keepUi});
+    this.apply(d.docs||[]);
+    if(!mine.some(x=>x.col==='meta'&&x.id==='settings')){ if(localSettings) S.settings=normSettings({...localSettings,...(this._team?{zooms:S.settings.zooms,rooms:S.settings.rooms}:{})}); if(body.a==='signup'||!localSettings){ if(j.name){ S.settings.name=j.name; S.settings.mentor=j.name+' 멘토'; } } S.settings.started=true; this.enqueue('meta','settings',clone(S.settings),false); }
+    if(localData){ COLS.forEach(col=>Object.values(localData[col]).forEach(o=>{ S.real[col][o.id]=o; this.loadQ()[col+'/'+o.id]={col,id:o.id,data:o,del:false,v:Date.now()}; })); this.saveQ(); }
+    if(!this._team) this.pushTeam();
+    S.mode='gas'; S.gate=false; S.demo=false; S.ex=null;
+    if(!Object.keys(S.real.snippets).length&&!mine.length) DEFAULT_SNIPPETS.forEach(s=>store.put('snippets',{id:uid('n'),...s,at:Date.now()}));
+    lsSet('md.syncAt',String(d.now||Date.now())); store.saveLocal(); this.flush(); this.start(); applyTheme();
+    toast(body.a==='signup'?'가입했어요':'로그인했어요',`${j.name||j.user}님의 데이터로 시작해요.`);
+    S.view='home'; render(); setTimeout(()=>{ try{ dayToast(); }catch(e){} },900); return true;
+  },
+  /* 로그아웃: 이 기기에서 계정 데이터를 지워요 (서버 데이터는 그대로) */
+  async signOut(){
+    const c=this.cfg(); if(Object.keys(this.loadQ()).length){ try{ await this.flush(); }catch(e){} }
+    if(c){ try{ await this.auth(c.url,{a:'logout',token:c.token}); }catch(e){} }
+    clearInterval(this.poll); lsSet('md.sync',''); lsSet('md.syncq',''); lsSet('md.syncAt',''); lsSet('md.data',''); this.q={};
+    const keepUi={theme:S.settings.theme,fx:S.settings.fx,sfx:S.settings.sfx};
+    COLS.forEach(col=>S.real[col]={}); S.settings=normSettings(keepUi); S.mode='local'; S.gate=true; S.demo=false; S.ex=null;
+    toast('로그아웃했어요','이 기기에서 데이터를 지웠어요. 다시 로그인하면 그대로 불러와요.'); render();
+  },
+  useLocal(){ lsSet('md.localOnly','1'); S.gate=false; render(); }
 };
 
 let gActive=0; const gQ=[];
@@ -1810,9 +1860,10 @@ let renderPending=false,renderDirty=false;
 function scheduleRender(){ if(renderPending) return; renderPending=true; requestAnimationFrame(()=>{ renderPending=false; const a=document.activeElement; if(a&&a.closest&&a.closest('#view')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){ renderDirty=true; renderSide(); return; } render(); }); }
 function render(){
   renderDirty=false;
+  document.body.classList.toggle('gate',!!S.gate);
   renderSide();
   const V={home:vHome,timetable:vTimetable,notice:vNotice,students:vStudents,alarms:vAlarms,progress:vProgress,tasks:vTasks,snippets:vSnippets,settings:vSettings}[S.view]||vHome;
-  const html=(S.demo?demoBanner():'')+V();
+  const html=S.gate?vLogin():(S.demo?demoBanner():'')+V();
   const view=$('#view'); const same=view.dataset.v===S.view; view.dataset.v=S.view;
   view.innerHTML=html; if(!same){ view.style.animation='none'; view.offsetHeight; view.style.animation=''; }
   afterRender();
@@ -2077,14 +2128,33 @@ function vSnippets(){
   return `<div class="view">${vh('문구함','자주 보내는 안내 문구를 저장해 두고 한 번에 복사해요',`<button class="btn pri" data-act="newSnip">${ic('plus')}문구 추가</button>`)}
   ${sn.length?`<div class="grid3">${sn.map(s=>`<div class="snip"><b style="font-weight:500">${esc(s.title)}</b><p>${esc(s.text)}</p><div class="btns" style="margin-top:auto"><button class="btn sm" data-act="copySnip" data-id="${s.id}">${ic('copy')}복사</button><button class="btn sm ghost" data-act="editSnip" data-id="${s.id}">고치기</button></div></div>`).join('')}</div>`:'<section class="pane"><div class="empty"><b>저장한 문구가 없어요</b>위치 안내, 준비물, 결석 답장처럼 자주 쓰는 말을 넣어 두세요.</div></section>'}</div>`;
 }
+function vLogin(){
+  const sv=gas.server(); const up=S.loginTab==='up';
+  return `<div class="view"><div class="login-wrap"><section class="pane login">
+    <div class="login-mark">${ic('users')}</div>
+    <h1>${up?'팀원 가입':'KAIA DESK 로그인'}</h1>
+    <p class="login-sub">${up?'팀장에게 받은 가입 코드로 내 계정을 만들어요. 내 학생 · 업무는 나만 봐요.':'내 계정으로 로그인하면 어느 기기에서든 내 데이터가 보여요.'}</p>
+    <div class="seg login-seg"><button class="${up?'':'on'}" data-act="loginTab" data-k="in">로그인</button><button class="${up?'on':''}" data-act="loginTab" data-k="up">가입</button></div>
+    <form class="login-form" data-form="login" onsubmit="return false">
+      <label class="field ${sv?'login-hide':''}"><span>팀 서버 주소</span><input id="lgUrl" class="in" value="${esc(sv)}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="url"></label>
+      ${up?`<label class="field"><span>이름</span><input id="lgName" class="in" placeholder="예: 홍길동" autocomplete="name"></label>`:''}
+      <label class="field"><span>아이디</span><input id="lgUser" class="in" placeholder="영문 소문자 · 숫자" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
+      <label class="field"><span>비밀번호</span><input id="lgPw" class="in" type="password" placeholder="${up?'6자 이상':''}" autocomplete="${up?'new-password':'current-password'}"></label>
+      ${up?`<label class="field"><span>팀 가입 코드</span><input id="lgTeam" class="in" autocomplete="off" autocapitalize="off"></label>`:''}
+      <button class="btn pri login-go" data-act="loginGo">${up?'가입하고 시작하기':'로그인'}</button>
+    </form>
+    ${sv?`<button class="login-link" data-act="loginServer">팀 서버 주소 바꾸기</button>`:''}
+    <button class="login-link" data-act="useLocal">로그인 없이 이 기기에서만 쓰기</button>
+  </section></div></div>`;
+}
 function syncSection(){
   if(S.mode==='db') return `<section class="pane"><h2>PC · 휴대폰 동기화</h2><p style="margin:0;font-size:13px;color:var(--muted);line-height:1.7">지금은 Claude 계정에 저장돼서 PC와 휴대폰이 자동으로 맞춰져요. GitHub에 올린 앱에서는 아래와 같은 구글 시트 동기화를 써요. 옮길 때는 <b style="color:var(--fg)">백업 파일 받기</b> → 새 앱에서 <b style="color:var(--fg)">백업에서 복원</b>을 쓰세요.</p></section>`;
   const c=gas.cfg();
-  return `<section class="pane"><h2>PC · 휴대폰 동기화 <small>구글 시트 · 무료</small>${c?'<span class="chip ok r">연결됨</span>':''}</h2>
-    ${c?`<p style="margin:0 0 12px;font-size:13px;color:var(--muted)">이 기기는 구글 시트와 동기화 중이에요. 다른 기기에서도 같은 주소 · 키를 넣으면 같은 데이터가 보여요.</p>
-      <div class="btns"><button class="btn sm" data-act="syncNow">지금 동기화</button><button class="btn sm danger" data-act="syncOff">동기화 끄기</button></div>`
-    :`<p style="margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.7">지금은 이 기기에만 저장돼요. 구글 시트에 Apps Script를 한 번 배포하고 주소와 비밀 키를 넣으면 PC와 휴대폰이 같은 데이터를 써요. (방법: GitHub 저장소의 <b style="color:var(--fg)">SYNC_SETUP.md</b>)</p>
-      <div class="form"><label class="field full"><span>웹 앱 주소</span><input id="syncUrl" class="in" placeholder="https://script.google.com/macros/s/…/exec"></label><label class="field"><span>비밀 키 (Apps Script의 KEY)</span><input id="syncKey" class="in" type="password" autocomplete="off"></label><div class="field"><span>&nbsp;</span><button class="btn pri" data-act="syncOn" style="height:42px">연결하기</button></div></div>`}
+  return `<section class="pane"><h2>계정 · 동기화 <small>팀 서버</small>${c?'<span class="chip ok r">로그인됨</span>':''}</h2>
+    ${c?`<p style="margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.7"><b style="color:var(--fg)">${esc(c.name||c.user)}</b> (${esc(c.user)}) 계정으로 로그인했어요. 학생 · 업무 · 문구함 · 안내문 양식은 나만 보고, 시간표와 강의실 · 줌 회의 정보는 팀이 같이 써요. 다른 기기에서 같은 아이디로 로그인하면 같은 데이터가 보여요.</p>
+      <div class="btns"><button class="btn sm" data-act="syncNow">지금 동기화</button><button class="btn sm" data-act="copyInvite">${ic('copy')}팀원 초대 링크 복사</button><button class="btn sm danger" data-act="signOut">로그아웃</button></div>`
+    :`<p style="margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.7">지금은 이 기기에만 저장돼요. 팀 서버에 로그인하면 PC · 휴대폰 어디서든 내 데이터가 보여요.</p>
+      <div class="btns"><button class="btn pri" data-act="openLogin">로그인 · 가입</button></div>`}
   </section>
   <section class="pane"><h2>휴대폰 앱으로 쓰기</h2><p style="margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.7">아이폰: Safari로 열고 <b style="color:var(--fg)">공유 → 홈 화면에 추가</b>. 안드로이드: Chrome 메뉴 <b style="color:var(--fg)">→ 앱 설치</b>(또는 아래 버튼). 설치하면 주소창 없이 앱처럼 열려요.</p>
     <div class="btns">${window._installPrompt?'<button class="btn pri" data-act="install">홈 화면에 설치</button>':''}<button class="btn sm" data-act="notifyOn">${('Notification' in window)&&Notification.permission==='granted'?'알림 허용됨':'휴대폰 알림 허용'}</button></div></section>`;
@@ -3165,6 +3235,20 @@ const ACT={
   brief:()=>{ sfx('ok'); speak(briefingText()); },
   replayBoot:()=>{ try{ sessionStorage.removeItem('md.booted'); }catch(e){} if(!isHud()){ toast('홀로그램 테마에서만 보여요','설정 → 배경 → J.A.R.V.I.S.를 고르세요.'); return; } sfx('boot'); const L=bootLines(); L.ready=true; bootSequence(L); },
   syncOn:async el=>{ const u=$('#syncUrl').value, k=$('#syncKey').value; if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u.trim())){ toast('웹 앱 주소를 확인해 주세요','https://script.google.com/macros/s/…/exec 형식이에요.'); return; } if(!k.trim()){ toast('비밀 키를 넣어 주세요',''); return; } el.disabled=true; await gas.connect(u,k); el.disabled=false; },
+  openLogin:()=>{ S.gate=true; S.loginTab='in'; render(); },
+  loginTab:el=>{ S.loginTab=el.dataset.k; render(); setTimeout(()=>{ const f=$('#lgUser'); f&&f.focus(); },50); },
+  loginServer:()=>{ const f=$('#lgUrl'); if(f){ f.closest('.field').classList.remove('login-hide'); f.focus(); f.select(); } },
+  useLocal:()=>gas.useLocal(),
+  loginGo:async el=>{
+    const url=($('#lgUrl').value||'').trim(), user=($('#lgUser').value||'').trim(), pw=$('#lgPw').value||'';
+    if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)){ toast('팀 서버 주소를 확인해 주세요','https://script.google.com/macros/s/…/exec 형식이에요.'); const f=$('#lgUrl'); f&&f.closest('.field').classList.remove('login-hide'); return; }
+    if(!user||!pw){ toast('아이디와 비밀번호를 넣어 주세요',''); return; }
+    const body=S.loginTab==='up'?{a:'signup',user,pw,name:($('#lgName').value||'').trim(),team:($('#lgTeam').value||'').trim()}:{a:'login',user,pw};
+    if(body.a==='signup'&&!body.name){ toast('이름을 넣어 주세요','개강안내 문자에 멘토 이름으로 들어가요.'); return; }
+    el.disabled=true; el.textContent='확인 중…'; const ok=await gas.signIn(url,body); if(!ok){ el.disabled=false; el.textContent=body.a==='signup'?'가입하고 시작하기':'로그인'; }
+  },
+  signOut:async()=>{ if(await confirmBox('로그아웃할까요?','이 기기에서 내 데이터를 지워요. 서버에는 그대로 있어서 다시 로그인하면 불러와요.','로그아웃',true)) gas.signOut(); },
+  copyInvite:()=>{ const c=gas.cfg(); if(!c) return; const link=location.origin+location.pathname+'?server='+encodeURIComponent(c.url); copyText(link); toast('초대 링크를 복사했어요','팀원에게 이 링크와 팀 가입 코드를 보내 주세요.'); },
   syncOff:async()=>{ if(await confirmBox('동기화를 끌까요?','이 기기의 데이터는 그대로 남고, 다른 기기와는 더 이상 맞춰지지 않아요.','끄기',true)) gas.disconnect(); },
   syncNow:async()=>{ try{ await gas.flush(); const n=await gas.pull(false); toast('동기화했어요',n?`바뀐 내용 ${n}건을 받았어요.`:'바뀐 내용이 없어요.'); render(); }catch(e){ toast('동기화하지 못했어요','인터넷 연결을 확인해 주세요.'); } },
   install:async()=>{ const p=window._installPrompt; if(!p) return; p.prompt(); try{ await p.userChoice; }catch(e){} window._installPrompt=null; render(); },
@@ -3219,7 +3303,7 @@ document.addEventListener('submit',e=>{
   store.put('tasks',{id:uid('t'),text,due:$('#tkDue').value||'',time:$('#tkTime').value||'',cat:$('#tkCat').value,sid:$('#tkSid').value||'',done:false,at:Date.now()});
   toast('할 일을 추가했어요',$('#tkTime').value?`${dueLabel({due:$('#tkDue').value,time:$('#tkTime').value})}에 알려 드릴게요.`:''); render(); const i=$('#tkText'); i&&i.focus();
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(modalEl) closeModal(); else closeDrawer(); } });
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.closest&&e.target.closest('.login-form')){ e.preventDefault(); const b=$('.login-go'); b&&!b.disabled&&b.click(); return; } if(e.key==='Escape'){ if(modalEl) closeModal(); else closeDrawer(); } });
 
 /* ===== POINTER MOTION ===== */
 document.addEventListener('pointermove',e=>{
@@ -3246,7 +3330,7 @@ function tick(){
 }
 function notify(title,body){ try{ if(!('Notification' in window)||Notification.permission!=='granted') return; const opt={body,icon:'icons/icon-192.png',badge:'icons/favicon-64.png',tag:title}; if(navigator.serviceWorker&&navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r=>r.showNotification(title,opt)); else new Notification(title,opt); }catch(e){} }
 function dayToast(){
-  const t=todayStr(); if(lsGet('md.toastDay')===t) return; lsSet('md.toastDay',t);
+  if(S.gate) return; const t=todayStr(); if(lsGet('md.toastDay')===t) return; lsSet('md.toastDay',t);
   const un=activeAlarms().filter(a=>!a.ack); if(!un.length) return;
   const body=un.slice(0,3).map(a=>`${a.type==='start'?'개강':'종강'} D-${diffDays(t,a.date)} ${a.c.name}`).join(' · ');
   toast(`확인할 알림 ${un.length}건`,body,'alarm-t'); notify(`KAIA DESK · 확인할 알림 ${un.length}건`,body);
@@ -3263,7 +3347,7 @@ async function boot(){
   const BL=['INITIALIZING KAIA DESK','LINKING DATA CORE…']; const bootP=isHud()?bootSequence(BL):Promise.resolve();
   await store.init();
   applyTheme();
-  BL.push(...bootLines().slice(2)); BL.ready=true;
+  BL.push(...(S.gate?['AUTHENTICATION REQUIRED','로그인해 주세요']:bootLines().slice(2))); BL.ready=true;
   await bootP; applyFx(); if(FX.on()) S._fxAssemble=true; render(); dayToast(); tick(); setInterval(tick,30000);
 }
 boot();
