@@ -1064,6 +1064,73 @@ body.hud.hlight .chip.violet{background:#eef2f5;color:var(--fg-2)}
 .wk-hub-l button{text-align:left;font-size:12.5px;color:var(--fg-2);padding:4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:none;border:0;cursor:pointer}
 .wk-hub-l button:hover{color:var(--accent)}
 @media (max-width:640px){.wk-it{grid-template-columns:44px 10px minmax(0,1fr) auto;gap:8px}.wk-row input[type=date].in,.wk-row input[type=time].in{flex:1;min-width:0}}
+
+/* ===== 과제 제작 · 분석 ===== */
+.qz{display:flex;flex-direction:column;gap:16px}
+.qz-lead{margin:0;font-size:15px;font-weight:600}
+.qz-subs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.qz-sub{display:flex;flex-direction:column;gap:6px;text-align:left;padding:18px;border-radius:16px;background:var(--surface-2);border:1px solid transparent;cursor:pointer;transition:transform .2s,box-shadow .2s;color:var(--fg)}
+.qz-sub:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.qz-sub b{font-size:17px}.qz-sub span{font-size:12.5px;color:var(--muted);line-height:1.6}.qz-sub small{font-size:11.5px;color:var(--faint)}
+.qz-lv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qz-lv button{display:flex;flex-direction:column;gap:4px;padding:14px;border-radius:14px;background:var(--surface-2);text-align:left;color:var(--fg);border:2px solid transparent;cursor:pointer}
+.qz-lv button b{font-size:20px}.qz-lv button span{font-size:12px;color:var(--muted)}
+.qz-lv button.on{border-color:var(--accent);background:var(--accent-soft)}
+.qz-tops{display:flex;flex-wrap:wrap;gap:8px 18px;padding:6px 2px}
+.qz-head{display:flex;align-items:center;gap:12px}.qz-head>div{flex:1;display:flex;flex-direction:column}.qz-head b{font-size:16px}.qz-head span{font-size:12.5px;color:var(--muted)}
+.qz-prev{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto;padding-right:4px}
+.qz-q{padding:12px 14px;border-radius:12px;background:var(--surface-2)}
+.qz-qh{font-size:13.5px;line-height:1.6}.qz-qh .chip{margin-left:6px;vertical-align:middle}
+.qz-q pre,.qzr pre{margin:8px 0;padding:10px 12px;border-radius:10px;background:var(--surface-3);font-family:'JetBrains Mono',Consolas,monospace;font-size:12.5px;line-height:1.55;white-space:pre-wrap;overflow:auto}
+.qz-q ol{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 14px;font-size:13px;color:var(--fg-2)}
+.qz-q ol li{white-space:pre-wrap}.qz-q ol li.ok{color:var(--ok);font-weight:600}
+.qz-reg{grid-template-columns:1fr 1fr}
+.qz-cardh{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.qz-cardh .chip{margin-right:auto}
+.qz-grade{display:flex;flex-direction:column;gap:10px}
+.qz-gh{display:flex;flex-direction:column}.qz-gh b{font-size:13.5px}.qz-gh span{font-size:12px;color:var(--muted)}
+.qz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.qz-cell{display:flex;align-items:center;gap:3px;padding:4px 6px;border-radius:10px;background:var(--surface)}
+.qz-cell span{width:24px;font-size:12px;font-weight:700;color:var(--muted);text-align:right;margin-right:4px}
+.qz-cell button{width:26px;height:26px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--fg-2);background:transparent;border:1px solid var(--line-2);cursor:pointer}
+.qz-cell button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.qz-cnt{font-size:12px;color:var(--muted)}
+.qz-done{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.qz-done b{font-size:22px}.qz-done span{flex:1;font-size:12.5px;color:var(--muted);min-width:160px}
+.qzr{display:flex;flex-direction:column;gap:16px}
+.qzr-top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between}
+.qzr-k{font-size:12.5px;color:var(--muted)}
+.qzr-score{display:flex;align-items:baseline;gap:6px}.qzr-score b{font-size:52px;line-height:1;font-weight:800;letter-spacing:-.03em}.qzr-score span{font-size:16px;font-weight:600}.qzr-score em{font-style:normal;font-size:13px;color:var(--muted);margin-left:8px}
+.qzr-sum{flex:1;min-width:240px;max-width:520px;margin:0;font-size:14px;line-height:1.7;padding:12px 14px;border-radius:12px;background:var(--surface-2)}
+.qzr-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:14px}
+.qzr-box{padding:16px;border-radius:16px;background:var(--surface-2)}
+.qzr-box h4{margin:0 0 12px;font-size:13.5px}.qzr-box h4 small{color:var(--faint);font-weight:500}
+.qz-chart,.qz-radar{width:100%;height:auto;display:block;color:var(--fg)}
+.qz-radar{max-width:340px;margin:0 auto}
+.qzr-tp{padding:10px 0;border-top:1px solid var(--line)}.qzr-tp:first-of-type{border-top:0}
+.qzr-tph{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.qzr-tph b{font-size:14px}
+.qzr-m{font-size:12px;color:var(--muted)}
+.qzr-tp p{margin:6px 0 0;font-size:13px;line-height:1.7;color:var(--fg-2)}
+.qzr-w{padding:10px 0;border-top:1px solid var(--line)}.qzr-w:first-of-type{border-top:0}
+.qzr-wq{margin:0;font-size:13.5px;line-height:1.6}.qzr-wa{margin:4px 0 0;font-size:12.5px}.qzr-wa b.bad{color:var(--bad)}.qzr-wa b.ok{color:var(--ok)}
+.qzr-we{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
+@media (max-width:700px){.qzr-grid,.qz-reg{grid-template-columns:1fr}.qz-lv{grid-template-columns:1fr}.qz-q ol{grid-template-columns:1fr}.qzr-score b{font-size:42px}}
+.qz-bars{display:flex;flex-direction:column;gap:12px}
+.qz-bar{display:grid;grid-template-columns:minmax(80px,30%) 1fr 44px;align-items:center;gap:10px}
+.qz-bar .n{font-size:13px;text-align:right;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qz-bar .tr{height:16px;border-radius:9px;background:var(--surface-3);overflow:hidden}
+.qz-bar .tr i{display:block;height:100%;border-radius:9px}
+.qz-bar b{font-size:13px}
+.qzr.print .qz-bar .tr{background:#e6e6e6}.qzr.print .qz-bar .n{color:#222}
+/* 인쇄 */
+#printArea{display:none}
+@media print{
+  body.printing>*:not(#printArea){display:none!important}
+  body.printing #printArea{display:block!important;position:static}
+  body.printing{background:#fff!important}
+  body.printing .qzr.print{gap:10pt}
+  body.printing .qzr.print .qzr-box,body.printing .qzr.print .qzr-sum{background:#f6f6f6!important;page-break-inside:avoid}
+  body.printing .qzr.print .qzr-grid{grid-template-columns:1.4fr 1fr}
+  @page{size:A4;margin:16mm 14mm}
+}
 </style>
 </head>
 <body>
@@ -2272,7 +2339,7 @@ function vTasks(){
   const g={over:open.filter(k=>k.due&&k.due<t),today:open.filter(k=>k.due===t),later:open.filter(k=>k.due&&k.due>t),none:open.filter(k=>!k.due)};
   const sec=(title,arr)=>arr.length?`<h2 style="margin-top:14px">${title} <small>${arr.length}</small></h2><div class="list">${arr.map(taskRow).join('')}</div>`:'';
   const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-  return `<div class="view">${vh('업무','콜백 약속 · 개강 준비 · 서류 같은 할 일을 날짜와 시간으로 관리해요',`<button class="btn pri" data-act="wLead">${ic('plus')}빠른 상담 등록</button>`)}${workHub()}
+  return `<div class="view">${vh('업무','콜백 약속 · 개강 준비 · 서류 같은 할 일을 날짜와 시간으로 관리해요',`<button class="btn" data-act="qzOpenFree">${ic('task')}과제 제작</button><button class="btn pri" data-act="wLead">${ic('plus')}빠른 상담 등록</button>`)}${workHub()}
   <section class="pane"><form id="taskForm" class="form" style="grid-template-columns:minmax(0,2.2fr) repeat(4,minmax(0,1fr)) auto;align-items:end">
     <label class="field"><span>할 일</span><input id="tkText" class="in" placeholder="예: 한도윤 학생 3시 콜백" required></label>
     <label class="field"><span>날짜</span><input id="tkDue" class="in" type="date" value="${t}"></label>
@@ -3504,12 +3571,13 @@ function stuAssignTab(s){
   const t=todayStr(); const as=(s.assigns||[]).slice().sort((a,b)=>(b.week||0)-(a.week||0));
   const next=(as[0]?+as[0].week||0:0)+1;
   return `<div class="body wk">
-   <div class="btns"><button class="btn pri sm" data-act="wAsNew">${ic('plus')}과제 추가</button><button class="btn sm" data-act="wPrompt" data-k="asMake">${ic('send')}다음 과제 출제 요청문</button></div>
+   <div class="btns"><button class="btn pri sm" data-act="qzOpen">${ic('plus')}과제 제작</button><button class="btn sm" data-act="wAsNew">${ic('plus')}직접 입력</button><button class="btn sm ghost" data-act="wPrompt" data-k="asMake">${ic('send')}Claude 출제 요청문</button></div>
    ${s._asNew?`<div class="wk-panel"><b>${next}주차 과제</b>
      <div class="wk-row"><input id="waWeek" class="in" type="number" min="1" value="${next}" style="max-width:90px" aria-label="주차"><input id="waTitle" class="in" placeholder="범위 · 제목 (예: 리스트 · 딕셔너리)"><input id="waDue" class="in" type="date" value="${addDays(t,7)}" aria-label="마감"></div>
      <textarea id="waBody" class="in" rows="4" placeholder="과제 내용 (Claude가 만든 문제를 붙여넣어도 돼요)"></textarea>
      <div class="btns"><button class="btn sm pri" data-act="wAsAdd">추가</button></div></div>`:''}
    ${as.length?as.map(a=>{ const late=a.st==='set'&&a.due&&a.due<t;
+     if(a.kind==='quiz') return `<div class="wk-as ${a.st}"><div class="wk-as-h"><b>${a.week}주차</b><span class="grow">${esc(a.title||'')}</span>${late?'<span class="chip bad">마감 지남</span>':''}<span class="chip ${a.st==='done'?'ok':a.st==='sub'?'warn':'blue'}">${AS_STEPS.find(x=>x[0]===a.st)[1]}</span><button class="btn sm ghost" data-act="wAsDel" data-id="${a.id}" aria-label="삭제">${ic('trash')}</button></div><div class="wk-as-m">마감 ${a.due?fmtMD(a.due):'—'}${a.subAt?` · 제출 ${fmtMD(a.subAt)}`:''}${a.doneAt?` · 채점 ${fmtMD(a.doneAt)}`:''}</div>${quizCard(a)}</div>`;
      return `<div class="wk-as ${a.st}">
        <div class="wk-as-h"><b>${a.week}주차</b><span class="grow">${esc(a.title||'')}</span>${late?'<span class="chip bad">마감 지남</span>':''}<span class="chip ${a.st==='done'?'ok':a.st==='sub'?'warn':'blue'}">${AS_STEPS.find(x=>x[0]===a.st)[1]}</span></div>
        <div class="wk-as-m">마감 ${a.due?fmtMD(a.due):'—'}${a.subAt?` · 제출 ${fmtMD(a.subAt)}`:''}${a.doneAt?` · 채점 ${fmtMD(a.doneAt)}`:''}</div>
@@ -3518,7 +3586,7 @@ function stuAssignTab(s){
        ${a.st!=='set'?`<label class="field"><span>제출 답안 · 리포트</span><textarea class="in" rows="4" data-wa="${a.id}" data-f="ans" placeholder="학생이 보낸 코드와 리포트를 붙여넣으세요">${esc(a.ans||'')}</textarea></label>`:''}
        ${a.st==='done'||a.st==='sub'?`<div class="wk-row"><input class="in" data-wa="${a.id}" data-f="score" value="${esc(a.score||'')}" placeholder="점수 (예: 8/10)" style="max-width:150px"><input class="in" data-wa="${a.id}" data-f="fb" value="${esc(a.fb||'')}" placeholder="한 줄 피드백"></div>`:''}
        <div class="btns">${a.st!=='set'?`<button class="btn sm" data-act="wPrompt" data-k="asGrade" data-id="${a.id}">${ic('send')}첨삭 요청문 복사</button>`:''}<button class="btn sm ghost" data-act="wAsCopy" data-id="${a.id}">${ic('copy')}과제 복사</button><button class="btn sm ghost" data-act="wAsDel" data-id="${a.id}">${ic('trash')}</button></div>
-     </div>`; }).join(''):'<div class="empty"><b>등록된 과제가 없어요</b>주차별 과제를 쌓아 두면 다음 과제 출제 요청문에 지난 진도와 점수가 자동으로 들어가요.</div>'}
+     </div>`; }).join(''):'<div class="empty"><b>등록된 과제가 없어요</b><b>과제 제작</b>으로 과목 · 난이도를 고르면 시험지가 바로 만들어지고, 답안을 넣으면 자동으로 채점 · 분석돼요. 주차별 과제를 쌓아 두면 다음 과제 출제 요청문에 지난 진도와 점수가 자동으로 들어가요.</div>'}
   </div>`;
 }
 
@@ -3693,6 +3761,490 @@ document.addEventListener('input',e=>{ const el=e.target;
   if(el.dataset&&el.dataset.wa&&SM){ const a=(SM.assigns||[]).find(x=>x.id===el.dataset.wa); if(a){ a[el.dataset.f]=el.value; clearTimeout(window._wap); window._wap=setTimeout(wPersist,700); } }
   if(el.id==='wdText'){ const c=$('#wdCnt'); if(c) c.textContent=`공백 포함 ${el.value.length}자 · 제외 ${el.value.replace(/\s/g,'').length}자`; }
 });
+/* ===== 과제 문제은행 — 과목 · 영역 · 난이도(1 하 / 2 중 / 3 상) =====
+   문항: {t:영역번호, l:난이도, q:질문, c:코드(선택), o:[보기 4개], a:정답(1~4), e:해설} */
+const QBANK={
+python:{name:'파이썬',topics:[
+ {n:'변수 · 자료형',study:['변수에 값을 담고 type()으로 자료형을 직접 확인해 보세요. int · float · str · bool 네 가지를 먼저 구분하면 돼요.','형 변환(int(), str(), float())과 자료형끼리 연산할 때 생기는 오류를 직접 만들어 보며 익히세요.','가변(list · dict)과 불변(str · tuple) 자료형의 차이, 같은 객체를 두 변수가 가리킬 때 생기는 일을 정리해 보세요.']},
+ {n:'연산자 · 문자열',study:['+, -, *, /, //, %, ** 연산 결과를 하나씩 출력해 보며 차이를 비교하세요.','문자열 인덱싱 · 슬라이싱([시작:끝:간격])과 f-string 포매팅을 반복 연습하세요.','split · join · replace · strip 같은 문자열 메서드를 조합해 문장을 가공하는 문제를 풀어 보세요.']},
+ {n:'조건문',study:['if · elif · else 순서대로 조건을 검사한다는 흐름을 그림으로 그려 보세요.','and · or · not 조합과 비교 연산자를 섞은 조건식의 결과를 손으로 먼저 예측해 보세요.','조건이 겹칠 때 어떤 블록이 실행되는지, 중첩 if를 elif로 바꾸는 연습을 해 보세요.']},
+ {n:'반복문',study:['for i in range(...)의 시작 · 끝 · 간격을 바꿔 가며 출력되는 숫자를 확인하세요.','while 반복의 종료 조건, break · continue가 흐름을 어떻게 바꾸는지 직접 추적해 보세요.','중첩 반복과 누적 변수(합계 · 개수)를 이용한 패턴 문제(별 찍기, 구구단)를 풀어 보세요.']},
+ {n:'리스트 · 딕셔너리',study:['리스트 만들기 · 인덱스로 꺼내기 · append로 추가하기를 먼저 손에 익히세요.','리스트 메서드(insert · remove · pop · sort)와 딕셔너리의 키 · 값 다루기(keys · values · items)를 연습하세요.','리스트 컴프리헨션, 딕셔너리로 개수 세기, 정렬 key 활용 같은 실전 패턴을 익히세요.']},
+ {n:'함수',study:['def로 함수를 만들고 값을 return 받는 기본 형태를 여러 번 작성해 보세요.','매개변수 기본값, 여러 값 반환, 지역 변수와 전역 변수의 차이를 정리하세요.','*args · **kwargs, 람다, 재귀 함수의 동작을 작은 예제로 추적해 보세요.']}],
+ q:[
+ {t:0,l:1,q:'다음 코드의 출력 결과는?',c:'x = 3\ny = 2.0\nprint(type(x + y).__name__)',o:['int','float','str','error'],a:2,e:'정수와 실수를 더하면 결과는 실수(float)가 돼요.'},
+ {t:0,l:1,q:'파이썬 변수 이름으로 사용할 수 없는 것은?',o:['my_name','_count','2nd_value','total2'],a:3,e:'변수 이름은 숫자로 시작할 수 없어요.'},
+ {t:0,l:1,q:'다음 코드의 출력 결과는?',c:'a = "10"\nb = "20"\nprint(a + b)',o:['30','1020','10 20','error'],a:2,e:'문자열끼리 +를 하면 이어 붙여져요.'},
+ {t:0,l:2,q:'다음 코드의 출력 결과는?',c:'n = int("7") + int(3.9)\nprint(n)',o:['10','10.9','11','error'],a:1,e:'int(3.9)는 소수점을 버려 3이 돼요. 7 + 3 = 10.'},
+ {t:0,l:2,q:'다음 코드를 실행하면 어떻게 되나요?',c:'age = 20\nprint("나이: " + age)',o:['나이: 20','나이:20','TypeError 발생','20'],a:3,e:'문자열과 정수는 +로 이어 붙일 수 없어요. str(age)로 바꿔야 해요.'},
+ {t:0,l:2,q:'다음 코드의 출력 결과는?',c:'print(bool(""), bool("0"))',o:['False False','True True','False True','True False'],a:3,e:'빈 문자열은 False, 글자가 하나라도 있으면 True예요. "0"도 글자가 있어요.'},
+ {t:0,l:3,q:'다음 코드의 출력 결과는?',c:'a = [1, 2]\nb = a\nb.append(3)\nprint(a)',o:['[1, 2]','[1, 2, 3]','[3]','error'],a:2,e:'b = a는 같은 리스트를 가리켜요. b를 바꾸면 a도 바뀌어요.'},
+ {t:0,l:3,q:'다음 코드의 출력 결과는?',c:'t = (1, 2, 3)\ntry:\n    t[0] = 9\n    print(t)\nexcept TypeError:\n    print("불변")',o:['(9, 2, 3)','(1, 2, 3)','불변','9'],a:3,e:'튜플은 불변 자료형이라 값을 바꾸면 TypeError가 나요.'},
+ {t:0,l:3,q:'다음 코드의 출력 결과는?',c:'x = 0.1 + 0.2\nprint(x == 0.3, round(x, 2) == 0.3)',o:['True True','False True','False False','True False'],a:2,e:'실수 계산에는 아주 작은 오차가 생겨서 0.1+0.2는 정확히 0.3이 아니에요. 반올림하면 같아져요.'},
+ {t:1,l:1,q:'다음 코드의 출력 결과는?',c:'print(7 // 2, 7 % 2)',o:['3.5 1','3 1','3 0.5','4 1'],a:2,e:'//는 몫, %는 나머지예요.'},
+ {t:1,l:1,q:'다음 코드의 출력 결과는?',c:'s = "python"\nprint(s[0], s[-1])',o:['p n','p o','y n','n p'],a:1,e:'0번은 첫 글자, -1번은 마지막 글자예요.'},
+ {t:1,l:1,q:'다음 코드의 출력 결과는?',c:'print(2 ** 3)',o:['6','8','9','23'],a:2,e:'**는 거듭제곱이에요. 2의 3제곱 = 8.'},
+ {t:1,l:2,q:'다음 코드의 출력 결과는?',c:'s = "Hello World"\nprint(s[6:9])',o:['Wor','Worl','o W','World'],a:1,e:'6번부터 9번 앞(8번)까지 잘라요.'},
+ {t:1,l:2,q:'다음 코드의 출력 결과는?',c:'name = "민수"\nscore = 92.456\nprint(f"{name}: {score:.1f}")',o:['민수: 92.4','민수: 92.5','민수: 92.456','민수: 92'],a:2,e:':.1f는 소수점 첫째 자리까지 반올림해서 보여 줘요.'},
+ {t:1,l:2,q:'다음 코드의 출력 결과는?',c:'s = "abcdef"\nprint(s[::2])',o:['ace','bdf','abc','fdb'],a:1,e:'간격 2로 0, 2, 4번 글자를 가져와요.'},
+ {t:1,l:3,q:'다음 코드의 출력 결과는?',c:'s = " a,b ,c "\nparts = [p.strip() for p in s.split(",")]\nprint("-".join(parts))',o:['a-b-c',' a-b - c ','a,b,c','a-b -c'],a:1,e:'쉼표로 나눈 뒤 strip으로 양쪽 공백을 지우고 -로 이어 붙여요.'},
+ {t:1,l:3,q:'다음 코드의 출력 결과는?',c:'s = "banana"\nprint(s.count("a"), s.find("n"), s.replace("a", "", 2))',o:['3 2 bnna','3 2 bnana','2 2 bnna','3 1 bnna'],a:1,e:'a는 3번, n은 처음 2번 위치, replace의 2는 앞에서 2개만 바꾼다는 뜻이에요.'},
+ {t:1,l:3,q:'다음 코드의 출력 결과는?',c:'print(10 - 2 * 3 ** 2 // 4)',o:['6','16','2','4'],a:1,e:'** → * → // 순서: 3**2=9, 2*9=18, 18//4=4, 10-4=6.'},
+ {t:2,l:1,q:'다음 코드의 출력 결과는?',c:'x = 15\nif x > 10:\n    print("큼")\nelse:\n    print("작음")',o:['큼','작음','큼 작음','아무것도 출력 안 됨'],a:1,e:'15 > 10이 참이라 if 블록이 실행돼요.'},
+ {t:2,l:1,q:'짝수인지 확인하는 조건식으로 알맞은 것은?',o:['n / 2 == 0','n % 2 == 0','n // 2 == 1','n % 2 == 1'],a:2,e:'2로 나눈 나머지가 0이면 짝수예요.'},
+ {t:2,l:1,q:'다음 코드의 출력 결과는?',c:'score = 75\nif score >= 90:\n    print("A")\nelif score >= 70:\n    print("B")\nelse:\n    print("C")',o:['A','B','C','B C'],a:2,e:'90 이상은 아니고 70 이상이라 B가 출력돼요.'},
+ {t:2,l:2,q:'다음 코드의 출력 결과는?',c:'a, b = 5, 0\nif b != 0 and a / b > 1:\n    print("ok")\nelse:\n    print("skip")',o:['ok','skip','ZeroDivisionError','아무것도 출력 안 됨'],a:2,e:'and는 앞 조건이 거짓이면 뒤를 계산하지 않아서 0으로 나누지 않아요.'},
+ {t:2,l:2,q:'다음 코드의 출력 결과는?',c:'x = 7\nprint("홀" if x % 2 else "짝")',o:['홀','짝','1','True'],a:1,e:'7 % 2는 1이고, 1은 참으로 취급돼서 "홀"이 나와요.'},
+ {t:2,l:2,q:'다음 코드의 출력 결과는?',c:'n = 0\nif n:\n    print("A")\nelif not n:\n    print("B")\nelse:\n    print("C")',o:['A','B','C','A B'],a:2,e:'0은 거짓이라 not n이 참이 돼요.'},
+ {t:2,l:3,q:'다음 코드의 출력 결과는?',c:'x = 25\nif x > 10:\n    if x > 20:\n        r = "A"\n    else:\n        r = "B"\nelif x > 5:\n    r = "C"\nelse:\n    r = "D"\nprint(r)',o:['A','B','C','D'],a:1,e:'바깥 if와 안쪽 if가 모두 참이라 A예요.'},
+ {t:2,l:3,q:'다음 코드의 출력 결과는?',c:'a = []\nb = [0]\nprint(bool(a or b), a and b)',o:['True []','False [0]','True [0]','False []'],a:1,e:'a or b는 b([0], 참), a and b는 a가 거짓이라 a([])를 돌려줘요.'},
+ {t:2,l:3,q:'다음 코드의 출력 결과는?',c:'year = 1900\nleap = (year % 4 == 0 and year % 100 != 0) or year % 400 == 0\nprint(leap)',o:['True','False','1900','error'],a:2,e:'1900은 100으로 나누어떨어지고 400으로는 안 나누어떨어져서 윤년이 아니에요.'},
+ {t:3,l:1,q:'다음 코드의 출력 결과는?',c:'for i in range(3):\n    print(i, end=" ")',o:['1 2 3 ','0 1 2 ','0 1 2 3 ','3 '],a:2,e:'range(3)은 0, 1, 2예요.'},
+ {t:3,l:1,q:'다음 코드의 출력 결과는?',c:'total = 0\nfor i in range(1, 5):\n    total += i\nprint(total)',o:['10','15','4','6'],a:1,e:'1+2+3+4 = 10.'},
+ {t:3,l:1,q:'range(2, 10, 3)이 만드는 숫자는?',o:['2, 5, 8','2, 5, 8, 11','3, 6, 9','2, 4, 6, 8'],a:1,e:'2부터 10 미만까지 3씩 커져요.'},
+ {t:3,l:2,q:'다음 코드의 출력 결과는?',c:'n = 0\nwhile n < 10:\n    n += 3\nprint(n)',o:['9','10','12','3'],a:3,e:'3, 6, 9, 12가 되면 10보다 커서 멈춰요.'},
+ {t:3,l:2,q:'다음 코드의 출력 결과는?',c:'for i in range(1, 6):\n    if i == 4:\n        break\n    if i % 2 == 0:\n        continue\n    print(i, end="")',o:['13','135','1235','123'],a:1,e:'2는 continue로 건너뛰고, 4에서 break로 끝나요.'},
+ {t:3,l:2,q:'다음 코드의 출력 결과는?',c:'cnt = 0\nfor ch in "programming":\n    if ch in "aeiou":\n        cnt += 1\nprint(cnt)',o:['2','3','4','11'],a:2,e:'o, a, i 세 개예요.'},
+ {t:3,l:3,q:'다음 코드의 출력 결과는?',c:'for i in range(1, 4):\n    print("*" * i + " " * (3 - i) + "|")',o:['*  |\n** |\n***|','*|\n**|\n***|','***|\n** |\n*  |','|  *\n| **\n|***'],a:1,e:'i개의 별 뒤에 (3-i)칸 공백을 붙여요.'},
+ {t:3,l:3,q:'다음 코드의 출력 결과는?',c:'r = 0\nfor i in range(3):\n    for j in range(i):\n        r += j\nprint(r)',o:['1','3','0','6'],a:1,e:'i=1일 때 j=0, i=2일 때 j=0,1 → 0+0+1 = 1.'},
+ {t:3,l:3,q:'다음 코드의 출력 결과는?',c:'for i in range(3):\n    pass\nelse:\n    print("끝", i)',o:['끝 2','끝 3','아무것도 출력 안 됨','끝 0'],a:1,e:'for가 break 없이 끝나면 else가 실행되고, i는 마지막 값 2예요.'},
+ {t:4,l:1,q:'다음 코드의 출력 결과는?',c:'nums = [10, 20, 30]\nnums.append(40)\nprint(len(nums))',o:['3','4','40','5'],a:2,e:'append로 하나 추가해서 4개가 돼요.'},
+ {t:4,l:1,q:'다음 코드의 출력 결과는?',c:'d = {"a": 1, "b": 2}\nprint(d["b"])',o:['a','b','1','2'],a:4,e:'키 "b"에 들어 있는 값은 2예요.'},
+ {t:4,l:1,q:'다음 코드의 출력 결과는?',c:'fruits = ["사과", "배", "귤"]\nprint(fruits[1])',o:['사과','배','귤','error'],a:2,e:'인덱스는 0부터 시작해서 1번은 두 번째 값이에요.'},
+ {t:4,l:2,q:'다음 코드의 출력 결과는?',c:'a = [3, 1, 2]\na.sort(reverse=True)\na.pop()\nprint(a)',o:['[3, 2]','[2, 1]','[1, 2]','[3, 1]'],a:1,e:'내림차순 [3, 2, 1]에서 pop()은 마지막 값을 꺼내요.'},
+ {t:4,l:2,q:'다음 코드의 출력 결과는?',c:'d = {"x": 1}\nd["y"] = 2\nd["x"] = 5\nprint(list(d.values()))',o:['[1, 2]','[5, 2]','[2, 5]','[1, 2, 5]'],a:2,e:'"x" 값을 5로 덮어쓰고 "y"를 추가했어요.'},
+ {t:4,l:2,q:'다음 코드의 출력 결과는?',c:'a = [1, 2, 3, 4, 5]\nprint(a[1:4], a[-2:])',o:['[2, 3, 4] [4, 5]','[1, 2, 3] [4, 5]','[2, 3, 4, 5] [5]','[2, 3] [4]'],a:1,e:'1~3번, 그리고 뒤에서 두 개예요.'},
+ {t:4,l:3,q:'다음 코드의 출력 결과는?',c:'print([x * x for x in range(6) if x % 2 == 1])',o:['[1, 9, 25]','[0, 4, 16]','[1, 4, 9, 16, 25]','[1, 3, 5]'],a:1,e:'홀수 1, 3, 5만 골라 제곱해요.'},
+ {t:4,l:3,q:'다음 코드의 출력 결과는?',c:'cnt = {}\nfor w in "a b a c a b".split():\n    cnt[w] = cnt.get(w, 0) + 1\nprint(cnt)',o:["{'a': 3, 'b': 2, 'c': 1}","{'a': 1, 'b': 1, 'c': 1}","{'a': 3, 'b': 1, 'c': 1}","['a', 'b', 'c']"],a:1,e:'get(w, 0)으로 처음 나온 단어는 0에서 시작해 개수를 세요.'},
+ {t:4,l:3,q:'다음 코드의 출력 결과는?',c:'people = [("민수", 25), ("지현", 21), ("도윤", 30)]\npeople.sort(key=lambda p: p[1])\nprint(people[0][0])',o:['민수','지현','도윤','21'],a:2,e:'나이(p[1]) 기준 오름차순이라 21살 지현이 맨 앞이에요.'},
+ {t:5,l:1,q:'다음 코드의 출력 결과는?',c:'def add(a, b):\n    return a + b\n\nprint(add(2, 3))',o:['5','23','add','None'],a:1,e:'2 + 3 = 5를 돌려줘요.'},
+ {t:5,l:1,q:'함수가 값을 돌려줄 때 쓰는 키워드는?',o:['def','return','print','yield'],a:2,e:'return으로 결과를 함수 밖으로 돌려줘요.'},
+ {t:5,l:1,q:'다음 코드의 출력 결과는?',c:'def hello():\n    print("안녕")\n\nr = hello()\nprint(r)',o:['안녕\nNone','안녕','None','안녕\n안녕'],a:1,e:'return이 없는 함수는 None을 돌려줘요.'},
+ {t:5,l:2,q:'다음 코드의 출력 결과는?',c:'def greet(name, msg="반가워요"):\n    return f"{name}님 {msg}"\n\nprint(greet("민수"))',o:['민수님 반가워요','민수님','반가워요','error'],a:1,e:'msg를 안 넘기면 기본값을 써요.'},
+ {t:5,l:2,q:'다음 코드의 출력 결과는?',c:'def calc(a, b):\n    return a + b, a * b\n\ns, m = calc(3, 4)\nprint(s, m)',o:['7 12','(7, 12)','12 7','error'],a:1,e:'값 두 개를 튜플로 돌려주고 나눠 받았어요.'},
+ {t:5,l:2,q:'다음 코드의 출력 결과는?',c:'x = 10\ndef f():\n    x = 5\n    return x\n\nprint(f(), x)',o:['5 10','5 5','10 10','10 5'],a:1,e:'함수 안의 x는 지역 변수라 바깥 x는 그대로 10이에요.'},
+ {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'def fact(n):\n    return 1 if n <= 1 else n * fact(n - 1)\n\nprint(fact(5))',o:['120','24','15','5'],a:1,e:'5×4×3×2×1 = 120.'},
+ {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'def total(*args, **kw):\n    return sum(args) + kw.get("bonus", 0)\n\nprint(total(1, 2, 3, bonus=10))',o:['16','6','10','error'],a:1,e:'args는 (1, 2, 3), kw는 {"bonus": 10}이에요.'},
+ {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'def f(a, lst=[]):\n    lst.append(a)\n    return lst\n\nf(1)\nprint(f(2))',o:['[2]','[1, 2]','[1]','[]'],a:2,e:'기본값 리스트는 한 번만 만들어져서 호출할 때마다 계속 쌓여요.'}
+ ]},
+sql:{name:'SQL (SQLD)',topics:[
+ {n:'기본 조회',study:['SELECT · FROM · WHERE 세 줄짜리 쿼리를 테이블 하나로 반복 작성해 보세요.','LIKE · IN · BETWEEN · IS NULL 조건과 별칭(AS), DISTINCT를 섞어 연습하세요.','NULL이 들어간 비교 · 연산 결과와 연산자 우선순위(AND가 OR보다 먼저)를 정리하세요.']},
+ {n:'집계 · 그룹',study:['COUNT · SUM · AVG · MAX · MIN을 테이블 전체에 적용해 보세요.','GROUP BY로 묶고 HAVING으로 그룹을 거르는 흐름(WHERE와의 차이)을 익히세요.','SQL 실행 순서(FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY)를 외우고 문제에 적용하세요.']},
+ {n:'조인',study:['두 테이블을 공통 키로 INNER JOIN 하는 기본 문장을 손으로 써 보세요.','LEFT · RIGHT OUTER JOIN 결과에서 NULL이 생기는 위치를 표로 그려 보세요.','셀프 조인, 조인 조건과 WHERE 조건의 차이, CROSS JOIN 결과 건수 계산을 연습하세요.']},
+ {n:'서브쿼리',study:['WHERE 안의 단일 행 서브쿼리(= (SELECT ...))부터 연습하세요.','IN · EXISTS · 다중 행 비교(ANY · ALL)의 차이를 예제로 비교하세요.','상관 서브쿼리와 스칼라 서브쿼리, 인라인 뷰(FROM 절 서브쿼리)를 구분해 보세요.']},
+ {n:'DML · DDL · 트랜잭션',study:['INSERT · UPDATE · DELETE 기본 문법을 작은 테이블로 직접 실행해 보세요.','CREATE · ALTER · DROP과 제약조건(PK · FK · UNIQUE · NOT NULL)을 정리하세요.','COMMIT · ROLLBACK · SAVEPOINT와 DELETE · TRUNCATE · DROP의 차이를 비교하세요.']},
+ {n:'모델링 · 정규화',study:['엔터티 · 속성 · 관계 · 식별자 용어를 그림과 함께 정리하세요.','1 · 2 · 3정규형의 조건(원자값, 부분 종속 제거, 이행 종속 제거)을 예제로 익히세요.','반정규화가 필요한 상황, 식별 · 비식별 관계, 카디널리티 문제를 풀어 보세요.']}],
+ q:[
+ {t:0,l:1,q:'EMP 테이블에서 모든 열을 조회하는 SQL은?',o:['SELECT ALL EMP;','SELECT * FROM EMP;','GET * FROM EMP;','SELECT EMP *;'],a:2,e:'*는 모든 열을 뜻해요.'},
+ {t:0,l:1,q:'이름이 "김"으로 시작하는 행을 찾는 조건은?',o:["NAME = '김%'","NAME LIKE '%김'","NAME LIKE '김%'","NAME IN ('김')"],a:3,e:'%는 0개 이상의 아무 문자를 뜻해요.'},
+ {t:0,l:1,q:'중복을 제거하고 조회할 때 쓰는 키워드는?',o:['UNIQUE','DISTINCT','DIFFERENT','ONLY'],a:2,e:'SELECT DISTINCT 열 이름 형태로 써요.'},
+ {t:0,l:2,q:'COMM 열이 NULL인 행을 찾는 올바른 조건은?',o:['COMM = NULL','COMM IS NULL',"COMM = ''",'COMM == NULL'],a:2,e:'NULL은 = 로 비교할 수 없고 IS NULL을 써야 해요.'},
+ {t:0,l:2,q:'SAL BETWEEN 100 AND 200과 같은 의미는?',o:['SAL > 100 AND SAL < 200','SAL >= 100 AND SAL <= 200','SAL >= 100 OR SAL <= 200','SAL > 100 AND SAL <= 200'],a:2,e:'BETWEEN은 양 끝 값을 포함해요.'},
+ {t:0,l:2,q:"WHERE DEPT IN ('A', 'B')와 같은 의미는?",o:["DEPT = 'A' AND DEPT = 'B'","DEPT = 'A' OR DEPT = 'B'","DEPT BETWEEN 'A' AND 'B'","DEPT LIKE 'A%B'"],a:2,e:'IN은 OR 조건을 묶어 쓴 것과 같아요.'},
+ {t:0,l:3,q:'SAL이 100, NULL, 300인 세 행에 대해 SELECT SAL + 10 FROM T의 결과는?',o:['110, 10, 310','110, NULL, 310','110, 310','에러'],a:2,e:'NULL과의 산술 연산 결과는 NULL이에요.'},
+ {t:0,l:3,q:"WHERE A = 1 OR A = 2 AND B = 3 은 어떻게 해석되나요?",o:['(A = 1 OR A = 2) AND B = 3','A = 1 OR (A = 2 AND B = 3)','A = 1 AND B = 3','항상 거짓'],a:2,e:'AND가 OR보다 먼저 계산돼요.'},
+ {t:0,l:3,q:"NOT IN (1, 2, NULL) 조건의 결과로 알맞은 것은?",o:['1, 2가 아닌 행만 나온다','NULL만 나온다','한 행도 나오지 않는다','모든 행이 나온다'],a:3,e:'NOT IN 목록에 NULL이 있으면 비교 결과가 UNKNOWN이 되어 아무 행도 안 나와요.'},
+ {t:1,l:1,q:'행의 개수를 세는 함수는?',o:['SUM','COUNT','NUM','TOTAL'],a:2,e:'COUNT(*)는 행 수를 세요.'},
+ {t:1,l:1,q:'부서별 평균 급여를 구할 때 반드시 필요한 절은?',o:['ORDER BY DEPT','GROUP BY DEPT','HAVING DEPT','DISTINCT DEPT'],a:2,e:'부서별로 묶으려면 GROUP BY를 써요.'},
+ {t:1,l:1,q:'정렬할 때 내림차순을 뜻하는 키워드는?',o:['ASC','DESC','DOWN','REVERSE'],a:2,e:'ASC는 오름차순, DESC는 내림차순이에요.'},
+ {t:1,l:2,q:'그룹으로 묶은 결과에 조건을 걸 때 쓰는 절은?',o:['WHERE','HAVING','ON','FILTER'],a:2,e:'집계 결과에 대한 조건은 HAVING에 써요.'},
+ {t:1,l:2,q:'COMM이 100, NULL, 200인 세 행에서 COUNT(COMM)의 결과는?',o:['3','2','0','NULL'],a:2,e:'COUNT(열)은 NULL을 빼고 세요. COUNT(*)는 3이에요.'},
+ {t:1,l:2,q:'COMM이 100, NULL, 200일 때 AVG(COMM)의 결과는?',o:['100','150','NULL','300'],a:2,e:'집계 함수는 NULL을 제외하고 계산해요. (100+200)/2 = 150.'},
+ {t:1,l:3,q:'SQL 문의 논리적 실행 순서로 알맞은 것은?',o:['SELECT → FROM → WHERE → GROUP BY','FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY','FROM → SELECT → WHERE → ORDER BY','WHERE → FROM → GROUP BY → SELECT'],a:2,e:'FROM부터 읽고 SELECT는 거의 마지막, ORDER BY가 맨 끝이에요.'},
+ {t:1,l:3,q:'다음 중 오류가 나는 SQL은?',o:['SELECT DEPT, COUNT(*) FROM EMP GROUP BY DEPT','SELECT DEPT, NAME FROM EMP GROUP BY DEPT','SELECT DEPT FROM EMP GROUP BY DEPT HAVING COUNT(*) > 2','SELECT COUNT(*) FROM EMP'],a:2,e:'GROUP BY에 없는 NAME은 집계 함수 없이 SELECT할 수 없어요.'},
+ {t:1,l:3,q:'WHERE 절에서 쓸 수 없는 것은?',o:['SAL > 100','AVG(SAL) > 100',"NAME LIKE 'K%'",'DEPT IS NOT NULL'],a:2,e:'집계 함수 조건은 WHERE가 아니라 HAVING에 써야 해요.'},
+ {t:2,l:1,q:'두 테이블에서 조건이 일치하는 행만 가져오는 조인은?',o:['INNER JOIN','LEFT OUTER JOIN','FULL OUTER JOIN','CROSS JOIN'],a:1,e:'INNER JOIN은 양쪽에 모두 있는 행만 남겨요.'},
+ {t:2,l:1,q:'EMP와 DEPT를 DEPTNO로 조인하는 ON 절로 알맞은 것은?',o:['ON EMP = DEPT','ON EMP.DEPTNO = DEPT.DEPTNO','ON DEPTNO','ON EMP.DEPTNO IN DEPT'],a:2,e:'조인할 두 열을 = 로 연결해요.'},
+ {t:2,l:1,q:'왼쪽 테이블의 모든 행을 남기고 오른쪽은 일치하는 것만 붙이는 조인은?',o:['INNER JOIN','LEFT OUTER JOIN','RIGHT OUTER JOIN','NATURAL JOIN'],a:2,e:'일치하지 않는 오른쪽 값은 NULL로 채워져요.'},
+ {t:2,l:2,q:'A 테이블 5행, B 테이블 4행을 CROSS JOIN 하면 결과 행 수는?',o:['9','20','5','4'],a:2,e:'모든 조합이라 5 × 4 = 20행이에요.'},
+ {t:2,l:2,q:'직원 10명 중 3명이 부서가 없을 때(DEPTNO가 NULL), EMP LEFT JOIN DEPT 결과 행 수는? (부서는 모두 존재)',o:['7','10','13','3'],a:2,e:'LEFT JOIN은 왼쪽(EMP) 행을 모두 남겨요.'},
+ {t:2,l:2,q:'같은 테이블을 두 번 사용해 직원과 그 상사 이름을 함께 조회하는 조인은?',o:['CROSS JOIN','셀프 조인','NATURAL JOIN','FULL OUTER JOIN'],a:2,e:'같은 테이블에 별칭을 두 개 붙여 조인해요.'},
+ {t:2,l:3,q:'A(1,2,3), B(2,3,4)를 같은 값으로 FULL OUTER JOIN 하면 결과 행 수는?',o:['2','3','4','6'],a:3,e:'일치하는 2, 3에 A만 있는 1, B만 있는 4를 더해 4행이에요.'},
+ {t:2,l:3,q:"LEFT JOIN에서 오른쪽 테이블 조건을 ON이 아닌 WHERE에 쓰면 생기는 일은?",o:['결과가 같다','INNER JOIN처럼 동작할 수 있다','문법 오류가 난다','행이 늘어난다'],a:2,e:'WHERE에서 오른쪽 열 조건을 걸면 NULL인 행이 걸러져 사실상 INNER JOIN이 돼요.'},
+ {t:2,l:3,q:'NATURAL JOIN에 대한 설명으로 틀린 것은?',o:['이름이 같은 열을 기준으로 조인한다','조인 열에 테이블 별칭(접두사)을 붙일 수 없다','ON 절로 조건을 직접 지정한다','같은 이름 열은 결과에 한 번만 나온다'],a:3,e:'NATURAL JOIN은 ON이나 USING 없이 같은 이름 열로 자동 조인해요.'},
+ {t:3,l:1,q:'서브쿼리는 어디에 쓰나요?',o:['괄호 안에 들어간 SELECT 문','두 테이블을 합치는 키워드','정렬 방법','테이블 이름'],a:1,e:'SQL 안에 괄호로 넣은 또 다른 SELECT를 서브쿼리라고 해요.'},
+ {t:3,l:1,q:'평균 급여보다 많이 받는 직원을 찾는 SQL로 알맞은 것은?',o:['SELECT * FROM EMP WHERE SAL > AVG(SAL)','SELECT * FROM EMP WHERE SAL > (SELECT AVG(SAL) FROM EMP)','SELECT * FROM EMP HAVING SAL > AVG(SAL)','SELECT AVG(SAL) FROM EMP WHERE SAL >'],a:2,e:'평균을 서브쿼리로 먼저 구해서 비교해요.'},
+ {t:3,l:1,q:'서브쿼리 결과가 여러 행일 때 = 대신 쓰는 연산자는?',o:['LIKE','IN','BETWEEN','IS'],a:2,e:'여러 값 중 하나와 같은지 비교할 때 IN을 써요.'},
+ {t:3,l:2,q:'서브쿼리 결과가 한 행이라도 있으면 참이 되는 연산자는?',o:['IN','EXISTS','ANY','ALL'],a:2,e:'EXISTS는 결과 존재 여부만 확인해요.'},
+ {t:3,l:2,q:'SAL > ALL (100, 200, 300)과 같은 의미는?',o:['SAL > 100','SAL > 300','SAL > 200','SAL > 600'],a:2,e:'ALL은 모든 값보다 커야 하니 가장 큰 300보다 커야 해요.'},
+ {t:3,l:2,q:'FROM 절에 쓰는 서브쿼리를 부르는 이름은?',o:['스칼라 서브쿼리','인라인 뷰','상관 서브쿼리','중첩 함수'],a:2,e:'FROM 절 서브쿼리는 임시 테이블처럼 쓰여서 인라인 뷰라고 해요.'},
+ {t:3,l:3,q:'바깥 쿼리의 열을 서브쿼리 안에서 참조하는 서브쿼리는?',o:['인라인 뷰','상관 서브쿼리','단일 행 서브쿼리','스칼라 함수'],a:2,e:'바깥 행마다 서브쿼리가 다시 계산돼요.'},
+ {t:3,l:3,q:'SAL > ANY (100, 200, 300)과 같은 의미는?',o:['SAL > 100','SAL > 300','SAL > 600','SAL IN (100, 200, 300)'],a:1,e:'ANY는 하나라도 만족하면 되니 가장 작은 100보다 크면 돼요.'},
+ {t:3,l:3,q:'SELECT 절에 쓰여 한 행 한 값을 돌려주는 서브쿼리는?',o:['인라인 뷰','스칼라 서브쿼리','다중 열 서브쿼리','EXISTS 서브쿼리'],a:2,e:'스칼라 서브쿼리는 반드시 한 행, 한 열을 돌려줘야 해요.'},
+ {t:4,l:1,q:'새 행을 추가하는 SQL 명령은?',o:['ADD','INSERT','UPDATE','CREATE'],a:2,e:'INSERT INTO 테이블 VALUES (...) 형태예요.'},
+ {t:4,l:1,q:'테이블을 새로 만드는 명령은?',o:['MAKE TABLE','CREATE TABLE','NEW TABLE','INSERT TABLE'],a:2,e:'DDL인 CREATE TABLE로 만들어요.'},
+ {t:4,l:1,q:'기존 행의 값을 바꾸는 명령은?',o:['UPDATE','ALTER','MODIFY','CHANGE'],a:1,e:'UPDATE 테이블 SET 열 = 값 WHERE 조건 형태예요.'},
+ {t:4,l:2,q:'다음 중 DDL이 아닌 것은?',o:['CREATE','ALTER','DROP','DELETE'],a:4,e:'DELETE는 데이터를 지우는 DML이에요.'},
+ {t:4,l:2,q:'기본키(PRIMARY KEY)의 특징으로 알맞은 것은?',o:['NULL을 허용한다','중복을 허용한다','UNIQUE와 NOT NULL을 모두 만족한다','테이블에 여러 개 만들 수 있다'],a:3,e:'기본키는 유일하고 비어 있으면 안 돼요.'},
+ {t:4,l:2,q:'트랜잭션의 변경 내용을 확정하는 명령은?',o:['SAVE','COMMIT','ROLLBACK','END'],a:2,e:'COMMIT으로 확정하고 ROLLBACK으로 되돌려요.'},
+ {t:4,l:3,q:'테이블 구조는 남기고 데이터만 모두 지우며, 되돌릴 수 없는 명령은?',o:['DELETE','DROP','TRUNCATE','ROLLBACK'],a:3,e:'TRUNCATE는 구조는 남기고 데이터를 지우며 ROLLBACK이 안 돼요.'},
+ {t:4,l:3,q:'트랜잭션의 ACID 중 "모두 실행되거나 전혀 실행되지 않아야 한다"는 특성은?',o:['원자성','일관성','고립성','지속성'],a:1,e:'원자성(Atomicity)이에요.'},
+ {t:4,l:3,q:'외래키(FK)로 참조 중인 부모 행을 지울 때 자식 행도 함께 지우는 옵션은?',o:['ON DELETE SET NULL','ON DELETE CASCADE','ON DELETE RESTRICT','ON UPDATE CASCADE'],a:2,e:'CASCADE는 부모 삭제를 자식에게 이어서 적용해요.'},
+ {t:5,l:1,q:'업무에서 관리할 대상(사람, 장소, 사건 등)을 무엇이라고 하나요?',o:['속성','엔터티','관계','도메인'],a:2,e:'관리할 대상의 집합이 엔터티예요.'},
+ {t:5,l:1,q:'엔터티의 각 행을 유일하게 구별하는 속성은?',o:['식별자','도메인','관계','인덱스'],a:1,e:'식별자로 인스턴스를 구분해요.'},
+ {t:5,l:1,q:'속성이 가질 수 있는 값의 범위를 무엇이라고 하나요?',o:['도메인','카디널리티','튜플','스키마'],a:1,e:'예: 성별 속성의 도메인은 남, 여.'},
+ {t:5,l:2,q:'제1정규형의 조건은?',o:['부분 함수 종속 제거','모든 속성 값이 원자값','이행 함수 종속 제거','다치 종속 제거'],a:2,e:'한 칸에 값이 하나만 들어가야 해요.'},
+ {t:5,l:2,q:'제2정규형에서 제거하는 것은?',o:['반복 그룹','부분 함수 종속','이행 함수 종속','조인 종속'],a:2,e:'복합 키의 일부에만 종속된 속성을 분리해요.'},
+ {t:5,l:2,q:'A → B, B → C 일 때 A → C가 성립하는 종속을 없애는 정규형은?',o:['제1정규형','제2정규형','제3정규형','BCNF'],a:3,e:'이행 함수 종속 제거가 제3정규형이에요.'},
+ {t:5,l:3,q:'조회 성능을 위해 일부러 중복을 허용하는 작업은?',o:['정규화','반정규화','인덱싱','파티셔닝'],a:2,e:'반정규화는 성능을 위해 정규화를 일부 되돌려요.'},
+ {t:5,l:3,q:'부모 엔터티의 식별자가 자식 엔터티의 주식별자 일부가 되는 관계는?',o:['비식별 관계','식별 관계','순환 관계','배타 관계'],a:2,e:'부모 식별자가 자식 기본키에 포함되면 식별 관계예요.'},
+ {t:5,l:3,q:'한 학생이 여러 과목을 듣고 한 과목도 여러 학생이 들을 때, 이를 해소하는 방법은?',o:['1:1 관계로 바꾼다','관계 엔터티(수강)를 만든다','학생 엔터티를 삭제한다','속성을 합친다'],a:2,e:'M:N 관계는 중간 엔터티로 1:N 두 개로 나눠요.'}
+ ]},
+linux:{name:'리눅스',topics:[
+ {n:'파일 · 디렉터리',study:['pwd · ls · cd · mkdir · touch로 폴더를 만들고 이동하는 연습부터 하세요.','cp · mv · rm 옵션(-r, -i, -f)과 절대 경로 · 상대 경로(. ..)를 구분하세요.','find · 링크(ln, ln -s) · 디렉터리 구조(/etc, /var, /home, /tmp)의 역할을 정리하세요.']},
+ {n:'권한 · 소유권',study:['ls -l 결과의 rwxr-xr-x를 사용자 · 그룹 · 기타로 끊어 읽는 연습을 하세요.','chmod 숫자 표기(755, 644)와 기호 표기(u+x), chown · chgrp를 직접 실습하세요.','SetUID · SetGID · Sticky Bit, umask 계산을 정리하세요.']},
+ {n:'프로세스 · 작업',study:['ps · top으로 실행 중인 프로세스를 보고 PID를 찾는 연습을 하세요.','kill 시그널(15, 9), &와 jobs · fg · bg로 작업을 오가는 법을 익히세요.','nice · renice 우선순위, nohup, cron 예약 작업의 형식을 정리하세요.']},
+ {n:'사용자 · 그룹',study:['useradd · passwd · userdel로 계정을 만들고 지워 보세요.','/etc/passwd · /etc/shadow · /etc/group 파일의 각 필드 의미를 정리하세요.','su · sudo 차이, usermod 옵션(-aG 등), 계정 잠금 정책을 정리하세요.']},
+ {n:'셸 · 텍스트 처리',study:['cat · head · tail · less로 파일 내용을 보는 명령을 손에 익히세요.','리다이렉션(> >> <)과 파이프(|), grep으로 원하는 줄만 뽑는 연습을 하세요.','sort · uniq · wc · cut · awk · sed를 파이프로 이어 로그를 분석해 보세요.']},
+ {n:'패키지 · 서비스 · 네트워크',study:['ip addr(ifconfig) · ping으로 내 컴퓨터의 네트워크 상태를 확인해 보세요.','systemctl로 서비스 시작 · 중지 · 상태 확인, 패키지 설치(apt · dnf)를 실습하세요.','ss(netstat)로 열린 포트 확인, 방화벽(firewalld · ufw), 로그 위치(/var/log)를 정리하세요.']}],
+ q:[
+ {t:0,l:1,q:'현재 작업 중인 디렉터리 경로를 보여 주는 명령은?',o:['ls','cd','pwd','dir'],a:3,e:'pwd = print working directory.'},
+ {t:0,l:1,q:'새 디렉터리를 만드는 명령은?',o:['mkdir','touch','newdir','md'],a:1,e:'mkdir 디렉터리명.'},
+ {t:0,l:1,q:'숨김 파일까지 모두 보여 주는 ls 옵션은?',o:['-l','-a','-h','-r'],a:2,e:'점(.)으로 시작하는 숨김 파일까지 보여 줘요.'},
+ {t:0,l:2,q:'디렉터리와 그 안의 내용을 모두 복사하는 명령은?',o:['cp dir1 dir2','cp -r dir1 dir2','mv -r dir1 dir2','copy dir1 dir2'],a:2,e:'-r은 하위 내용까지 재귀적으로 복사해요.'},
+ {t:0,l:2,q:'현재 위치가 /home/user/docs일 때 cd ../.. 후의 위치는?',o:['/home/user','/home','/','/home/user/docs'],a:2,e:'..은 상위 디렉터리, 두 번 올라가면 /home이에요.'},
+ {t:0,l:2,q:'파일 이름을 바꿀 때 쓰는 명령은?',o:['rename','cp','mv','ln'],a:3,e:'mv 기존이름 새이름으로 이름을 바꿔요.'},
+ {t:0,l:3,q:'/etc 아래에서 이름이 .conf로 끝나는 파일을 찾는 명령은?',o:['find /etc -name "*.conf"','grep /etc .conf','ls /etc | find conf','locate -etc conf'],a:1,e:'find 경로 -name 패턴 형식이에요.'},
+ {t:0,l:3,q:'원본을 지우면 연결이 끊어지는 링크는?',o:['하드 링크','심볼릭 링크','둘 다','둘 다 아님'],a:2,e:'심볼릭 링크는 경로만 가리켜서 원본이 사라지면 깨져요.'},
+ {t:0,l:3,q:'시스템 로그 파일이 주로 저장되는 디렉터리는?',o:['/etc','/var/log','/usr/bin','/home'],a:2,e:'/var는 계속 바뀌는 데이터, 그중 log가 로그예요.'},
+ {t:1,l:1,q:'ls -l 결과 -rw-r--r-- 에서 소유자의 권한은?',o:['읽기만','읽기 · 쓰기','읽기 · 쓰기 · 실행','실행만'],a:2,e:'첫 글자(파일 종류) 다음 세 글자 rw-가 소유자 권한이에요.'},
+ {t:1,l:1,q:'파일 권한을 바꾸는 명령은?',o:['chown','chmod','chgrp','perm'],a:2,e:'change mode의 줄임말이에요.'},
+ {t:1,l:1,q:'권한 숫자 표기에서 r, w, x의 값은?',o:['1, 2, 4','4, 2, 1','3, 2, 1','4, 1, 2'],a:2,e:'읽기 4, 쓰기 2, 실행 1을 더해요.'},
+ {t:1,l:2,q:'chmod 750 file 실행 후 권한은?',o:['rwxr-x---','rwxr-xr-x','rw-r-----','rwx---r-x'],a:1,e:'7=rwx, 5=r-x, 0=---.'},
+ {t:1,l:2,q:'파일 소유자를 user1로 바꾸는 명령은?',o:['chmod user1 file','chown user1 file','chgrp user1 file','own user1 file'],a:2,e:'chown은 소유자를 바꿔요.'},
+ {t:1,l:2,q:'소유자에게만 실행 권한을 추가하는 기호 표기는?',o:['chmod a+x file','chmod u+x file','chmod g+x file','chmod o+x file'],a:2,e:'u=소유자, g=그룹, o=기타, a=모두.'},
+ {t:1,l:3,q:'umask가 022일 때 새로 만든 파일의 기본 권한은?',o:['755','644','666','600'],a:2,e:'파일 기본 666에서 022를 빼면 644예요.'},
+ {t:1,l:3,q:'/tmp처럼 누구나 쓸 수 있지만 자기 파일만 지울 수 있게 하는 특수 권한은?',o:['SetUID','SetGID','Sticky Bit','umask'],a:3,e:'Sticky Bit가 설정되면 ls -l에 t로 보여요.'},
+ {t:1,l:3,q:'passwd 명령처럼 실행하는 동안 소유자(root) 권한으로 동작하게 하는 특수 권한은?',o:['Sticky Bit','SetUID','SetGID','ACL'],a:2,e:'SetUID가 있으면 실행 중에 파일 소유자의 권한을 얻어요.'},
+ {t:2,l:1,q:'실행 중인 프로세스 목록을 보여 주는 명령은?',o:['ps','ls','pwd','cat'],a:1,e:'ps aux로 전체 프로세스를 볼 수 있어요.'},
+ {t:2,l:1,q:'프로세스를 종료하는 명령은?',o:['stop','kill','end','exit'],a:2,e:'kill PID로 종료 신호를 보내요.'},
+ {t:2,l:1,q:'CPU · 메모리 사용량을 실시간으로 보여 주는 명령은?',o:['top','free -s','df','du'],a:1,e:'top은 계속 갱신되는 화면을 보여 줘요.'},
+ {t:2,l:2,q:'명령을 백그라운드로 실행하려면 끝에 무엇을 붙이나요?',o:['&','|','>','*'],a:1,e:'명령 & 형태로 실행해요.'},
+ {t:2,l:2,q:'kill -9 PID가 보내는 시그널은?',o:['SIGTERM','SIGKILL','SIGHUP','SIGINT'],a:2,e:'9번 SIGKILL은 강제 종료예요. 기본값은 15번 SIGTERM.'},
+ {t:2,l:2,q:'백그라운드 작업을 다시 앞으로 가져오는 명령은?',o:['bg','fg','jobs','nohup'],a:2,e:'fg %작업번호.'},
+ {t:2,l:3,q:'crontab 항목 "0 2 * * 1 /backup.sh"의 실행 시점은?',o:['매일 0시 2분','매주 월요일 2시 0분','매월 1일 2시','2분마다'],a:2,e:'순서: 분 시 일 월 요일. 요일 1은 월요일이에요.'},
+ {t:2,l:3,q:'터미널을 닫아도 명령이 계속 실행되게 하는 명령은?',o:['nice','nohup','renice','wait'],a:2,e:'nohup은 로그아웃 신호(SIGHUP)를 무시하게 해요.'},
+ {t:2,l:3,q:'nice 값에 대한 설명으로 알맞은 것은?',o:['값이 클수록 우선순위가 높다','값이 작을수록 우선순위가 높다','0만 쓸 수 있다','일반 사용자도 음수로 바꿀 수 있다'],a:2,e:'nice는 -20~19, 작을수록 우선순위가 높고 음수는 root만 줄 수 있어요.'},
+ {t:3,l:1,q:'새 사용자 계정을 만드는 명령은?',o:['useradd','usermod','newuser','mkuser'],a:1,e:'useradd 사용자명.'},
+ {t:3,l:1,q:'사용자 비밀번호를 설정 · 변경하는 명령은?',o:['pass','passwd','chpass','pw'],a:2,e:'passwd 사용자명.'},
+ {t:3,l:1,q:'관리자 권한으로 명령 하나를 실행할 때 앞에 붙이는 것은?',o:['root','sudo','admin','su'],a:2,e:'sudo 명령 형태로 써요.'},
+ {t:3,l:2,q:'사용자 계정 정보(이름, UID, 홈 디렉터리, 셸)가 저장된 파일은?',o:['/etc/shadow','/etc/passwd','/etc/group','/etc/login'],a:2,e:'/etc/passwd에 계정 정보, 암호화된 비밀번호는 /etc/shadow에 있어요.'},
+ {t:3,l:2,q:'암호화된 비밀번호가 저장된 파일은?',o:['/etc/passwd','/etc/shadow','/etc/group','/etc/sudoers'],a:2,e:'/etc/shadow는 root만 읽을 수 있어요.'},
+ {t:3,l:2,q:'root 계정의 UID는?',o:['0','1','100','1000'],a:1,e:'UID 0이 관리자예요.'},
+ {t:3,l:3,q:'기존 그룹을 유지하면서 user1을 docker 그룹에 추가하는 명령은?',o:['usermod -G docker user1','usermod -aG docker user1','groupadd docker user1','chgrp docker user1'],a:2,e:'-a(추가) 없이 -G만 쓰면 기존 보조 그룹이 지워져요.'},
+ {t:3,l:3,q:'su와 su - 의 차이로 알맞은 것은?',o:['차이가 없다','su -는 대상 사용자의 환경 변수와 홈 디렉터리까지 불러온다','su는 root만 쓸 수 있다','su -는 비밀번호를 묻지 않는다'],a:2,e:'su -는 로그인 셸처럼 환경을 새로 불러와요.'},
+ {t:3,l:3,q:'sudo 권한을 설정할 때 안전하게 편집하는 명령은?',o:['vi /etc/sudoers','visudo','sudo -e passwd','nano /etc/group'],a:2,e:'visudo는 문법 검사를 해 줘서 설정 실수를 막아요.'},
+ {t:4,l:1,q:'파일 내용 전체를 화면에 출력하는 명령은?',o:['cat','cut','cp','cd'],a:1,e:'cat 파일명.'},
+ {t:4,l:1,q:'파일의 마지막 10줄을 보여 주는 명령은?',o:['head','tail','end','last'],a:2,e:'tail은 끝부분, head는 앞부분이에요.'},
+ {t:4,l:1,q:'명령 결과를 파일에 덮어써서 저장하는 기호는?',o:['>','>>','<','|'],a:1,e:'>는 덮어쓰기, >>는 이어 쓰기예요.'},
+ {t:4,l:2,q:'로그 파일에서 "error"가 들어간 줄만 찾는 명령은?',o:['find error log.txt','grep error log.txt','cat error log.txt','search error log.txt'],a:2,e:'grep 패턴 파일.'},
+ {t:4,l:2,q:'앞 명령의 출력을 다음 명령의 입력으로 넘기는 기호는?',o:['>','&','|',';'],a:3,e:'파이프 | 로 명령을 이어요.'},
+ {t:4,l:2,q:'파일의 줄 수를 세는 명령은?',o:['wc -l file','count file','grep -c file','len file'],a:1,e:'wc -l은 줄 수를 세요.'},
+ {t:4,l:3,q:'access.log에서 IP(첫 번째 칸)별 접속 횟수를 많은 순으로 보는 명령은?',o:["awk '{print $1}' access.log | sort | uniq -c | sort -nr","grep IP access.log | wc -l","cut access.log | uniq","sort access.log | head"],a:1,e:'첫 칸만 뽑아 정렬 → uniq -c로 개수 → 숫자 역순 정렬.'},
+ {t:4,l:3,q:'sed "s/old/new/g" file 의 동작은?',o:['old가 들어간 줄을 지운다','모든 old를 new로 바꿔 출력한다','첫 old만 new로 바꾼다','파일 이름을 바꾼다'],a:2,e:'s는 치환, g는 한 줄의 모든 일치 항목을 바꿔요.'},
+ {t:4,l:3,q:'명령의 오류 메시지만 error.log에 저장하는 방법은?',o:['cmd > error.log','cmd 2> error.log','cmd | error.log','cmd >> error.log 1'],a:2,e:'2는 표준 에러(stderr)예요.'},
+ {t:5,l:1,q:'다른 컴퓨터와 통신이 되는지 확인하는 명령은?',o:['ping','route','hostname','netstat -r'],a:1,e:'ping 주소로 응답을 확인해요.'},
+ {t:5,l:1,q:'내 컴퓨터의 IP 주소를 확인하는 명령은?',o:['ip addr','ls ip','whoami','hostname -x'],a:1,e:'ip addr(또는 ifconfig)로 확인해요.'},
+ {t:5,l:1,q:'우분투에서 패키지를 설치하는 명령은?',o:['apt install','yum get','rpm -x','pkg add'],a:1,e:'데비안 · 우분투 계열은 apt를 써요.'},
+ {t:5,l:2,q:'nginx 서비스의 상태를 확인하는 명령은?',o:['systemctl status nginx','service nginx check','nginx -t','ps nginx'],a:1,e:'systemctl start · stop · restart · status로 서비스를 다뤄요.'},
+ {t:5,l:2,q:'부팅할 때 서비스가 자동으로 시작되게 하는 명령은?',o:['systemctl start nginx','systemctl enable nginx','systemctl boot nginx','systemctl auto nginx'],a:2,e:'enable은 부팅 시 자동 시작, start는 지금 바로 시작이에요.'},
+ {t:5,l:2,q:'CentOS · Rocky 계열에서 쓰는 패키지 관리자는?',o:['apt','dnf(yum)','pacman','brew'],a:2,e:'레드햇 계열은 dnf(예전 yum)를 써요.'},
+ {t:5,l:3,q:'현재 열려서 대기 중인 TCP 포트를 확인하는 명령은?',o:['ss -tln','ping -p','ip route','traceroute -l'],a:1,e:'t=TCP, l=LISTEN, n=숫자로 표시.'},
+ {t:5,l:3,q:'firewalld에서 80번 포트를 영구적으로 여는 명령은?',o:['firewall-cmd --add-port=80/tcp --permanent','iptables open 80','ufw enable 80','systemctl open 80'],a:1,e:'--permanent 후 firewall-cmd --reload로 적용해요.'},
+ {t:5,l:3,q:'DNS 서버 주소가 설정되는 파일은?',o:['/etc/hosts','/etc/resolv.conf','/etc/hostname','/etc/services'],a:2,e:'/etc/hosts는 직접 지정한 이름, resolv.conf는 DNS 서버예요.'}
+ ]},
+netsec:{name:'네트워크 · 정보보안',topics:[
+ {n:'OSI · TCP/IP',study:['OSI 7계층 이름과 순서를 먼저 외우고 계층마다 대표 장비 하나씩 연결해 보세요.','TCP와 UDP 차이, 3-way handshake 과정을 그림으로 그려 보세요.','캡슐화 단위(프레임 · 패킷 · 세그먼트), 계층별 프로토콜(ARP, ICMP 등)을 정리하세요.']},
+ {n:'IP · 서브넷',study:['IPv4 주소가 8비트씩 4칸이라는 것, 사설 IP 대역(10, 172.16, 192.168)을 먼저 익히세요.','서브넷 마스크(/24, /26)로 네트워크 주소와 브로드캐스트 주소를 구하는 연습을 하세요.','서브넷 분할 계산, 호스트 수 계산(2^n - 2), NAT · DHCP 동작을 정리하세요.']},
+ {n:'포트 · 프로토콜',study:['HTTP 80, HTTPS 443, SSH 22, DNS 53 같은 대표 포트를 카드로 외우세요.','DNS 조회 과정, HTTP 요청 · 응답 구조와 상태 코드(200, 404, 500)를 정리하세요.','FTP 액티브 · 패시브, SMTP · POP3 · IMAP 차이, TLS 핸드셰이크를 정리하세요.']},
+ {n:'암호 · 인증',study:['대칭키와 공개키 암호의 차이를 비유(자물쇠 · 열쇠)로 정리해 보세요.','해시(SHA-256)의 특징, 비밀번호를 해시로 저장하는 이유와 솔트를 익히세요.','전자서명 · 인증서(PKI) 흐름, 다중 인증(MFA), 접근 통제 모델을 정리하세요.']},
+ {n:'웹 공격',study:['SQL 인젝션과 XSS가 무엇인지 공격 예시 한 줄씩 외워 보세요.','CSRF · 파일 업로드 취약점 · 디렉터리 이동 공격과 대응 방법을 짝지어 정리하세요.','OWASP Top 10 항목과 시큐어 코딩(입력 검증, 준비된 문장)을 정리하세요.']},
+ {n:'보안 장비 · 운영',study:['방화벽 · IDS · IPS가 각각 무엇을 막고 탐지하는지 한 줄로 정리하세요.','DoS · DDoS 유형(SYN Flood 등), 로그 분석의 기본(누가 · 언제 · 무엇을)을 익히세요.','VPN · 망분리 · 보안 관제(SIEM) 흐름, 침해 사고 대응 절차를 정리하세요.']}],
+ q:[
+ {t:0,l:1,q:'OSI 7계층 중 가장 아래 계층은?',o:['물리 계층','데이터링크 계층','네트워크 계층','응용 계층'],a:1,e:'1계층 물리 → 7계층 응용 순서예요.'},
+ {t:0,l:1,q:'IP 주소를 이용해 경로를 정하는 계층은?',o:['전송 계층','네트워크 계층','세션 계층','물리 계층'],a:2,e:'3계층 네트워크 계층, 대표 장비는 라우터예요.'},
+ {t:0,l:1,q:'연결을 맺고 신뢰성 있게 전달하는 전송 프로토콜은?',o:['UDP','TCP','IP','ARP'],a:2,e:'TCP는 연결 지향, UDP는 비연결형이에요.'},
+ {t:0,l:2,q:'TCP 3-way handshake의 순서는?',o:['SYN → ACK → FIN','SYN → SYN/ACK → ACK','ACK → SYN → FIN','SYN → FIN → ACK'],a:2,e:'연결 요청 → 응답 · 요청 → 확인.'},
+ {t:0,l:2,q:'스위치가 동작하는 계층은?',o:['1계층','2계층','4계층','7계층'],a:2,e:'일반 스위치는 MAC 주소로 전달하는 2계층 장비예요.'},
+ {t:0,l:2,q:'실시간 영상 · 음성 스트리밍에 주로 쓰이는 프로토콜은?',o:['TCP','UDP','ARP','ICMP'],a:2,e:'조금 손실돼도 빠른 UDP가 유리해요.'},
+ {t:0,l:3,q:'IP 주소로 MAC 주소를 알아내는 프로토콜은?',o:['RARP','ARP','ICMP','DNS'],a:2,e:'ARP는 IP → MAC, RARP는 반대예요.'},
+ {t:0,l:3,q:'ping 명령이 사용하는 프로토콜은?',o:['TCP','UDP','ICMP','ARP'],a:3,e:'ICMP Echo Request · Reply를 써요.'},
+ {t:0,l:3,q:'전송 계층(4계층)의 데이터 단위는?',o:['프레임','패킷','세그먼트','비트'],a:3,e:'2계층 프레임, 3계층 패킷, 4계층 세그먼트예요.'},
+ {t:1,l:1,q:'IPv4 주소는 몇 비트인가요?',o:['16비트','32비트','64비트','128비트'],a:2,e:'8비트 × 4칸 = 32비트. IPv6는 128비트예요.'},
+ {t:1,l:1,q:'다음 중 사설 IP 주소는?',o:['8.8.8.8','192.168.0.10','203.0.113.5','1.1.1.1'],a:2,e:'192.168.x.x는 사설 대역이에요.'},
+ {t:1,l:1,q:'IP 주소를 자동으로 나눠 주는 프로토콜은?',o:['DNS','DHCP','FTP','SNMP'],a:2,e:'DHCP 서버가 IP를 할당해요.'},
+ {t:1,l:2,q:'192.168.1.0/24 네트워크에서 쓸 수 있는 호스트 수는?',o:['254','256','255','128'],a:1,e:'2^8 - 2(네트워크 · 브로드캐스트) = 254.'},
+ {t:1,l:2,q:'/24 서브넷 마스크를 10진수로 쓰면?',o:['255.255.0.0','255.255.255.0','255.255.255.255','255.0.0.0'],a:2,e:'앞 24비트가 1이에요.'},
+ {t:1,l:2,q:'사설 IP를 공인 IP로 바꿔 인터넷에 나가게 하는 기술은?',o:['DNS','NAT','ARP','VLAN'],a:2,e:'NAT(주소 변환)이에요.'},
+ {t:1,l:3,q:'192.168.10.70/26 이 속한 네트워크의 브로드캐스트 주소는?',o:['192.168.10.63','192.168.10.127','192.168.10.255','192.168.10.64'],a:2,e:'/26은 64개씩 나뉘어 64~127 구간, 브로드캐스트는 127이에요.'},
+ {t:1,l:3,q:'/27 서브넷 하나에서 쓸 수 있는 호스트 수는?',o:['30','32','62','14'],a:1,e:'2^5 - 2 = 30.'},
+ {t:1,l:3,q:'172.20.5.1은 어떤 주소인가요?',o:['공인 IP','사설 IP (172.16.0.0/12 대역)','루프백 주소','멀티캐스트 주소'],a:2,e:'172.16.0.0 ~ 172.31.255.255가 사설 대역이에요.'},
+ {t:2,l:1,q:'HTTPS의 기본 포트는?',o:['80','443','22','21'],a:2,e:'HTTP 80, HTTPS 443.'},
+ {t:2,l:1,q:'도메인 이름을 IP 주소로 바꿔 주는 서비스는?',o:['DHCP','DNS','FTP','SMTP'],a:2,e:'DNS가 이름을 주소로 바꿔요.'},
+ {t:2,l:1,q:'원격 서버에 암호화된 연결로 접속하는 SSH의 기본 포트는?',o:['21','22','23','25'],a:2,e:'23번 Telnet은 암호화가 없어 위험해요.'},
+ {t:2,l:2,q:'HTTP 상태 코드 404의 의미는?',o:['성공','요청한 자원을 찾을 수 없음','서버 내부 오류','권한 없음'],a:2,e:'200 성공, 403 금지, 404 없음, 500 서버 오류.'},
+ {t:2,l:2,q:'메일을 보낼 때 쓰는 프로토콜은?',o:['POP3','IMAP','SMTP','SNMP'],a:3,e:'보내기는 SMTP, 받기는 POP3 · IMAP이에요.'},
+ {t:2,l:2,q:'DNS가 주로 사용하는 포트는?',o:['53','67','110','161'],a:1,e:'DNS는 53번(주로 UDP)을 써요.'},
+ {t:2,l:3,q:'HTTPS 연결에서 서버의 신원을 확인하는 데 쓰이는 것은?',o:['쿠키','인증서','세션 ID','방화벽 규칙'],a:2,e:'TLS 핸드셰이크에서 서버 인증서를 검증해요.'},
+ {t:2,l:3,q:'받은 메일을 서버에 남겨 두고 여러 기기에서 동기화해 보는 프로토콜은?',o:['POP3','IMAP','SMTP','FTP'],a:2,e:'POP3는 내려받아 가져오고, IMAP은 서버와 동기화해요.'},
+ {t:2,l:3,q:'HTTP 메서드 중 서버의 자원을 지우는 요청은?',o:['GET','POST','PUT','DELETE'],a:4,e:'GET 조회, POST 생성, PUT 수정, DELETE 삭제.'},
+ {t:3,l:1,q:'암호화와 복호화에 같은 키를 쓰는 방식은?',o:['공개키 암호','대칭키 암호','해시','전자서명'],a:2,e:'대칭키는 빠르지만 키 전달이 어려워요.'},
+ {t:3,l:1,q:'다음 중 대칭키 암호 알고리즘은?',o:['RSA','AES','ECC','DSA'],a:2,e:'AES는 대칭키, RSA · ECC는 공개키예요.'},
+ {t:3,l:1,q:'비밀번호 + 휴대폰 인증처럼 두 가지 이상을 함께 쓰는 인증은?',o:['단일 인증','다중 인증(MFA)','익명 인증','생체 인증만'],a:2,e:'아는 것 · 가진 것 · 본인 특징 중 두 가지 이상을 써요.'},
+ {t:3,l:2,q:'해시 함수의 특징으로 틀린 것은?',o:['입력이 달라지면 결과가 크게 달라진다','결과 길이가 일정하다','결과로 원문을 복원할 수 있다','같은 입력은 같은 결과가 나온다'],a:3,e:'해시는 일방향이라 원문을 되돌릴 수 없어요.'},
+ {t:3,l:2,q:'A가 B에게 비밀 메시지를 보낼 때 공개키 암호에서 쓰는 키는?',o:['A의 개인키','A의 공개키','B의 공개키','B의 개인키'],a:3,e:'받는 사람의 공개키로 잠그면 B의 개인키로만 열 수 있어요.'},
+ {t:3,l:2,q:'비밀번호를 해시할 때 같은 비밀번호도 다른 결과가 나오게 덧붙이는 값은?',o:['솔트','키 스트림','논스','패딩'],a:1,e:'솔트로 미리 계산된 해시표(레인보우 테이블) 공격을 막아요.'},
+ {t:3,l:3,q:'전자서명을 만들 때 쓰는 키는?',o:['보내는 사람의 개인키','보내는 사람의 공개키','받는 사람의 공개키','대칭키'],a:1,e:'개인키로 서명하고 공개키로 누구나 검증해요.'},
+ {t:3,l:3,q:'관리자가 보안 등급에 따라 접근 권한을 강제로 정하는 접근 통제 모델은?',o:['DAC','MAC','RBAC','ABAC'],a:2,e:'MAC(강제적), DAC(소유자 재량), RBAC(역할 기반).'},
+ {t:3,l:3,q:'다음 중 해시 알고리즘으로 현재 권장되는 것은?',o:['MD5','SHA-1','SHA-256','DES'],a:3,e:'MD5 · SHA-1은 충돌 공격에 취약해요. DES는 암호 알고리즘이에요.'},
+ {t:4,l:1,q:"로그인 창에 ' OR '1'='1 같은 입력으로 DB를 조작하는 공격은?",o:['XSS','SQL 인젝션','DDoS','피싱'],a:2,e:'입력값이 SQL 문에 그대로 들어가서 생겨요.'},
+ {t:4,l:1,q:'게시판에 악성 스크립트를 심어 다른 사용자 브라우저에서 실행되게 하는 공격은?',o:['SQL 인젝션','XSS','CSRF','스니핑'],a:2,e:'XSS(크로스 사이트 스크립팅)예요.'},
+ {t:4,l:1,q:'진짜처럼 꾸민 메일이나 사이트로 개인정보를 빼내는 공격은?',o:['피싱','스푸핑','랜섬웨어','웜'],a:1,e:'피싱(Phishing)이에요.'},
+ {t:4,l:2,q:'SQL 인젝션을 막는 가장 효과적인 방법은?',o:['비밀번호를 길게 한다','준비된 문장(Prepared Statement)을 쓴다','HTTPS를 쓴다','방화벽 포트를 닫는다'],a:2,e:'입력값을 SQL 구조와 분리해서 처리해요.'},
+ {t:4,l:2,q:'로그인한 사용자가 모르게 요청을 보내게 만드는 공격은?',o:['XSS','CSRF','SQL 인젝션','무차별 대입'],a:2,e:'CSRF는 사용자의 인증 상태를 악용해요. 토큰으로 막아요.'},
+ {t:4,l:2,q:'XSS를 막는 방법으로 알맞은 것은?',o:['출력할 때 특수문자를 이스케이프한다','포트를 바꾼다','DB 백업을 한다','파일 이름을 바꾼다'],a:1,e:'< > 같은 문자를 &lt; 등으로 바꿔 스크립트로 실행되지 않게 해요.'},
+ {t:4,l:3,q:'../../etc/passwd 같은 경로로 허용되지 않은 파일에 접근하는 공격은?',o:['디렉터리 이동(Path Traversal)','XSS','세션 고정','클릭재킹'],a:1,e:'파일 경로 입력값을 검증해서 막아요.'},
+ {t:4,l:3,q:'웹셸 업로드 공격을 막는 방법으로 가장 알맞은 것은?',o:['업로드 파일 확장자 · 형식을 검증하고 실행 권한 없는 곳에 저장한다','파일 크기만 제한한다','업로드 버튼을 숨긴다','HTTPS만 쓴다'],a:1,e:'확장자 화이트리스트, 실행 권한 제거, 파일명 변경을 함께 써요.'},
+ {t:4,l:3,q:'웹 애플리케이션 주요 취약점 10가지를 정리해 발표하는 국제 단체는?',o:['OWASP','IETF','ISO','W3C'],a:1,e:'OWASP Top 10이 대표적인 기준이에요.'},
+ {t:5,l:1,q:'정해진 규칙에 따라 들어오고 나가는 트래픽을 허용 · 차단하는 장비는?',o:['방화벽','스위치','허브','리피터'],a:1,e:'IP · 포트 규칙으로 통제해요.'},
+ {t:5,l:1,q:'여러 컴퓨터가 동시에 요청을 보내 서비스를 마비시키는 공격은?',o:['DDoS','피싱','스니핑','키로깅'],a:1,e:'분산 서비스 거부 공격이에요.'},
+ {t:5,l:1,q:'공용망 위에 암호화된 사설 통로를 만드는 기술은?',o:['VPN','VLAN','NAT','DNS'],a:1,e:'VPN으로 외부에서도 안전하게 내부망에 접속해요.'},
+ {t:5,l:2,q:'침입을 탐지만 하고 알리는 시스템은?',o:['IPS','IDS','WAF','DLP'],a:2,e:'IDS는 탐지, IPS는 탐지 후 차단까지 해요.'},
+ {t:5,l:2,q:'SYN 패킷만 대량으로 보내 연결 대기열을 가득 채우는 공격은?',o:['SYN Flooding','Ping of Death','스미싱','ARP 스푸핑'],a:1,e:'3-way handshake를 끝내지 않아 서버 자원을 묶어 둬요.'},
+ {t:5,l:2,q:'웹 공격(SQL 인젝션, XSS 등)을 전문으로 막는 방화벽은?',o:['WAF','NAC','DLP','VPN'],a:1,e:'웹 애플리케이션 방화벽이에요.'},
+ {t:5,l:3,q:'여러 보안 장비의 로그를 모아 상관 분석하고 관제하는 시스템은?',o:['SIEM','DHCP','DNS','CDN'],a:1,e:'SIEM으로 흩어진 로그를 한곳에서 분석해요.'},
+ {t:5,l:3,q:'침해 사고 대응 절차로 알맞은 순서는?',o:['탐지 → 분석 → 차단 · 복구 → 재발 방지','복구 → 탐지 → 분석 → 보고','차단 → 탐지 → 보고 → 분석','보고 → 복구 → 탐지'],a:1,e:'탐지 · 분석 후 확산을 막고 복구, 마지막으로 재발 방지 대책을 세워요.'},
+ {t:5,l:3,q:'같은 네트워크에서 가짜 ARP 응답으로 통신을 가로채는 공격은?',o:['ARP 스푸핑','DNS 터널링','세션 하이재킹','SYN Flooding'],a:1,e:'공격자가 게이트웨이인 척해서 패킷을 중간에서 봐요.'}
+ ]}
+};
+const QLEVEL=['','하','중','상'];
+/* ===== 과제 제작 · 채점 · 수준 분석 (문제은행 기반) ===== */
+const QZ_KEYS=Object.keys(QBANK);
+const CIRC=['','①','②','③','④'];
+let QW=null; // 제작 마법사 상태
+
+function qzShuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function qzPick(sub,lv,topics,per){
+  const B=QBANK[sub]; const out=[];
+  topics.forEach(t=>{
+    const same=qzShuffle(B.q.filter(q=>q.t===t&&q.l===lv));
+    const near=qzShuffle(B.q.filter(q=>q.t===t&&Math.abs(q.l-lv)===1));
+    same.concat(near).slice(0,per).forEach(q=>{ const ord=qzShuffle([0,1,2,3]); out.push({t:q.t,l:q.l,q:q.q,c:q.c||'',o:ord.map(k=>q.o[k]),a:ord.indexOf(q.a-1)+1,e:q.e}); });
+  });
+  return qzShuffle(out);
+}
+function qzTitle(sub,lv){ return `${QBANK[sub].name} ${QLEVEL[lv]} 단계 과제`; }
+
+/* ---------- 제작 마법사 ---------- */
+function openQuiz(opt={}){
+  QW={step:opt.sub?2:1,sub:opt.sub||'',lv:opt.lv||2,topics:opt.topics||null,per:opt.per||3,sid:opt.sid||'',qs:null,back:opt.back||''};
+  drawQuiz();
+}
+function drawQuiz(){
+  const w=QW; const t=todayStr();
+  let body='';
+  if(w.step===1){
+    body=`<p class="qz-lead">어떤 과목의 과제를 만들까요?</p><div class="qz-subs">${QZ_KEYS.map(k=>`<button class="qz-sub" data-act="qzSub" data-k="${k}"><b>${QBANK[k].name}</b><span>${QBANK[k].topics.map(x=>x.n).join(' · ')}</span><small>${QBANK[k].q.length}문항 보유</small></button>`).join('')}</div>`;
+  } else if(w.step===2){
+    const B=QBANK[w.sub]; const tp=w.topics||B.topics.map((_,i)=>i);
+    body=`<p class="qz-lead">${B.name} · 난이도와 범위를 골라 주세요</p>
+      <div class="qz-lv">${[1,2,3].map(l=>`<button class="${w.lv===l?'on':''}" data-act="qzLv" data-k="${l}"><b>${QLEVEL[l]}</b><span>${['','처음 배우는 단계 · 기본 개념','개념을 응용하는 단계','실전 · 자격증 수준'][l]}</span></button>`).join('')}</div>
+      <div class="field full"><span>출제 영역</span><div class="qz-tops">${B.topics.map((x,i)=>`<label class="check"><input type="checkbox" class="qzTop" value="${i}" ${tp.includes(i)?'checked':''}>${x.n}</label>`).join('')}</div></div>
+      <div class="field full"><span>영역별 문항 수</span><div class="seg">${[1,2,3].map(n=>`<button class="${w.per===n?'on':''}" data-act="qzPer" data-k="${n}">${n}문항씩</button>`).join('')}</div></div>`;
+  } else {
+    const B=QBANK[w.sub]; const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+    body=`<div class="qz-head"><div><b>${esc(qzTitle(w.sub,w.lv))}</b><span>${w.qs.length}문항 · ${[...new Set(w.qs.map(q=>B.topics[q.t].n))].join(' · ')}</span></div><button class="btn sm ghost" data-act="qzShuffle">${ic('right')}다시 뽑기</button></div>
+      <div class="qz-prev">${w.qs.map((q,i)=>`<div class="qz-q"><div class="qz-qh"><b>${i+1}.</b> ${esc(q.q)} <span class="chip">${esc(B.topics[q.t].n)} · ${QLEVEL[q.l]}</span></div>${q.c?`<pre>${esc(q.c)}</pre>`:''}<ol>${q.o.map((o,k)=>`<li class="${k+1===q.a?'ok':''}">${CIRC[k+1]} ${esc(o)}</li>`).join('')}</ol></div>`).join('')}</div>
+      <div class="form qz-reg"><label class="field"><span>학생</span><select id="qzSid" class="in"><option value="">학생 없이 (인쇄 · 파일만)</option>${sts.map(s=>`<option value="${s.id}" ${w.sid===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></label>
+      <label class="field"><span>제출 마감</span><input id="qzDue" class="in" type="date" value="${addDays(t,7)}"></label></div>`;
+  }
+  const foot=w.step===1?`<button class="btn ghost" data-act="${w.back?'qzBack':'close'}">취소</button>`
+    :w.step===2?`<button class="btn ghost" data-act="qzPrev">이전</button><button class="btn pri" data-act="qzMake">문제 뽑기</button>`
+    :`<button class="btn ghost" data-act="qzPrev">이전</button><button class="btn" data-act="qzWord">${ic('dl')}Word</button><button class="btn" data-act="qzPrint">인쇄</button><button class="btn pri" data-act="qzSave">학생 과제로 등록</button>`;
+  const html=`${mHead('과제 제작')}<div class="body qz">${body}</div><footer>${foot}</footer>`;
+  if(modalEl&&modalEl._kind==='quiz') modalEl.querySelector('.sheet').innerHTML=html; else { openModal(html,'wide'); modalEl._kind='quiz'; }
+}
+
+/* ---------- 시험지 · 정답지 HTML (Word · 인쇄 공용) ---------- */
+function wsHTML(qz,o={}){
+  const B=QBANK[qz.sub]; const n=qz.qs.length; const branch=S.settings.branch||'코리아AI아카데미';
+  const rows=Math.ceil(n/3); let sheet='';
+  for(let r=0;r<rows;r++){ sheet+='<tr>'; for(let c=0;c<3;c++){ const i=c*rows+r; const TD='border:1px solid #333;padding:6pt;text-align:center;font-size:11pt;'; sheet+=i<n?`<td class="no" style="${TD}width:12%;background:#f4f4f4;font-weight:bold">${i+1}</td><td class="an" style="${TD}width:21%">${o.key?CIRC[qz.qs[i].a]:'&nbsp;'}</td>`:`<td class="no" style="${TD}">&nbsp;</td><td class="an" style="${TD}">&nbsp;</td>`; } sheet+='</tr>'; }
+  const qs=qz.qs.map((q,i)=>`<div class="q"><p class="qt" style="margin:12pt 0 4pt"><b>${i+1}.</b> ${esc(q.q)}</p>${q.c?`<pre class="code" style="font-family:Consolas,monospace;font-size:9.5pt;background:#f6f6f6;border:1px solid #ddd;padding:6pt 8pt">${esc(q.c)}</pre>`:''}${q.o.map((x,k)=>`<p class="op" style="margin:1pt 0 1pt 12pt">${CIRC[k+1]} ${esc(x).replace(/\n/g,'<br>')}</p>`).join('')}${o.key?`<p class="ex">정답 ${CIRC[q.a]} · ${esc(q.e)} <i>[${esc(B.topics[q.t].n)}]</i></p>`:''}</div>`).join('');
+  return `<div class="ws">
+  <table class="hd"><tr><td class="tl"><div class="brand">${esc(branch)}</div><div class="ttl">${esc(qz.title||qzTitle(qz.sub,qz.lv))}${o.key?' — 정답 · 해설':''}</div></td>
+  <td class="meta">이름 <span class="ln">${esc(o.name||'')}</span><br>날짜 <span class="ln">${o.date?esc(o.date):''}</span></td></tr></table>
+  ${o.key?'':`<div class="guide" style="background:#f3f3f3;border-left:3px solid #111;padding:7pt 9pt;font-size:9.5pt">· 문제를 풀고 마지막 장 <b>답안표</b>에 보기 번호(1~4)를 적어 주세요.<br>· 모르는 문제는 찍지 말고 비워 두세요. 정확한 수준 분석에 도움이 돼요.<br>· 코드 문제는 직접 실행하지 말고, 머릿속으로 한 줄씩 따라가며 풀어 보세요.</div>`}
+  ${qs}
+  <br clear="all" style="page-break-before:always" class="pb">
+  <div class="ansh"><div class="ttl2">답안표 · ${esc(qz.title||qzTitle(qz.sub,qz.lv))}</div><p class="sm">이름 <span class="ln">${esc(o.name||'')}</span></p>
+  <table class="sheet" width="100%" border="1" cellspacing="0" cellpadding="6" style="width:100%;border-collapse:collapse;border:1px solid #333"><tr>${'<th style="border:1px solid #333;padding:6pt;background:#e8e8e8">번호</th><th style="border:1px solid #333;padding:6pt;background:#e8e8e8">답</th>'.repeat(3)}</tr>${sheet}</table>
+  <p class="sm">이 표에 답을 적어 그대로 보내 주세요. Word 파일로 보내도 자동으로 채점돼요.</p></div></div>`;
+}
+const WS_CSS=`.ws{font-family:'Malgun Gothic','맑은 고딕','Apple SD Gothic Neo',sans-serif;color:#111;font-size:11pt;line-height:1.55}
+.ws .hd{width:100%;border-collapse:collapse;border-bottom:2px solid #111;margin-bottom:10pt}.ws .hd td{padding:0 0 6pt;vertical-align:bottom}
+.ws .brand{font-size:9pt;color:#555;letter-spacing:1pt}.ws .ttl{font-size:17pt;font-weight:700}.ws .meta{text-align:right;font-size:10pt;line-height:2}
+.ws .ln{display:inline-block;min-width:90pt;border-bottom:1px solid #999;text-align:center}
+.ws .guide{font-size:9.5pt;color:#333;background:#f3f3f3;padding:7pt 9pt;margin-bottom:12pt;border-left:3px solid #111}
+.ws .q{margin:0 0 13pt;page-break-inside:avoid}.ws .qt{margin:0 0 4pt;font-weight:600}
+.ws .code{font-family:Consolas,'D2Coding',monospace;font-size:9.5pt;background:#f6f6f6;border:1px solid #ddd;padding:6pt 8pt;margin:4pt 0 6pt;white-space:pre-wrap}
+.ws .op{margin:0;padding-left:10pt}.ws .op span{display:block;margin:1pt 0}
+.ws .ex{margin:4pt 0 0;padding:5pt 8pt;background:#eef5ff;font-size:9.5pt}.ws .ex i{color:#666;font-style:normal}
+.ws .pb{page-break-before:always;height:0}
+.ws .ttl2{font-size:14pt;font-weight:700;margin-bottom:6pt}.ws .sm{font-size:9.5pt;color:#444}
+.ws .sheet{width:100%;border-collapse:collapse;margin:8pt 0}.ws .sheet th,.ws .sheet td{border:1px solid #333;padding:5pt;text-align:center;font-size:11pt}
+.ws .sheet th{background:#eee}.ws .sheet td.no{width:12%;background:#fafafa;font-weight:600}.ws .sheet td.an{width:21%}`;
+function wordDoc(inner,title){
+  return `﻿<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${esc(title)}</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>@page{size:A4;margin:18mm 16mm}${WS_CSS}</style></head><body>${inner}</body></html>`;
+}
+function printHTML(inner){
+  let pa=document.getElementById('printArea'); if(!pa){ pa=document.createElement('div'); pa.id='printArea'; document.body.appendChild(pa); }
+  pa.innerHTML=`<style>${WS_CSS}</style>${inner}`; document.body.classList.add('printing');
+  const done=()=>{ document.body.classList.remove('printing'); pa.innerHTML=''; };
+  addEventListener('afterprint',done,{once:true}); setTimeout(()=>{ try{ window.print(); }catch(e){} setTimeout(()=>{ if(document.body.classList.contains('printing')&&!matchMedia('print').matches) done(); },1500); },60);
+}
+function qzFileName(qz,name,suffix){ return `${name?name+'_':''}${QBANK[qz.sub].name.replace(/[^\w가-힣]+/g,'')}_${QLEVEL[qz.lv]}_${suffix}.doc`; }
+
+/* ---------- 채점 ---------- */
+function parseAnswerText(txt,n){
+  const ans=Array(n).fill(0); txt=String(txt||'').replace(/[①②③④]/g,m=>CIRC.indexOf(m));
+  const pairs=[...txt.matchAll(/(\d{1,2})\s*[.:)번\-]\s*([1-4])/g)];
+  if(pairs.length>=Math.min(3,n)){ pairs.forEach(m=>{ const i=+m[1]-1; if(i>=0&&i<n) ans[i]=+m[2]; }); return ans; }
+  const seq=txt.replace(/[^1-4xX\-_?]/g,'').split(''); seq.slice(0,n).forEach((c,i)=>{ ans[i]=/[1-4]/.test(c)?+c:0; }); return ans;
+}
+function answersFromRows(rows,n){
+  const ans=Array(n).fill(0); let hit=0;
+  rows.forEach(cells=>{ for(let k=0;k+1<cells.length;k++){ const no=cells[k].trim(), v=cells[k+1].trim().replace(/[①②③④]/g,m=>CIRC.indexOf(m)); if(/^\d{1,2}$/.test(no)&&+no>=1&&+no<=n&&/^[1-4]$/.test(v)){ ans[+no-1]=+v; hit++; k++; } } });
+  return hit?ans:null;
+}
+async function loadJSZip(){ if(window.JSZip) return window.JSZip; await new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); return window.JSZip; }
+async function answersFromFile(file,n){
+  const name=file.name.toLowerCase();
+  if(name.endsWith('.docx')){
+    const Z=await loadJSZip(); const zip=await Z.loadAsync(await file.arrayBuffer()); const xml=await zip.file('word/document.xml').async('string');
+    const doc=new DOMParser().parseFromString(xml,'application/xml'); const W='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+    const rows=[...doc.getElementsByTagNameNS(W,'tr')].map(tr=>[...tr.getElementsByTagNameNS(W,'tc')].map(tc=>[...tc.getElementsByTagNameNS(W,'t')].map(t=>t.textContent).join('')));
+    return answersFromRows(rows,n)||parseAnswerText([...doc.getElementsByTagNameNS(W,'t')].map(t=>t.textContent).join(' '),n);
+  }
+  const text=await file.text();
+  if(/<t[dr][\s>]/i.test(text)){ const d=new DOMParser().parseFromString(text,'text/html'); const rows=[...d.querySelectorAll('tr')].map(tr=>[...tr.children].map(td=>td.textContent)); const r=answersFromRows(rows,n); if(r) return r; return parseAnswerText(d.body.textContent,n); }
+  return parseAnswerText(text,n);
+}
+function gradeQuiz(a){
+  const qz=a.quiz; const ans=a.qAns||[]; const by={}; let ok=0, blank=0;
+  qz.qs.forEach((q,i)=>{ const b=by[q.t]||(by[q.t]={c:0,n:0,b:0}); b.n++; if(!ans[i]){ b.b++; blank++; } else if(ans[i]===q.a){ b.c++; ok++; } });
+  a.res={ok,n:qz.qs.length,blank,by,at:Date.now()}; a.score=`${ok}/${qz.qs.length}`; a.st='done'; const t=todayStr(); a.doneAt=t; if(!a.subAt) a.subAt=t;
+  const nm=k=>QBANK[qz.sub].topics[k].n; const E=Object.entries(by);
+  const weak=E.filter(([k,v])=>v.c/v.n<0.5).map(([k])=>nm(k)), mid=E.filter(([k,v])=>v.c/v.n>=0.5&&v.c/v.n<0.8).map(([k])=>nm(k));
+  a.fb=[weak.length?`취약: ${weak.join(', ')}`:'',mid.length?`보완: ${mid.join(', ')}`:''].filter(Boolean).join(' · ')||'전 영역 양호';
+  return a.res;
+}
+const pct=(c,n)=>n?Math.round(c/n*100):0;
+function topicState(p){ return p>=80?['양호','ok']:p>=50?['보완','warn']:['취약','bad']; }
+
+/* ---------- 차트 (SVG) ---------- */
+function chartBars(rows,print){
+  const col={ok:print?'#1f9d6b':'var(--ok)',warn:print?'#d98a00':'var(--warn)',bad:print?'#d6453a':'var(--bad)'};
+  return `<div class="qz-bars" role="img" aria-label="영역별 정답률">${rows.map(r=>`<div class="qz-bar"><span class="n">${esc(r.n)}</span><span class="tr"><i style="width:${Math.max(2,r.p)}%;background:${col[topicState(r.p)[1]]}"></i></span><b>${r.p}%</b></div>`).join('')}</div>`;
+}
+function chartRadar(rows,print){
+  const S2=300,C=S2/2,R=104,n=rows.length; const pt=(i,v)=>{ const a=-Math.PI/2+i*2*Math.PI/n; return [C+Math.cos(a)*R*v,C+Math.sin(a)*R*v]; };
+  const grid=[0.25,0.5,0.75,1].map(g=>`<polygon points="${rows.map((_,i)=>pt(i,g).join(',')).join(' ')}" fill="none" stroke="${print?'#ccc':'var(--line-2)'}" stroke-width="1"/>`).join('');
+  const axes=rows.map((_,i)=>{ const [x,y]=pt(i,1); return `<line x1="${C}" y1="${C}" x2="${x}" y2="${y}" stroke="${print?'#ddd':'var(--line)'}"/>`; }).join('');
+  const poly=rows.map((r,i)=>pt(i,Math.max(0.04,r.p/100)).join(',')).join(' ');
+  const labels=rows.map((r,i)=>{ const [x,y]=pt(i,1.2); return `<text x="${x}" y="${y+4}" text-anchor="middle" font-size="11.5" fill="${print?'#222':'currentColor'}">${esc(r.n)}</text>`; }).join('');
+  const acc=print?'#1769c2':'var(--accent)';
+  return `<svg class="qz-radar" viewBox="-30 -10 ${S2+60} ${S2+20}" role="img" aria-label="영역별 정답률 레이더">${grid}${axes}<polygon points="${poly}" fill="${acc}" fill-opacity=".18" stroke="${acc}" stroke-width="2"/>${rows.map((r,i)=>{ const [x,y]=pt(i,Math.max(0.04,r.p/100)); return `<circle cx="${x}" cy="${y}" r="3.5" fill="${acc}"/>`; }).join('')}${labels}</svg>`;
+}
+function chartTrend(pts,print){
+  if(pts.length<2) return '';
+  const W=print?640:Math.max(300,Math.min(860,innerWidth-110)),H=print?150:170,px=36,py=22; const x=i=>px+i*(W-px*2)/(pts.length-1), y=v=>H-py-(H-py*2)*v/100;
+  const acc=print?'#1769c2':'var(--accent)';
+  return `<svg class="qz-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="점수 추이">${[0,50,100].map(v=>`<line x1="${px}" x2="${W-px}" y1="${y(v)}" y2="${y(v)}" stroke="${print?'#eee':'var(--line)'}"/><text x="${px-8}" y="${y(v)+4}" text-anchor="end" font-size="10.5" fill="${print?'#777':'currentColor'}" opacity=".7">${v}</text>`).join('')}
+    <polyline points="${pts.map((p,i)=>x(i)+','+y(p.p)).join(' ')}" fill="none" stroke="${acc}" stroke-width="2.4" stroke-linejoin="round"/>${pts.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.p)}" r="4" fill="${acc}"/><text x="${x(i)}" y="${y(p.p)-10}" text-anchor="middle" font-size="11" font-weight="700" fill="${print?'#222':'currentColor'}">${p.p}%</text><text x="${x(i)}" y="${H-2}" text-anchor="middle" font-size="10.5" fill="${print?'#777':'currentColor'}" opacity=".75">${esc(p.l)}</text>`).join('')}</svg>`;
+}
+
+/* ---------- 분석 리포트 ---------- */
+function quizReport(s,a,print){
+  const qz=a.quiz, B=QBANK[qz.sub], r=a.res; const p=pct(r.ok,r.n);
+  const rows=Object.keys(r.by).map(k=>({k:+k,n:B.topics[k].n,c:r.by[k].c,t:r.by[k].n,b:r.by[k].b,p:pct(r.by[k].c,r.by[k].n)})).sort((x,y)=>x.k-y.k);
+  const hist=(s.assigns||[]).filter(x=>x.kind==='quiz'&&x.res&&x.quiz.sub===qz.sub).sort((x,y)=>(x.res.at||0)-(y.res.at||0)).map(x=>({p:pct(x.res.ok,x.res.n),l:`${x.week}주차 ${QLEVEL[x.quiz.lv]}`}));
+  const lvTxt=p>=85?`${QLEVEL[qz.lv]} 단계를 충분히 이해했어요. ${qz.lv<3?`다음엔 ${QLEVEL[qz.lv+1]} 단계로 올려도 좋아요.`:'실전 문제와 자격증 기출로 넘어가도 좋아요.'}`:p>=60?`${QLEVEL[qz.lv]} 단계의 기본은 잡혀 있어요. 아래 보완 영역을 채우면 다음 단계로 넘어갈 수 있어요.`:`${QLEVEL[qz.lv]} 단계가 아직 어려운 편이에요. 취약 영역을 ${qz.lv>1?QLEVEL[qz.lv-1]+' 단계부터 ':''}다시 다지는 걸 추천해요.`;
+  const wrong=qz.qs.map((q,i)=>({q,i,ans:(a.qAns||[])[i]||0})).filter(x=>x.ans!==x.q.a);
+  const tipFor=row=>{ const st=topicState(row.p)[0]; const i=st==='취약'?Math.max(0,qz.lv-2):st==='보완'?qz.lv-1:Math.min(2,qz.lv); return (st==='양호'&&qz.lv===3?'충분해요. 기출 · 실전 문제로 감을 유지하세요. ':'')+B.topics[row.k].study[i]; };
+  const C=print?'qzr print':'qzr';
+  return `<div class="${C}">
+   <div class="qzr-top"><div><div class="qzr-k">${esc(s.name||'')} · ${esc(B.name)} ${QLEVEL[qz.lv]} 단계 · ${a.week}주차</div><div class="qzr-score"><b>${p}</b><span>점</span><em>${r.ok} / ${r.n} 정답${r.blank?` · 빈칸 ${r.blank}`:''}</em></div></div><p class="qzr-sum">${lvTxt}</p></div>
+   <div class="qzr-grid"><div class="qzr-box"><h4>영역별 정답률</h4>${chartBars(rows,print)}</div><div class="qzr-box"><h4>균형</h4>${chartRadar(rows,print)}</div></div>
+   ${hist.length>1?`<div class="qzr-box"><h4>${esc(B.name)} 점수 추이</h4>${chartTrend(hist,print)}</div>`:''}
+   <div class="qzr-box"><h4>영역별 진단 · 이렇게 공부하세요</h4>${rows.slice().sort((x,y)=>x.p-y.p).map(row=>{ const [st,cls]=topicState(row.p); return `<div class="qzr-tp"><div class="qzr-tph"><span class="chip ${cls}">${st}</span><b>${esc(row.n)}</b><span class="qzr-m">${row.c}/${row.t} 정답 · ${row.p}%${row.b?` · 빈칸 ${row.b}`:''}</span></div><p>${esc(tipFor(row))}</p></div>`; }).join('')}</div>
+   ${wrong.length?`<div class="qzr-box"><h4>틀린 문제 다시 보기 <small>${wrong.length}문항</small></h4>${wrong.map(x=>`<div class="qzr-w"><p class="qzr-wq"><b>${x.i+1}.</b> ${esc(x.q.q)} <span class="qzr-m">[${esc(B.topics[x.q.t].n)}]</span></p>${x.q.c?`<pre>${esc(x.q.c)}</pre>`:''}<p class="qzr-wa">학생 답 <b class="bad">${x.ans?CIRC[x.ans]+' '+esc(x.q.o[x.ans-1]):'빈칸'}</b> · 정답 <b class="ok">${CIRC[x.q.a]} ${esc(x.q.o[x.q.a-1])}</b></p><p class="qzr-we">${esc(x.q.e)}</p></div>`).join('')}</div>`:''}
+  </div>`;
+}
+function openReport(sid,aid){
+  const s=D().students[sid]; const a=s&&(s.assigns||[]).find(x=>x.id===aid); if(!a||!a.res) return;
+  const weak=Object.entries(a.res.by).filter(([k,v])=>v.c/v.n<0.8).map(([k])=>+k);
+  openModal(`${mHead('수준 분석')}<div class="body">${quizReport(s,a,false)}</div><footer><button class="btn ghost" data-act="qzBackStu" data-id="${sid}">학생으로</button><button class="btn" data-act="qzRepPrompt" data-id="${sid}" data-aid="${aid}">${ic('send')}Claude 심층 분석 요청문</button><button class="btn" data-act="qzRepPrint" data-id="${sid}" data-aid="${aid}">인쇄</button><button class="btn pri" data-act="qzNext" data-id="${sid}" data-aid="${aid}" data-weak="${weak.join(',')}">보완 과제 만들기</button></footer>`,'wide');
+  modalEl._kind='report';
+}
+
+/* ---------- 학생 과제 카드 안 (퀴즈형) ---------- */
+function quizCard(a){
+  const qz=a.quiz, n=qz.qs.length, B=QBANK[qz.sub]; const d=a.qAns||Array(n).fill(0);
+  const head=`<div class="qz-cardh"><span class="chip blue">${esc(B.name)} · ${QLEVEL[qz.lv]} · ${n}문항</span><button class="btn sm" data-act="qzCardWord" data-id="${a.id}">${ic('dl')}시험지 Word</button><button class="btn sm" data-act="qzCardPrint" data-id="${a.id}">시험지 인쇄</button><button class="btn sm ghost" data-act="qzCardKey" data-id="${a.id}">정답지</button></div>`;
+  if(a.res){ const p=pct(a.res.ok,a.res.n); return `${head}<div class="qz-done"><b>${p}점</b><span>${a.res.ok}/${a.res.n} 정답 · ${esc(a.fb||'')}</span><button class="btn sm pri" data-act="qzOpenRep" data-id="${a.id}">분석 보기</button><button class="btn sm ghost" data-act="qzRegrade" data-id="${a.id}">다시 채점</button></div>`; }
+  return `${head}<div class="qz-grade"><div class="qz-gh"><b>답안 입력</b><span>학생이 보낸 답을 누르거나, 붙여넣거나, 파일로 올리세요</span></div>
+    <div class="qz-grid">${Array.from({length:n},(_,i)=>`<div class="qz-cell"><span>${i+1}</span>${[1,2,3,4].map(v=>`<button class="${d[i]===v?'on':''}" data-act="qzPick" data-id="${a.id}" data-i="${i}" data-v="${v}">${v}</button>`).join('')}</div>`).join('')}</div>
+    <div class="wk-row"><input class="in" id="qzPaste_${a.id}" placeholder="한 번에 붙여넣기 (예: 3 1 4 2 … 또는 1.3 2.1 …)"><button class="btn sm" data-act="qzPasteAns" data-id="${a.id}">적용</button><label class="btn sm">${ic('up')}답안 파일<input type="file" accept=".docx,.doc,.htm,.html,.txt" data-qzfile="${a.id}" hidden></label></div>
+    <div class="btns"><button class="btn pri sm" data-act="qzGrade" data-id="${a.id}">채점하고 분석하기</button><span class="qz-cnt">${d.filter(Boolean).length}/${n} 입력</span></div></div>`;
+}
+
+/* ---------- 동작 ---------- */
+function qzSelTopics(){ return [...document.querySelectorAll('.qzTop')].filter(x=>x.checked).map(x=>+x.value); }
+function qzFind(id){ return SM&&(SM.assigns||[]).find(x=>x.id===id); }
+Object.assign(WACT,{
+  qzOpen:()=>{ wSync(); if(!SM.id||!D().students[SM.id]){ toast('먼저 학생을 저장해 주세요','정보 탭에서 이름을 적고 추가 버튼을 누른 뒤 과제를 만들 수 있어요.'); return; } openQuiz({sid:SM.id,back:SM.id}); },
+  qzOpenFree:()=>openQuiz({}),
+  qzSub:el=>{ QW.sub=el.dataset.k; QW.topics=null; QW.step=2; drawQuiz(); },
+  qzLv:el=>{ QW.topics=qzSelTopics(); QW.lv=+el.dataset.k; drawQuiz(); },
+  qzPer:el=>{ QW.topics=qzSelTopics(); QW.per=+el.dataset.k; drawQuiz(); },
+  qzPrev:()=>{ if(QW.step===3){ QW.step=2; } else { QW.step=1; } drawQuiz(); },
+  qzBack:()=>{ const sid=QW.back; closeModal(); if(sid){ openStudent(sid); SM._tab='as'; drawStudent(); } },
+  qzMake:()=>{ const tp=qzSelTopics(); if(!tp.length){ toast('영역을 하나 이상 골라 주세요',''); return; } QW.topics=tp; QW.qs=qzPick(QW.sub,QW.lv,tp,QW.per); QW.step=3; drawQuiz(); },
+  qzShuffle:()=>{ QW.qs=qzPick(QW.sub,QW.lv,QW.topics,QW.per); drawQuiz(); },
+  qzWord:()=>{ const s=D().students[$('#qzSid').value]; const qz={sub:QW.sub,lv:QW.lv,qs:QW.qs,title:qzTitle(QW.sub,QW.lv)}; saveFile(qzFileName(qz,s&&s.name,'과제'),wordDoc(wsHTML(qz,{name:s?s.name:''}),qz.title)); },
+  qzPrint:()=>{ const s=D().students[$('#qzSid').value]; printHTML(wsHTML({sub:QW.sub,lv:QW.lv,qs:QW.qs,title:qzTitle(QW.sub,QW.lv)},{name:s?s.name:''})); },
+  qzSave:()=>{ const sid=$('#qzSid').value; if(!sid){ toast('학생을 골라 주세요','학생 없이 쓸 때는 Word나 인쇄만 하면 돼요.'); return; }
+    const s=wNorm(clone(D().students[sid])); const week=(s.assigns.reduce((m,a)=>Math.max(m,+a.week||0),0))+1;
+    const a={id:wid('a'),week,kind:'quiz',title:qzTitle(QW.sub,QW.lv),body:'',due:$('#qzDue').value||'',st:'set',setAt:todayStr(),at:Date.now(),quiz:{sub:QW.sub,lv:QW.lv,qs:QW.qs}};
+    s.assigns.push(a); store.put('students',s); closeModal(); openStudent(sid); SM._tab='as'; drawStudent(); toast('과제를 등록했어요',`${week}주차 · Word 저장이나 인쇄로 학생에게 전달하세요.`); },
+  qzCardWord:el=>{ const a=qzFind(el.dataset.id); if(a) saveFile(qzFileName(a.quiz,SM.name,`${a.week}주차_과제`),wordDoc(wsHTML({...a.quiz,title:a.title},{name:SM.name}),a.title)); },
+  qzCardPrint:el=>{ const a=qzFind(el.dataset.id); if(a) printHTML(wsHTML({...a.quiz,title:a.title},{name:SM.name})); },
+  qzCardKey:el=>{ const a=qzFind(el.dataset.id); if(a) printHTML(wsHTML({...a.quiz,title:a.title},{name:SM.name,key:true})); },
+  qzPick:el=>{ const a=qzFind(el.dataset.id); if(!a) return; const n=a.quiz.qs.length; a.qAns=a.qAns||Array(n).fill(0); const i=+el.dataset.i, v=+el.dataset.v; a.qAns[i]=a.qAns[i]===v?0:v;
+    el.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.v===a.qAns[i])); const c=el.closest('.qz-grade').querySelector('.qz-cnt'); if(c) c.textContent=`${a.qAns.filter(Boolean).length}/${n} 입력`;
+    if(a.st==='set'){ a.st='sub'; a.subAt=todayStr(); } clearTimeout(window._qzp); window._qzp=setTimeout(wPersist,600); },
+  qzPasteAns:el=>{ const a=qzFind(el.dataset.id); if(!a) return; const v=$('#qzPaste_'+a.id).value; a.qAns=parseAnswerText(v,a.quiz.qs.length); if(a.st==='set'){ a.st='sub'; a.subAt=todayStr(); } wRedraw(); toast('답안을 넣었어요',`${a.qAns.filter(Boolean).length}문항 인식`); },
+  qzGrade:el=>{ const a=qzFind(el.dataset.id); if(!a) return; const n=a.quiz.qs.length; a.qAns=a.qAns||Array(n).fill(0); const filled=a.qAns.filter(Boolean).length;
+    if(!filled){ toast('답안을 먼저 넣어 주세요',''); return; } gradeQuiz(a); wPersist(); const sid=SM.id; openReport(sid,a.id); },
+  qzRegrade:el=>{ const a=qzFind(el.dataset.id); if(!a) return; delete a.res; a.st='sub'; a.doneAt=''; wRedraw(); },
+  qzOpenRep:el=>{ wSync(); wPersist(); openReport(SM.id,el.dataset.id); },
+  qzBackStu:el=>{ closeModal(); openStudent(el.dataset.id); SM._tab='as'; drawStudent(); },
+  qzRepPrint:el=>{ const s=D().students[el.dataset.id]; const a=s&&(s.assigns||[]).find(x=>x.id===el.dataset.aid); if(a) printHTML(`<div class="ws">${quizReport(s,a,true)}</div>`); },
+  qzRepPrompt:el=>{ const s=D().students[el.dataset.id]; const a=s&&(s.assigns||[]).find(x=>x.id===el.dataset.aid); if(!a) return; const B=QBANK[a.quiz.sub];
+    const lines=Object.entries(a.res.by).map(([k,v])=>`- ${B.topics[k].n}: ${v.c}/${v.n}${v.b?` (빈칸 ${v.b})`:''}`);
+    const wrong=a.quiz.qs.map((q,i)=>({q,i,ans:(a.qAns||[])[i]||0})).filter(x=>x.ans!==x.q.a).map(x=>`- ${x.i+1}번 [${B.topics[x.q.t].n}] ${x.q.q}${x.q.c?`\n  코드: ${x.q.c.replace(/\n/g,' ⏎ ')}`:''}\n  학생 답: ${x.ans?x.q.o[x.ans-1]:'빈칸'} / 정답: ${x.q.o[x.q.a-1]}`);
+    copyPrompt(`[과제 결과 심층 분석 요청]\n${stuProfile(s)}\n\n과제: ${a.title} (${a.week}주차) · ${a.res.ok}/${a.res.n} 정답\n영역별:\n${lines.join('\n')}\n\n틀린 문제:\n${wrong.join('\n')||'- 없음'}\n\n요청:\n- 오답 패턴으로 볼 때 학생이 어떤 개념을 어떻게 잘못 이해하고 있는지 짚어 주세요.\n- 다음 2주 동안의 공부 순서를 구체적으로(무엇을 · 어떤 예제로 · 얼마나) 제안해 주세요.\n- 학생에게 보낼 격려 + 피드백 문자 초안을 하나 써 주세요.`); },
+  qzNext:el=>{ const s=D().students[el.dataset.id]; const a=s&&(s.assigns||[]).find(x=>x.id===el.dataset.aid); if(!a) return; const weak=String(el.dataset.weak||'').split(',').filter(Boolean).map(Number);
+    const p=pct(a.res.ok,a.res.n); const lv=p>=85&&a.quiz.lv<3?a.quiz.lv+1:p<50&&a.quiz.lv>1?a.quiz.lv-1:a.quiz.lv;
+    closeModal(); openQuiz({sub:a.quiz.sub,lv,topics:weak.length?weak:null,per:weak.length&&weak.length<=3?3:2,sid:s.id,back:s.id}); toast(weak.length?'취약 영역으로 골라 뒀어요':'다음 단계로 골라 뒀어요',`난이도 ${QLEVEL[lv]} · 확인 후 문제 뽑기를 누르세요.`); }
+});
+document.addEventListener('change',async e=>{ const el=e.target; if(!el.dataset||!el.dataset.qzfile) return; const a=qzFind(el.dataset.qzfile); const f=el.files&&el.files[0]; if(!a||!f) return;
+  try{ const ans=await answersFromFile(f,a.quiz.qs.length); const got=ans.filter(Boolean).length; if(!got){ toast('답을 찾지 못했어요','답안표에 번호(1~4)가 적혀 있는지 확인하거나 붙여넣기를 써 주세요.'); return; }
+    a.qAns=ans; if(a.st==='set'){ a.st='sub'; a.subAt=todayStr(); } wRedraw(); toast('답안 파일을 읽었어요',`${got}/${a.quiz.qs.length}문항 인식 · 확인 후 채점하세요.`); }
+  catch(err){ console.warn(err); toast('파일을 읽지 못했어요','Word(.docx) 파일인지 확인해 주세요.'); } });
 /* ===== EVENTS ===== */
 function ackToggle(key){
   const acks={...(S.settings.acks||{})}; if(acks[key]) delete acks[key]; else acks[key]=todayStr();
@@ -3890,6 +4442,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261018-1545';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261018-1617';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
