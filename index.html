@@ -3101,35 +3101,62 @@ const bgfx={
     x.restore();
   },
   /* ---- EXECUTIVE core: hairline rings · gradient progress arcs · soft orb ---- */
+  tintLogo(col){ if(this.logoInk===undefined&&typeof LOGO!=='undefined'){ const im=new Image(); this.logoInk=null; im.onload=()=>{ this.logoInk=im; }; im.src=LOGO; } if(!this.logoInk||!this.logoInk.width) return null; this._lt=this._lt||{}; let LT=this._lt[col]; if(!LT){ LT=document.createElement('canvas'); LT.width=this.logoInk.width; LT.height=this.logoInk.height; const g=LT.getContext('2d'); g.drawImage(this.logoInk,0,0); g.globalCompositeOperation='source-in'; g.fillStyle=col; g.fillRect(0,0,LT.width,LT.height); this._lt[col]=LT; } return LT; },
+  /* ---- 코어: 굵은 진행 링 + 가운데 연못(물 일렁임 · 물방울 · 물결) ---- */
   execCore(now){
     const c=this.core, x=c.x,S=c.S,d=c.d,t=(now-this.t0)/1000, C=S/2, D=c.data||{};
+    const T=this.theme, G=!!T.xg, Wt=!!T.xw, Ro=!!T.xr, Lv=!!T.xl;
+    const P=Ro?{o:['#fffdfc','#fbeeee'],ln:'90,50,55',w1:'#f3b3bd',w2:'#c4788a',acc:'#c4788a',logo:'#c4788a',al:'#d6965a'}
+      :Lv?{o:['#fdfcff','#efebff'],ln:'50,40,100',w1:'#c9bdff',w2:'#7c68ce',acc:'#7c68ce',logo:'#7c68ce',al:'#e878a0'}
+      :G?{o:['#141310','#0a0a09'],ln:'255,255,255',w1:'#f0d27a',w2:'#a8821f',acc:'#d4af37',logo:'#e9cd7a',al:'#e9a23b'}
+      :Wt?{o:['#ffffff','#eef3fb'],ln:'14,23,38',w1:'#8db8ff',w2:'#1f6feb',acc:'#1f6feb',logo:'#0e1726',al:'#ff6a3d'}
+      :{o:['#ffffff','#eef0ff'],ln:'12,12,16',w1:'#93a6ff',w2:'#3554ff',acc:'#3554ff',logo:'#0c0c10',al:'#ff6a3d'};
+    const st=this._pond=this._pond||{drops:[],rings:[],next:1.2};
     x.clearRect(0,0,S,S); x.save(); x.translate(C,C);
-    const G=!!this.theme.xg, Wt=!!this.theme.xw, Ro=!!this.theme.xr, Lv=!!this.theme.xl; const P=Ro?{o:['#ffffff','#fdeef0','#f7dde0'],glow:'rgba(214,120,140,.25)',ln:'90,50,55',g1:'#f3b3bd',g2:'#c4788a',acc:'#c4788a',dot:'#fff',al:'214,150,90',alc:'#d6965a'}:Lv?{o:['#ffffff','#f1eeff','#e2dcff'],glow:'rgba(124,104,206,.25)',ln:'50,40,100',g1:'#c3b6ff',g2:'#7c68ce',acc:'#7c68ce',dot:'#fff',al:'232,120,160',alc:'#e878a0'}:G?{o:['#1c1a15','#111','#0a0a0a'],glow:'rgba(212,175,55,.22)',ln:'255,255,255',g1:'#f0d27a',g2:'#b8912b',acc:'#d4af37',dot:'#0a0805',al:'233,162,59',alc:'#e9a23b'}:Wt?{o:['#ffffff','#eef3fc','#dfe8f8'],glow:'rgba(31,111,235,.22)',ln:'14,23,38',g1:'#6ea3ff',g2:'#1a5fd0',acc:'#1f6feb',dot:'#fff',al:'255,106,61',alc:'#ff6a3d'}:{o:['#ffffff','#e8ecff','#d6ddff'],glow:'rgba(53,84,255,.25)',ln:'12,12,16',g1:'#7b93ff',g2:'#2a43d6',acc:'#3554ff',dot:'#fff',al:'255,106,61',alc:'#ff6a3d'};
-    // soft orb
-    const og=x.createRadialGradient(-S*0.04,-S*0.05,0,0,0,S*0.2); og.addColorStop(0,P.o[0]); og.addColorStop(.55,P.o[1]); og.addColorStop(1,P.o[2]);
-    x.shadowColor=P.glow; x.shadowBlur=40*d; x.shadowOffsetY=14*d; x.fillStyle=og; x.beginPath(); x.arc(0,0,S*0.17,0,Math.PI*2); x.fill(); x.shadowBlur=0; x.shadowOffsetY=0;
-    // hairline rings
-    [0.46,0.385,0.3].forEach((r,i)=>{ x.strokeStyle=`rgba(${P.ln},${[0.08,0.06,0.1][i]*(G?1.4:1)})`; x.lineWidth=d; x.beginPath(); x.arc(0,0,S*r,0,Math.PI*2); x.stroke(); });
-    // minute ticks on outer ring
-    x.save(); x.rotate(t*0.03); for(let i=0;i<60;i++){ const a=i/60*Math.PI*2, L=i%5===0?S*0.018:S*0.008; x.strokeStyle=`rgba(${P.ln},${i%5===0?.28:.12})`; x.lineWidth=d; x.beginPath(); x.moveTo(Math.cos(a)*S*0.46,Math.sin(a)*S*0.46); x.lineTo(Math.cos(a)*(S*0.46-L),Math.sin(a)*(S*0.46-L)); x.stroke(); } x.restore();
-    // progress arcs (one lane per course, concentric thin lanes)
-    const segs=(D.segs||[]).slice(0,6); const base=S*0.385;
-    segs.forEach((g2,i)=>{ const r=base-i*S*0.016; const a0=-Math.PI/2+t*0.05*(i%2?-1:1); const span=Math.PI*2*Math.max(0.03,Math.min(1,g2.p||0));
-      const gr=x.createLinearGradient(-r,-r,r,r); gr.addColorStop(0,P.g1); gr.addColorStop(1,P.g2);
-      x.strokeStyle=`rgba(${P.ln},.06)`; x.lineWidth=S*0.008; x.lineCap='round'; x.beginPath(); x.arc(0,0,r,0,Math.PI*2); x.stroke();
-      x.strokeStyle=gr; x.beginPath(); x.arc(0,0,r,a0,a0+span); x.stroke();
-      const ex=Math.cos(a0+span)*r, ey=Math.sin(a0+span)*r; x.fillStyle=P.dot; x.beginPath(); x.arc(ex,ey,S*0.008,0,Math.PI*2); x.fill(); x.strokeStyle=g2.late?P.alc:P.acc; x.lineWidth=(g2.late?2.4:1.5)*d; x.stroke(); });
+    const Rp=S*0.2;                       // 연못 반지름
+    // 바깥 눈금 링 (천천히 회전)
+    x.save(); x.rotate(t*0.03); for(let i=0;i<72;i++){ const a=i/72*Math.PI*2, L=i%6===0?S*0.02:S*0.009; x.strokeStyle=`rgba(${P.ln},${i%6===0?.3:.12})`; x.lineWidth=d; x.beginPath(); x.moveTo(Math.cos(a)*S*0.475,Math.sin(a)*S*0.475); x.lineTo(Math.cos(a)*(S*0.475-L),Math.sin(a)*(S*0.475-L)); x.stroke(); } x.restore();
+    // 굵은 진행 링 (최대 3개)
+    const segs=(D.segs||[]).slice(0,3); const lw=S*0.026, gap=S*0.045;
+    x.lineCap='round';
+    segs.forEach((g2,i)=>{ const r=S*0.405-i*gap; const a0=-Math.PI/2+t*0.04*(i%2?-1:1); const span=Math.PI*2*Math.max(0.04,Math.min(1,g2.p||0));
+      x.strokeStyle=`rgba(${P.ln},${G?.08:.06})`; x.lineWidth=lw; x.beginPath(); x.arc(0,0,r,0,Math.PI*2); x.stroke();
+      const gr=x.createLinearGradient(-r,-r,r,r); gr.addColorStop(0,P.w1); gr.addColorStop(1,g2.late?P.al:P.w2); x.strokeStyle=gr; x.beginPath(); x.arc(0,0,r,a0,a0+span); x.stroke(); });
+    if(!segs.length){ x.strokeStyle=`rgba(${P.ln},.07)`; x.lineWidth=lw; x.beginPath(); x.arc(0,0,S*0.405,0,Math.PI*2); x.stroke(); }
     x.lineCap='butt';
-    // alerts orbit
-    const na=Math.min(10,D.alarms||0);
-    for(let i=0;i<na;i++){ const a=t*0.18+i/Math.max(1,na)*Math.PI*2; const r=S*0.3; const px=Math.cos(a)*r, py=Math.sin(a)*r; x.fillStyle=P.alc; x.beginPath(); x.arc(px,py,3.4*d,0,Math.PI*2); x.fill(); x.strokeStyle=`rgba(${P.al},${(0.25+0.2*Math.sin(t*2+i)).toFixed(3)})`; x.lineWidth=d; x.beginPath(); x.arc(px,py,(8+2*Math.sin(t*2+i))*d,0,Math.PI*2); x.stroke(); }
-    // travelling highlight on outer ring
-    x.strokeStyle=P.acc; x.lineWidth=2*d; x.lineCap='round'; x.beginPath(); x.arc(0,0,S*0.46,t*0.6,t*0.6+0.28); x.stroke(); x.lineCap='butt';
-    // logo
-    if(!this.logoInk&&typeof LOGO!=='undefined'){ const im=new Image(); im.onload=()=>{ this.logoInk=im; }; im.src=LOGO; this.logoInk=null; }
-    const tintCol=Ro?'#c4788a':Lv?'#7c68ce':Wt?'#0e1726':null;
-    if(tintCol&&this.logoInk&&this.logoInk.width){ this._lt=this._lt||{}; let LT=this._lt[tintCol]; if(!LT){ LT=document.createElement('canvas'); LT.width=this.logoInk.width; LT.height=this.logoInk.height; const g=LT.getContext('2d'); g.drawImage(this.logoInk,0,0); g.globalCompositeOperation='source-in'; g.fillStyle=tintCol; g.fillRect(0,0,LT.width,LT.height); this._lt[tintCol]=LT; } const w=S*0.13, h=w*LT.height/LT.width; x.drawImage(LT,-w/2,-h/2-S*0.008,w,h); }
-    else if(G&&this.logoTint){ const LT=this.logoTint, w=S*0.13, h=w*LT.height/LT.width; x.drawImage(LT,-w/2,-h/2-S*0.008,w,h); } else if(this.logoInk&&this.logoInk.width){ const w=S*0.13, h=w*this.logoInk.height/this.logoInk.width; x.drawImage(this.logoInk,-w/2,-h/2-S*0.008,w,h); }
+    // 바깥을 도는 하이라이트
+    x.strokeStyle=P.acc; x.globalAlpha=.85; x.lineWidth=2*d; x.lineCap='round'; x.beginPath(); x.arc(0,0,S*0.475,t*0.5,t*0.5+0.32); x.stroke(); x.globalAlpha=1; x.lineCap='butt';
+    // 알림: 바깥 링 위의 작은 점
+    const na=Math.min(6,D.alarms||0); for(let i=0;i<na;i++){ const a=-Math.PI/2+t*0.12+i/Math.max(1,na)*Math.PI*2, r=S*0.475; x.fillStyle=P.al; x.beginPath(); x.arc(Math.cos(a)*r,Math.sin(a)*r,3.6*d,0,Math.PI*2); x.fill(); }
+    // 물방울: 몇 초마다 위에서 연못으로
+    if(t>st.next){ st.drops.push({y:-S*0.46,vy:S*0.2,born:t}); st.next=t+3.2+Math.random()*1.6; }
+    // 연못 물높이 (전체 진행률 평균 · 은은하게)
+    const avg=segs.length?segs.reduce((s,g)=>s+Math.min(1,g.p||0),0)/segs.length:0.5; const lvl=0.38+avg*0.34;
+    let E=0; st.rings.forEach(r=>{ const age=t-r.t; if(age<1.6) E+=Math.exp(-age*2.2); });
+    const surf=px=>Rp-2*Rp*lvl+Math.sin(px/Rp*3.1+t*1.5)*Rp*(0.035+0.05*E)+Math.sin(px/Rp*5.3-t*2.1)*Rp*(0.018+0.03*E);
+    // 연못 바탕
+    x.save(); x.beginPath(); x.arc(0,0,Rp,0,Math.PI*2); const og=x.createRadialGradient(-Rp*0.3,-Rp*0.35,0,0,0,Rp); og.addColorStop(0,P.o[0]); og.addColorStop(1,P.o[1]);
+    x.shadowColor=G?'rgba(212,175,55,.22)':`rgba(${P.ln},.14)`; x.shadowBlur=36*d; x.shadowOffsetY=12*d; x.fillStyle=og; x.fill(); x.shadowBlur=0; x.shadowOffsetY=0; x.clip();
+    const LT=this.tintLogo(P.logo), LW=this.tintLogo(G?'#0a0805':'#ffffff'); const lw2=S*0.12, lh=LT?lw2*LT.height/LT.width:0;
+    if(LT) x.drawImage(LT,-lw2/2,-lh/2-S*0.006,lw2,lh);
+    // 뒤쪽 물결
+    x.beginPath(); x.moveTo(-Rp,Rp); for(let px=-Rp;px<=Rp;px+=2*d){ x.lineTo(px,surf(px*0.9+Rp*0.4)-Rp*0.03); } x.lineTo(Rp,Rp); x.closePath(); x.fillStyle=P.w1; x.globalAlpha=.35; x.fill(); x.globalAlpha=1;
+    // 앞쪽 물
+    x.beginPath(); x.moveTo(-Rp,Rp); const pts=[]; for(let px=-Rp;px<=Rp;px+=2*d){ const y=surf(px); pts.push([px,y]); x.lineTo(px,y); } x.lineTo(Rp,Rp); x.closePath();
+    const wg=x.createLinearGradient(0,-Rp*0.2,0,Rp); wg.addColorStop(0,P.w1); wg.addColorStop(1,P.w2); x.fillStyle=wg; x.globalAlpha=.9; x.fill(); x.globalAlpha=1;
+    // 잠긴 로고는 반전색
+    if(LW){ x.save(); x.clip(); x.drawImage(LW,-lw2/2,-lh/2-S*0.006,lw2,lh); x.restore(); }
+    // 수면 하이라이트 + 수면에 퍼지는 작은 물결
+    x.beginPath(); pts.forEach(([px,y],n)=>n?x.lineTo(px,y):x.moveTo(px,y)); x.strokeStyle='rgba(255,255,255,.6)'; x.lineWidth=1.4*d; x.stroke();
+    st.rings.forEach(r=>{ const age=t-r.t; if(age>1.4) return; const rr=Rp*0.1+age*Rp*0.7; x.strokeStyle=`rgba(255,255,255,${(0.5*(1-age/1.4)).toFixed(3)})`; x.lineWidth=1.2*d; x.beginPath(); x.ellipse(0,surf(0),rr,rr*0.22,0,0,Math.PI*2); x.stroke(); });
+    x.restore();
+    // 떨어지는 물방울
+    for(let n=st.drops.length-1;n>=0;n--){ const dr=st.drops[n]; dr.vy+=S*1.6*(1/30); dr.y+=dr.vy*(1/30); const sy=surf(0);
+      if(dr.y>=sy){ st.drops.splice(n,1); st.rings.push({t}); continue; }
+      x.fillStyle=P.w2; x.globalAlpha=.9; x.beginPath(); x.ellipse(0,dr.y,S*0.008,S*0.012,0,0,Math.PI*2); x.fill(); x.globalAlpha=1; }
+    // 연못 밖으로 퍼지는 물결 (코어 전체에)
+    st.rings=st.rings.filter(r=>t-r.t<3.2);
+    st.rings.forEach(r=>{ const age=t-r.t; [0,0.35].forEach(dl=>{ const a=age-dl; if(a<0) return; const p=a/2.6; if(p>1) return; const rr=Rp+(S*0.48-Rp)*(1-Math.pow(1-p,2)); x.strokeStyle=P.acc; x.globalAlpha=0.28*(1-p); x.lineWidth=(1.6-p)*d; x.beginPath(); x.arc(0,0,rr,0,Math.PI*2); x.stroke(); x.globalAlpha=1; }); });
     x.restore();
   },
   /* ---- home hero: white silk lines on ink ---- */
@@ -5001,6 +5028,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261018-2210';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261018-2215';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
