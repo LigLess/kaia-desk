@@ -1120,6 +1120,7 @@ body.hud.hlight .chip.violet{background:#eef2f5;color:var(--fg-2)}
 .qz-bar .tr i{display:block;height:100%;border-radius:9px}
 .qz-bar b{font-size:13px}
 .qzr.print .qz-bar .tr{background:#e6e6e6}.qzr.print .qz-bar .n{color:#222}
+.qz-cat{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin:4px 0 -6px}
 /* 인쇄 */
 #printArea{display:none}
 @media print{
@@ -3764,7 +3765,7 @@ document.addEventListener('input',e=>{ const el=e.target;
 /* ===== 과제 문제은행 — 과목 · 영역 · 난이도(1 하 / 2 중 / 3 상) =====
    문항: {t:영역번호, l:난이도, q:질문, c:코드(선택), o:[보기 4개], a:정답(1~4), e:해설} */
 const QBANK={
-python:{name:'파이썬',topics:[
+python:{cat:'lang',name:'파이썬',topics:[
  {n:'변수 · 자료형',study:['변수에 값을 담고 type()으로 자료형을 직접 확인해 보세요. int · float · str · bool 네 가지를 먼저 구분하면 돼요.','형 변환(int(), str(), float())과 자료형끼리 연산할 때 생기는 오류를 직접 만들어 보며 익히세요.','가변(list · dict)과 불변(str · tuple) 자료형의 차이, 같은 객체를 두 변수가 가리킬 때 생기는 일을 정리해 보세요.']},
  {n:'연산자 · 문자열',study:['+, -, *, /, //, %, ** 연산 결과를 하나씩 출력해 보며 차이를 비교하세요.','문자열 인덱싱 · 슬라이싱([시작:끝:간격])과 f-string 포매팅을 반복 연습하세요.','split · join · replace · strip 같은 문자열 메서드를 조합해 문장을 가공하는 문제를 풀어 보세요.']},
  {n:'조건문',study:['if · elif · else 순서대로 조건을 검사한다는 흐름을 그림으로 그려 보세요.','and · or · not 조합과 비교 연산자를 섞은 조건식의 결과를 손으로 먼저 예측해 보세요.','조건이 겹칠 때 어떤 블록이 실행되는지, 중첩 if를 elif로 바꾸는 연습을 해 보세요.']},
@@ -3827,7 +3828,7 @@ python:{name:'파이썬',topics:[
  {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'def total(*args, **kw):\n    return sum(args) + kw.get("bonus", 0)\n\nprint(total(1, 2, 3, bonus=10))',o:['16','6','10','error'],a:1,e:'args는 (1, 2, 3), kw는 {"bonus": 10}이에요.'},
  {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'def f(a, lst=[]):\n    lst.append(a)\n    return lst\n\nf(1)\nprint(f(2))',o:['[2]','[1, 2]','[1]','[]'],a:2,e:'기본값 리스트는 한 번만 만들어져서 호출할 때마다 계속 쌓여요.'}
  ]},
-sql:{name:'SQL (SQLD)',topics:[
+sql:{cat:'cert',name:'SQLD',topics:[
  {n:'기본 조회',study:['SELECT · FROM · WHERE 세 줄짜리 쿼리를 테이블 하나로 반복 작성해 보세요.','LIKE · IN · BETWEEN · IS NULL 조건과 별칭(AS), DISTINCT를 섞어 연습하세요.','NULL이 들어간 비교 · 연산 결과와 연산자 우선순위(AND가 OR보다 먼저)를 정리하세요.']},
  {n:'집계 · 그룹',study:['COUNT · SUM · AVG · MAX · MIN을 테이블 전체에 적용해 보세요.','GROUP BY로 묶고 HAVING으로 그룹을 거르는 흐름(WHERE와의 차이)을 익히세요.','SQL 실행 순서(FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY)를 외우고 문제에 적용하세요.']},
  {n:'조인',study:['두 테이블을 공통 키로 INNER JOIN 하는 기본 문장을 손으로 써 보세요.','LEFT · RIGHT OUTER JOIN 결과에서 NULL이 생기는 위치를 표로 그려 보세요.','셀프 조인, 조인 조건과 WHERE 조건의 차이, CROSS JOIN 결과 건수 계산을 연습하세요.']},
@@ -3890,7 +3891,7 @@ sql:{name:'SQL (SQLD)',topics:[
  {t:5,l:3,q:'부모 엔터티의 식별자가 자식 엔터티의 주식별자 일부가 되는 관계는?',o:['비식별 관계','식별 관계','순환 관계','배타 관계'],a:2,e:'부모 식별자가 자식 기본키에 포함되면 식별 관계예요.'},
  {t:5,l:3,q:'한 학생이 여러 과목을 듣고 한 과목도 여러 학생이 들을 때, 이를 해소하는 방법은?',o:['1:1 관계로 바꾼다','관계 엔터티(수강)를 만든다','학생 엔터티를 삭제한다','속성을 합친다'],a:2,e:'M:N 관계는 중간 엔터티로 1:N 두 개로 나눠요.'}
  ]},
-linux:{name:'리눅스',topics:[
+linux:{cat:'base',name:'리눅스',topics:[
  {n:'파일 · 디렉터리',study:['pwd · ls · cd · mkdir · touch로 폴더를 만들고 이동하는 연습부터 하세요.','cp · mv · rm 옵션(-r, -i, -f)과 절대 경로 · 상대 경로(. ..)를 구분하세요.','find · 링크(ln, ln -s) · 디렉터리 구조(/etc, /var, /home, /tmp)의 역할을 정리하세요.']},
  {n:'권한 · 소유권',study:['ls -l 결과의 rwxr-xr-x를 사용자 · 그룹 · 기타로 끊어 읽는 연습을 하세요.','chmod 숫자 표기(755, 644)와 기호 표기(u+x), chown · chgrp를 직접 실습하세요.','SetUID · SetGID · Sticky Bit, umask 계산을 정리하세요.']},
  {n:'프로세스 · 작업',study:['ps · top으로 실행 중인 프로세스를 보고 PID를 찾는 연습을 하세요.','kill 시그널(15, 9), &와 jobs · fg · bg로 작업을 오가는 법을 익히세요.','nice · renice 우선순위, nohup, cron 예약 작업의 형식을 정리하세요.']},
@@ -3953,7 +3954,7 @@ linux:{name:'리눅스',topics:[
  {t:5,l:3,q:'firewalld에서 80번 포트를 영구적으로 여는 명령은?',o:['firewall-cmd --add-port=80/tcp --permanent','iptables open 80','ufw enable 80','systemctl open 80'],a:1,e:'--permanent 후 firewall-cmd --reload로 적용해요.'},
  {t:5,l:3,q:'DNS 서버 주소가 설정되는 파일은?',o:['/etc/hosts','/etc/resolv.conf','/etc/hostname','/etc/services'],a:2,e:'/etc/hosts는 직접 지정한 이름, resolv.conf는 DNS 서버예요.'}
  ]},
-netsec:{name:'네트워크 · 정보보안',topics:[
+netsec:{cat:'base',name:'네트워크 · 정보보안',topics:[
  {n:'OSI · TCP/IP',study:['OSI 7계층 이름과 순서를 먼저 외우고 계층마다 대표 장비 하나씩 연결해 보세요.','TCP와 UDP 차이, 3-way handshake 과정을 그림으로 그려 보세요.','캡슐화 단위(프레임 · 패킷 · 세그먼트), 계층별 프로토콜(ARP, ICMP 등)을 정리하세요.']},
  {n:'IP · 서브넷',study:['IPv4 주소가 8비트씩 4칸이라는 것, 사설 IP 대역(10, 172.16, 192.168)을 먼저 익히세요.','서브넷 마스크(/24, /26)로 네트워크 주소와 브로드캐스트 주소를 구하는 연습을 하세요.','서브넷 분할 계산, 호스트 수 계산(2^n - 2), NAT · DHCP 동작을 정리하세요.']},
  {n:'포트 · 프로토콜',study:['HTTP 80, HTTPS 443, SSH 22, DNS 53 같은 대표 포트를 카드로 외우세요.','DNS 조회 과정, HTTP 요청 · 응답 구조와 상태 코드(200, 404, 500)를 정리하세요.','FTP 액티브 · 패시브, SMTP · POP3 · IMAP 차이, TLS 핸드셰이크를 정리하세요.']},
@@ -4018,10 +4019,139 @@ netsec:{name:'네트워크 · 정보보안',topics:[
  ]}
 };
 const QLEVEL=['','하','중','상'];
+/* ===== 문제은행 2 — 자바 · C언어 (기초 언어) ===== */
+QBANK.java={name:'자바',cat:'lang',topics:[
+ {n:'변수 · 자료형',study:['int · double · char · boolean · String을 선언하고 출력해 보세요. 자바는 자료형을 먼저 적어야 한다는 점이 파이썬과 달라요.','정수 나눗셈, 자동 · 강제 형 변환(casting)을 직접 출력하며 비교하세요.','기본형과 참조형(String, 배열)의 차이, 래퍼 클래스(Integer)와 오버플로를 정리하세요.']},
+ {n:'연산자',study:['산술 · 비교 · 논리 연산자 결과를 하나씩 출력해 보세요.','증감 연산자(++, --)의 앞 · 뒤 위치에 따른 차이와 복합 대입(+=)을 연습하세요.','삼항 연산자, 비트 연산(&, |, ^, <<), 단락 평가(&&, ||)를 예제로 추적하세요.']},
+ {n:'조건 · 반복',study:['if-else와 for 반복의 기본 형태를 손으로 여러 번 써 보세요.','switch, while · do-while, break · continue의 흐름을 표로 추적하세요.','중첩 반복과 라벨 break, switch의 fall-through 같은 함정을 정리하세요.']},
+ {n:'배열 · 문자열',study:['int[] arr = new int[5]처럼 배열을 만들고 인덱스로 값을 넣고 꺼내 보세요.','배열 길이(length), 향상된 for문, String 메서드(length(), charAt, substring)를 연습하세요.','2차원 배열, String 비교(== 와 equals), StringBuilder를 정리하세요.']},
+ {n:'메서드 · 클래스',study:['메서드를 만들고 값을 return 받는 형태를 반복 작성하세요.','클래스 · 객체 · 생성자 · this의 의미를 작은 예제(학생 클래스)로 익히세요.','static 멤버, 오버로딩, 접근 제어자(private · public)와 캡슐화를 정리하세요.']},
+ {n:'상속 · 예외',study:['extends로 부모 클래스를 물려받는 기본 예제를 만들어 보세요.','오버라이딩과 다형성(부모 타입 변수에 자식 객체), super 호출 순서를 추적하세요.','추상 클래스 · 인터페이스, try-catch-finally 실행 순서를 정리하세요.']}],
+ q:[
+ {t:0,l:1,q:'다음 코드의 출력 결과는?',c:'int a = 7;\nint b = 2;\nSystem.out.println(a / b);',o:['3','3.5','4','3.0'],a:1,e:'정수끼리 나누면 소수점 아래를 버려요.'},
+ {t:0,l:1,q:'참 · 거짓 값을 저장하는 자바 자료형은?',o:['bool','boolean','bit','Bool'],a:2,e:'자바의 기본형은 boolean이에요.'},
+ {t:0,l:1,q:'다음 코드의 출력 결과는?',c:'String s = "Java";\nSystem.out.println(s + 1 + 2);',o:['Java3','Java12','3Java','error'],a:2,e:'문자열 뒤에 +가 오면 이어 붙이기가 돼요.'},
+ {t:0,l:2,q:'다음 코드의 출력 결과는?',c:'double d = 3.99;\nint n = (int) d;\nSystem.out.println(n);',o:['4','3','3.99','error'],a:2,e:'(int) 강제 형 변환은 소수점 아래를 버려요.'},
+ {t:0,l:2,q:'다음 코드의 출력 결과는?',c:'System.out.println(1 + 2 + "3" + 4 + 5);',o:['15','3345','12345','339'],a:2,e:'앞에서부터: 1+2=3, 3+"3"="33", 그 뒤로는 문자열 이어 붙이기.'},
+ {t:0,l:2,q:'다음 코드의 출력 결과는?',c:"char c = 'A';\nSystem.out.println(c + 1);",o:['B','66','A1','error'],a:2,e:"char는 정수(65)로 계산돼서 66이 출력돼요."},
+ {t:0,l:3,q:'다음 코드의 출력 결과는?',c:'int max = Integer.MAX_VALUE;\nSystem.out.println(max + 1 == Integer.MIN_VALUE);',o:['true','false','error','2147483648'],a:1,e:'int 범위를 넘으면 오버플로로 가장 작은 값이 돼요.'},
+ {t:0,l:3,q:'다음 코드의 출력 결과는?',c:'long x = 10;\nfloat f = x;\nSystem.out.println(f);',o:['10','10.0','error','10L'],a:2,e:'long에서 float로는 자동 형 변환되고 실수로 출력돼요.'},
+ {t:0,l:3,q:'다음 코드의 출력 결과는?',c:'Integer a = 127, b = 127;\nInteger c = 128, d = 128;\nSystem.out.println((a == b) + " " + (c == d));',o:['true true','true false','false false','false true'],a:2,e:'-128~127은 캐시된 같은 객체라 ==가 true, 128부터는 다른 객체예요. 값 비교는 equals를 써야 해요.'},
+ {t:1,l:1,q:'다음 코드의 출력 결과는?',c:'System.out.println(10 % 3);',o:['3','1','3.33','0'],a:2,e:'%는 나머지예요.'},
+ {t:1,l:1,q:'다음 코드의 출력 결과는?',c:'int x = 5;\nx += 3;\nSystem.out.println(x);',o:['5','3','8','53'],a:3,e:'x += 3은 x = x + 3과 같아요.'},
+ {t:1,l:1,q:'"같지 않다"를 뜻하는 자바 비교 연산자는?',o:['<>','!=','=!','~='],a:2,e:'!= 를 써요.'},
+ {t:1,l:2,q:'다음 코드의 출력 결과는?',c:'int i = 5;\nint j = i++ + 1;\nSystem.out.println(i + " " + j);',o:['6 6','6 7','5 6','5 7'],a:1,e:'i++는 현재 값(5)을 먼저 쓰고 나중에 1 증가해요.'},
+ {t:1,l:2,q:'다음 코드의 출력 결과는?',c:'int i = 5;\nint j = ++i + 1;\nSystem.out.println(i + " " + j);',o:['6 7','6 6','5 7','5 6'],a:1,e:'++i는 먼저 1 증가한 값(6)을 써요.'},
+ {t:1,l:2,q:'다음 코드의 출력 결과는?',c:'int n = 15;\nString r = n > 10 ? "big" : "small";\nSystem.out.println(r);',o:['big','small','true','15'],a:1,e:'조건 ? 참일 때 : 거짓일 때.'},
+ {t:1,l:3,q:'다음 코드의 출력 결과는?',c:'System.out.println((5 & 3) + " " + (5 | 3) + " " + (5 ^ 3));',o:['1 7 6','1 7 2','8 7 6','0 7 6'],a:1,e:'101 & 011 = 001, | = 111, ^ = 110.'},
+ {t:1,l:3,q:'다음 코드의 출력 결과는?',c:'int a = 0;\nboolean r = (a != 0) && (10 / a > 1);\nSystem.out.println(r);',o:['false','true','ArithmeticException','0'],a:1,e:'&&는 앞이 거짓이면 뒤를 계산하지 않아서 0으로 나누지 않아요.'},
+ {t:1,l:3,q:'다음 코드의 출력 결과는?',c:'System.out.println(1 << 4);',o:['16','5','4','14'],a:1,e:'왼쪽으로 4비트 이동 = 2의 4제곱 = 16.'},
+ {t:2,l:1,q:'다음 코드의 출력 결과는?',c:'int score = 85;\nif (score >= 90) System.out.println("A");\nelse if (score >= 80) System.out.println("B");\nelse System.out.println("C");',o:['A','B','C','B C'],a:2,e:'80 이상 90 미만이라 B예요.'},
+ {t:2,l:1,q:'다음 코드의 출력 결과는?',c:'for (int i = 0; i < 3; i++) {\n    System.out.print(i);\n}',o:['012','123','0123','3'],a:1,e:'0, 1, 2를 붙여서 출력해요.'},
+ {t:2,l:1,q:'다음 코드의 출력 결과는?',c:'int sum = 0;\nfor (int i = 1; i <= 4; i++) sum += i;\nSystem.out.println(sum);',o:['10','6','4','15'],a:1,e:'1+2+3+4 = 10.'},
+ {t:2,l:2,q:'다음 코드의 출력 결과는?',c:'int n = 3;\nswitch (n) {\n    case 1: System.out.print("a"); break;\n    case 3: System.out.print("c"); break;\n    default: System.out.print("d");\n}',o:['c','cd','d','a'],a:1,e:'case 3에서 출력하고 break로 빠져나와요.'},
+ {t:2,l:2,q:'다음 코드의 출력 결과는?',c:'int i = 10;\ndo {\n    System.out.print(i);\n} while (i < 5);',o:['10','아무것도 출력 안 됨','5','무한 반복'],a:1,e:'do-while은 조건과 상관없이 한 번은 실행돼요.'},
+ {t:2,l:2,q:'다음 코드의 출력 결과는?',c:'for (int i = 1; i <= 5; i++) {\n    if (i % 2 == 0) continue;\n    System.out.print(i);\n}',o:['135','24','12345','13'],a:1,e:'짝수는 continue로 건너뛰어요.'},
+ {t:2,l:3,q:'다음 코드의 출력 결과는?',c:'int n = 2;\nswitch (n) {\n    case 1: System.out.print("a");\n    case 2: System.out.print("b");\n    case 3: System.out.print("c");\n    default: System.out.print("d");\n}',o:['b','bcd','bc','abcd'],a:2,e:'break가 없으면 아래 case까지 계속 실행돼요(fall-through).'},
+ {t:2,l:3,q:'다음 코드의 출력 결과는?',c:'int cnt = 0;\nouter:\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 3; j++) {\n        if (j == 2) continue outer;\n        if (i == 2) break outer;\n        cnt++;\n    }\n}\nSystem.out.println(cnt);',o:['4','6','3','9'],a:1,e:'i=0, 1일 때 j=0, 1에서만 증가(4번), i=2에서 바로 빠져나와요.'},
+ {t:2,l:3,q:'다음 코드의 출력 결과는?',c:'int i = 0;\nwhile (i++ < 3) { }\nSystem.out.println(i);',o:['3','4','2','5'],a:2,e:'비교 후 증가: 0<3, 1<3, 2<3, 3<3(거짓)에서도 증가해서 4.'},
+ {t:3,l:1,q:'다음 코드의 출력 결과는?',c:'int[] arr = {10, 20, 30};\nSystem.out.println(arr[1]);',o:['10','20','30','error'],a:2,e:'인덱스는 0부터 시작해요.'},
+ {t:3,l:1,q:'다음 코드의 출력 결과는?',c:'int[] arr = new int[4];\nSystem.out.println(arr.length + " " + arr[0]);',o:['4 0','3 0','4 null','0 0'],a:1,e:'int 배열은 0으로 채워지고, length는 칸 수예요.'},
+ {t:3,l:1,q:'다음 코드의 출력 결과는?',c:'String s = "Hello";\nSystem.out.println(s.length());',o:['4','5','6','Hello'],a:2,e:'글자 수가 5개예요.'},
+ {t:3,l:2,q:'다음 코드의 출력 결과는?',c:'String s = "programming";\nSystem.out.println(s.substring(3, 7));',o:['gram','gramm','ogra','ram'],a:1,e:'3번부터 7번 앞(6번)까지예요.'},
+ {t:3,l:2,q:'다음 코드의 출력 결과는?',c:'int[] a = {3, 1, 4, 1, 5};\nint max = a[0];\nfor (int x : a) if (x > max) max = x;\nSystem.out.println(max);',o:['5','3','4','1'],a:1,e:'향상된 for문으로 가장 큰 값을 찾아요.'},
+ {t:3,l:2,q:'다음 코드의 출력 결과는?',c:'String s = "Java";\nSystem.out.println(s.charAt(0) + "" + s.indexOf("v"));',o:['J2','J3','a2','J1'],a:1,e:'charAt(0)은 J, indexOf("v")는 2예요.'},
+ {t:3,l:3,q:'다음 코드의 출력 결과는?',c:'String a = "hi";\nString b = new String("hi");\nSystem.out.println((a == b) + " " + a.equals(b));',o:['false true','true true','true false','false false'],a:1,e:'==는 같은 객체인지, equals는 내용이 같은지 비교해요.'},
+ {t:3,l:3,q:'다음 코드의 출력 결과는?',c:'int[][] m = {{1, 2, 3}, {4, 5, 6}};\nSystem.out.println(m.length + " " + m[1][2]);',o:['2 6','3 6','2 5','3 5'],a:1,e:'행이 2개, m[1][2]는 두 번째 행의 세 번째 값 6.'},
+ {t:3,l:3,q:'다음 코드의 출력 결과는?',c:'StringBuilder sb = new StringBuilder("abc");\nsb.append("d").reverse();\nSystem.out.println(sb);',o:['dcba','abcd','cbad','dabc'],a:1,e:'abcd를 만든 뒤 뒤집어요.'},
+ {t:4,l:1,q:'다음 코드의 출력 결과는?',c:'public class Main {\n    static int add(int a, int b) {\n        return a + b;\n    }\n    public static void main(String[] args) {\n        System.out.println(add(3, 4));\n    }\n}',o:['7','34','add','error'],a:1,e:'3 + 4 = 7을 돌려줘요.'},
+ {t:4,l:1,q:'객체를 만들 때 자동으로 호출되는 특별한 메서드는?',o:['main','생성자','소멸자','getter'],a:2,e:'클래스 이름과 같은 이름의 생성자가 호출돼요.'},
+ {t:4,l:1,q:'클래스로부터 객체를 만드는 키워드는?',o:['make','new','create','class'],a:2,e:'new 클래스이름() 형태예요.'},
+ {t:4,l:2,q:'다음 코드의 출력 결과는?',c:'public class Main {\n    String name;\n    Main(String name) { this.name = name; }\n    public static void main(String[] args) {\n        Main m = new Main("민수");\n        System.out.println(m.name);\n    }\n}',o:['민수','name','null','error'],a:1,e:'this.name은 객체의 필드, name은 매개변수예요.'},
+ {t:4,l:2,q:'다음 코드의 출력 결과는?',c:'public class Main {\n    static int count = 0;\n    Main() { count++; }\n    public static void main(String[] args) {\n        new Main(); new Main(); new Main();\n        System.out.println(count);\n    }\n}',o:['3','1','0','error'],a:1,e:'static 변수는 모든 객체가 함께 써요.'},
+ {t:4,l:2,q:'같은 이름의 메서드를 매개변수만 다르게 여러 개 만드는 것은?',o:['오버라이딩','오버로딩','캡슐화','상속'],a:2,e:'오버로딩(overloading)이에요.'},
+ {t:4,l:3,q:'다음 코드의 출력 결과는?',c:'public class Main {\n    static void change(int x, int[] arr) {\n        x = 100;\n        arr[0] = 100;\n    }\n    public static void main(String[] args) {\n        int a = 1;\n        int[] b = {1};\n        change(a, b);\n        System.out.println(a + " " + b[0]);\n    }\n}',o:['1 100','100 100','1 1','100 1'],a:1,e:'기본형은 값이 복사되고, 배열은 같은 객체를 가리켜서 바뀌어요.'},
+ {t:4,l:3,q:'다음 코드의 출력 결과는?',c:'public class Main {\n    static int f(int n) { return n <= 1 ? n : f(n - 1) + f(n - 2); }\n    public static void main(String[] args) {\n        System.out.println(f(6));\n    }\n}',o:['8','13','5','6'],a:1,e:'피보나치: 0 1 1 2 3 5 8 → f(6) = 8.'},
+ {t:4,l:3,q:'필드를 private으로 숨기고 getter · setter로만 접근하게 하는 원칙은?',o:['상속','다형성','캡슐화','추상화'],a:3,e:'캡슐화(정보 은닉)예요.'},
+ {t:5,l:1,q:'부모 클래스를 물려받을 때 쓰는 키워드는?',o:['implements','extends','inherits','super'],a:2,e:'class Dog extends Animal 형태예요.'},
+ {t:5,l:1,q:'예외가 생길 수 있는 코드를 감싸는 문법은?',o:['if-else','try-catch','switch','for-each'],a:2,e:'try 안에서 예외가 나면 catch가 처리해요.'},
+ {t:5,l:1,q:'자바에서 클래스가 직접 상속받을 수 있는 부모 클래스 수는?',o:['1개','2개','무제한','0개'],a:1,e:'자바는 단일 상속만 돼요. 인터페이스는 여러 개 구현할 수 있어요.'},
+ {t:5,l:2,q:'다음 코드의 출력 결과는?',c:'class Animal { String sound() { return "..."; } }\nclass Dog extends Animal { String sound() { return "멍"; } }\npublic class Main {\n    public static void main(String[] args) {\n        Animal a = new Dog();\n        System.out.println(a.sound());\n    }\n}',o:['멍','...','error','null'],a:1,e:'변수 타입이 Animal이어도 실제 객체(Dog)의 메서드가 실행돼요(다형성).'},
+ {t:5,l:2,q:'다음 코드의 출력 결과는?',c:'public class Main {\n    public static void main(String[] args) {\n        try {\n            int x = 10 / 0;\n            System.out.print("A");\n        } catch (ArithmeticException e) {\n            System.out.print("B");\n        } finally {\n            System.out.print("C");\n        }\n    }\n}',o:['BC','AC','ABC','B'],a:1,e:'예외로 A는 건너뛰고 catch → finally 순서예요.'},
+ {t:5,l:2,q:'부모 클래스의 메서드를 자식이 같은 모양으로 다시 정의하는 것은?',o:['오버로딩','오버라이딩','캡슐화','생성자'],a:2,e:'오버라이딩(overriding)이에요.'},
+ {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'class A { A() { System.out.print("A"); } }\nclass B extends A { B() { System.out.print("B"); } }\npublic class Main {\n    public static void main(String[] args) {\n        new B();\n    }\n}',o:['AB','BA','B','A'],a:1,e:'자식 생성자는 먼저 부모 생성자(super())를 호출해요.'},
+ {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'interface Shape { double area(); }\nclass Sq implements Shape {\n    int s; Sq(int s) { this.s = s; }\n    public double area() { return s * s; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Shape sh = new Sq(3);\n        System.out.println(sh.area());\n    }\n}',o:['9.0','9','6.0','error'],a:1,e:'int 결과 9가 double로 반환돼 9.0으로 출력돼요.'},
+ {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'public class Main {\n    static int f() {\n        try { return 1; }\n        finally { System.out.print("F"); }\n    }\n    public static void main(String[] args) {\n        System.out.println(f());\n    }\n}',o:['F1','1F','1','F'],a:1,e:'return 전에 finally가 먼저 실행돼요.'}
+ ]};
+QBANK.c={name:'C언어',cat:'lang',topics:[
+ {n:'자료형 · 입출력',study:['int · float · double · char 변수를 선언하고 printf로 출력해 보세요.','printf 서식 지정자(%d, %f, %c, %s, %.2f)와 scanf 입력 형태를 연습하세요.','sizeof로 자료형 크기를 확인하고, 정수 나눗셈 · 형 변환 결과를 정리하세요.']},
+ {n:'연산자',study:['산술 · 비교 · 논리 연산자 결과를 printf로 출력해 보세요.','증감 연산자(++, --)의 앞 · 뒤 차이와 복합 대입을 추적하세요.','비트 연산, 시프트, 삼항 연산자, 연산자 우선순위 표를 정리하세요.']},
+ {n:'조건 · 반복',study:['if-else, for 반복의 기본 형태를 여러 번 써 보세요.','switch-case와 break, while · do-while 흐름을 표로 추적하세요.','중첩 반복으로 패턴 출력, 반복 안의 break · continue 함정을 정리하세요.']},
+ {n:'배열 · 문자열',study:['int arr[5] 배열을 만들고 for로 값을 넣고 출력해 보세요.','char 배열 문자열, 널 문자(\\0), strlen · strcpy · strcmp를 익히세요.','2차원 배열, 배열을 함수로 넘기기, 문자열 뒤집기 같은 문제를 풀어 보세요.']},
+ {n:'포인터',study:['& (주소)와 * (값) 기호가 무엇을 뜻하는지 그림으로 그려 보세요.','포인터와 배열의 관계(arr[i] == *(arr+i)), 포인터 연산을 추적하세요.','이중 포인터, 함수에 포인터 넘기기(call by reference), 동적 할당(malloc · free)을 정리하세요.']},
+ {n:'함수 · 구조체',study:['함수를 선언 · 정의하고 값을 return 받는 기본 형태를 연습하세요.','지역 · 전역 · static 변수의 수명 차이, 재귀 함수 추적을 연습하세요.','struct 정의와 . / -> 접근, 구조체 배열, typedef를 정리하세요.']}],
+ q:[
+ {t:0,l:1,q:'다음 코드의 출력 결과는?',c:'int a = 7, b = 2;\nprintf("%d", a / b);',o:['3','3.5','4','3.000000'],a:1,e:'정수끼리 나누면 소수점 아래를 버려요.'},
+ {t:0,l:1,q:'정수를 출력할 때 쓰는 printf 서식 지정자는?',o:['%f','%d','%c','%s'],a:2,e:'%d는 정수, %f는 실수, %c는 문자, %s는 문자열이에요.'},
+ {t:0,l:1,q:'다음 코드의 출력 결과는?',c:'double x = 3.14159;\nprintf("%.2f", x);',o:['3.14','3.141','3.1','3.14159'],a:1,e:'%.2f는 소수점 둘째 자리까지 보여 줘요.'},
+ {t:0,l:2,q:'다음 코드의 출력 결과는?',c:"char c = 'A';\nprintf(\"%c %d\", c + 2, c);",o:['C 65','A 65','C 67','B 66'],a:1,e:"'A'는 65, 65+2=67은 'C'예요."},
+ {t:0,l:2,q:'다음 코드의 출력 결과는?',c:'int a = 5;\ndouble r = a / 2;\nprintf("%.1f", r);',o:['2.0','2.5','2','3.0'],a:1,e:'a / 2가 먼저 정수 나눗셈(2)으로 계산된 뒤 실수가 돼요.'},
+ {t:0,l:2,q:'다음 코드의 출력 결과는?',c:'int a = 5;\ndouble r = (double)a / 2;\nprintf("%.1f", r);',o:['2.5','2.0','2','error'],a:1,e:'a를 먼저 실수로 바꾸면 실수 나눗셈이 돼요.'},
+ {t:0,l:3,q:'다음 코드의 출력 결과는?',c:'printf("%d", (int)sizeof(char));',o:['1','2','4','8'],a:1,e:'char는 항상 1바이트예요.'},
+ {t:0,l:3,q:'다음 코드의 출력 결과는?',c:'unsigned char u = 255;\nu = u + 1;\nprintf("%d", u);',o:['0','256','255','-1'],a:1,e:'unsigned char는 0~255라 넘치면 0으로 돌아가요.'},
+ {t:0,l:3,q:'다음 코드의 출력 결과는?',c:'printf("%5.1f|%-4d|", 3.14159, 42);',o:['  3.1|42  |','3.1|42|','3.14|  42|','  3.1|  42|'],a:1,e:'%5.1f는 5칸 오른쪽 정렬, %-4d는 4칸 왼쪽 정렬이에요.'},
+ {t:1,l:1,q:'다음 코드의 출력 결과는?',c:'printf("%d", 17 % 5);',o:['2','3','3.4','5'],a:1,e:'17을 5로 나눈 나머지는 2.'},
+ {t:1,l:1,q:'다음 코드의 출력 결과는?',c:'int x = 10;\nx -= 3;\nprintf("%d", x);',o:['7','13','3','10'],a:1,e:'x -= 3은 x = x - 3.'},
+ {t:1,l:1,q:'C에서 "그리고(AND)"를 뜻하는 논리 연산자는?',o:['&','&&','and','||'],a:2,e:'&&는 논리 AND, &는 비트 AND예요.'},
+ {t:1,l:2,q:'다음 코드의 출력 결과는?',c:'int i = 3;\nint j = i++ * 2;\nprintf("%d %d", i, j);',o:['4 6','4 8','3 6','3 8'],a:1,e:'i++는 현재 값(3)으로 계산한 뒤 증가해요.'},
+ {t:1,l:2,q:'다음 코드의 출력 결과는?',c:'int i = 3;\nint j = ++i * 2;\nprintf("%d %d", i, j);',o:['4 8','4 6','3 8','3 6'],a:1,e:'++i는 먼저 증가(4)한 뒤 계산해요.'},
+ {t:1,l:2,q:'다음 코드의 출력 결과는?',c:'int a = 3, b = 7;\nprintf("%d", a > b ? a : b);',o:['7','3','1','0'],a:1,e:'조건이 거짓이라 b를 선택해요.'},
+ {t:1,l:3,q:'다음 코드의 출력 결과는?',c:'printf("%d %d %d", 6 & 3, 6 | 3, 6 ^ 3);',o:['2 7 5','2 7 1','4 7 5','2 9 5'],a:1,e:'110 & 011 = 010(2), | = 111(7), ^ = 101(5).'},
+ {t:1,l:3,q:'다음 코드의 출력 결과는?',c:'printf("%d %d", 20 >> 2, 3 << 3);',o:['5 24','5 9','10 24','4 24'],a:1,e:'>> 2는 4로 나누기, << 3은 8 곱하기.'},
+ {t:1,l:3,q:'다음 코드의 출력 결과는?',c:'int a = 0, b = 5;\nif (a && ++b) { }\nprintf("%d", b);',o:['5','6','0','1'],a:1,e:'a가 0(거짓)이라 ++b는 실행되지 않아요.'},
+ {t:2,l:1,q:'다음 코드의 출력 결과는?',c:'int n = 4;\nif (n % 2 == 0) printf("짝");\nelse printf("홀");',o:['짝','홀','짝홀','0'],a:1,e:'4는 2로 나눈 나머지가 0이에요.'},
+ {t:2,l:1,q:'다음 코드의 출력 결과는?',c:'for (int i = 1; i <= 3; i++) printf("%d", i);',o:['123','012','1234','3'],a:1,e:'1부터 3까지 출력해요.'},
+ {t:2,l:1,q:'다음 코드의 출력 결과는?',c:'int s = 0;\nfor (int i = 1; i <= 5; i++) s += i;\nprintf("%d", s);',o:['15','10','5','20'],a:1,e:'1+2+3+4+5 = 15.'},
+ {t:2,l:2,q:'다음 코드의 출력 결과는?',c:'int n = 0;\nwhile (n < 20) n += 6;\nprintf("%d", n);',o:['24','18','20','6'],a:1,e:'6, 12, 18, 24에서 멈춰요.'},
+ {t:2,l:2,q:'다음 코드의 출력 결과는?',c:'int k = 2;\nswitch (k) {\n    case 1: printf("A"); break;\n    case 2: printf("B"); break;\n    default: printf("D");\n}',o:['B','BD','D','AB'],a:1,e:'case 2에서 출력하고 break로 끝나요.'},
+ {t:2,l:2,q:'다음 코드의 출력 결과는?',c:'for (int i = 1; i <= 10; i++) {\n    if (i == 5) break;\n    if (i % 2) continue;\n    printf("%d", i);\n}',o:['24','13','2468','1234'],a:1,e:'홀수는 건너뛰고 5에서 멈춰서 2, 4만 출력돼요.'},
+ {t:2,l:3,q:'다음 코드의 출력 결과는?',c:'int k = 1;\nswitch (k) {\n    case 1: printf("A");\n    case 2: printf("B");\n    default: printf("D");\n}',o:['ABD','A','AB','D'],a:1,e:'break가 없어서 아래 case로 계속 내려가요.'},
+ {t:2,l:3,q:'다음 코드의 출력 결과는?',c:'int c = 0;\nfor (int i = 0; i < 4; i++)\n    for (int j = i; j < 4; j++)\n        c++;\nprintf("%d", c);',o:['10','16','6','4'],a:1,e:'4 + 3 + 2 + 1 = 10.'},
+ {t:2,l:3,q:'다음 코드의 출력 결과는?',c:'int i = 5;\ndo {\n    printf("%d", i);\n    i -= 2;\n} while (i > 0);',o:['531','53','5310','5'],a:1,e:'5, 3, 1 출력 후 i = -1에서 멈춰요.'},
+ {t:3,l:1,q:'다음 코드의 출력 결과는?',c:'int a[] = {5, 10, 15};\nprintf("%d", a[2]);',o:['15','10','5','error'],a:1,e:'인덱스 2는 세 번째 값이에요.'},
+ {t:3,l:1,q:'C 문자열의 끝을 나타내는 문자는?',o:["'\\n'","'\\0'","' '","'0'"],a:2,e:'널 문자 \\0이 문자열 끝을 표시해요.'},
+ {t:3,l:1,q:'다음 코드의 출력 결과는?',c:'char s[] = "Hello";\nprintf("%c", s[1]);',o:['e','H','l','o'],a:1,e:'s[0]이 H, s[1]이 e예요.'},
+ {t:3,l:2,q:'다음 코드의 출력 결과는?',c:'char s[] = "Code";\nprintf("%d %d", (int)strlen(s), (int)sizeof(s));',o:['4 5','4 4','5 5','5 4'],a:1,e:'strlen은 글자 수(4), sizeof는 널 문자까지 포함한 배열 크기(5).'},
+ {t:3,l:2,q:'다음 코드의 출력 결과는?',c:'int a[5] = {1, 2};\nprintf("%d %d", a[1], a[4]);',o:['2 0','2 쓰레기값','1 0','0 0'],a:1,e:'일부만 초기화하면 나머지는 0으로 채워져요.'},
+ {t:3,l:2,q:'다음 코드의 출력 결과는?',c:'int a[] = {3, 8, 1, 9, 4};\nint m = a[0];\nfor (int i = 1; i < 5; i++) if (a[i] < m) m = a[i];\nprintf("%d", m);',o:['1','9','3','4'],a:1,e:'가장 작은 값을 찾아요.'},
+ {t:3,l:3,q:'다음 코드의 출력 결과는?',c:'int m[2][3] = {{1, 2, 3}, {4, 5, 6}};\nprintf("%d", m[1][0] + m[0][2]);',o:['7','5','6','9'],a:1,e:'m[1][0] = 4, m[0][2] = 3.'},
+ {t:3,l:3,q:'다음 코드의 출력 결과는?',c:'char a[] = "abc", b[] = "abd";\nint r = strcmp(a, b);\nprintf("%s", r < 0 ? "작다" : r > 0 ? "크다" : "같다");',o:['작다','크다','같다','error'],a:1,e:"사전 순으로 'c'가 'd'보다 앞이라 음수가 나와요."},
+ {t:3,l:3,q:'다음 코드의 출력 결과는?',c:'char s[] = "stack";\nint n = (int)strlen(s);\nfor (int i = 0; i < n / 2; i++) {\n    char t = s[i]; s[i] = s[n - 1 - i]; s[n - 1 - i] = t;\n}\nprintf("%s", s);',o:['kcats','stack','kcast','ktacs'],a:1,e:'양 끝을 바꿔 가며 문자열을 뒤집어요.'},
+ {t:4,l:1,q:'변수 x의 메모리 주소를 얻는 연산자는?',o:['*x','&x','#x','@x'],a:2,e:'&는 주소, *는 그 주소의 값이에요.'},
+ {t:4,l:1,q:'다음 코드의 출력 결과는?',c:'int a = 10;\nint *p = &a;\nprintf("%d", *p);',o:['10','a의 주소','p','error'],a:1,e:'*p는 p가 가리키는 곳의 값이에요.'},
+ {t:4,l:1,q:'다음 코드의 출력 결과는?',c:'int a = 3;\nint *p = &a;\n*p = 7;\nprintf("%d", a);',o:['7','3','0','error'],a:1,e:'포인터로 a의 값을 바꿨어요.'},
+ {t:4,l:2,q:'다음 코드의 출력 결과는?',c:'int a[] = {10, 20, 30};\nint *p = a;\nprintf("%d", *(p + 2));',o:['30','20','12','error'],a:1,e:'*(p + 2)는 a[2]와 같아요.'},
+ {t:4,l:2,q:'다음 코드의 출력 결과는?',c:'int a[] = {1, 2, 3};\nint *p = a;\np++;\nprintf("%d", *p + 10);',o:['12','11','13','3'],a:1,e:'p가 a[1](2)을 가리키고, 2 + 10 = 12.'},
+ {t:4,l:2,q:'다음 코드의 출력 결과는?',c:'void sw(int *x, int *y) { int t = *x; *x = *y; *y = t; }\nint main(void) {\n    int a = 1, b = 2;\n    sw(&a, &b);\n    printf("%d %d", a, b);\n    return 0;\n}',o:['2 1','1 2','2 2','1 1'],a:1,e:'주소를 넘겨서 원래 변수 값을 바꿨어요.'},
+ {t:4,l:3,q:'다음 코드의 출력 결과는?',c:'int a = 5;\nint *p = &a;\nint **pp = &p;\n**pp = 9;\nprintf("%d", a);',o:['9','5','주소값','error'],a:1,e:'이중 포인터로 a까지 찾아가서 바꿨어요.'},
+ {t:4,l:3,q:'다음 코드의 출력 결과는?',c:'char *s = "HELLO";\nprintf("%c%c", *s, *(s + 4));',o:['HO','HL','HE','EO'],a:1,e:'s[0] = H, s[4] = O.'},
+ {t:4,l:3,q:'malloc으로 할당한 메모리를 다 쓴 뒤 반드시 해야 하는 것은?',o:['free로 해제','return 0','printf 출력','sizeof 호출'],a:1,e:'해제하지 않으면 메모리 누수가 생겨요.'},
+ {t:5,l:1,q:'다음 코드의 출력 결과는?',c:'int sq(int n) { return n * n; }\nint main(void) {\n    printf("%d", sq(4));\n    return 0;\n}',o:['16','8','4','error'],a:1,e:'4 × 4 = 16.'},
+ {t:5,l:1,q:'값을 돌려주지 않는 함수의 반환형은?',o:['int','void','null','empty'],a:2,e:'void 함수는 return 값이 없어요.'},
+ {t:5,l:1,q:'구조체를 정의할 때 쓰는 키워드는?',o:['class','struct','record','object'],a:2,e:'struct 이름 { ... }; 형태예요.'},
+ {t:5,l:2,q:'다음 코드의 출력 결과는?',c:'void inc(int n) { n++; }\nint main(void) {\n    int a = 5;\n    inc(a);\n    printf("%d", a);\n    return 0;\n}',o:['5','6','0','error'],a:1,e:'값이 복사돼서 넘어가서 원래 a는 그대로예요.'},
+ {t:5,l:2,q:'다음 코드의 출력 결과는?',c:'struct P { int x; int y; };\nint main(void) {\n    struct P p = {3, 4};\n    printf("%d", p.x * p.y);\n    return 0;\n}',o:['12','7','34','error'],a:1,e:'p.x = 3, p.y = 4.'},
+ {t:5,l:2,q:'다음 코드의 출력 결과는?',c:'int f(int n) { return n == 0 ? 0 : n + f(n - 1); }\nint main(void) {\n    printf("%d", f(4));\n    return 0;\n}',o:['10','4','24','0'],a:1,e:'4 + 3 + 2 + 1 + 0 = 10.'},
+ {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'int cnt(void) { static int c = 0; return ++c; }\nint main(void) {\n    cnt(); cnt();\n    printf("%d", cnt());\n    return 0;\n}',o:['3','1','0','2'],a:1,e:'static 지역 변수는 함수가 끝나도 값이 유지돼요.'},
+ {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'struct S { int v; };\nint main(void) {\n    struct S s = {1};\n    struct S *p = &s;\n    p->v += 4;\n    printf("%d", s.v);\n    return 0;\n}',o:['5','1','4','error'],a:1,e:'포인터로 구조체 멤버에 접근할 때 -> 를 써요.'},
+ {t:5,l:3,q:'다음 코드의 출력 결과는?',c:'int g = 1;\nvoid f(void) { int g = 5; g++; }\nint main(void) {\n    f();\n    printf("%d", g);\n    return 0;\n}',o:['1','6','5','2'],a:1,e:'함수 안의 g는 지역 변수라 전역 g는 그대로 1이에요.'}
+ ]};
+/* 자격증 문제은행 */
 /* ===== 과제 제작 · 채점 · 수준 분석 (문제은행 기반) ===== */
-const QZ_KEYS=Object.keys(QBANK);
+let QZ_KEYS=[];
 const CIRC=['','①','②','③','④'];
 let QW=null; // 제작 마법사 상태
+function qzKeys(){ return QZ_KEYS=Object.keys(QBANK); }
 
 function qzShuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function qzPick(sub,lv,topics,per){
@@ -4036,7 +4166,7 @@ function qzPick(sub,lv,topics,per){
 function qzTitle(sub,lv){ return `${QBANK[sub].name} ${QLEVEL[lv]} 단계 과제`; }
 
 /* ---------- 제작 마법사 ---------- */
-function openQuiz(opt={}){
+function openQuiz(opt={}){ qzKeys();
   QW={step:opt.sub?2:1,sub:opt.sub||'',lv:opt.lv||2,topics:opt.topics||null,per:opt.per||3,sid:opt.sid||'',qs:null,back:opt.back||''};
   drawQuiz();
 }
@@ -4044,7 +4174,8 @@ function drawQuiz(){
   const w=QW; const t=todayStr();
   let body='';
   if(w.step===1){
-    body=`<p class="qz-lead">어떤 과목의 과제를 만들까요?</p><div class="qz-subs">${QZ_KEYS.map(k=>`<button class="qz-sub" data-act="qzSub" data-k="${k}"><b>${QBANK[k].name}</b><span>${QBANK[k].topics.map(x=>x.n).join(' · ')}</span><small>${QBANK[k].q.length}문항 보유</small></button>`).join('')}</div>`;
+    const card=k=>`<button class="qz-sub" data-act="qzSub" data-k="${k}"><b>${QBANK[k].name}</b><span>${QBANK[k].topics.map(x=>x.n).join(' · ')}</span><small>${QBANK[k].q.length}문항 보유</small></button>`;
+    body=`<p class="qz-lead">어떤 과목의 과제를 만들까요?</p>${[['lang','기초 언어'],['cert','자격증'],['base','실무 기초']].map(([c,l])=>{ const ks=QZ_KEYS.filter(k=>(QBANK[k].cat||'base')===c); return ks.length?`<div class="qz-cat">${l}</div><div class="qz-subs">${ks.map(card).join('')}</div>`:''; }).join('')}`;
   } else if(w.step===2){
     const B=QBANK[w.sub]; const tp=w.topics||B.topics.map((_,i)=>i);
     body=`<p class="qz-lead">${B.name} · 난이도와 범위를 골라 주세요</p>
@@ -4442,6 +4573,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261018-1617';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261018-1628';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>r.update().catch(()=>{});document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
