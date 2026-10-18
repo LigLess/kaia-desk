@@ -1003,6 +1003,18 @@ body.hud.hlight .chip.ok{background:rgba(11,158,108,.1);color:#07865b}
 body.hud.hlight .chip.warn{background:rgba(232,137,12,.12);color:#b56500}
 body.hud.hlight .chip.bad{background:rgba(224,72,59,.1);color:#c3392c}
 body.hud.hlight .chip.violet{background:#eef2f5;color:var(--fg-2)}
+
+/* ===== 로딩 화면 (모든 테마) ===== */
+.boot2{position:fixed;inset:0;z-index:300;overflow:hidden;transition:opacity .6s ease,transform .6s ease}
+.boot2.out{opacity:0;transform:scale(1.02);pointer-events:none}
+.boot2 canvas{position:absolute;inset:0}
+.bl-logo{position:absolute;height:auto;opacity:0;will-change:transform,opacity;pointer-events:none}
+.bl-name{position:absolute;left:0;right:0;text-align:center;font-weight:700;font-size:13px;letter-spacing:.42em;padding-left:.42em;opacity:0}
+.bl-line{position:absolute;left:0;right:0;text-align:center;font-size:12.5px;letter-spacing:.02em;opacity:0;padding:0 24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl-line.show{animation:blIn .45s cubic-bezier(.2,.8,.2,1) forwards}
+.boot2.mono .bl-line{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.08em}
+.bl-skip{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);text-align:center;font-size:11px;letter-spacing:.12em;opacity:.45}
+@keyframes blIn{from{opacity:0;transform:translateY(6px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
 </style>
 </head>
 <body>
@@ -2279,7 +2291,7 @@ function vSettings(){
     <label class="field"><span>소속 · 직함 (사이드바 표시)</span><input class="in" data-set="role" value="${esc(s.role)}"></label>
     <label class="field"><span>안내 문구 {지점}</span><input class="in" data-set="branch" value="${esc(s.branch)}"></label>
     <label class="field"><span>안내 문구 {멘토}</span><input class="in" data-set="mentor" value="${esc(s.mentor)}"></label></div></section>
-  <section class="pane"><h2>배경 <small>움직이는 배경 테마 · PC와 휴대폰에 함께 적용돼요</small></h2>${themes}<div class="btns" style="margin-top:16px"><label class="check"><input type="checkbox" data-act="sfxToggle" ${s.sfx?'checked':''}>J.A.R.V.I.S. 효과음</label><button class="btn sm" data-act="brief">${ic('send')}음성 브리핑 미리 듣기</button><button class="btn sm" data-act="replayBoot">부팅 화면 다시 보기</button></div>
+  <section class="pane"><h2>배경 <small>움직이는 배경 테마 · PC와 휴대폰에 함께 적용돼요</small></h2>${themes}<div class="btns" style="margin-top:16px"><label class="check"><input type="checkbox" data-act="sfxToggle" ${s.sfx?'checked':''}>J.A.R.V.I.S. 효과음</label><button class="btn sm" data-act="brief">${ic('send')}음성 브리핑 미리 듣기</button><button class="btn sm" data-act="replayBoot">로딩 화면 다시 보기</button></div>
     <div class="field" style="margin-top:18px"><span>화면 전환 효과</span><div class="seg">${[['shard','파편 조립'],['stack','차곡차곡'],['rise','스르륵'],['off','끄기']].map(([k,l])=>`<button class="${(s.fx||'rise')===k?'on':''}" data-act="fxMode" data-k="${k}">${l}</button>`).join('')}</div><span style="font-size:12px;color:var(--faint);font-weight:400">파편 조립: 메뉴를 옮기면 창이 유리 파편으로 흩어졌다가, 새 창의 파편들이 하나씩 날아와 맞춰져요. 차곡차곡: 각 창이 아래에서 하나씩 올라와 제자리에 딱 맞물려요. 효과음을 켜 두면 조립 소리도 나요.</span></div></section>
   <section class="pane"><h2>알림</h2><div class="form">
     <div class="field full"><span>개강·종강 며칠 전에 알릴까요</span><div class="btns">${[14,7,3,1].map(o=>`<label class="check"><input type="checkbox" data-act="offToggle" data-o="${o}" ${offs.includes(o)?'checked':''}>${o}일 전</label>`).join('')}</div></div>
@@ -3047,20 +3059,81 @@ function speak(text){
 }
 
 /* ---------- boot sequence ---------- */
+/* ---------- 로딩 화면: 물방울이 원 안으로 떨어져 튀고, 물결이 일렁이며 로딩 링이 차오름 (테마별 색) ---------- */
+function loaderPalette(){
+  const k=document.body.dataset.bg||'aurora';
+  const P={
+    jarvisLight:{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#eef2f5 70%,#e4eaef)',ink:'10,143,199',a1:'#0a8fc7',a2:'#2fc3f2',text:'#5a6a78',name:'#0f1d29',logo:'invert(37%) sepia(93%) saturate(1352%) hue-rotate(172deg) brightness(92%)',mono:true},
+    jarvis:{bg:'radial-gradient(70% 70% at 50% 45%,#0a2f4a,#03111d 70%,#01060b)',ink:'91,225,255',a1:'#5be1ff',a2:'#9ef0ff',text:'rgba(127,227,255,.75)',name:'#d9f7ff',logo:'brightness(0) invert(84%) sepia(40%) saturate(900%) hue-rotate(160deg)',mono:true},
+    exec:{bg:'radial-gradient(70% 70% at 50% 45%,#fbfbf9,#f3f3ef 75%)',ink:'12,12,16',a1:'#0c0c10',a2:'#0c0c10',head:'#ff5a1f',text:'#6d6d76',name:'#0c0c10',logo:'brightness(0)'},
+    aurora:{bg:'radial-gradient(80% 70% at 50% 40%,#16205a,#0a0d33 55%,#050a20)',ink:'120,235,230',a1:'#4fe3d6',a2:'#9b7bff',text:'rgba(210,225,255,.7)',name:'#f2f5ff',logo:'brightness(0) invert(1)'},
+    sunset:{bg:'radial-gradient(80% 70% at 50% 40%,#3a1036,#1c0716 60%,#100410)',ink:'255,170,140',a1:'#ff8a5c',a2:'#ff4f7b',text:'rgba(255,220,210,.7)',name:'#fff3ee',logo:'brightness(0) invert(1)'},
+    ocean:{bg:'radial-gradient(80% 70% at 50% 40%,#063453,#04243f 55%,#021626)',ink:'110,215,255',a1:'#3fd0ff',a2:'#2df0c0',text:'rgba(200,236,255,.7)',name:'#eefaff',logo:'brightness(0) invert(1)'},
+    space:{bg:'radial-gradient(80% 70% at 50% 40%,#1b1238,#0a0716 60%,#030208)',ink:'200,185,255',a1:'#b39dff',a2:'#6aa8ff',text:'rgba(225,215,255,.7)',name:'#f5f2ff',logo:'brightness(0) invert(1)'}
+  };
+  return P[k]||{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#f4f4f6 75%)',ink:'11,11,15',a1:'#0b0b0f',a2:'#0b0b0f',text:'#6b6b73',name:'#0b0b0f',logo:'brightness(0)'};
+}
 function bootSequence(lines){
-  if(!isHud()) return Promise.resolve();
   let seen=false; try{ seen=sessionStorage.getItem('md.booted')==='1'; }catch(e){}
   if(seen) return Promise.resolve();
   try{ sessionStorage.setItem('md.booted','1'); }catch(e){}
+  const reduce=(()=>{ try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } })();
   return new Promise(res=>{
-    const el=document.createElement('div'); el.className='boot'; el.id='boot';
-    el.innerHTML=`<svg viewBox="0 0 200 200" aria-hidden="true"><circle class="b1" cx="100" cy="100" r="96"/><circle class="b2" cx="100" cy="100" r="80"/><circle class="b3" cx="100" cy="100" r="62"/><circle class="b4" cx="100" cy="100" r="88"/><image href="${LOGO}" x="78" y="80" width="44" height="36" style="filter:brightness(0) invert(84%) sepia(40%) saturate(900%) hue-rotate(160deg)"/></svg><div class="boot-lines" id="bootLines"></div><div class="boot-skip">TAP TO SKIP</div>`;
+    const P=loaderPalette();
+    const el=document.createElement('div'); el.className='boot2'+(P.mono?' mono':''); el.id='boot'; el.style.background=P.bg;
+    el.innerHTML=`<canvas></canvas><img class="bl-logo" alt="" src="${LOGO}" style="filter:${P.logo}"><div class="bl-name" style="color:${P.name}">KAIA DESK</div><div class="bl-line" style="color:${P.text}"></div><div class="bl-skip" style="color:${P.text}">탭하면 건너뛰기</div>`;
     document.body.appendChild(el);
-    let done=false; const finish=()=>{ if(done) return; done=true; el.classList.add('out'); setTimeout(()=>{ el.remove(); res(); },700); };
-    el.addEventListener('click',finish);
-    const box=el.querySelector('#bootLines'); let i=0;
-    const t0=Date.now(); const next=()=>{ if(done) return; if(i>=lines.length){ if(lines.ready||Date.now()-t0>7000) setTimeout(finish,700); else setTimeout(next,120); return; } const p=document.createElement('p'); p.textContent=lines[i]; if(lines.ready&&i===lines.length-1) p.className='ok'; box.appendChild(p); if(box.children.length>4) box.firstChild.remove(); i++; setTimeout(next,i===lines.length?380:260); };
-    setTimeout(next,700);
+    const cv=el.querySelector('canvas'), x=cv.getContext('2d'), logo=el.querySelector('.bl-logo'), nameEl=el.querySelector('.bl-name'), lineEl=el.querySelector('.bl-line');
+    let W,H,dpr,cx,cy,R;
+    const size=()=>{ dpr=Math.min(2,devicePixelRatio||1); W=innerWidth; H=innerHeight; cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px'; cx=W/2; cy=H*0.44; R=Math.max(46,Math.min(84,Math.min(W,H)*0.11));
+      const ls=R*0.62; Object.assign(logo.style,{width:ls+'px',left:(cx-ls/2)+'px',top:(cy-ls*0.4)+'px'}); nameEl.style.top=(cy+R+34)+'px'; lineEl.style.top=(cy+R+62)+'px'; };
+    size(); addEventListener('resize',size);
+    const ink=a=>`rgba(${P.ink},${Math.max(0,a).toFixed(3)})`;
+    const FALL=reduce?0:0.62, G=()=>R*10;
+    const drops=[], rings=[]; let impact=false, jet=null;
+    const ring=(px,py,t0,max,amp,dur,w)=>rings.push({px,py,t0,max,amp,dur,w,seed:Math.random()*6});
+    const t0=performance.now(); let done=false, shown=0, prog=0, lastLine=0, raf, endAt=0;
+    const finish=(fast)=>{ if(done) return; done=true; endAt=(performance.now()-t0)/1000; if(!fast) ring(cx,cy,endAt,R*3.2,.35,1.1,1.2); setTimeout(()=>el.classList.add('out'),fast?0:260); setTimeout(()=>{ cancelAnimationFrame(raf); removeEventListener('resize',size); el.remove(); res(); },fast?420:900); };
+    el.addEventListener('click',()=>finish(true));
+    const KO={'INITIALIZING KAIA DESK':'시작하는 중','LINKING DATA CORE…':'데이터 연결 중…','AUTHENTICATION REQUIRED':'로그인 확인 중'};
+    const setLine=txt=>{ if(!P.mono&&KO[txt]) txt=KO[txt]; if(!P.mono) txt=txt.replace(/^SYSTEM ONLINE — /,''); lineEl.classList.remove('show'); void lineEl.offsetWidth; lineEl.textContent=txt; lineEl.classList.add('show'); };
+    const frame=now=>{
+      const t=(now-t0)/1000; x.setTransform(dpr,0,0,dpr,0,0); x.clearRect(0,0,W,H);
+      // 1) 떨어지는 물방울
+      if(t<FALL){ const p=t/FALL, e=p*p; const y=cy-H*0.34+(H*0.34)*e, r=R*0.085;
+        x.save(); x.translate(cx,y); x.scale(1-0.18*e,1+0.55*e); const g=x.createRadialGradient(-r*0.3,-r*0.3,0,0,0,r); g.addColorStop(0,ink(.55)); g.addColorStop(1,ink(.95)); x.fillStyle=g; x.beginPath(); x.arc(0,0,r,0,Math.PI*2); x.fill(); x.restore(); }
+      // 2) 착수: 튀는 방울 + 물결
+      if(t>=FALL&&!impact){ impact=true;
+        for(let i=0;i<7;i++){ const a=-Math.PI/2+(i-3)*0.32+(Math.random()-.5)*0.2, v=R*(2.4+Math.random()*1.3); drops.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,r:R*(0.022+Math.random()*0.025),t:t}); }
+        jet={y:cy,vy:-R*3.6,r:R*0.05,t:t+0.1};
+        ring(cx,cy,t,R*2.1,.5,1.3,1.4); ring(cx,cy,t+0.12,R*1.6,.35,1.2,1); ring(cx,cy,t+0.26,R*1.25,.22,1.1,.8);
+      }
+      let dt=1/60;
+      for(let i=drops.length-1;i>=0;i--){ const d=drops[i]; d.vy+=G()*dt; d.x+=d.vx*dt; d.y+=d.vy*dt;
+        if(d.y>=cy&&d.vy>0){ ring(d.x,cy,t,R*0.32,.28,.7,.7); drops.splice(i,1); continue; }
+        x.fillStyle=ink(.8); x.beginPath(); x.arc(d.x,d.y,d.r,0,Math.PI*2); x.fill(); }
+      if(jet&&t>=jet.t){ jet.vy+=G()*dt; jet.y+=jet.vy*dt; if(jet.y>=cy&&jet.vy>0){ ring(cx,cy,t,R*1.15,.3,1,.9); jet=null; } else { x.fillStyle=ink(.85); x.beginPath(); x.ellipse(cx,jet.y,jet.r*0.85,jet.r*1.15,0,0,Math.PI*2); x.fill(); } }
+      // 3) 물결 (살짝 일렁이는 원)
+      for(let i=rings.length-1;i>=0;i--){ const r=rings[i]; const p=(t-r.t0)/r.dur; if(p<0) continue; if(p>=1){ rings.splice(i,1); continue; }
+        const e=1-Math.pow(1-p,3), rad=r.max*e, a=r.amp*Math.pow(1-p,1.6); x.strokeStyle=ink(a); x.lineWidth=r.w*(1.6-p);
+        x.beginPath(); for(let s=0;s<=72;s++){ const ang=s/72*Math.PI*2; const wob=Math.sin(ang*4+r.seed+t*3)*R*0.03*(1-p); const rr=rad+wob; s?x.lineTo(r.px+Math.cos(ang)*rr,r.py+Math.sin(ang)*rr*(r.px===cx?1:0.42)):x.moveTo(r.px+rr,r.py); } x.closePath(); x.stroke(); }
+      // 4) 로딩 링: 물결이 R에서 멈추며 자리잡고, 진행만큼 차오름
+      if(impact){ const p=Math.max(0,t-FALL); const settle=1-Math.exp(-5*p)*Math.cos(9*p); const breath=Math.exp(-1.6*p)*R*0.05+R*0.008;
+        const rad=R*Math.min(1.08,settle);
+        const path=(a0,a1)=>{ x.beginPath(); const n=Math.max(8,Math.ceil((a1-a0)/(Math.PI*2)*96)); for(let s=0;s<=n;s++){ const ang=a0+(a1-a0)*s/n; const rr=rad+Math.sin(ang*3+t*2.2)*breath; s?x.lineTo(cx+Math.cos(ang)*rr,cy+Math.sin(ang)*rr):x.moveTo(cx+Math.cos(ang)*rr,cy+Math.sin(ang)*rr); } };
+        x.lineCap='round'; path(0,Math.PI*2); x.strokeStyle=ink(.14*Math.min(1,p*3)); x.lineWidth=2; x.stroke();
+        const target=lines.length?Math.min(1,shown/Math.max(lines.length,1))*(lines.ready?1:0.9):0; prog+=(target-prog)*0.06; if(done) prog+=(1-prog)*0.2;
+        if(prog>0.002){ const a0=-Math.PI/2, a1=a0+prog*Math.PI*2; path(a0,a1); const gr=x.createLinearGradient(cx-R,cy-R,cx+R,cy+R); gr.addColorStop(0,P.a1); gr.addColorStop(1,P.a2); x.strokeStyle=gr; x.lineWidth=2.6; x.stroke();
+          const hr=rad+Math.sin(a1*3+t*2.2)*breath; x.fillStyle=P.head||P.a2; x.beginPath(); x.arc(cx+Math.cos(a1)*hr,cy+Math.sin(a1)*hr,3,0,Math.PI*2); x.fill(); }
+        const lo=Math.min(1,Math.max(0,(p-0.15)/0.55)); logo.style.opacity=lo; logo.style.transform=`scale(${0.86+0.14*(1-Math.pow(1-lo,3))}) translateY(${Math.sin(t*2.2)*1.2}px)`;
+        nameEl.style.opacity=Math.min(1,Math.max(0,(p-0.35)/0.5));
+        // 상태 문구
+        if(t-lastLine>0.38&&p>0.45&&shown<lines.length){ setLine(lines[shown]); shown++; lastLine=t; }
+        if(!done&&((lines.ready&&shown>=lines.length&&prog>0.985&&t>2.1)||t>8)) finish(false);
+      }
+      raf=requestAnimationFrame(frame);
+    };
+    raf=requestAnimationFrame(frame);
   });
 }
 
@@ -3334,7 +3407,7 @@ const ACT={
   cmd:()=>openCmd(),
   fxMode:el=>{ S.settings.fx=el.dataset.k; store.saveSettings(); applyFx(); if(el.dataset.k==='shard'||el.dataset.k==='stack'){ S._fxAssemble=true; } render(); },
   brief:()=>{ sfx('ok'); speak(briefingText()); },
-  replayBoot:()=>{ try{ sessionStorage.removeItem('md.booted'); }catch(e){} if(!isHud()){ toast('홀로그램 테마에서만 보여요','설정 → 배경 → J.A.R.V.I.S.를 고르세요.'); return; } sfx('boot'); const L=bootLines(); L.ready=true; bootSequence(L); },
+  replayBoot:()=>{ try{ sessionStorage.removeItem('md.booted'); }catch(e){} sfx('boot'); const L=bootLines(); L.ready=true; bootSequence(L); },
   syncOn:async el=>{ const u=$('#syncUrl').value, k=$('#syncKey').value; if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u.trim())){ toast('웹 앱 주소를 확인해 주세요','https://script.google.com/macros/s/…/exec 형식이에요.'); return; } if(!k.trim()){ toast('비밀 키를 넣어 주세요',''); return; } el.disabled=true; await gas.connect(u,k); el.disabled=false; },
   openLogin:()=>{ S.gate=true; S.loginTab='in'; render(); },
   loginTab:el=>{ S.loginTab=el.dataset.k; render(); setTimeout(()=>{ const f=$('#lgUser'); f&&f.focus(); },50); },
@@ -3445,7 +3518,7 @@ async function boot(){
   renderSide();
   $('#view').innerHTML='<div class="loading"><div><i></i>데이터를 불러오는 중…</div></div>';
   bgfx.init(); applyTheme(lsGet('md.bg')||'aurora');
-  const BL=['INITIALIZING KAIA DESK','LINKING DATA CORE…']; const bootP=isHud()?bootSequence(BL):Promise.resolve();
+  const BL=['INITIALIZING KAIA DESK','LINKING DATA CORE…']; const bootP=bootSequence(BL);
   await store.init();
   applyTheme();
   BL.push(...(S.gate?['AUTHENTICATION REQUIRED','로그인해 주세요']:bootLines().slice(2))); BL.ready=true;
