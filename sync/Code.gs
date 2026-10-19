@@ -7,6 +7,9 @@
  * 2) 배포 → 새 배포 → 유형: 웹 앱 → 실행: 나 / 액세스: 모든 사용자 → 배포
  * 3) 나온 웹 앱 주소(…/exec)를 앱의 설정 → 계정 · 동기화에 넣으세요.
  *
+ * 커뮤니티(게시판 · 파일 · DB 배정)를 처음 켤 때: 이 코드로 바꾼 뒤 배포 관리 → 수정 → 새 버전 → 배포.
+ *   드라이브 · 메일 권한을 물어보면 "허용"을 눌러 주세요. 올린 파일은 내 드라이브의 "KAIA DESK 팀 파일" 폴더에 저장돼요.
+ *
  * 비밀번호를 잊은 팀원: 시트의 kaia_users 탭에서 그 사람 줄을 지우면, 같은 아이디로 다시 가입할 수 있고 데이터는 그대로예요.
  */
 const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
@@ -14,7 +17,8 @@ const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
 const DATA = 'kaia_data';
 const USERS = 'kaia_users';
 const TEAM_OWNER = '_team';
-const SHARED = { courses: true, inbox: true }; // 팀 공용 컬렉션 (meta/team 도 공용, inbox = 진단 결과 수신함)
+const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
+const MAX_FILE = 15 * 1024 * 1024;
 
 function ss_() { return SpreadsheetApp.getActive(); }
 function dataSheet_() {
@@ -24,7 +28,7 @@ function dataSheet_() {
 }
 function userSheet_() {
   let s = ss_().getSheetByName(USERS);
-  if (!s) { s = ss_().insertSheet(USERS); s.appendRow(['user', 'name', 'salt', 'hash', 'tokens', 'created']); s.setFrozenRows(1); }
+  if (!s) { s = ss_().insertSheet(USERS); s.appendRow(['user', 'name', 'salt', 'hash', 'tokens', 'created', 'email']); s.setFrozenRows(1); }
   return s;
 }
 function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
@@ -56,10 +60,39 @@ function auth_(token) {
 function tooMany_(user) { const c = CacheService.getScriptCache(); return Number(c.get('f_' + user) || 0) >= 6; }
 function fail_(user) { const c = CacheService.getScriptCache(); c.put('f_' + user, String(Number(c.get('f_' + user) || 0) + 1), 600); }
 
+function folder_() {
+  const p = PropertiesService.getScriptProperties(); const id = p.getProperty('FOLDER');
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  const f = DriveApp.createFolder('KAIA DESK 팀 파일'); p.setProperty('FOLDER', f.getId()); return f;
+}
+function inFolder_(file) { const fid = folder_().getId(); const it = file.getParents(); while (it.hasNext()) if (it.next().getId() === fid) return true; return false; }
+function nameOf_(user) { const u = findUser_(user); return u ? String(u.r[1] || user) : user; }
+function mailLead_(lead, uid) {
+  try {
+    const u = findUser_(norm_(lead.to)); const to = u ? String(u.r[6] || '').trim() : '';
+    if (!to || !/@/.test(to)) return;
+    const from = nameOf_(uid);
+    const subj = '[KAIA DESK] ' + (lead.name || '') + '문의 배정_' + from + '전달';
+    const body = [subj, '', '문의자: ' + (lead.name || '-'), '연락처: ' + (lead.phone || '-'), '관심 과정: ' + (lead.course || '-'), '문의 경로: ' + (lead.src || '-'), '', (lead.memo || ''), '', '앱에서 확인: KAIA DESK → 팀 → DB 배정'].join('\n');
+    MailApp.sendEmail(to, subj, body);
+  } catch (e) {}
+}
+
 function doGet(e) {
   const p = e.parameter || {};
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 2 });
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 3 });
   const uid = auth_(p.token); if (!uid) return out_({ error: 'auth' });
+  if (p.a === 'members') {
+    const v = userSheet_().getDataRange().getValues().slice(1);
+    const me = v.find(r => norm_(r[0]) === uid);
+    return out_({ v: 3, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '' });
+  }
+  if (p.a === 'file') {
+    let f; try { f = DriveApp.getFileById(String(p.id || '')); } catch (err) { return out_({ error: 'nofile' }); }
+    if (!inFolder_(f)) return out_({ error: 'nofile' });
+    const b = f.getBlob();
+    return out_({ name: f.getName(), type: b.getContentType(), data: Utilities.base64Encode(b.getBytes()) });
+  }
   const since = Number(p.since || 0);
   const docs = [];
   dataSheet_().getDataRange().getValues().slice(1).forEach(r => {
@@ -73,6 +106,27 @@ function doGet(e) {
 
 function doPost(e) {
   const b = JSON.parse(e.postData.contents || '{}');
+  if (b.a === 'upload') {   // 게시판 첨부 파일 → 드라이브 폴더
+    const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
+    const bytes = Utilities.base64Decode(String(b.data || ''));
+    if (!bytes.length || bytes.length > MAX_FILE) return out_({ error: 'size' });
+    const name = String(b.name || 'file').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120);
+    const f = folder_().createFile(Utilities.newBlob(bytes, String(b.type || 'application/octet-stream'), name));
+    f.setDescription(uid);
+    return out_({ ok: true, id: f.getId(), name: name, size: bytes.length, type: String(b.type || '') });
+  }
+  if (b.a === 'unfile') {
+    const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
+    try { const f = DriveApp.getFileById(String(b.id || '')); if (inFolder_(f) && f.getDescription() === uid) f.setTrashed(true); } catch (err) {}
+    return out_({ ok: true });
+  }
+  if (b.a === 'email') {    // 배정 알림 받을 메일 주소 (본인만)
+    const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
+    const em = String(b.email || '').trim().slice(0, 120);
+    if (em && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) return out_({ error: 'email' });
+    const u = findUser_(uid); u.s.getRange(u.row, 7).setValue(em);
+    return out_({ ok: true, email: em });
+  }
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     if (b.a === 'signup') {
@@ -116,13 +170,27 @@ function doPost(e) {
     const vals = s.getDataRange().getValues();
     const idx = {}; vals.forEach((r, i) => { if (i) idx[r[0] + '/' + r[1] + '/' + r[2]] = i + 1; });
     const now = Date.now();
+    const mails = [];
     (b.writes || []).forEach(w => {
       const owner = (SHARED[w.col] || (w.col === 'meta' && w.id === 'team')) ? TEAM_OWNER : uid;
       const k = owner + '/' + w.col + '/' + w.id;
+      // 게시판 · DB 배정: 글쓴이 / 보낸 사람 · 받은 사람만 고칠 수 있어요
+      if (w.col === 'posts' || w.col === 'comments' || w.col === 'leads') {
+        let old = null; if (idx[k]) { try { old = JSON.parse(vals[idx[k] - 1][3] || 'null'); } catch (err) {} }
+        if (w.col === 'leads') {
+          if (old && old.from !== uid && old.to !== uid) return;
+          if (!w.del && w.data) { if (!old) w.data.from = uid; if (w.data.to && (!old || old.to !== w.data.to)) mails.push(w.data); }
+        } else {
+          if (old && old.by !== uid) return;
+          if (!w.del && w.data && !old) w.data.by = uid;
+        }
+      }
       const row = [owner, w.col, String(w.id), w.del ? '' : JSON.stringify(w.data), now, w.del ? 1 : ''];
       if (idx[k]) s.getRange(idx[k], 1, 1, 6).setValues([row]);
       else { s.appendRow(row); idx[k] = s.getLastRow(); }
     });
+    lock.releaseLock();
+    mails.forEach(l => mailLead_(l, uid));
     return out_({ ok: true, now: now });
-  } finally { lock.releaseLock(); }
+  } finally { try { lock.releaseLock(); } catch (err) {} }
 }
