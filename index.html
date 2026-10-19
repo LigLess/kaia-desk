@@ -1355,6 +1355,10 @@ h2 .tm-chk{margin:0}
 .tm-ch{font-size:12px;font-weight:600;color:var(--muted)}
 .tm-c{position:relative;padding-right:28px}.tm-x{position:absolute;right:0;top:0;border:0;background:none;color:var(--faint);cursor:pointer;padding:2px}.tm-x svg{width:14px;height:14px}
 .toast.lead-t{border-left:3px solid var(--accent)}
+/* 강한 알림(배정 · 콜백 · 진단): 직접 닫기 전까지 유지 */
+.toast.sticky{position:relative;min-width:300px;padding-right:42px;cursor:pointer;outline:2px solid var(--accent);outline-offset:0;animation:tin .55s var(--spring),kring 1.4s ease-out .5s 3}
+.toast.sticky .tx{position:absolute;right:8px;top:8px;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:rgba(128,128,128,.28);color:inherit;font-size:15px;line-height:24px;cursor:pointer}
+@keyframes kring{0%{outline-color:var(--accent);outline-offset:0}100%{outline-color:transparent;outline-offset:10px}}
 @media (max-width:420px){.tm-g2{grid-template-columns:minmax(0,1fr)}}
 
 #view.quiet,#view.quiet *{animation:none!important}
@@ -2059,7 +2063,7 @@ const gas={
       if(d.del) delete S.real[d.col][d.id]; else S.real[d.col][d.id]=d.data; n++;
     }
     teamNotify();
-    if(this._newIn){ const k=this._newIn; this._newIn=0; setTimeout(()=>{ try{ toast(`새 진단 결과 ${k}건`,'알림 화면의 수신함에서 학생에게 붙여 주세요.','alarm-t'); }catch(e){} },400); }
+    if(this._newIn){ const k=this._newIn; this._newIn=0; setTimeout(()=>{ try{ alertShow({title:`새 진단 결과 ${k}건`,body:'알림 화면의 수신함에서 학생에게 붙여 주세요.',tag:'inbox-new',go:'alarms'}); alertSound('새 진단 결과'); }catch(e){} },400); }
     if(n){ store.saveLocal(); if(S.demo&&COLS.some(c=>Object.keys(S.real[c]).length)){ S.demo=false; S.ex=null; } }
     return n;
   },
@@ -2072,7 +2076,8 @@ const gas={
   },
   start(){
     clearInterval(this.poll);
-    const tick=async()=>{ if(document.hidden) return; try{ const n=await this.pull(false); if(n){ S._quiet=true; scheduleRender(); } }catch(e){ this.state('off'); } };
+    let skip=0;
+    const tick=async()=>{ if(document.hidden){ skip^=1; if(skip) return; } else skip=0; try{ const n=await this.pull(false); if(n){ S._quiet=true; scheduleRender(); } }catch(e){ this.state('off'); } };
     this.poll=setInterval(tick,25000);
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tick(); });
     addEventListener('online',()=>{ this.flush(); tick(); });
@@ -2110,7 +2115,7 @@ const gas={
     if(!Object.keys(S.real.snippets).length&&!mine.length) DEFAULT_SNIPPETS.forEach(s=>store.put('snippets',{id:uid('n'),...s,at:Date.now()}));
     lsSet('md.syncAt',String(d.now||Date.now())); store.saveLocal(); this.flush(); this.start(); applyTheme();
     toast(body.a==='signup'?'가입했어요':'로그인했어요',`${j.name||j.user}님의 데이터로 시작해요.`);
-    S.view='home'; render(); setTimeout(()=>{ try{ dayToast(); }catch(e){} },900); return true;
+    S.view='home'; render(); setTimeout(()=>{ try{ dayToast(); permHint(); }catch(e){} },900); return true;
   },
   /* 로그아웃: 이 기기에서 계정 데이터를 지워요 (서버 데이터는 그대로) */
   async signOut(){
@@ -2246,10 +2251,12 @@ function dueLabel(tk){
 }
 
 /* ---------- toast / copy / confirm ---------- */
-function toast(title,body,cls=''){
-  const box=$('#toasts'); const el=document.createElement('div'); el.className='toast '+cls;
-  el.innerHTML=`<b>${esc(title)}</b>${body?esc(body):''}`; box.appendChild(el); const plain=[...box.children].filter(x=>!x.classList.contains('alarm-t')); if(plain.length>3) plain.slice(0,plain.length-3).forEach(x=>x.remove());
-  setTimeout(()=>{el.style.transition='opacity .4s, transform .4s';el.style.opacity='0';el.style.transform='translateY(8px)';setTimeout(()=>el.remove(),450)},cls?7000:3800);
+function toast(title,body,cls='',act){
+  const box=$('#toasts'); const el=document.createElement('div'); el.className='toast '+cls; const sticky=/(^|\s)sticky(\s|$)/.test(cls);
+  el.innerHTML=`<b>${esc(title)}</b>${body?esc(body):''}${sticky?'<button class="tx" aria-label="닫기">×</button>':''}`; box.appendChild(el); const plain=[...box.children].filter(x=>!x.classList.contains('alarm-t')); if(plain.length>3) plain.slice(0,plain.length-3).forEach(x=>x.remove());
+  const kill=()=>{el.style.transition='opacity .4s, transform .4s';el.style.opacity='0';el.style.transform='translateY(8px)';setTimeout(()=>el.remove(),450)};
+  if(sticky){ el.addEventListener('click',e=>{ const x=e.target.closest&&e.target.closest('.tx'); kill(); if(!x&&act){ try{ act(); }catch(err){} } }); return; }
+  setTimeout(kill,cls?7000:3800);
 }
 function copyText(txt){
   const ok=()=>toast('복사했어요','카톡이나 문자에 붙여넣으면 돼요.');
@@ -2266,6 +2273,36 @@ function confirmBox(title,body,okLabel='확인',danger=false){
 }
 let audioCtx=null;
 function beep(){ try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.0001,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.2,audioCtx.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+0.6); o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.65);}catch(e){} }
+
+/* ===== 알림 강화: 두 번 울리는 소리 · 탭 제목 깜빡임 · 알림 눌렀을 때 해당 화면으로 이동 ===== */
+function alertSound(msg){
+  try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==='suspended') audioCtx.resume(); const t0=audioCtx.currentTime;
+    [[988,0],[1319,.22]].forEach(([f,d])=>{ const o=audioCtx.createOscillator(),g=audioCtx.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t0+d); g.gain.exponentialRampToValueAtTime(0.25,t0+d+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+d+0.5); o.connect(g).connect(audioCtx.destination); o.start(t0+d); o.stop(t0+d+0.55); });
+  }catch(e){}
+  try{ titleFlash(msg||'새 알림'); }catch(e){}
+}
+let _tfT=null,_tfBase='',_tfN=0;
+function titleFlash(msg){ if(!document.hidden) return; if(!_tfT) _tfBase=document.title; _tfN++; clearInterval(_tfT); let on=false; _tfT=setInterval(()=>{ on=!on; document.title=on?`🔔 (${_tfN}) ${msg}`:_tfBase; },1000); }
+function titleFlashStop(){ if(_tfT){ clearInterval(_tfT); _tfT=null; _tfN=0; document.title=_tfBase||document.title; } }
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) titleFlashStop(); });
+addEventListener('focus',titleFlashStop);
+function openFromNotice(d){ try{ if(!d||!d.go) return; if(d.tab) S.teamTab=d.tab; go(d.go); }catch(e){} }
+if('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message',e=>{ const m=e.data; if(m&&m.type==='kaia-go') openFromNotice(m); });
+/* 강한 알림 1건: 화면 오른쪽 아래에 직접 닫을 때까지 유지 + 윈도우(OS) 알림 */
+function alertShow(o){
+  toast(o.title,o.body,'alarm-t sticky '+(o.cls||''),()=>openFromNotice(o));
+  notify(o.title,o.nbody||o.body,{tag:o.tag,sticky:true,go:o.go,tab:o.tab});
+}
+/* 알림을 아직 허용하지 않은 팀원에게 하루 한 번 안내 */
+function permHint(){
+  try{
+    if(S.gate||S.mode!=='gas'||!('Notification' in window)) return;
+    const p=Notification.permission; if(p==='granted') return;
+    const t=todayStr(); if(lsGet('md.permDay')===t) return; lsSet('md.permDay',t);
+    if(p==='default') toast('PC 알림을 켜 주세요','여기를 누르면 새 DB 배정이 오면 화면 오른쪽 아래에 알림이 떠요.','alarm-t sticky',async()=>{ try{ const r=await Notification.requestPermission(); toast(r==='granted'?'알림을 허용했어요':'알림이 꺼져 있어요',r==='granted'?'이제 새 DB 배정이 오면 오른쪽 아래에 알림이 떠요.':'주소창 왼쪽 자물쇠 → 알림 → 허용으로 바꿔 주세요.'); if(r==='granted') render(); }catch(e){} });
+    else toast('알림이 차단돼 있어요','주소창 왼쪽 자물쇠 → 알림 → 허용으로 바꾸면 DB 배정 알림이 떠요.','alarm-t sticky');
+  }catch(e){}
+}
 
 /* ---------- navigation (top glass bar) ---------- */
 const NAV=[
@@ -4934,8 +4971,8 @@ function teamNotify(){
   const done=gas._doneLeads||[]; gas._doneLeads=[];
   if(fresh.length){
     noted=noted.concat(fresh.map(l=>l.id)).slice(-300); lsSet('md.leadNoti',JSON.stringify(noted));
-    setTimeout(()=>{ fresh.slice(0,3).forEach(l=>{ toast(leadTitle(l),[l.course,l.phone].filter(Boolean).join(' · ')||'팀 → DB 배정에서 확인하세요.','alarm-t lead-t'); try{ notify(leadTitle(l),[l.course,l.phone,l.memo].filter(Boolean).join(' · ')); }catch(e){} });
-      if(fresh.length>3) toast(`배정된 DB ${fresh.length}건`,'팀 → DB 배정에서 모두 볼 수 있어요.','alarm-t'); try{ beep(); }catch(e){} },500);
+    setTimeout(()=>{ fresh.slice(0,3).forEach(l=>{ alertShow({title:leadTitle(l),body:[l.course,l.phone].filter(Boolean).join(' · ')||'팀 → DB 배정에서 확인하세요.',nbody:[l.course,l.phone,l.memo].filter(Boolean).join(' · ')||'팀 → DB 배정에서 확인하세요.',cls:'lead-t',tag:'lead-'+l.id,go:'team',tab:'db'}); });
+      if(fresh.length>3) alertShow({title:`배정된 DB ${fresh.length}건`,body:'팀 → DB 배정에서 모두 볼 수 있어요.',tag:'lead-many',go:'team',tab:'db'}); alertSound(leadTitle(fresh[0])); },500);
   }
   done.forEach(l=>setTimeout(()=>toast(`${l.name||''} 문의 처리 완료`,`${l.toName||memberName(l.to)}님이 완료로 바꿨어요.`),600));
 }
@@ -5269,17 +5306,17 @@ function tick(){
     if(k.done||!k.due||!k.time||k.notified) continue;
     const key=`${k.due}T${k.time}`; if(key>nowKey) continue;
     const ageH=(now-new Date(`${k.due}T${k.time}:00`))/36e5;
-    if(ageH<12){ const st=k.sid&&D().students[k.sid]; toast(`${k.cat==='콜백'?'콜백 시간이에요':'할 일 시간이에요'} · ${k.time}`,k.text+(st&&st.phone?` (${st.phone})`:''),'alarm-t'); beep(); notify(`${k.cat==='콜백'?'콜백':'할 일'} · ${k.time}`,k.text+(st&&st.phone?` (${st.phone})`:'')); }
+    if(ageH<12){ const st=k.sid&&D().students[k.sid]; const tb=k.text+(st&&st.phone?` (${st.phone})`:''); alertShow({title:`${k.cat==='콜백'?'콜백 시간이에요':'할 일 시간이에요'} · ${k.time}`,body:tb,tag:'task-'+k.id,go:'tasks'}); alertSound(`${k.cat==='콜백'?'콜백':'할 일'} · ${k.time}`); }
     store.put('tasks',{...k,notified:true});
   }
   if(S.locked) drawLock();
 }
-function notify(title,body){ try{ if(!('Notification' in window)||Notification.permission!=='granted') return; const opt={body,icon:'icons/icon-192.png',badge:'icons/favicon-64.png',tag:title}; if(navigator.serviceWorker&&navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r=>r.showNotification(title,opt)); else new Notification(title,opt); }catch(e){} }
+function notify(title,body,o){ try{ if(!('Notification' in window)||Notification.permission!=='granted') return; o=o||{}; const opt={body,icon:'icons/icon-192.png',badge:'icons/favicon-64.png',tag:o.tag||title}; if(o.sticky){ opt.requireInteraction=true; opt.renotify=true; } if(o.go) opt.data={go:o.go,tab:o.tab||''}; if(navigator.serviceWorker&&navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r=>r.showNotification(title,opt)); else { const n=new Notification(title,opt); if(o.go) n.onclick=()=>{ try{ window.focus(); }catch(e){} openFromNotice(opt.data); n.close(); }; } }catch(e){} }
 function dayToast(){
   if(S.gate) return; const t=todayStr(); if(lsGet('md.toastDay')===t) return; lsSet('md.toastDay',t);
   const un=activeAlarms().filter(a=>!a.ack); if(!un.length) return;
   const body=un.slice(0,3).map(a=>`${a.type==='start'?'개강':'종강'} D-${diffDays(t,a.date)} ${a.c.name}`).join(' · ');
-  toast(`확인할 알림 ${un.length}건`,body,'alarm-t'); notify(`KAIA DESK · 확인할 알림 ${un.length}건`,body);
+  alertShow({title:`확인할 알림 ${un.length}건`,nbody:body,body,tag:'day-'+t,go:'alarms'});
 }
 window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); window._installPrompt=e; if(S.view==='settings') scheduleRender(); });
 function bootLines(){ const n=activeAlarms().filter(a=>!a.ack).length; return ['INITIALIZING KAIA DESK','LINKING DATA CORE…',`시간표 동기화 · ${list('courses').length}개 과정`,`학생 데이터 · ${list('students').length}명`,`확인할 알림 · ${n}건`,`SYSTEM ONLINE — 환영합니다, ${S.settings.name||''}님`]; }
@@ -5294,11 +5331,11 @@ async function boot(){
   await store.init();
   applyTheme();
   BL.push(...(S.gate?['AUTHENTICATION REQUIRED','로그인해 주세요']:bootLines().slice(2))); BL.ready=true;
-  await bootP; applyFx(); if(FX.on()) S._fxAssemble=true; render(); dayToast(); tick(); setInterval(tick,30000);
+  await bootP; applyFx(); if(FX.on()) S._fxAssemble=true; render(); dayToast(); permHint(); tick(); setInterval(tick,30000);
 }
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261019-1313';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261019-1700';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
