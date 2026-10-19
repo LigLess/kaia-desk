@@ -3908,7 +3908,7 @@ function buildPrompt(k,s,id){
   if(k==='docOnsite'){ const v=latest('면접 답변');
     return `[현장 피드백 정리 요청]\n${stuProfile(s)}\n\n오늘 학생과 대면으로 피드백했습니다. 원고는 더 바꾸지 말고, 학생이 스스로 고칠 포인트만 정리해 주세요.\n---\n${v?v.text:'(학생 답변 또는 현장 메모를 붙여넣어 주세요)'}\n---\n\n요청:\n- 멘토 본인이 직접 쓴 문서처럼 써 주세요. "학생에게 전달", "멘토가 ~" 같은 제3자 지시 문구는 쓰지 마세요.\n- 고칠 포인트는 짧고 구체적으로, 우선순위 순서로 정리해 주세요.`; }
   if(k==='transcript'){ const raw=($('#wlRaw')&&$('#wlRaw').value)||'';
-    return `[상담 녹취 정리 요청]\n${stuProfile(s)}\n\n아래는 클로바노트로 뽑은 상담 녹취 스크립트입니다.\n---\n${raw||'(녹취 텍스트를 붙여넣어 주세요)'}\n---\n\n요청:\n- 대사가 이상하게 인식된 부분과 오탈자를 고치고, 상담자와 학생 화자를 바로잡아 자연스러운 대화문으로 정리해 주세요.\n- 끝에 상담 요약(학생 상황 · 관심 과정 · 걸림돌 · 다음 할 일)을 5줄 이내로 붙여 주세요.`; }
+    return `[상담 녹취 정리 요청]\n${stuProfile(s)}\n\n아래는 클로바노트로 뽑은 상담 녹취 스크립트입니다.\n---\n${raw||'(녹취 텍스트를 붙여넣어 주세요)'}\n---\n\n요청:\n- 대사가 이상하게 인식된 부분과 오탈자를 고치고, 상담자와 학생 화자를 바로잡아 자연스러운 대화문으로 정리해 주세요.\n- 그다음 정리한 대화를 근거로 아래 회사 상담 양식을 채워 주세요. 녹취에 없는 내용은 지어내지 말고 "확인 필요"로 적어 주세요. 양식은 그대로 복사해 붙여넣을 수 있게 마지막에 따로 출력해 주세요.\n\n*컨텍자 : \n\n*본인확인 및 문의여부 체크 : \n\n*배워보시려는 계기 및 수강 희망 시기 : \n\n*분야 경험 및 수강 경험 여부 : \n\n*현재 거주지 및 평소 스케줄 어떤지 (가용시간체크) : \n\n*상담 명분 제시 및 상담 일정 확정 : \n\n*이외 상담내용 : \n\n** 수강료 / 시간표에 대한 나의 응대 : \n\n* 같이 방문하실 지인 / 기타 특이사항 : \n\n* 통화시간 : `; }
   if(k==='prep'){
     return `[상담 준비 요청]\n${stuProfile(s)}\n${as.length?`\n과제 진행: ${as.map(a=>`${a.week}주차 ${(AS_STEPS.find(x=>x[0]===a.st)||[])[1]}${a.score?`(${a.score})`:''}`).join(', ')}`:''}\n\n요청:\n- 위 기록을 바탕으로 이번 상담에서 꼭 확인할 것 3가지와, 학생이 망설일 만한 부분에 대한 답변 포인트를 정리해 주세요.\n- 국비지원(내일배움카드 · KDT 등)과 연결할 수 있으면 함께 짚어 주세요.\n- 상담 후 보낼 짧은 문자 초안도 하나 써 주세요.`; }
   return '';
@@ -5299,6 +5299,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261019-1048';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261019-1313';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
