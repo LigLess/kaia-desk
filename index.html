@@ -1356,6 +1356,8 @@ h2 .tm-chk{margin:0}
 .tm-c{position:relative;padding-right:28px}.tm-x{position:absolute;right:0;top:0;border:0;background:none;color:var(--faint);cursor:pointer;padding:2px}.tm-x svg{width:14px;height:14px}
 .toast.lead-t{border-left:3px solid var(--accent)}
 @media (max-width:420px){.tm-g2{grid-template-columns:minmax(0,1fr)}}
+
+#view.quiet,#view.quiet *{animation:none!important}
 </style>
 </head>
 <body>
@@ -2050,8 +2052,10 @@ const gas={
         if(d.id==='team'&&d.data){ this._team=true; if(Array.isArray(d.data.zooms)) S.settings.zooms=d.data.zooms; if(d.data.rooms) S.settings.rooms=d.data.rooms; this._teamSent=JSON.stringify({zooms:S.settings.zooms,rooms:S.settings.rooms}); n++; }
         continue; }
       if(d.col==='inbox'){ S.inbox=S.inbox||{}; const was=S.inbox[d.id]; if(d.del) delete S.inbox[d.id]; else { S.inbox[d.id]={...d.data,id:d.id,at:d.data&&d.data.at||d.t}; if(!was&&!d.data.done) this._newIn=(this._newIn||0)+1; } n++; continue; }
-      if(TEAM_COLS.includes(d.col)){ teamApply(d); n++; continue; }
+      if(TEAM_COLS.includes(d.col)){ const cur=(S.team||{})[d.col]&&S.team[d.col][d.id]; if(!d.del&&cur&&JSON.stringify({...d.data,id:d.id})===JSON.stringify(cur)) continue; teamApply(d); n++; continue; }
       if(!COLS.includes(d.col)) continue;
+      if(!d.del&&JSON.stringify(S.real[d.col][d.id])===JSON.stringify(d.data)) continue;
+      if(d.del&&!S.real[d.col][d.id]) continue;
       if(d.del) delete S.real[d.col][d.id]; else S.real[d.col][d.id]=d.data; n++;
     }
     teamNotify();
@@ -2068,7 +2072,7 @@ const gas={
   },
   start(){
     clearInterval(this.poll);
-    const tick=async()=>{ if(document.hidden) return; try{ const n=await this.pull(false); if(n) scheduleRender(); }catch(e){ this.state('off'); } };
+    const tick=async()=>{ if(document.hidden) return; try{ const n=await this.pull(false); if(n){ S._quiet=true; scheduleRender(); } }catch(e){ this.state('off'); } };
     this.poll=setInterval(tick,25000);
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tick(); });
     addEventListener('online',()=>{ this.flush(); tick(); });
@@ -2328,7 +2332,7 @@ function render(){
   renderSide();
   const V={home:vHome,timetable:vTimetable,notice:vNotice,students:vStudents,alarms:vAlarms,team:vTeam,progress:vProgress,tasks:vTasks,snippets:vSnippets,settings:vSettings}[S.view]||vHome;
   const html=S.gate?vLogin():(S.demo?demoBanner():'')+V();
-  const view=$('#view'); const same=view.dataset.v===S.view; view.dataset.v=S.view;
+  const view=$('#view'); const same=view.dataset.v===S.view; view.dataset.v=S.view; const quiet=!!S._quiet&&same; S._quiet=false; view.classList.toggle('quiet',quiet); S._q=quiet;
   view.innerHTML=html; if(!same){ view.style.animation='none'; view.offsetHeight; view.style.animation=''; }
   afterRender();
 }
@@ -2338,7 +2342,7 @@ function countUp(el){ const to=+el.dataset.count; if(!to){ el.textContent='0'; r
 function afterRender(){
   $$('#view>.view>*').forEach((el,i)=>el.style.setProperty('--i',Math.min(i,8)));
   if(S._fxAssemble){ S._fxAssemble=false; requestAnimationFrame(()=>FX.assemble([$('#view')])); }
-  $$('[data-count]').forEach(countUp);
+  if(!S._q) $$('[data-count]').forEach(countUp);
   if($('#herofx')) bgfx.bindHero($('#herofx'));
   if($('#corefx')){ bgfx.bindCore($('#corefx'),hudCoreData()); startHudClock(); }
   // animate rings
@@ -5295,6 +5299,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261019-0934';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261019-1048';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
