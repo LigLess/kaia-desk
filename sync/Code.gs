@@ -136,7 +136,7 @@ function doPost(e) {
       if (pw.length < 6) return out_({ error: 'pwshort' });
       if (findUser_(user)) return out_({ error: 'exists' });
       const salt = Utilities.getUuid();
-      userSheet_().appendRow([user, name, salt, hash_(salt, pw), '[]', new Date()]);
+      userSheet_().appendRow([user, name, salt, "'" + hash_(salt, pw), '[]', new Date()]); // ' = 시트가 수식으로 읽지 않게
       const u = findUser_(user);
       return out_({ ok: true, user: user, name: name, token: newToken_(u) });
     }
