@@ -1406,7 +1406,8 @@ h2 .tm-chk{margin:0}
 .qt-acts{margin-top:4px}
 .qt-prev{overflow:hidden;border-radius:10px;background:#fff;box-shadow:0 0 0 1px var(--line)}
 .qt-scale{width:794px;transform-origin:0 0}
-.qts{position:relative;background:#fff;color:#000}.qts table{border-collapse:collapse;table-layout:fixed;background:#fff}.qts td{padding:0 3px;overflow:visible;line-height:1.25;color:#000;word-break:keep-all}
+.qts{position:relative;background:#fff;color:#000}.qts table{border-collapse:collapse;table-layout:fixed;background:#fff}.qts td{padding:0 3px;overflow:visible;line-height:1.25;color:#000;word-break:keep-all}.qts td.f{overflow:hidden;text-overflow:clip}
+.qt-join{border:0;background:var(--surface-3);color:var(--muted);font:inherit;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;cursor:pointer}.qt-join.on{background:var(--accent-soft);color:var(--accent)}
 .qt-ptools{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}.qt-ptools .in{flex:1;min-width:180px}
 .qt-ptable{overflow:auto;max-height:70vh;border-radius:12px;box-shadow:0 0 0 1px var(--line)}
 .qt-ptable table{border-collapse:collapse;width:100%;font-size:13px}
@@ -5351,9 +5352,12 @@ function qtCalc(q){
 /* ---------- 견적서 용지 (화면 미리보기 · 인쇄) ---------- */
 function qtRefund(label,days,segs){ let i=0,nums='',txt=''; segs.forEach(([n,t,c])=>{ for(let k=0;k<n;k++) nums+=`<td class="${c}">${days[i++]}</td>`; txt+=`<td colspan="${n}" class="${c}">${t}</td>`; });
   return `<table class="rf"><tr><td rowspan="3" class="rl">${label}</td><td colspan="${days.length}">수업진행기준</td></tr><tr>${nums}</tr><tr>${txt}</tr></table>`; }
-function qtCatShow(rows){ let prev=null; return rows.map(r=>{ const v=r.cat||''; const s=v&&v===prev?'':v; if(v) prev=v; return s; }); }
+/* 과정 칸 합치기: 줄마다 자동(같은 과정이면 합침) · 위와 합치기 · 따로 중 선택 */
+function qtJoined(q,rows,i){ if(i<=0) return false; const r=rows[i]; if(r.join===true) return true; if(r.join===false||q.mergeAuto===false) return false; const a=r.cat||'', b=rows[i-1].cat||''; return !!a&&a===b; }
+function qtRuns(q,rows){ const runs=[]; rows.forEach((r,i)=>{ if(qtJoined(q,rows,i)&&runs.length) runs[runs.length-1].b=i; else runs.push({a:i,b:i}); }); return runs; }
+function qtCatShow(q,rows){ const out=rows.map(()=>''); qtRuns(q,rows).forEach(g=>{ out[g.a]=rows[g.a].cat||''; }); return out; }
 function qtPaper(q,c){
-  const rows=c.rows.filter(r=>r.n); const cs=qtCatShow(rows);
+  const rows=c.rows.filter(r=>r.n); const cs=qtCatShow(q,rows);
   const body=rows.map((r,i)=>`<tr><td>${esc(cs[i])}</td><td class="l">${esc(r.n)}</td><td>${r.free?'':esc(r.type)}</td><td>${esc(qtMD(r.s,r.pat))}</td><td>${esc(qtMD(r.e,r.pat))}</td><td>${esc(r.time)}</td><td>${r.cnt!==''&&r.cnt!=null?esc(r.cnt)+'회':''}</td><td class="r">${r.alloc==null?'':qtWon(r.alloc)}</td></tr>`).join('')||'<tr><td colspan="8">&nbsp;</td></tr>';
   const bank=q.tpl==='ai'?QT.bank_ai:QT.bank_it;
   return `<div class="qtp">
@@ -5439,10 +5443,10 @@ function qtFillDoc(doc,q,c){
     const row=[...doc.getElementsByTagNameNS(QT_NS,'row')].find(x=>x.getAttribute('r')===String(n)); if(row){ if(r) row.removeAttribute('hidden'); else row.setAttribute('hidden','1'); } }
   /* 과정: 같은 과정이 이어지면 원본처럼 세로로 한 칸에 합침 (C:D 병합) */
   const mc=doc.getElementsByTagNameNS(QT_NS,'mergeCells')[0];
-  if(mc){ let i=0; while(i<rows.length){ let j=i; const v=rows[i].cat||''; while(v&&j+1<rows.length&&(rows[j+1].cat||'')===v) j++;
+  if(mc){ qtRuns(q,rows).forEach(g=>{ const i=g.a, j=g.b;
       if(j>i){ const a=FIRST+i, b=FIRST+j; [...mc.getElementsByTagNameNS(QT_NS,'mergeCell')].forEach(m=>{ const mm=m.getAttribute('ref').match(/^C(\d+):D(\d+)$/); if(mm&&+mm[1]===+mm[2]&&+mm[1]>=a&&+mm[1]<=b) mc.removeChild(m); });
         const nm=doc.createElementNS(QT_NS,'mergeCell'); nm.setAttribute('ref',`C${a}:D${b}`); mc.appendChild(nm); for(let k=a+1;k<=b;k++) qtCell(doc,'C'+k,''); }
-      i=j+1; }
+      });
     mc.setAttribute('count',String(mc.getElementsByTagNameNS(QT_NS,'mergeCell').length)); }
   qtCell(doc,'I21',c.listed?c.listed+'과목':''); qtCell(doc,'Q21',c.paid?c.offline:'');
   qtCell(doc,'I25',c.onList||''); qtCell(doc,'I27',c.onList?c.onReal:''); qtCell(doc,'I28',c.paid?c.offline:''); qtCell(doc,'I29',c.paid?c.total:'');
@@ -5458,7 +5462,7 @@ async function qtXlsxBlob(q,c){
 }
 /* 채운 시트를 그대로 그림 — 열 너비 · 행 높이 · 칸 색 · 테두리 · 병합 · 로고 · 도장 위치 모두 엑셀 파일 값 */
 const qtColIdx=s=>qtColN(s)-1;
-function qtSheetHTML(T,doc){
+function qtSheetHTML(T,doc,zk){ const ZK=Math.min(1,zk||1);
   const E=(el,n)=>[...el.getElementsByTagNameNS(QT_NS,n)];
   const pa=[0,0,19,60]; // A1:T61 — 인쇄 영역(A1:T56) 아래로 이어지는 환불 안내 병합 칸까지 (0-based c0,r0,c1,r1)
   const colW=[]; for(let i=0;i<=pa[2];i++) colW[i]=Math.round(9.14*7);
@@ -5473,7 +5477,7 @@ function qtSheetHTML(T,doc){
   const merges={}, covered={};
   E(doc,'mergeCell').forEach(m=>{ const [a,b]=m.getAttribute('ref').split(':'); const A=a.match(/^([A-Z]+)(\d+)$/), B=b.match(/^([A-Z]+)(\d+)$/); const c0=qtColIdx(A[1]), r0=+A[2]-1, c1=qtColIdx(B[1]), r1=+B[2]-1;
     if(r0>pa[3]||c0>pa[2]) return; merges[r0+','+c0]={c1:Math.min(c1,pa[2]),r1:Math.min(r1,pa[3])}; for(let r=r0;r<=r1;r++) for(let c=c0;c<=c1;c++) if(r!==r0||c!==c0) covered[r+','+c]=1; });
-  const bcss=(b,k)=>{ if(!b||!b[k]) return ''; const s=b[k].s; const w=s==='medium'?2:s==='thick'?3:s==='double'?3:1; const ty=s==='double'?'double':s==='dotted'?'dotted':/dash/i.test(s)?'dashed':'solid'; return `border-${k}:${w}px ${ty} ${b[k].c};`; };
+  const bcss=(b,k)=>{ if(!b||!b[k]) return ''; const s=b[k].s; const w=(s==='medium'?2:s==='thick'?3:s==='double'?3:1)/ZK; const ty=s==='double'?'double':s==='dotted'?'dotted':/dash/i.test(s)?'dashed':'solid'; return `border-${k}:${w}px ${ty} ${b[k].c};`; };
   const fam=n=>/맑은|Malgun/i.test(n||'')?"'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif":"'Noto Sans KR','Noto Sans CJK KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif";
   const num=(v,f)=>{ if(v===''||isNaN(+v)) return v; return /#,##0/.test(f)?Number(v).toLocaleString('ko-KR'):String(v); };
   let html='', W=colW.reduce((a,b)=>a+b,0), H=0;
@@ -5487,7 +5491,8 @@ function qtSheetHTML(T,doc){
         if(s.fill) css+=`background:${s.fill};`; css+=`text-align:${s.h==='centerContinuous'?'center':s.h==='distributed'?'justify;text-align-last:justify':s.h||(cell.t==='n'?'right':'left')};vertical-align:${s.v==='center'?'middle':s.v==='top'?'top':'bottom'};${s.wrap?'white-space:pre-wrap;':'white-space:pre;'}`; }
       ['left','right','top','bottom'].forEach(kk=>css+=bcss(br,kk));
       const txt=cell?(cell.t==='n'?num(cell.v,s&&s.fmt||''):cell.v):'';
-      html+=`<td${cs>1?` colspan="${cs}"`:''}${rs>1?` rowspan="${rs}"`:''} style="${css}">${esc(txt)}</td>`; }
+      const fit=txt&&(m||(br&&(br.left||br.right)))&&!(s&&s.wrap);   // 테두리 · 병합 칸은 넘치지 않게 (엑셀처럼)
+      html+=`<td${cs>1?` colspan="${cs}"`:''}${rs>1?` rowspan="${rs}"`:''}${fit?' class="f"':''} style="${css}">${esc(txt)}</td>`; }
     html+='</tr>'; }
   /* 그림: 숨긴 행을 빼고 다시 계산한 위치 */
   const colX=[0]; colW.forEach((w,i)=>colX[i+1]=colX[i]+w); const rowY=[0]; for(let r=0;r<=60;r++) rowY[r+1]=rowY[r]+(r<=pa[3]&&!hid[r]?rowH[r]:(r>pa[3]?defH*4/3:0));
@@ -5495,7 +5500,11 @@ function qtSheetHTML(T,doc){
     return `<img src="${im.src}" alt="" style="position:absolute;left:${x0.toFixed(1)}px;top:${y0.toFixed(1)}px;width:${(x1-x0).toFixed(1)}px;height:${(y1-y0).toFixed(1)}px">`; }).join('');
   return {html:`<div class="qts" style="width:${W}px;min-height:${Math.ceil(H)}px"><table style="width:${W}px">${colTag}${html}</table>${imgs}</div>`,W,H};
 }
-async function qtSheetFor(q,c){ const T=await qtTpl(q.tpl); return qtSheetHTML(T,qtFillDoc(new DOMParser().parseFromString(T.sheet,'application/xml'),q,c)); }
+async function qtSheetFor(q,c,k){ const T=await qtTpl(q.tpl); return qtSheetHTML(T,qtFillDoc(new DOMParser().parseFromString(T.sheet,'application/xml'),q,c),k); }
+/* 칸보다 긴 글자는 글자 크기를 줄여 칸 안에 맞춤 (화면 글꼴이 엑셀보다 넓을 때) */
+function qtShrink(root){ root.querySelectorAll('td.f').forEach(td=>{ if(td.scrollWidth<=td.clientWidth+1) return; const fs=parseFloat(getComputedStyle(td).fontSize)||13; let k=td.clientWidth/td.scrollWidth;
+  td.style.fontSize=(fs*Math.max(.6,k*0.97)).toFixed(2)+'px'; if(td.scrollWidth>td.clientWidth+1) td.style.letterSpacing='-.03em'; }); }
+const QT_W=905;   // 시트 폭(px) — 미리보기 배율 계산용
 const qtFile=(q,ext)=>`견적서_${(q.name||'이름없음').replace(/[\\/:*?"<>|\s]+/g,'')}_${(q.date||todayStr()).replace(/-/g,'')}.${ext}`;
 
 /* ---------- 화면 ---------- */
@@ -5512,7 +5521,7 @@ function qtMakeView(){
       <span class="qt-amt">${r.free?'':x.orig==null?'<span class="chip warn">표에 없음</span>':`${x.alloc!==x.orig?`<s>${qtWon(x.orig)}</s>`:''}<b>${qtWon(x.alloc)}</b>`}</span>
       <button class="btn sm ghost" data-act="qtRowUp" data-k="${r.id}" aria-label="위로" ${i?'':'disabled'}>${ic('up2')}</button><button class="btn sm ghost" data-act="qtRowDel" data-k="${r.id}" aria-label="빼기">${ic('x')}</button></div>
     <div class="qt-r2">
-      <label><span>과정</span><input class="in" data-q="cat" value="${esc(r.cat)}" list="qtCats"></label>
+      <label><span>과정 ${i?(()=>{ const on=qtJoined(q,q.rows.filter(x=>x.n),q.rows.filter(x=>x.n).indexOf(r)); return `<button class="qt-join ${on?'on':''}" data-act="qtJoin" data-k="${r.id}" title="자동 → 위와 합치기 → 따로 순서로 바뀌어요">${r.join===true?'위와 합침':r.join===false?'따로':on?'자동 합침':'자동'}</button>`; })():''}</span><input class="in" data-q="cat" value="${esc(r.cat)}" list="qtCats"></label>
       <label><span>개강일</span><input class="in" type="date" data-q="s" value="${esc(r.s)}"></label>
       <label><span>요일</span><input class="in" data-q="pat" value="${esc(r.pat)}" placeholder="월수금월수"></label>
       <label><span>횟수</span><input class="in" type="number" min="0" data-q="cnt" value="${esc(r.cnt)}"></label>
@@ -5534,7 +5543,7 @@ function qtMakeView(){
       </div>
       ${q.sid&&D().students[q.sid]?`<p class="qt-link">${ic('users')} 학생 <b>${esc(D().students[q.sid].name)}</b>에 연결됨 — 저장하면 그 학생 기록에도 남아요.</p>`:''}
     </section>
-    <section class="pane"><h2>과목 <small>${c.paid}과목 · 1개월 단위</small></h2>
+    <section class="pane"><h2>과목 <small>${c.paid}과목 · 1개월 단위</small><label class="qt-chk sm r" style="margin:0"><input type="checkbox" data-act="qtMergeAuto" ${q.mergeAuto!==false?'checked':''}> 같은 과정 칸 자동 합치기</label></h2>
       ${rowsHtml||'<div class="empty"><b>과목을 추가하세요</b>아래 칸에 과목 이름을 치면 수강료표에서 찾아 줘요. 정가 · 구분 · 시간 · 횟수는 자동으로 들어가요.</div>'}
       <div class="qt-add"><input class="in" id="qtAddIn" list="qtCourses" placeholder="과목 추가 — 이름 일부를 치고 고르세요" autocomplete="off"><button class="btn pri" data-act="qtAdd">${ic('plus')}추가</button><button class="btn" data-act="qtAddFree">무료 항목</button></div>
     </section>
@@ -5584,8 +5593,9 @@ function qtRefresh(){
 }
 let _qtPv=0;
 function qtPreview(){ clearTimeout(qtPreview._t); qtPreview._t=setTimeout(async()=>{ const sc=$('#qtPrev .qt-scale'); if(!sc) return; const my=++_qtPv; const q=qtDraft(), c=qtCalc(q);
-  let h; try{ h=(await qtSheetFor(q,c)).html; }catch(e){ console.warn(e); h=qtPaper(q,c); }
-  if(my!==_qtPv) return; const sc2=$('#qtPrev .qt-scale'); if(sc2){ sc2.innerHTML=h; qtFit(); } },90); }
+  const pv=$('#qtPrev'); const k=pv?Math.min(1,pv.clientWidth/QT_W):1;
+  let h; try{ h=(await qtSheetFor(q,c,k)).html; }catch(e){ console.warn(e); h=qtPaper(q,c); }
+  if(my!==_qtPv) return; const sc2=$('#qtPrev .qt-scale'); if(sc2){ sc2.innerHTML=h; qtShrink(sc2); qtFit(); } },90); }
 function qtFit(){ const pv=$('#qtPrev'), sc=$('#qtPrev .qt-scale'); if(!pv||!sc) return; const w=(sc.firstElementChild&&sc.firstElementChild.offsetWidth)||794; sc.style.width=w+'px'; const k=Math.min(1,pv.clientWidth/w); sc.style.transform=`scale(${k})`; pv.style.height=Math.ceil(sc.scrollHeight*k)+'px'; }
 addEventListener('resize',()=>{ if(S.view==='quote') qtFit(); });
 
@@ -5647,6 +5657,8 @@ Object.assign(WACT,{
   qtRowUp:el=>{ const q=qtDraft(); const i=q.rows.findIndex(r=>r.id===el.dataset.k); if(i>0){ [q.rows[i-1],q.rows[i]]=[q.rows[i],q.rows[i-1]]; qtKeep(); render(); } },
   qtEnd:el=>{ const r=qtRow(el.dataset.k); if(!r) return; const e=qtEnd(r.s,r.pat,r.cnt); if(!e){ toast('종강일을 계산하지 못했어요','요일은 "월수금" "토일" "월수금월수"처럼 적어 주세요.'); return; } r.e=e; qtKeep(); render(); toast('종강일을 넣었어요',`${fmtMD(e)} · 공휴일은 따로 확인해 주세요.`); },
   qtCarve:el=>{ const q=qtDraft(); q.onCarve=el.checked; if(el.checked&&!QT_ONLINE[q.online]) q.online='1년'; qtKeep(); render(); },
+  qtJoin:el=>{ const r=qtRow(el.dataset.k); if(!r) return; r.join=r.join==null?true:r.join===true?false:undefined; qtKeep(); render(); },
+  qtMergeAuto:el=>{ const q=qtDraft(); q.mergeAuto=el.checked; qtKeep(); render(); },
   qtTier:el=>{ const q=qtDraft(); q.tier=el.checked; qtKeep(); render(); },
   qtStepAdd:el=>{ const q=qtDraft(); q.steps.push({k:el.dataset.k==='직접 입력'?'추가 할인':el.dataset.k,p:el.dataset.p||''}); qtKeep(); render(); if(!el.dataset.p){ const ins=$$('[data-qs]'); const x=ins[ins.length-1]; x&&x.focus(); } },
   qtStepDel:el=>{ const q=qtDraft(); q.steps.splice(+el.dataset.k,1); qtKeep(); render(); },
@@ -5654,8 +5666,10 @@ Object.assign(WACT,{
   qtXlsx:async()=>{ const q=qtDraft(); const c=qtCalc(q); if(c.rows.filter(r=>r.n).length>15){ toast('과목은 15개까지 들어가요','원본 양식 칸이 15줄이에요.'); }
     try{ const b=await qtXlsxBlob(q,c); await saveFile(qtFile(q,'xlsx'),b); }catch(e){ console.warn(e); toast('엑셀을 만들지 못했어요','인터넷 연결을 확인하고 다시 눌러 주세요.'); } },
   qtPrint:async()=>{ const q=qtDraft(); const c=qtCalc(q); let pa=document.getElementById('printArea'); if(!pa){ pa=document.createElement('div'); pa.id='printArea'; document.body.appendChild(pa); }
-    let h; try{ const sh=await qtSheetFor(q,c); const k=Math.min(718/sh.W,1000/sh.H);   /* A4 (8mm 여백) 한 장에 맞춤 */
-      h=`<div style="width:${Math.floor(sh.W*k)}px"><div style="zoom:${k}">${sh.html}</div></div>`; }catch(e){ console.warn(e); h=qtPaper(q,c); }
+    let h; try{ let sh=await qtSheetFor(q,c); const k=Math.min(718/sh.W,1000/sh.H);   /* A4 (8mm 여백) 한 장에 맞춤 */
+      sh=await qtSheetFor(q,c,k);   // 줄인 배율에서도 선이 선명하게
+      const tmp=document.createElement('div'); tmp.style.cssText='position:fixed;left:-20000px;top:0;visibility:hidden'; tmp.innerHTML=sh.html; document.body.appendChild(tmp); qtShrink(tmp); const body=tmp.innerHTML; tmp.remove();
+      h=`<div style="width:${Math.floor(sh.W*k)}px"><div style="zoom:${k}">${body}</div></div>`; }catch(e){ console.warn(e); h=qtPaper(q,c); }
     pa.innerHTML=h; document.body.classList.add('printing','qt-printing'); const done=()=>{ document.body.classList.remove('printing','qt-printing'); pa.innerHTML=''; };
     addEventListener('afterprint',done,{once:true}); setTimeout(()=>{ try{ window.print(); }catch(e){} setTimeout(()=>{ if(document.body.classList.contains('printing')&&!matchMedia('print').matches) done(); },1500); },80); },
   qtSave:()=>{ const q=qtDraft(); const c=qtCalc(q); if(!c.paid) return; if(!q.id) q.id=uid('q'); store.put('quotes',{id:q.id,q:clone(q),at:Date.now()});
@@ -5867,6 +5881,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-0024';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-0030';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
