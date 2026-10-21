@@ -1444,6 +1444,15 @@ h2 .tm-chk{margin:0}
 
 .tm-staffbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}.tm-staffbar .in{max-width:220px}
 .tm-ph{flex:none;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted)}
+
+.stu-ck{width:34px;text-align:center!important;padding-left:8px!important;padding-right:0!important}.stu-ck input{width:17px;height:17px;cursor:pointer;accent-color:var(--accent)}
+.t tr.sel td{background:var(--accent-soft)}
+.stu-bulk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;margin-bottom:10px;border-radius:12px;background:var(--accent-soft)}
+.sf-subj{display:flex;flex-wrap:wrap;gap:8px 16px;max-height:200px;overflow:auto;padding:4px 2px}
+
+.rec-g{margin-top:6px}.rec-g+.rec-g{margin-top:14px}
+.rec-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);padding:4px 2px 6px;border-bottom:1px solid var(--line)}.rec-h b{color:var(--fg)}
+.rec-row .t1{font-weight:600}
 </style>
 </head>
 <body>
@@ -2404,10 +2413,10 @@ function permHint(){
 
 /* ---------- navigation (top glass bar) ---------- */
 const NAV=[
- {v:'home',t:'홈',i:'home'},{v:'timetable',t:'시간표',i:'cal'},{v:'notice',t:'개강안내',i:'mail'},{v:'students',t:'학생',i:'users'},{v:'alarms',t:'알림',i:'bell',badge:true},{v:'team',t:'팀',i:'team',tb:true},{v:'progress',t:'진도관리',i:'flag'},
+ {v:'home',t:'홈',i:'home'},{v:'timetable',t:'시간표',i:'cal'},{v:'notice',t:'개강안내',i:'mail'},{v:'students',t:'학생',i:'users'},{v:'alarms',t:'알림',i:'bell',badge:true},{v:'team',t:'팀',i:'team',tb:true},
  {sep:1},
  {v:'tasks',t:'업무',i:'task',sec:1},{v:'quote',t:'견적서',i:'receipt',sec:1},{v:'snippets',t:'문구함',i:'quote',sec:1},{v:'settings',t:'설정',i:'gear',sec:1}];
-const TITLES={home:'홈',timetable:'시간표',notice:'개강안내',students:'학생',alarms:'알림',team:'팀',progress:'진도관리',tasks:'업무',quote:'견적서',snippets:'문구함',settings:'설정'};
+const TITLES={home:'홈',timetable:'시간표',notice:'개강안내',students:'학생',alarms:'알림',team:'팀',tasks:'업무',quote:'견적서',snippets:'문구함',settings:'설정'};
 const DOCK=[['home','홈','home'],['timetable','시간표','cal'],['notice','안내','mail'],['students','학생','users'],['team','팀','team'],['tasks','업무','task']];
 let navBound=false;
 /* 메뉴가 오른쪽 버튼과 겹치지 않게: 넘치면 보조 메뉴 글자 → 전체 글자 순서로 숨김 */
@@ -2465,7 +2474,7 @@ function render(){
   renderDirty=false;
   document.body.classList.toggle('gate',!!S.gate);
   renderSide();
-  const V={home:vHome,timetable:vTimetable,notice:vNotice,students:vStudents,alarms:vAlarms,team:vTeam,progress:vProgress,tasks:vTasks,quote:vQuote,snippets:vSnippets,settings:vSettings}[S.view]||vHome;
+  const V={home:vHome,timetable:vTimetable,notice:vNotice,students:vStudents,alarms:vAlarms,team:vTeam,progress:vHome,tasks:vTasks,quote:vQuote,snippets:vSnippets,settings:vSettings}[S.view]||vHome;
   const html=S.gate?vLogin():(S.demo?demoBanner():'')+V();
   const view=$('#view'); const same=view.dataset.v===S.view; view.dataset.v=S.view; const quiet=!!S._quiet&&same; S._quiet=false; view.classList.toggle('quiet',quiet); S._q=quiet;
   view.innerHTML=html; if(!same){ view.style.animation='none'; view.offsetHeight; view.style.animation=''; }
@@ -2540,7 +2549,7 @@ function vHomeLight(){
     </div>
     <div class="col">
       <section class="pane"><h2>오늘 수업 <small>${todayClasses.length}개</small></h2>
-        ${todayClasses.length?`<div class="list">${todayClasses.map(({c,p})=>`<div class="row click" data-act="openCourse" data-id="${c.id}" data-tab="prog"><div class="grow"><div class="t1">${esc(c.name)}</div><div class="t2">${esc(c.time||'')} · ${esc(c.room||'')} · ${p.todayIdx+1}/${p.total}회차</div></div>${p.pending?`<span class="chip warn">진도 미체크 ${p.pending}</span>`:'<span class="chip ok">진도 정상</span>'}</div>`).join('')}</div>`:`<div class="empty"><b>오늘은 수업이 없어요</b>시간표를 올리면 요일별 수업이 자동으로 잡혀요.</div>`}
+        ${todayClasses.length?`<div class="list">${todayClasses.map(({c,p})=>`<div class="row click" data-act="openCourse" data-id="${c.id}"><div class="grow"><div class="t1">${esc(c.name)}</div><div class="t2">${esc(c.time||'')} · ${esc(c.room||'')} · ${p.todayIdx+1}/${p.total}회차</div></div></div>`).join('')}</div>`:`<div class="empty"><b>오늘은 수업이 없어요</b>시간표를 올리면 요일별 수업이 자동으로 잡혀요.</div>`}
       </section>
       <section class="pane"><h2>할 일 <small>오늘까지</small><button class="btn sm ghost r" data-go="tasks">업무로 이동</button></h2>
         ${todayTasks.length?`<div class="list">${todayTasks.map(taskRow).join('')}</div>`:`<div class="empty"><b>오늘 할 일을 모두 끝냈어요</b>콜백 약속은 업무 메뉴에 시간과 함께 적어 두세요.</div>`}
@@ -2573,7 +2582,7 @@ function vTimetable(){
       ${!evs.length&&!running.length?'<div class="empty">이 날은 수업이 없어요.</div>':''}</div></div>`; }
   const monthCs=cs.filter(c=>c.start&&c.start<=mEnd&&courseEnd(c)>=mStart).sort((a,b)=>a.start<b.start?-1:1);
   return `<div class="view">
-  ${vh('시간표','엑셀 시간표를 올리면 개강·종강 알림과 진도표가 자동으로 만들어져요',
+  ${vh('시간표','엑셀 시간표를 올리면 개강·종강 알림이 자동으로 만들어져요',
     `<label class="btn pri" for="xlsFile">${ic('up')}엑셀 올리기</label><input id="xlsFile" type="file" accept=".xlsx,.xlsm,.xls,.csv" multiple hidden>
      <button class="btn" data-act="pasteImport">${ic('quote')}문자로 등록</button>
      <button class="btn" data-act="tplXlsx">${ic('dl')}양식 받기</button>
@@ -2648,7 +2657,7 @@ function vStudents(){
   const q=S.stuQ.trim(); const cs=list('courses').sort((a,b)=>(b.start||'').localeCompare(a.start||''));
   let st=list('students');
   if(S.stuStatus!=='all') st=st.filter(s=>s.status===S.stuStatus);
-  if(S.stuCourse!=='all') st=st.filter(s=>(s.courses||[]).includes(S.stuCourse));
+  if(S.stuCourse!=='all') st=st.filter(s=>(s.courses||[]).some(id=>D().courses[id]&&String(D().courses[id].name).trim()===S.stuCourse));
   if(q) st=st.filter(s=>(s.name+' '+(s.phone||'')+' '+(s.memo||'')+' '+(s.goal||'')).toLowerCase().includes(q.toLowerCase()));
   st.sort((a,b)=>(b.at||0)-(a.at||0));
   const counts={}; list('students').forEach(s=>counts[s.status]=(counts[s.status]||0)+1);
@@ -2656,12 +2665,14 @@ function vStudents(){
   <section class="pane">
     <div class="btns" style="margin-bottom:14px">
       <div style="position:relative;flex:1;min-width:200px"><input id="stuQ" class="in" placeholder="이름 · 연락처 · 메모 검색" value="${esc(S.stuQ)}" style="padding-left:38px"><span style="position:absolute;left:12px;top:11px;width:18px;height:18px;color:var(--faint)">${ic('search')}</span></div>
-      <select id="stuCourse" class="in" style="width:auto;max-width:100%"><option value="all">모든 과정</option>${cs.map(c=>`<option value="${c.id}" ${S.stuCourse===c.id?'selected':''}>${esc(c.name)} (${fmtMD(c.start)})</option>`).join('')}</select>
+      <select id="stuCourse" class="in" style="width:auto;max-width:100%"><option value="all">모든 과목</option>${courseGroups(cs).map(g=>`<option value="${esc(g.name)}" ${S.stuCourse===g.name?'selected':''}>${esc(g.name)}</option>`).join('')}</select>
     </div>
     <div class="seg" style="flex-wrap:wrap;margin-bottom:10px">${['all',...STATUSES].map(k=>`<button class="${S.stuStatus===k?'on':''}" data-act="stuStatus" data-k="${k}">${k==='all'?'전체':k}${k!=='all'&&counts[k]?` ${counts[k]}`:''}</button>`).join('')}</div>
-    ${st.length?`<div class="tablewrap"><table class="t"><thead><tr><th>이름</th><th>상태</th><th class="hide-m">연락처</th><th>수강 과정</th><th class="hide-m">최근 상담</th></tr></thead><tbody>
+    ${(()=>{ S.stuSel=S.stuSel||{}; const ids=st.map(s=>s.id); Object.keys(S.stuSel).forEach(id=>{ if(!D().students[id]) delete S.stuSel[id]; }); const n=Object.keys(S.stuSel).length;
+      return n?`<div class="stu-bulk"><b>${n}명 선택</b><button class="btn sm danger" data-act="stuBulkDel">${ic('trash')}선택 삭제</button><button class="btn sm ghost" data-act="stuSelNone">선택 해제</button></div>`:''; })()}
+    ${st.length?`<div class="tablewrap"><table class="t"><thead><tr><th class="stu-ck"><input type="checkbox" data-act="stuSelAll" aria-label="보이는 학생 모두 선택" ${st.length&&st.every(s=>S.stuSel&&S.stuSel[s.id])?'checked':''}></th><th>이름</th><th>상태</th><th class="hide-m">연락처</th><th>수강 과목</th><th class="hide-m">최근 상담</th></tr></thead><tbody>
     ${st.map(s=>{ const last=(s.logs||[]).slice().sort((a,b)=>a.d<b.d?1:-1)[0]; const cn=(s.courses||[]).map(id=>D().courses[id]).filter(Boolean);
-      return `<tr class="click" data-act="openStudent" data-id="${s.id}"><td><b style="font-weight:500">${esc(s.name)}</b>${s.goal?`<div style="font-size:11.5px;color:var(--faint)">${esc(s.goal)}</div>`:''}</td><td><span class="chip ${STATUS_CHIP[s.status]||''}">${esc(s.status)}</span>${s.type||s.funding?`<div style="font-size:11px;color:var(--faint);margin-top:3px">${esc([s.type,s.funding].filter(Boolean).join(' · '))}</div>`:''}</td><td class="hide-m num">${esc(s.phone||'')}</td><td class="wrap">${cn.length?cn.map(c=>`<span class="chip" style="margin:2px 4px 2px 0">${esc(c.name)}</span>`).join(''):'<span style="color:var(--faint)">없음</span>'}</td><td class="hide-m wrap" style="color:var(--muted)">${last?`${fmtMD(last.d)} ${esc(last.t)}`:''}</td></tr>`}).join('')}
+      return `<tr class="click ${S.stuSel&&S.stuSel[s.id]?'sel':''}" data-act="openStudent" data-id="${s.id}"><td class="stu-ck"><input type="checkbox" data-act="stuSel" data-id="${s.id}" aria-label="${esc(s.name)} 선택" ${S.stuSel&&S.stuSel[s.id]?'checked':''}></td><td><b style="font-weight:500">${esc(s.name)}</b>${s.goal?`<div style="font-size:11.5px;color:var(--faint)">${esc(s.goal)}</div>`:''}</td><td><span class="chip ${STATUS_CHIP[s.status]||''}">${esc(s.status)}</span>${s.type||s.funding?`<div style="font-size:11px;color:var(--faint);margin-top:3px">${esc([s.type,s.funding].filter(Boolean).join(' · '))}</div>`:''}</td><td class="hide-m num">${esc(s.phone||'')}</td><td class="wrap">${cn.length?cn.map(c=>`<span class="chip" style="margin:2px 4px 2px 0">${esc(c.name)}</span>`).join(''):'<span style="color:var(--faint)">없음</span>'}</td><td class="hide-m wrap" style="color:var(--muted)">${last?`${fmtMD(last.d)} ${esc(last.t)}`:''}</td></tr>`}).join('')}
     </tbody></table></div>`:`<div class="empty"><b>${q||S.stuStatus!=='all'||S.stuCourse!=='all'?'조건에 맞는 학생이 없어요':'아직 등록한 학생이 없어요'}</b>상담한 학생을 추가하고 수강 과정을 연결하면 개강안내 대상에 자동으로 들어가요. 이전 프로그램에서 내보낸 .json 파일을 이 화면에 끌어다 놓아도 돼요.</div>`}
   </section></div>`;
 }
@@ -2670,7 +2681,7 @@ function vAlarms(){
   const all=alarmsAll(); const t=todayStr();
   const now=activeAlarms(); const un=now.filter(a=>!a.ack), ack=now.filter(a=>a.ack);
   const soon=all.filter(a=>a.state==='soon'&&diffDays(t,a.ad)<=45);
-  return `<div class="view">${vh('알림',`개강·종강 ${(S.settings.offsets||[]).map(o=>o+'일 전').join(', ')}에 알림이 떠요`,`<button class="btn" data-act="ics">${ic('cal')}휴대폰 달력으로 보내기</button><button class="btn ghost" data-go="settings">알림 설정</button>`)}${leadAlarmSection()}${inboxSection()}
+  return `<div class="view">${vh('알림',`개강·종강 ${(S.settings.offsets||[]).map(o=>o+'일 전').join(', ')}에 알림이 떠요`,`<button class="btn" data-act="ics">${ic('cal')}휴대폰 달력으로 보내기</button><button class="btn ghost" data-go="settings">알림 설정</button>`)}${recSection()}${leadAlarmSection()}${inboxSection()}
   <section class="pane"><h2>지금 확인할 알림 <small>${un.length}건</small></h2>${un.length?un.map(a=>alarmRow(a)).join(''):'<div class="empty"><b>모두 확인했어요</b>새 알림이 생기면 메뉴의 알림 옆에 숫자가 떠요.</div>'}</section>
   ${ack.length?`<section class="pane"><h2>확인한 알림 <small>개강·종강일이 지나면 사라져요</small></h2>${ack.map(a=>alarmRow(a)).join('')}</section>`:''}
   <section class="pane"><h2>예정된 알림 <small>45일 이내 · ${soon.length}건</small></h2>
@@ -2810,7 +2821,7 @@ const mHead=t=>`<header><h3>${t}</h3><button class="btn sm ghost" data-act="clos
 
 /* course */
 let CM={id:null,tab:'info',draft:null};
-function openCourse(id,tab='info'){
+function openCourse(id,tab='info'){ if(tab==='prog') tab='info';
   const c=id?D().courses[id]:null;
   CM={id,tab,draft:c?clone(c):{id:null,name:'',kind:'평일',days:[1,2,3,4,5],daysB:null,time:'',start:todayStr(),end:'',total:null,teacher:'',room:'',memo:'',skipHol:true,prog:{},skips:[],extras:[]}};
   if(!id) CM.tab='info';
@@ -2818,7 +2829,7 @@ function openCourse(id,tab='info'){
 }
 function drawCourse(){
   const c=CM.draft; const isNew=!CM.id; const p=progOf(c);
-  const tabs=isNew?'':`<div class="tabs">${[['info','정보'],['prog',`진도 ${p.done}/${p.total}`],['stu',`수강생 ${studentsIn(CM.id).length}`]].map(([k,l])=>`<button class="${CM.tab===k?'on':''}" data-act="cTab" data-k="${k}">${l}</button>`).join('')}</div>`;
+  const tabs=isNew?'':`<div class="tabs">${[['info','정보'],['stu',`수강생 ${studentsIn(CM.id).length}`]].map(([k,l])=>`<button class="${CM.tab===k?'on':''}" data-act="cTab" data-k="${k}">${l}</button>`).join('')}</div>`;
   let body='';
   if(CM.tab==='info'){
     const calc=sessionsOf(c); const mism=c.total&&c.end&&calc.length!==c.total;
@@ -2884,7 +2895,7 @@ function drawStudent(){
     <label class="field"><span>수강 구분</span><input id="sfType" class="in" value="${esc(s.type||'')}" placeholder="일반 / 국비" list="typeList"><datalist id="typeList"><option>일반</option><option>국비</option></datalist></label>
     <label class="field"><span>지원 유형</span><input id="sfFunding" class="in" value="${esc(s.funding||'')}" placeholder="예: 내일배움카드, SKT 뉴딜"></label>
     <label class="field"><span>목표 · 관심 (한 줄)</span><input id="sfGoal" class="in" value="${esc(s.goal||'')}" placeholder="예: 비전공 · 정처기 후 백엔드 취업"></label>
-    <div class="field full"><span>수강 과정 <small style="color:var(--faint)">(최근 · 예정 과정)</small></span><div style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow:auto;padding:4px 2px">${relevant.length?relevant.map(c=>`<label class="check"><input type="checkbox" class="sfC" value="${c.id}" ${s.courses.includes(c.id)?'checked':''}>${esc(c.name)} <span style="color:var(--faint);font-size:12px">${fmtMD(c.start)}~${fmtMD(courseEnd(c))}</span></label>`).join(''):'<span style="color:var(--faint);font-size:13px">등록된 과정이 없어요. 시간표를 먼저 올려 주세요.</span>'}</div></div>
+    <div class="field full"><span>수강 과목</span><div class="sf-subj">${(()=>{ const g=courseGroups(relevant); return g.length?g.map(x=>`<label class="check"><input type="checkbox" class="sfN" data-ids="${x.ids.join(',')}" ${x.ids.some(id=>s.courses.includes(id))?'checked':''}>${esc(x.name)}</label>`).join(''):'<span style="color:var(--faint);font-size:13px">등록된 과정이 없어요. 시간표를 먼저 올려 주세요.</span>'; })()}</div></div>
     ${(s.prevCourses||[]).length?`<div class="field full"><span>시간표에 없는 수강 이력 <small style="color:var(--faint)">(이전 프로그램 · 같은 날짜 수업이 시간표에 올라오면 자동 연결)</small></span><div class="btns">${s.prevCourses.map(p=>typeof p==='string'?{name:p}:p).map(p=>`<span class="chip">${esc(p.name)}${p.start?` ${yyDot(p.start)}~${yyDot(p.end)}`:''}${p.att?` · 출석 ${p.att}회`:''}</span>`).join('')}</div></div>`:''}
     <label class="field full"><span>메모</span><textarea id="sfMemo" class="in" rows="5">${esc(s.memo||'')}</textarea></label>
     <div class="field full wk-hint">상담 · 통화 · 진단 기록과 콜백은 <b>기록</b> 탭, 과제는 <b>과제</b> 탭, 자소서 · 면접 첨삭은 <b>첨삭</b> 탭에서 관리해요.</div>
@@ -2892,7 +2903,15 @@ function drawStudent(){
   if(modalEl&&modalEl._kind==='student'){ modalEl.querySelector('.sheet').innerHTML=html; } else { openModal(html); modalEl._kind='student'; }
 }
 function readStudentForm(){ const s=SM; if(!$('#sfName')) return s; s.name=$('#sfName').value.trim(); s.phone=$('#sfPhone').value.trim(); s.status=$('#sfStatus').value; s.goal=$('#sfGoal').value.trim(); s.memo=$('#sfMemo').value; s.type=$('#sfType').value.trim(); s.funding=$('#sfFunding').value.trim();
-  const shown=$$('.sfC').map(x=>x.value); s.courses=[...s.courses.filter(id=>!shown.includes(id)),...$$('.sfC').filter(x=>x.checked).map(x=>x.value)]; return s; }
+  let ids=[...s.courses]; $$('.sfN').forEach(x=>{ const g=x.dataset.ids.split(','); const had=ids.filter(id=>g.includes(id));
+    if(!x.checked) ids=ids.filter(id=>!g.includes(id)); else if(!had.length){ const pick=pickCourse(g); if(pick) ids.push(pick); } });
+  s.courses=ids; return s; }
+/* 같은 이름의 수업(여러 달)을 과목 하나로 묶음 */
+function courseGroups(cs){ const m=new Map(); cs.forEach(c=>{ const k=String(c.name||'').trim(); if(!k) return; if(!m.has(k)) m.set(k,[]); m.get(k).push(c.id); }); return [...m].map(([name,ids])=>({name,ids})).sort((a,b)=>a.name.localeCompare(b.name,'ko')); }
+/* 과목을 체크하면 연결할 수업: 지금 진행 중 → 가장 가까운 예정 → 가장 최근 */
+function pickCourse(ids){ const t=todayStr(); const cs=ids.map(id=>D().courses[id]).filter(Boolean); if(!cs.length) return null;
+  const run=cs.find(c=>c.start<=t&&courseEnd(c)>=t); if(run) return run.id; const up=cs.filter(c=>c.start>t).sort((a,b)=>a.start<b.start?-1:1)[0]; if(up) return up.id;
+  return cs.sort((a,b)=>(b.start||'').localeCompare(a.start||''))[0].id; }
 
 /* snippet */
 let NM=null;
@@ -2959,7 +2978,7 @@ function drawImport(){
       return `<tr><td><label class="check"><input type="checkbox" data-act="imSel" data-k="${k}" ${IM.sel[k]?'checked':''} ${it.ok?'':'disabled'}></label></td><td class="wrap">${esc(c.name)}</td><td>${esc(c.room||c.kind)}</td><td class="num">${c.start?fmtMD(c.start):'<span style="color:var(--bad)">?</span>'}</td><td class="num">${fmtMD(c.end||ss[ss.length-1])}${c.end?'':' <span class="chip">계산</span>'}</td><td>${esc(daysLabel(c.days,c.daysB))} ${esc(c.time)}</td><td class="num">${ss.length}회</td>
         <td class="wrap">${it.dup?`<span class="chip">중복 · ${esc(it.dup)}에 있음</span> `:ex?'<span class="chip cyan">기존 과정 갱신</span> ':'<span class="chip ok">새 과정</span> '}${c.skips&&c.skips.length?`<span class="chip bad">휴강 ${c.skips.length}일</span> `:''}${it.warn.map(w=>`<span class="chip warn">${esc(w)}</span>`).join(' ')}</td></tr>`}).join('')}</tbody></table></div>`
     :`<div class="empty"><b>이 시트에서 과정을 찾지 못했어요</b>제목줄에 과정명 · 개강일(또는 기간)이 있어야 해요. 위의 "열 연결"에서 직접 골라 주세요.</div>`}
-    <p style="margin:0;font-size:12px;color:var(--faint)">같은 과정명 + 같은 개강일이면 기존 과정을 갱신하고 학생 연결과 진도 기록은 그대로 둬요.</p>
+    <p style="margin:0;font-size:12px;color:var(--faint)">같은 과정명 + 같은 개강일이면 기존 과정을 갱신하고 학생 연결은 그대로 둬요.</p>
   </div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="imDo" ${nSel?'':'disabled'}>${nSel}개 가져오기</button></footer>`;
   if(modalEl&&modalEl._kind==='import'){ modalEl.querySelector('.sheet').innerHTML=html; } else { openModal(html,'wide'); modalEl._kind='import'; }
 }
@@ -3728,7 +3747,7 @@ function vHomeHud(){
   const h=new Date().getHours(); const hi=(document.body.classList.contains('exec')||!isHud())?(h<12?'좋은 아침이에요':h<18?'좋은 오후예요':'좋은 저녁이에요'):(h<12?'Good morning':h<18?'Good afternoon':'Good evening');
   const upcoming=cs.filter(c=>c.start&&c.start>=t).sort((a,b)=>a.start<b.start?-1:1)[0];
   const nextTxt=upcoming?{b:`D-${diffDays(t,upcoming.start)}`,s:`${subjectOf(upcoming)} · ${fmtMD(upcoming.start)} 개강`}:{b:'—',s:'예정된 개강 없음'};
-  const late=running.filter(c=>progOf(c).pending>=3).length;
+  const late=0;   // 진도관리 기능 삭제 — 진도 경고 없음
   return `<div class="view hudhome">
    <div class="hud-grid">
     <section class="hpanel left">
@@ -3755,12 +3774,13 @@ function vHomeHud(){
       <div class="acts"><button class="btn sm" data-go="alarms">전체 알림</button><button class="btn sm" data-go="notice">개강안내</button></div>
     </section>
    </div>
+   ${recSection()}
    ${vHomeBody()}
   </div>`;
 }
 function hudCoreData(){
   const run=list('courses').filter(c=>courseStatus(c).k==='run').sort((a,b)=>a.start<b.start?-1:1);
-  return {segs:run.map(c=>{ const p=progOf(c); return {p:p.total?p.expected/p.total:0,late:p.pending>=3}; }),alarms:activeAlarms().filter(a=>!a.ack).length};
+  return {segs:run.map(c=>{ const p=progOf(c); return {p:p.total?p.expected/p.total:0,late:false}; }),alarms:activeAlarms().filter(a=>!a.ack).length};
 }
 let hudClockTimer=null;
 function startHudClock(){ clearInterval(hudClockTimer); const f=()=>{ const el=$('#hudClock'); if(!el){ clearInterval(hudClockTimer); return; } const n=new Date(); el.innerHTML=`${pad(n.getHours())}:${pad(n.getMinutes())}<small>:${pad(n.getSeconds())}</small>`; }; f(); hudClockTimer=setInterval(f,1000); }
@@ -4171,6 +4191,16 @@ Object.assign(WACT,{
 document.addEventListener('input',e=>{ const el=e.target;
   if(el.dataset&&el.dataset.wa&&SM){ const a=(SM.assigns||[]).find(x=>x.id===el.dataset.wa); if(a){ a[el.dataset.f]=el.value; clearTimeout(window._wap); window._wap=setTimeout(wPersist,700); } }
   if(el.id==='wdText'){ const c=$('#wdCnt'); if(c) c.textContent=`공백 포함 ${el.value.length}자 · 제외 ${el.value.replace(/\s/g,'').length}자`; }
+});
+
+/* ---------- 학생 여러 명 한꺼번에 지우기 ---------- */
+Object.assign(WACT,{
+  stuSel:el=>{ S.stuSel=S.stuSel||{}; if(el.checked) S.stuSel[el.dataset.id]=1; else delete S.stuSel[el.dataset.id]; render(); },
+  stuSelAll:el=>{ S.stuSel=S.stuSel||{}; $$('input[data-act="stuSel"]').forEach(x=>{ if(el.checked) S.stuSel[x.dataset.id]=1; else delete S.stuSel[x.dataset.id]; }); render(); },
+  stuSelNone:()=>{ S.stuSel={}; render(); },
+  stuBulkDel:async()=>{ const ids=Object.keys(S.stuSel||{}).filter(id=>D().students[id]); if(!ids.length) return;
+    const names=ids.map(id=>D().students[id].name); if(!await confirmBox(`학생 ${ids.length}명을 지울까요?`,`${names.slice(0,5).join(', ')}${ids.length>5?` 외 ${ids.length-5}명`:''} · 상담 기록 · 과제 · 첨삭도 함께 지워지고 되돌릴 수 없어요.`,`${ids.length}명 지우기`,true)) return;
+    ids.forEach(id=>store.del('students',id)); S.stuSel={}; toast(`${ids.length}명을 지웠어요`,''); render(); },
 });
 /* ===== 과제 문제은행 — 과목 · 영역 · 난이도(1 하 / 2 중 / 3 상) =====
    문항: {t:영역번호, l:난이도, q:질문, c:코드(선택), o:[보기 4개], a:정답(1~4), e:해설} */
@@ -5265,6 +5295,41 @@ Object.assign(WACT,{
   tmStaffPh:()=>{ S.staffPh=!S.staffPh; render(); },
 });
 document.addEventListener('input',e=>{ if(e.target.id==='staffQ'){ S.staffQ=e.target.value; clearTimeout(S._sq); S._sq=setTimeout(()=>{ const pos=e.target.selectionStart; render(); const x=$('#staffQ'); if(x){ x.focus(); try{ x.setSelectionRange(pos,pos); }catch(err){} } },250); } });
+/* ===== 녹화본 전달 알림 =====
+   수강중 학생 × 연결된 수업의 수업일 → 다음 날부터 "000학생 - 000과목 녹화본 제공 필요" (제공완료 누를 때까지)
+   녹화본 유효기간이 1주일이라 1주일 지난 수업은 목록에서 빠짐. 완료 기록은 학생 데이터(rec)에 저장 → PC · 폰 같이 맞춰짐 */
+function recSince(){ let s=lsGet('md.recSince'); if(!s){ s=addDays(todayStr(),-1); lsSet('md.recSince',s); } return s; }   // 처음 켠 날: 어제 수업부터
+function recItems(){
+  if(S.gate) return []; const t=todayStr(); const lo=[recSince(),addDays(t,-7)].sort()[1]; const out=[];
+  list('students').forEach(s=>{ if(s.status!=='수강중') return; (s.courses||[]).forEach(cid=>{ const c=D().courses[cid]; if(!c) return;
+    sessionsOf(c).forEach(d=>{ if(d>=lo&&d<t){ const key=cid+'|'+d; if(!(s.rec&&s.rec[key])) out.push({s,c,d,key}); } }); }); });
+  return out.sort((a,b)=>(a.d+a.c.name+a.s.name).localeCompare(b.d+b.c.name+b.s.name,'ko'));
+}
+function recSection(){
+  const items=recItems(); if(!items.length) return '';
+  const groups=new Map(); items.forEach(x=>{ const g=x.d+'|'+x.c.id; if(!groups.has(g)) groups.set(g,[]); groups.get(g).push(x); });
+  return `<section class="pane rec-pane"><h2>녹화본 전달 <small>수업 다음 날 보내요 · 1주일 지나면 목록에서 빠져요</small><span class="chip warn r">${items.length}건</span></h2>
+    ${[...groups].map(([g,xs])=>`<div class="rec-g"><div class="rec-h"><span><b>${fmtMD(xs[0].d)} 수업</b> · ${esc(xs[0].c.name)}</span>${xs.length>1?`<button class="btn sm ghost" data-act="recAll" data-k="${esc(g)}">${xs.length}명 모두 제공완료</button>`:''}</div>
+      ${xs.map(x=>`<div class="row rec-row"><div class="grow"><div class="t1">${esc(x.s.name)}학생 - ${esc(x.c.name)} 녹화본 제공 필요</div>${x.s.phone?`<div class="t2">${esc(x.s.phone)}</div>`:''}</div><button class="btn sm pri" data-act="recDone" data-id="${x.s.id}" data-k="${esc(x.key)}">${ic('check')}제공완료</button></div>`).join('')}</div>`).join('')}
+  </section>`;
+}
+function recMark(sid,keys){
+  const s0=D().students[sid]; if(!s0) return; const s=clone(s0); const t=todayStr(); const rec={...(s.rec||{})};
+  keys.forEach(k=>rec[k]=Date.now()); Object.keys(rec).forEach(k=>{ const d=k.split('|')[1]; if(d&&d<addDays(t,-30)) delete rec[k]; });   // 30일 지난 기록은 정리
+  s.rec=rec; store.put('students',s);
+}
+/* 하루 한 번 (오전 9시 이후) 윈도우 알림 + 화면 오른쪽 아래 알림 */
+function recDaily(){
+  try{ if(S.gate||S.demo) return; const t=todayStr(); if(lsGet('md.recDay')===t||new Date().getHours()<9) return;
+    const items=recItems(); lsSet('md.recDay',t); if(!items.length) return;
+    const body=items.slice(0,3).map(x=>`${x.s.name} - ${x.c.name}`).join(' · ')+(items.length>3?` 외 ${items.length-3}건`:'');
+    alertShow({title:`녹화본 전달 ${items.length}건`,body,nbody:body,tag:'rec-'+t,go:'home'}); alertSound('녹화본 전달'); }catch(e){ console.warn(e); }
+}
+Object.assign(WACT,{
+  recDone:el=>{ const s=D().students[el.dataset.id]; recMark(el.dataset.id,[el.dataset.k]); toast('제공완료',s?`${s.name}학생 녹화본`:''); render(); },
+  recAll:el=>{ const items=recItems().filter(x=>x.d+'|'+x.c.id===el.dataset.k); const by={}; items.forEach(x=>(by[x.s.id]=by[x.s.id]||[]).push(x.key));
+    Object.entries(by).forEach(([sid,ks])=>recMark(sid,ks)); toast('제공완료',`${items.length}명 녹화본`); render(); },
+});
 /* 자동 생성 파일 — quote/gen_quote_data.py 로 다시 만드세요 (직접 고치지 마세요) */
 const PRICE_DEFAULT=[{"n": "C#1", "m": 1800, "p": 400000, "src": "photo"}, {"n": "C#2", "m": 1800, "p": 450000, "src": "photo"}, {"n": "C#3", "m": 1800, "p": 500000, "src": "photo"}, {"n": "C++", "m": 1800, "p": 450000, "src": "photo"}, {"n": "C언어1", "m": 1800, "p": 500000, "src": "photo"}, {"n": "C언어2", "m": 1800, "p": 500000, "src": "photo"}, {"n": "C언어1/주", "m": 1920, "p": 450000, "src": "photo"}, {"n": "C언어2/주", "m": 1920, "p": 450000, "src": "photo"}, {"n": "C언어1/특", "m": 1500, "p": 450000, "src": "photo"}, {"n": "C언어2/특", "m": 1500, "p": 450000, "src": "photo"}, {"n": "JAVA1", "m": 1800, "p": 550000, "src": "photo"}, {"n": "JAVA2", "m": 1800, "p": 550000, "src": "photo"}, {"n": "JAVA1/주", "m": 1920, "p": 550000, "src": "photo"}, {"n": "JAVA2/주", "m": 1920, "p": 550000, "src": "photo"}, {"n": "JAVA1/특", "m": 1500, "p": 450000, "src": "photo"}, {"n": "JAVA2/특", "m": 1500, "p": 450000, "src": "photo"}, {"n": "Python1", "m": 1800, "p": 550000, "src": "photo"}, {"n": "Python2", "m": 1800, "p": 550000, "src": "photo"}, {"n": "Python1/주", "m": 1920, "p": 550000, "src": "photo"}, {"n": "Python2/주", "m": 1920, "p": 550000, "src": "photo"}, {"n": "Python1/특", "m": 1500, "p": 450000, "src": "photo"}, {"n": "Python2/특", "m": 1500, "p": 450000, "src": "photo"}, {"n": "DBMS", "m": 1800, "p": 550000, "src": "photo"}, {"n": "DBMS/주", "m": 1920, "p": 550000, "src": "photo"}, {"n": "DBMS/특", "m": 1500, "p": 550000, "src": "photo"}, {"n": "JPA SpringBoot PJ 1/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "JPA SpringBoot PJ 2/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "JPA SpringBoot PJ 3/주말", "m": 1920, "p": 1000000, "src": "photo"}, {"n": "앱개발1/주", "m": 1920, "p": 700000, "src": "photo"}, {"n": "앱개발2/주", "m": 1920, "p": 700000, "src": "photo"}, {"n": "앱개발3/주", "m": 1920, "p": 700000, "src": "photo"}, {"n": "웹개발1/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "웹개발2/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "웹개발3/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "웹개발4/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "웹개발5/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "웹개발1/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "웹개발2/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "웹개발3/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "웹개발4/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "웹개발5/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "웹개발6/주말", "m": 1920, "p": 1000000, "src": "photo"}, {"n": "웹표준1/특", "m": 1500, "p": 450000, "src": "photo"}, {"n": "웹표준2/특", "m": 1500, "p": 450000, "src": "photo"}, {"n": "웹프론트엔드1/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "웹프론트엔드2/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "웹프론트엔드3/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "웹프론트엔드4/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "웹프론트엔드5/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "웹프론트엔드6/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "C언어자료구조", "m": 1920, "p": 450000, "src": "photo"}, {"n": "C언어자료구조&알고리즘/주", "m": 1920, "p": 550000, "src": "photo"}, {"n": "C언어자료구조/주말방특", "m": 1440, "p": 350000, "src": "photo"}, {"n": "Python자료구조", "m": 1920, "p": 450000, "src": "photo"}, {"n": "자료구조&알고리즘", "m": 1800, "p": 550000, "src": "photo"}, {"n": "자료구조&알고리즘/주", "m": 1920, "p": 550000, "src": "photo"}, {"n": "자료구조&알고리즘/특", "m": 1500, "p": 550000, "src": "photo"}, {"n": "코딩테스트1/주", "m": 1440, "p": 650000, "src": "photo"}, {"n": "코딩테스트2/주", "m": 1440, "p": 650000, "src": "photo"}, {"n": "코딩테스트3/주", "m": 1440, "p": 800000, "src": "photo"}, {"n": "네트워크1", "m": 3240, "p": 700000, "src": "photo"}, {"n": "네트워크2", "m": 3240, "p": 700000, "src": "photo"}, {"n": "리눅스1", "m": 1800, "p": 700000, "src": "photo"}, {"n": "리눅스2", "m": 1800, "p": 800000, "src": "photo"}, {"n": "리눅스1/주", "m": 2880, "p": 700000, "src": "photo"}, {"n": "리눅스2/주", "m": 2880, "p": 800000, "src": "photo"}, {"n": "리눅스1/주말", "m": 1920, "p": 600000, "src": "photo"}, {"n": "리눅스2/주말", "m": 1920, "p": 700000, "src": "photo"}, {"n": "멀티클라우드1(도커/쿠버네티스)/주말", "m": 3360, "p": 1000000, "src": "photo"}, {"n": "멀티클라우드2(AWS)/주말", "m": 3360, "p": 1100000, "src": "photo"}, {"n": "시스템네트워크/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "시스템네트워크2/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "씨스코1", "m": 1800, "p": 700000, "src": "photo"}, {"n": "씨스코2", "m": 1800, "p": 800000, "src": "photo"}, {"n": "씨스코1/주", "m": 2880, "p": 700000, "src": "photo"}, {"n": "씨스코2/주", "m": 2880, "p": 800000, "src": "photo"}, {"n": "씨스코1/주말", "m": 2400, "p": 600000, "src": "photo"}, {"n": "씨스코2/주말", "m": 2400, "p": 700000, "src": "photo"}, {"n": "정보보안1", "m": 3000, "p": 1000000, "src": "photo"}, {"n": "정보보안2", "m": 3000, "p": 1000000, "src": "photo"}, {"n": "정보보안3", "m": 3000, "p": 1000000, "src": "photo"}, {"n": "정보보안4", "m": 3000, "p": 1000000, "src": "photo"}, {"n": "정보보안5", "m": 3000, "p": 1000000, "src": "photo"}, {"n": "정보보안6", "m": 3000, "p": 1000000, "src": "photo"}, {"n": "정보보안1/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "정보보안2/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "정보보안3/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "정보보안4/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "해킹보안1/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "해킹보안2/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "해킹보안3/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "해킹보안4/주말", "m": 1920, "p": 800000, "src": "photo"}, {"n": "R분석", "m": 1800, "p": 450000, "src": "photo"}, {"n": "빅데이터 R/주말", "m": 1920, "p": 450000, "src": "photo"}, {"n": "빅데이터1", "m": 1440, "p": 700000, "src": "photo"}, {"n": "빅데이터2", "m": 1440, "p": 700000, "src": "photo"}, {"n": "빅데이터3", "m": 1440, "p": 800000, "src": "photo"}, {"n": "빅데이터1/주", "m": 1440, "p": 700000, "src": "photo"}, {"n": "빅데이터2/주", "m": 1440, "p": 700000, "src": "photo"}, {"n": "빅데이터3/주", "m": 1440, "p": 800000, "src": "photo"}, {"n": "빅데이터기반AI프로젝트1", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "빅데이터기반AI프로젝트2", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "빅데이터기반AI프로젝트3", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "빅데이터기반AI프로젝트4", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "빅데이터기반AI프로젝트5", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "빅데이터기반AI프로젝트6", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "파이썬 데이터분석 프로젝트1/주", "m": 960, "p": 500000, "src": "photo"}, {"n": "파이썬 데이터분석 프로젝트2/주", "m": 960, "p": 500000, "src": "photo"}, {"n": "파이썬 데이터분석 프로젝트3/주", "m": 960, "p": 500000, "src": "photo"}, {"n": "AI바이브코딩 나만의 APP 제작1", "m": 1440, "p": 500000, "src": "photo"}, {"n": "AI바이브코딩 나만의 APP 제작2", "m": 1440, "p": 500000, "src": "photo"}, {"n": "AI에이전트기반데이터분석&자동화", "m": 1440, "p": 500000, "src": "photo"}, {"n": "AI활용 자연어처리 챗봇 프로젝트1", "m": 1800, "p": 500000, "src": "photo"}, {"n": "AI활용 자연어처리 챗봇 프로젝트2", "m": 1800, "p": 500000, "src": "photo"}, {"n": "AI활용 자연어처리 챗봇 프로젝트3", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "AI활용 자연어처리 챗봇 프로젝트4", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "AI활용 자연어처리 챗봇 프로젝트5", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "AI활용 자연어처리 챗봇 프로젝트6", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "AI활용 컴퓨터비전 프로젝트1", "m": 1800, "p": 500000, "src": "photo"}, {"n": "AI활용 컴퓨터비전 프로젝트2", "m": 1800, "p": 500000, "src": "photo"}, {"n": "AI활용 컴퓨터비전 프로젝트3", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "AI활용 컴퓨터비전 프로젝트4", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "AI활용 컴퓨터비전 프로젝트5", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "AI활용 컴퓨터비전 프로젝트6", "m": 1800, "p": 1000000, "src": "photo"}, {"n": "Claude AI 기반 바이브코딩 풀스택 웹개발1", "m": 2880, "p": 500000, "src": "photo"}, {"n": "Claude AI 기반 바이브코딩 풀스택 웹개발2", "m": 2880, "p": 500000, "src": "photo"}, {"n": "Claude Code 기반 웹개발1", "m": 3600, "p": 1000000, "src": "photo"}, {"n": "Claude Code 기반 웹개발2", "m": 3600, "p": 1000000, "src": "photo"}, {"n": "Claude Code 기반 웹개발3", "m": 3600, "p": 1000000, "src": "photo"}, {"n": "Claude Code 기반 웹개발4", "m": 3600, "p": 1000000, "src": "photo"}, {"n": "Claude Code 기반 웹개발5", "m": 3600, "p": 1000000, "src": "photo"}, {"n": "랭체인1/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "랭체인2/주", "m": 1920, "p": 700000, "src": "photo"}, {"n": "파이썬&바이브코딩1", "m": 1800, "p": 550000, "src": "photo"}, {"n": "파이썬&바이브코딩2", "m": 1800, "p": 550000, "src": "photo"}, {"n": "바이브코딩1/주", "m": 1920, "p": 600000, "src": "photo"}, {"n": "바이브코딩2/주", "m": 1920, "p": 700000, "src": "photo"}, {"n": "3D 브랜드 광고 콘텐츠 제작", "m": 1800, "p": 500000, "src": "photo"}, {"n": "AI크리에이터 콘텐츠 제작 기초 (숏폼 제작)", "m": 1800, "p": 500000, "src": "photo"}, {"n": "AI크리에이터 콘텐츠 제작 심화 (공모전 대비)", "m": 1800, "p": 500000, "src": "photo"}, {"n": "AI활용 콘텐츠제작", "m": 1800, "p": 550000, "src": "photo"}, {"n": "생성형AI 마케팅 콘텐츠 자동화 실무", "m": 1800, "p": 500000, "src": "photo"}, {"n": "Gemini로 만드는 나만의 AI업무 비서", "m": 1440, "p": 500000, "src": "photo"}, {"n": "ChatGPT 활용 컨텐츠/주말", "m": 1920, "p": 350000, "src": "photo"}, {"n": "챗GPT AI활용", "m": 1800, "p": 550000, "src": "photo"}, {"n": "ChatGPT 데이터 분석", "m": 1800, "p": 500000, "src": "photo"}, {"n": "ADsP", "m": 2160, "p": 600000, "src": "photo"}, {"n": "ADsP/주", "m": 2160, "p": 600000, "src": "photo"}, {"n": "ADsP/주말", "m": 1440, "p": 500000, "src": "photo"}, {"n": "CCNA1/주말", "m": 1920, "p": 500000, "src": "photo"}, {"n": "CCNA2/주말", "m": 1920, "p": 500000, "src": "photo"}, {"n": "국가공인 AI자격증 AiCE 어소시에이트 취득 과정", "m": 3360, "p": 1000000, "src": "photo"}, {"n": "빅데이터분석기사 필기/주말", "m": 1920, "p": 400000, "src": "photo"}, {"n": "빅데이터분석기사 실기/주말", "m": 1920, "p": 600000, "src": "photo"}, {"n": "정보보안기사필기1/주말", "m": 1920, "p": 450000, "src": "photo"}, {"n": "정보보안기사필기2/주말", "m": 1920, "p": 450000, "src": "photo"}, {"n": "정보보안기사실기1/주말", "m": 1920, "p": 700000, "src": "photo"}, {"n": "정보보안기사실기2/주말", "m": 1920, "p": 700000, "src": "photo"}, {"n": "정보처리기사필기/주", "m": 1920, "p": 400000, "src": "photo"}, {"n": "정보처리기사실기/주", "m": 3840, "p": 800000, "src": "photo"}, {"n": "정보처리실기1/주", "m": 1440, "p": 400000, "src": "photo"}, {"n": "정보처리실기2/주", "m": 1440, "p": 400000, "src": "photo"}, {"n": "정보처리기사실기/주말", "m": 2400, "p": 500000, "src": "photo"}, {"n": "(과정평가형자격)정보처리기능사 취득과정", "m": 36000, "p": 4374000, "src": "photo"}, {"n": "[K-뉴딜]SKT ALEPH(알레프)", "m": 30000, "p": 12250000, "src": "photo"}, {"n": "[KDT]LLM기반 생성형AI·공공데이터 융합 개발자", "m": 54000, "p": 6561000, "src": "photo"}, {"n": "[KDT]공공데이터 융합생성형 AI 활용 풀스택 개발자", "m": 54240, "p": 6561000, "src": "photo"}, {"n": "[산대특]검색증강생성(RAG) AI기반 문화관광 개발자", "m": 43200, "p": 4766400, "src": "photo"}, {"n": "[이스트캠프] AI휴먼(멀티포달, TTS, STT, 프롬프트 엔지니어링, RAG)", "m": 48000, "p": 14520000, "src": "photo"}];
 const QT={"note": "1) 위 수강료는 학원내 게시되어 있는 수강료 기준이며, 교육청에 신고된 금액입니다.\n2) 이벤트 할인 및 조기마감되는 과목 시간에 대한 수강배정을 원하는 경우 지정된 기간 내 완납되어야 적용받을 수 있습니다.", "pay": "1) 현금수납 - 학원 안내접수처에서 접수 및 결제 (현금영수증 발행 가능)\n2) 신용카드 결제 (할부 결제 가능 및 카드사 별 할부 개월 수 상이 / 담당 멘토 확인 가능)\n3) 계좌이체 / 인터넷뱅킹 (현금영수증 발행 가능)", "bank_it": "- 수강료 계좌 : 064-163415-04-026 / 기업은행 / (주)코리아아이티아카데미부산\n- 온라인 강좌 계좌 : 336-103411-04-020 / 기업은행 / ㈜코리아온라인클래스", "bank_ai": "- 수강료 계좌 :  336-104596-04-025 / 기업은행 / ㈜ 코리아에이아이아카데미", "pay2": "4) 온라인결제 (나이스페이)\n        - 코리아AI아카데미 부산점 공식 홈페이지 메뉴 > 고객상담센터 > 온라인 결제", "term": "1) 본 서류는 코리아AI아카데미 부산지점(이하 \"부산지점\" 이라고 한다)에 수강료를 지원받으시는 분들에 적용됩니다\n2) 본 수강생은 부산지점 내 기본할인율 이외 추가지원이 적용됩니다\n3) 4~7과목 등록 시 1과목 / 8과목 이상 등록 시 부산지점에서 2과목을 무료로 지원받으실 수 있습니다\n4) 무료지원과목의 수강료 제한은 없으며, 종강 후 6개월 이내 사용가능합니다\n5) 무료지원과목에 대한 지급 기한은 변동 불가합니다. (휴학, 연장 등)\n6) 단 2,3,4번 항목은 부산지점 수강생에 대한 혜택사항으로 환불 발생시 원수강료 기준으로 공제됩니다\n7) 공제금은 한과목 기준으로 수업 참여기준이 아닌 진행기준으로 측정됩니다.\n1/3시점->1/3공제 , 1/2시점->1/2공제 , 1/2이상시점->전체수강료공제", "agree": "본 수강생은 위 내용을 정확하게 이해하였으며 세부조항에 동의합니다\n                       이름 :                             (서명)          ", "staff": "교육담당 : 김병로 멘토 Tel. 051.914.5904 ㅣHP. 010.5698.5902ㅣ\n부산광역시 부산진구 중앙대로 668, 에이원프라자4층 TEL. 051-914-5925 l FAX. 051-914-5925", "ref": "*환불시점이 애매한 경우 교습시간 전/후로 적용\nex)10일 수업 중 5일차 수업 이후 6일차 '수업시간' 전 환불요청시 1/2 , '수업시간' 후 환불요청시 환불금 없음\n20일 수업 중 6일차 수업까지 참여 후 7일차 '수업시간' 전 환불요청시 1/3 , '수업시간'후 환불요청시 1/2시점(수업참여 여부는 중요하지 않음, 환불요청 시점이 적용\n*녹화본 제공 받았을시 수업참여로 간주", "title": "코리아AI아카데미 부산"};
@@ -5874,6 +5939,7 @@ function tick(){
     if(ageH<12){ const st=k.sid&&D().students[k.sid]; const tb=k.text+(st&&st.phone?` (${st.phone})`:''); alertShow({title:`${k.cat==='콜백'?'콜백 시간이에요':'할 일 시간이에요'} · ${k.time}`,body:tb,tag:'task-'+k.id,go:'tasks'}); alertSound(`${k.cat==='콜백'?'콜백':'할 일'} · ${k.time}`); }
     store.put('tasks',{...k,notified:true});
   }
+  recDaily();
   if(S.locked) drawLock();
 }
 function notify(title,body,o){ try{ if(!('Notification' in window)||Notification.permission!=='granted') return; o=o||{}; const opt={body,icon:'icons/icon-192.png',badge:'icons/favicon-64.png',tag:o.tag||title}; if(o.sticky){ opt.requireInteraction=true; opt.renotify=true; } if(o.go) opt.data={go:o.go,tab:o.tab||''}; if(navigator.serviceWorker&&navigator.serviceWorker.controller) navigator.serviceWorker.ready.then(r=>r.showNotification(title,opt)); else { const n=new Notification(title,opt); if(o.go) n.onclick=()=>{ try{ window.focus(); }catch(e){} openFromNotice(opt.data); n.close(); }; } }catch(e){} }
@@ -5901,6 +5967,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-0033';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-0044';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
