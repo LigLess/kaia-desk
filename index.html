@@ -1469,6 +1469,29 @@ body:not(.dark):not(.xg) .qt-step .in{background:#fff!important;border:1px solid
 .qt-row .in:focus,.qt-head .in:focus,.qt-more .in:focus,.qt-add .in:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px var(--accent-soft)}
 body:not(.dark):not(.xg) .qt-row{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
 .qt-row .in::placeholder{color:var(--faint)}
+
+/* ===== 옥스블러드 (모던 · 깔끔 · 댄디) ===== */
+body.hud.exec.xo{--bg:#f3f0eb;--bg-soft:#ece8e1;--card:#fbfaf7;--surface:#fbfaf7;--surface-2:#efebe4;--surface-3:#e6e1d8;
+  --fg:#17151a;--fg-2:#34303a;--muted:#77707a;--faint:#aaa3a8;--line:#e5e0d7;--line-2:#d5cdc1;
+  --ink:#17151a;--ink-fg:#fbfaf7;--ink-2:#2c2930;--ink-soft:rgba(23,21,26,.06);--accent:#7a1e2c;--accent-2:#5f1622;--accent-soft:rgba(122,30,44,.10);
+  --amber:#a8662f;--amber-soft:rgba(168,102,47,.13);--cyan:#7a1e2c;--cyan-soft:rgba(122,30,44,.10);--violet:#7a1e2c;--pill-bg:#17151a;--pill-fg:#fbfaf7;--spot:rgba(122,30,44,.06);
+  --shadow-md:0 16px 34px -20px rgba(23,21,26,.28);--shadow-lg:0 40px 80px -30px rgba(23,21,26,.32),0 0 0 1px rgba(23,21,26,.05);background:#f3f0eb}
+body.hud.exec.xo .pane,body.hud.exec.xo .stat,body.hud.exec.xo .pcard,body.hud.exec.xo .snip,body.hud.exec.xo .alarm,body.hud.exec.xo .hpanel{background:#fbfaf7;border:1px solid #e3ddd3;box-shadow:0 1px 0 rgba(23,21,26,.04),0 22px 40px -30px rgba(23,21,26,.30)}
+body.hud.exec.xo .btn.pri{background:#7a1e2c;border-color:#7a1e2c;color:#fbfaf7;letter-spacing:.01em}
+body.hud.exec.xo .btn.pri:hover{background:#5f1622}
+body.hud.exec.xo .topnav{background:rgba(251,250,247,.86);border-color:#e3ddd3}
+body.hud.exec.xo .wordmark img{filter:brightness(0)}
+body.hud.exec.xo .hpanel .greet,body.hud.exec.xo .hpanel .clock,body.hud.exec.xo .readout b{color:var(--fg)}
+body.hud.exec.xo .hpanel .greet{font-weight:600;letter-spacing:-.045em}
+body.hud.exec.xo .hl::before{content:"";display:inline-block;width:14px;height:2px;background:#7a1e2c;margin-right:2px}
+body.hud.exec.xo .toast{background:#17151a;color:rgba(251,250,247,.82)}
+body.hud.exec.xo ::selection{background:#7a1e2c;color:#fff}
+/* ===== 오팔 나이트 (다크 · 화려) ===== */
+body.dark[data-bg="opal"]{--bg:#04050a;--surface:rgba(12,14,24,.56);--surface-2:rgba(255,255,255,.07);--surface-3:rgba(255,255,255,.12);--fg:#f7fbff;--fg-2:#dfe8f3;--muted:rgba(225,235,248,.66);--faint:rgba(225,235,248,.4);
+  --line:rgba(255,255,255,.13);--line-2:rgba(255,255,255,.24);--accent:#3ff0d8;--accent-2:#a9fff3;--accent-soft:rgba(63,240,216,.16);--amber:#ffb21f;--bar:rgba(10,10,20,.45);--bar-line:rgba(255,255,255,.18);background:#04050a}
+body.dark[data-bg="opal"] .btn.pri{background:linear-gradient(100deg,#3ff0d8,#ff3d8b);border-color:transparent;color:#05060b;font-weight:700}
+body.dark[data-bg="opal"] .pane,body.dark[data-bg="opal"] .hpanel{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 24px 60px -30px rgba(255,61,139,.35),0 18px 50px -34px rgba(63,240,216,.35)}
+body.dark[data-bg="opal"] ::selection{background:#ff3d8b;color:#fff}
 </style>
 </head>
 <body>
@@ -2802,7 +2825,7 @@ function vSettings(){
   const tplF=(k,l)=>`<label class="field full"><span>${l}</span><textarea class="in" data-set="tpl.${k}" rows="6">${esc(s.tpl[k])}</textarea></label>`;
   const zoomRows=(s.zooms||[]).map((z,i)=>`<div class="btns" style="flex-wrap:nowrap"><input class="in" data-zoom="${i}" data-f="k" value="${esc(z.k)}" style="width:64px;text-align:center" maxlength="3" aria-label="계정 이름"><input class="in" data-zoom="${i}" data-f="id" value="${esc(z.id)}" placeholder="회의 ID" style="flex:1;min-width:0"><input class="in" data-zoom="${i}" data-f="pw" value="${esc(z.pw)}" placeholder="회의 PW" style="width:120px"><button class="btn sm ghost" data-act="zoomDel" data-i="${i}" aria-label="삭제">${ic('x')}</button></div>`).join('');
   const sw=(light)=>Object.entries(BG_THEMES).filter(([k,th])=>!th.hud&&!!th.light===light).map(([k,th])=>`<button class="swatch ${s.theme===k?'on':''}" data-act="theme" data-k="${k}" style="background:${th.preview}"><span>${th.name}</span></button>`).join('');
-  const themes=`<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">모던</div><div class="swatches">${Object.entries(BG_THEMES).filter(([k,th])=>th.hud).map(([k,th])=>`<button class="swatch ${s.theme===k?'on':''}" data-act="theme" data-k="${k}" style="background:${th.preview}"><span>${th.name}</span></button>`).join('')}</div><div style="font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 8px">화이트</div><div class="swatches">${sw(true)}</div><div style="font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 8px">다크</div><div class="swatches">${sw(false)}</div>`;
+  const themes=`<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">모던</div><div class="swatches">${Object.entries(BG_THEMES).filter(([k,th])=>th.hud).map(([k,th])=>`<button class="swatch ${s.theme===k?'on':''}" data-act="theme" data-k="${k}" style="background:${th.preview}"><span>${th.name}</span></button>`).join('')}</div><div style="font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 8px">기하학</div><div class="swatches">${sw(true)}</div><div style="font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 8px">다크</div><div class="swatches">${sw(false)}</div>`;
   return `<div class="view">${vh('설정',S.mode==='db'?'내 Claude 계정에 저장돼서 PC와 휴대폰에서 같은 데이터가 보여요':S.mode==='local'?'지금 화면은 이 기기에만 저장돼요':'')}
   <section class="pane"><h2>내 정보</h2><div class="form">
     <label class="field"><span>이름</span><input class="in" data-set="name" value="${esc(s.name)}"></label>
@@ -3094,6 +3117,8 @@ const BG_THEMES={
     preview:'radial-gradient(circle at 50% 50%,transparent 30%,rgba(196,120,130,.85) 31%,transparent 32.5%),radial-gradient(circle at 25% 25%,rgba(255,196,204,.9),transparent 55%),radial-gradient(circle at 80% 80%,rgba(238,210,180,.9),transparent 55%),#fbf4f1'},
   lavender:{name:'라벤더 미스트',hud:true,exec:true,xl:true,light:true,
     preview:'radial-gradient(circle at 50% 50%,transparent 30%,rgba(124,104,206,.85) 31%,transparent 32.5%),radial-gradient(circle at 25% 25%,rgba(206,196,255,.95),transparent 55%),radial-gradient(circle at 80% 80%,rgba(190,228,240,.9),transparent 55%),#f6f4fd'},
+  oxblood:{name:'옥스블러드',hud:true,exec:true,xo:true,light:true,meta:'#f3f0eb',
+    preview:'radial-gradient(circle at 50% 50%,transparent 30%,rgba(122,30,44,.9) 31%,transparent 32.5%),linear-gradient(135deg,transparent 62%,rgba(23,21,26,.9) 62.5%,rgba(23,21,26,.9) 64%,transparent 64.5%),radial-gradient(circle at 20% 20%,rgba(168,102,47,.18),transparent 50%),#f3f0eb'},
   dotwave:{name:'도트 웨이브',light:true,kind:'dotwave',
     preview:'radial-gradient(circle,rgba(11,11,15,.55) 1.2px,transparent 1.6px) 0 0/10px 10px,linear-gradient(180deg,#fff 0%,#fff 35%,#f1f1f4)'},
   contour:{name:'토포그래피',light:true,kind:'contour',
@@ -3112,6 +3137,8 @@ const BG_THEMES={
     preview:'radial-gradient(circle at 25% 70%,#ff8a3d 0,transparent 55%),radial-gradient(circle at 75% 30%,#ff4f7b 0,transparent 55%),radial-gradient(circle at 50% 50%,#b74dff 0,transparent 65%),#2a0b30'},
   ocean:{name:'딥 오션',base:['#021626','#04243f','#061130'],blobs:['#00b8d9','#0a6cff','#2df0c0','#4c5cff','#76e4ff'],silk:['#a8fbff','#86d6ff','#b8ffe8'],
     preview:'radial-gradient(circle at 30% 30%,#2df0c0 0,transparent 50%),radial-gradient(circle at 70% 70%,#0a6cff 0,transparent 55%),radial-gradient(circle at 70% 20%,#00b8d9 0,transparent 55%),#03203a'},
+  opal:{name:'오팔 나이트',base:['#04050a','#0a0614','#03101a'],blobs:['#00e0c6','#ff3d8b','#ffb21f','#2f6bff','#7cff6b'],silk:['#a9fff3','#ffc2dc','#fff1b8'],meta:'#04050a',
+    preview:'radial-gradient(circle at 22% 28%,#00e0c6 0,transparent 45%),radial-gradient(circle at 78% 30%,#ff3d8b 0,transparent 45%),radial-gradient(circle at 55% 82%,#ffb21f 0,transparent 45%),radial-gradient(circle at 30% 85%,#2f6bff 0,transparent 40%),#04050a'},
   midnight:{name:'미드나잇 스틸',base:['#07090d','#0d1219','#0a0f16'],blobs:['#2f5b86','#2b6f72','#4a6d96','#1f3f5f','#5f7d99'],silk:['#c9d4e2','#9fb8d0','#dfe6ee'],dim:0.42,meta:'#07090d',
     preview:'radial-gradient(circle at 25% 30%,rgba(79,130,180,.55) 0,transparent 50%),radial-gradient(circle at 75% 75%,rgba(43,111,114,.45) 0,transparent 55%),linear-gradient(160deg,#0d1219,#07090d)'},
   space:{name:'딥 스페이스',space:true,silk:['#c890ff','#86a9ff'],
@@ -3303,10 +3330,11 @@ const bgfx={
   },
   /* ---- EXECUTIVE background: warm paper + slow colour light + two hairlines ---- */
   execBg(x,W,H,t){
-    const s=this.s, T=this.theme, G=!!T.xg, Wt=!!T.xw, Ro=!!T.xr, Lv=!!T.xl;
-    x.fillStyle=G?'#050505':Wt?'#f6f7f9':Ro?'#fbf4f1':Lv?'#f6f4fd':'#f6f6f3'; x.fillRect(0,0,W,H);
+    const s=this.s, T=this.theme, G=!!T.xg, Wt=!!T.xw, Ro=!!T.xr, Lv=!!T.xl, Ox=!!T.xo;
+    x.fillStyle=G?'#050505':Wt?'#f6f7f9':Ro?'#fbf4f1':Lv?'#f6f4fd':Ox?'#f3f0eb':'#f6f6f3'; x.fillRect(0,0,W,H);
     const R=Math.max(W,H);
-    (Ro?[[0.15,0.12,0.45,'255,170,182',0.22],[0.88,0.2,0.38,'236,196,160',0.2],[0.75,0.92,0.42,'214,140,160',0.14],[0.1,0.85,0.32,'255,214,200',0.2]]
+    (Ox?[[0.85,0.15,0.42,'122,30,44',0.07],[0.12,0.85,0.4,'168,102,47',0.06],[0.7,0.9,0.35,'23,21,26',0.05],[0.1,0.12,0.3,'122,30,44',0.04]]
+     :Ro?[[0.15,0.12,0.45,'255,170,182',0.22],[0.88,0.2,0.38,'236,196,160',0.2],[0.75,0.92,0.42,'214,140,160',0.14],[0.1,0.85,0.32,'255,214,200',0.2]]
      :Lv?[[0.15,0.12,0.45,'176,160,255',0.2],[0.88,0.2,0.38,'160,215,240',0.18],[0.75,0.92,0.42,'214,180,255',0.16],[0.1,0.85,0.32,'190,200,255',0.16]]
      :G?[[0.2,0.1,0.45,'212,175,55',0.07],[0.85,0.2,0.35,'160,130,60',0.05],[0.75,0.95,0.4,'212,175,55',0.05],[0.1,0.85,0.3,'90,80,60',0.05]]
      :Wt?[[0.18,0.12,0.42,'31,111,235',0.07],[0.86,0.18,0.36,'120,150,220',0.06],[0.78,0.92,0.4,'31,111,235',0.05],[0.1,0.85,0.3,'14,23,38',0.03]]
@@ -3314,7 +3342,7 @@ const bgfx={
       const cx=W*(ox+0.04*Math.sin(t*0.1+i*1.9)), cy=H*(oy+0.04*Math.cos(t*0.09+i*2.4)), rr=R*r*(1+0.06*Math.sin(t*0.15+i));
       const g=x.createRadialGradient(cx,cy,0,cx,cy,rr); g.addColorStop(0,`rgba(${c},${a})`); g.addColorStop(1,`rgba(${c},0)`); x.fillStyle=g; x.fillRect(0,0,W,H);
     });
-    for(let k=0;k<2;k++){ x.beginPath(); for(let px=-10*s;px<=W+10*s;px+=12*s){ const u=px/W; const y=H*(0.74+k*0.06)+Math.sin(u*3+t*0.18+k*1.7)*H*0.05+Math.sin(u*7-t*0.25)*H*0.008; px<=-10*s?x.moveTo(px,y):x.lineTo(px,y); } x.strokeStyle=Ro?(k?'rgba(196,110,128,.22)':'rgba(120,70,70,.06)'):Lv?(k?'rgba(124,104,206,.22)':'rgba(60,50,110,.06)'):G?(k?'rgba(212,175,55,.22)':'rgba(255,255,255,.05)'):Wt?(k?'rgba(31,111,235,.16)':'rgba(14,23,38,.06)'):(k?'rgba(53,84,255,.18)':'rgba(12,12,16,.07)'); x.lineWidth=1*s; x.stroke(); }
+    for(let k=0;k<2;k++){ x.beginPath(); for(let px=-10*s;px<=W+10*s;px+=12*s){ const u=px/W; const y=H*(0.74+k*0.06)+Math.sin(u*3+t*0.18+k*1.7)*H*0.05+Math.sin(u*7-t*0.25)*H*0.008; px<=-10*s?x.moveTo(px,y):x.lineTo(px,y); } x.strokeStyle=Ox?(k?'rgba(122,30,44,.30)':'rgba(23,21,26,.08)'):Ro?(k?'rgba(196,110,128,.22)':'rgba(120,70,70,.06)'):Lv?(k?'rgba(124,104,206,.22)':'rgba(60,50,110,.06)'):G?(k?'rgba(212,175,55,.22)':'rgba(255,255,255,.05)'):Wt?(k?'rgba(31,111,235,.16)':'rgba(14,23,38,.06)'):(k?'rgba(53,84,255,.18)':'rgba(12,12,16,.07)'); x.lineWidth=1*s; x.stroke(); }
   },
   /* ---- arc-reactor core (home) ---- */
   bindCore(cv,data){ this.core={c:cv,x:cv.getContext('2d'),data}; this.sizeCore(); if(!this.logoTint) this.makeLogo(); this.coreFrame(performance.now()); },
@@ -3329,15 +3357,17 @@ const bgfx={
   /* ---- 코어: 굵은 진행 링 + 가운데 연못(물 일렁임 · 물방울 · 물결) ---- */
   execCore(now){
     const c=this.core, x=c.x,S=c.S,d=c.d,t=(now-this.t0)/1000, C=S/2, D=c.data||{};
-    const T=this.theme, G=!!T.xg, Wt=!!T.xw, Ro=!!T.xr, Lv=!!T.xl;
+    const T=this.theme, G=!!T.xg, Wt=!!T.xw, Ro=!!T.xr, Lv=!!T.xl, Ox=!!T.xo;
     const k=document.body.dataset.bg||'';
-    const P=Ro?{o:['#fffdfc','#fbeeee'],ln:'90,50,55',w1:'#f3b3bd',w2:'#c4788a',acc:'#c4788a',logo:'#c4788a',al:'#d6965a'}
+    const P=Ox?{o:['#fbfaf7','#ece7de'],ln:'23,21,26',w1:'#c98e97',w2:'#7a1e2c',acc:'#7a1e2c',logo:'#17151a',al:'#a8662f'}
+      :Ro?{o:['#fffdfc','#fbeeee'],ln:'90,50,55',w1:'#f3b3bd',w2:'#c4788a',acc:'#c4788a',logo:'#c4788a',al:'#d6965a'}
       :Lv?{o:['#fdfcff','#efebff'],ln:'50,40,100',w1:'#c9bdff',w2:'#7c68ce',acc:'#7c68ce',logo:'#7c68ce',al:'#e878a0'}
       :G?{o:['#141310','#0a0a09'],ln:'255,255,255',w1:'#f0d27a',w2:'#a8821f',acc:'#d4af37',logo:'#e9cd7a',al:'#e9a23b'}
       :Wt?{o:['#ffffff','#eef3fb'],ln:'14,23,38',w1:'#8db8ff',w2:'#1f6feb',acc:'#1f6feb',logo:'#0e1726',al:'#ff6a3d'}
       :T.exec?{o:['#ffffff','#eef0ff'],ln:'12,12,16',w1:'#93a6ff',w2:'#3554ff',acc:'#3554ff',logo:'#0c0c10',al:'#ff6a3d'}
       // 화이트 계열: 잉크 + 블루, 컨셉별 링 트랙 질감
       :k==='linen'?{o:['#fffdf8','#efeadf'],ln:'29,27,22',w1:'#a9c7b9',w2:'#2e5e4e',acc:'#2e5e4e',logo:'#1d1b16',al:'#c27803',tex:'strand'}
+      :k==='opal'?{o:['rgba(255,255,255,.09)','rgba(255,255,255,.02)'],ln:'255,255,255',w1:'#3ff0d8',w2:'#ff3d8b',acc:'#fff1b8',logo:'#ffffff',lw:'#04050a',al:'#ffb21f',dark:1,tex:'stars'}
       :k==='midnight'?{o:['rgba(255,255,255,.08)','rgba(255,255,255,.02)'],ln:'255,255,255',w1:'#9cc2e6',w2:'#3d6a99',acc:'#c9d4e2',logo:'#ffffff',lw:'#07090d',al:'#e9b45a',dark:1,tex:'glow'}
       :k==='dotwave'?{o:['#ffffff','#f1f1f4'],ln:'11,11,15',w1:'#9db0ff',w2:'#2f5bff',acc:'#2f5bff',logo:'#0b0b0f',al:'#e8890c',tex:'dots'}
       :k==='contour'?{o:['#ffffff','#f2f2f4'],ln:'11,11,15',w1:'#8a8a94',w2:'#16161c',acc:'#0b0b0f',logo:'#0b0b0f',al:'#e8890c',tex:'contour'}
@@ -3453,7 +3483,7 @@ const bgfx={
 function applyTheme(name){
   const k=name||S.settings.theme||'studio'; const key=BG_THEMES[k]?k:'studio';
   const was=document.body.classList.contains('hud');
-  document.body.dataset.bg=key; document.body.classList.toggle('dark',!BG_THEMES[key].light); document.body.classList.toggle('hud',!!BG_THEMES[key].hud); document.body.classList.toggle('hlight',!!BG_THEMES[key].hlight); document.body.classList.toggle('exec',!!BG_THEMES[key].exec); document.body.classList.toggle('gold',false); document.body.classList.toggle('xw',!!BG_THEMES[key].xw); document.body.classList.toggle('xg',!!BG_THEMES[key].xg); document.body.classList.toggle('xr',!!BG_THEMES[key].xr); document.body.classList.toggle('xl',!!BG_THEMES[key].xl); if(BG_THEMES[key].hlight||BG_THEMES[key].exec) document.body.classList.remove('dark'); lsSet('md.bg',key); bgfx.set(key);
+  document.body.dataset.bg=key; document.body.classList.toggle('dark',!BG_THEMES[key].light); document.body.classList.toggle('hud',!!BG_THEMES[key].hud); document.body.classList.toggle('hlight',!!BG_THEMES[key].hlight); document.body.classList.toggle('exec',!!BG_THEMES[key].exec); document.body.classList.toggle('gold',false); document.body.classList.toggle('xw',!!BG_THEMES[key].xw); document.body.classList.toggle('xg',!!BG_THEMES[key].xg); document.body.classList.toggle('xr',!!BG_THEMES[key].xr); document.body.classList.toggle('xl',!!BG_THEMES[key].xl); document.body.classList.toggle('xo',!!BG_THEMES[key].xo); if(BG_THEMES[key].hlight||BG_THEMES[key].exec) document.body.classList.remove('dark'); lsSet('md.bg',key); bgfx.set(key);
   const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',BG_THEMES[key].meta?BG_THEMES[key].meta:BG_THEMES[key].xr?'#fbf4f1':BG_THEMES[key].xl?'#f6f4fd':BG_THEMES[key].xg?'#050505':BG_THEMES[key].xw?'#f6f7f9':BG_THEMES[key].exec?'#f6f6f3':BG_THEMES[key].hlight?'#f1f4f7':BG_THEMES[key].light?'#ffffff':BG_THEMES[key].hud?'#000000':'#05040f');
   if(was!==!!BG_THEMES[key].hud&&typeof render==='function'&&S.mode!=='loading'&&$('#view .view')) render();
 }
@@ -3653,11 +3683,13 @@ function loaderPalette(){
     ocean:{bg:'radial-gradient(80% 70% at 50% 40%,#063453,#04243f 55%,#021626)',ink:'110,215,255',a1:'#3fd0ff',a2:'#2df0c0',text:'rgba(200,236,255,.7)',name:'#eefaff',logo:'brightness(0) invert(1)'},
     rose:{bg:'radial-gradient(70% 70% at 50% 45%,#fffafa,#fbf0ee 75%)',ink:'196,120,138',a1:'#c4788a',a2:'#f3b3bd',text:'#9a7d80',name:'#5a3a40',logo:'brightness(0) invert(55%) sepia(30%) saturate(700%) hue-rotate(305deg)'},
     lavender:{bg:'radial-gradient(70% 70% at 50% 45%,#fdfcff,#f1eefc 75%)',ink:'124,104,206',a1:'#7c68ce',a2:'#c3b6ff',text:'#857ca6',name:'#3a3262',logo:'brightness(0) invert(42%) sepia(40%) saturate(900%) hue-rotate(215deg)'},
+    oxblood:{bg:'radial-gradient(70% 70% at 50% 45%,#fbfaf7,#f0ece5 75%)',ink:'122,30,44',a1:'#7a1e2c',a2:'#c98e97',head:'#7a1e2c',text:'#77707a',name:'#17151a',logo:'brightness(0)'},
+    opal:{bg:'radial-gradient(80% 70% at 50% 40%,#101a2a,#08060f 60%,#020206)',ink:'120,255,235',a1:'#3ff0d8',a2:'#ff3d8b',text:'rgba(235,245,255,.75)',name:'#ffffff',logo:'brightness(0) invert(1)'},
     linen:{bg:'radial-gradient(70% 70% at 60% 30%,#fffdf8,#f3efe6 75%)',ink:'46,94,78',a1:'#2e5e4e',a2:'#8fb5a5',text:'#6f6a5f',name:'#1d1b16',logo:'brightness(0) invert(9%) sepia(8%) saturate(900%) hue-rotate(10deg)'},
     midnight:{bg:'radial-gradient(80% 70% at 50% 40%,#132030,#0b111a 55%,#06080c)',ink:'170,200,230',a1:'#9cc2e6',a2:'#4f86b8',text:'rgba(205,218,232,.7)',name:'#eef3f8',logo:'brightness(0) invert(1)'},
     space:{bg:'radial-gradient(80% 70% at 50% 40%,#1b1238,#0a0716 60%,#030208)',ink:'200,185,255',a1:'#b39dff',a2:'#6aa8ff',text:'rgba(225,215,255,.7)',name:'#f5f2ff',logo:'brightness(0) invert(1)'}
   };
-  const FX={jarvisLight:'plain',jarvis:'exec',rose:'plain',lavender:'plain',exec:'exec',dotwave:'dots',contour:'contour',bloom:'bloom',network:'net',studio:'strand',linen:'strand',midnight:'glow',aurora:'glow',sunset:'glow',ocean:'caustic',space:'stars'};
+  const FX={jarvisLight:'plain',jarvis:'exec',rose:'plain',lavender:'plain',exec:'exec',dotwave:'dots',contour:'contour',bloom:'bloom',network:'net',studio:'strand',linen:'strand',midnight:'glow',oxblood:'exec',opal:'glow',aurora:'glow',sunset:'glow',ocean:'caustic',space:'stars'};
   const o=P[k]||{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#f4f4f6 75%)',ink:'11,11,15',a1:'#0b0b0f',a2:'#4a4a52',text:'#6b6b73',name:'#0b0b0f',logo:'brightness(0)'}; o.fx=FX[k]||'plain'; return o;
 }
 function bootSequence(lines){
@@ -3665,7 +3697,7 @@ function bootSequence(lines){
   if(seen) return Promise.resolve();
   try{ sessionStorage.setItem('md.booted','1'); }catch(e){}
   return new Promise(res=>{
-    const P=loaderPalette(); const light=/^(255|2[0-4]\d)/.test('')||['exec','jarvisLight'].includes(document.body.dataset.bg)||!['aurora','sunset','ocean','space','jarvis','midnight'].includes(document.body.dataset.bg);
+    const P=loaderPalette(); const light=/^(255|2[0-4]\d)/.test('')||['exec','jarvisLight'].includes(document.body.dataset.bg)||!['aurora','sunset','ocean','space','jarvis','midnight','opal'].includes(document.body.dataset.bg);
     const under=light?'brightness(0) invert(1)':'brightness(0) opacity(.78)';
     const el=document.createElement('div'); el.className='boot2'+(P.mono?' mono':''); el.id='boot'; el.style.background=P.bg;
     el.innerHTML=`<canvas></canvas><img class="bl-logo" alt="" src="${LOGO}" style="filter:${P.logo}"><img class="bl-logo bl-under" alt="" src="${LOGO}" style="filter:${under}"><div class="bl-name" style="color:${P.name}">KAIA DESK</div><div class="bl-line" style="color:${P.text}"></div><div class="bl-skip" style="color:${P.text}">탭하면 건너뛰기</div>`;
@@ -6005,6 +6037,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-0056';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-0100';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
