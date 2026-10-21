@@ -5454,9 +5454,18 @@ function qtFillDoc(doc,q,c){
   const sv=doc.getElementsByTagNameNS(QT_NS,'sheetView')[0]; if(sv){ sv.setAttribute('topLeftCell','A1'); const sel=sv.getElementsByTagNameNS(QT_NS,'selection')[0]; if(sel){ sel.setAttribute('activeCell','K3'); sel.setAttribute('sqref','K3'); } }
   return doc;
 }
+function qtWidenCols(doc,extra){
+  if(!extra||!extra.some(x=>x>0)) return; const cols=doc.getElementsByTagNameNS(QT_NS,'cols')[0]; if(!cols) return;
+  const list=[...cols.getElementsByTagNameNS(QT_NS,'col')].map(c=>({min:+c.getAttribute('min'),max:+c.getAttribute('max'),w:+c.getAttribute('width'),attrs:[...c.attributes].map(a=>[a.name,a.value])}));
+  while(cols.firstChild) cols.removeChild(cols.firstChild);
+  list.forEach(o=>{ for(let i=o.min;i<=o.max;i++){ const e=doc.createElementNS(QT_NS,'col'); o.attrs.forEach(([n,v])=>e.setAttribute(n,v)); e.setAttribute('min',i); e.setAttribute('max',i);
+    const add=(extra[i-1]||0)/7; if(add>0){ e.setAttribute('width',String(Math.round((o.w+add)*100)/100)); e.setAttribute('customWidth','1'); } cols.appendChild(e); } });
+  const ps=doc.getElementsByTagNameNS(QT_NS,'pageSetup')[0]; if(ps){ ps.removeAttribute('scale'); ps.setAttribute('fitToWidth','1'); ps.setAttribute('fitToHeight','1'); }   // 넓어져도 한 장에 인쇄
+}
 async function qtXlsxBlob(q,c){
   const Z=await loadJSZip(); const zip=await Z.loadAsync(QTPL[q.tpl==='ai'?'ai':'it'],{base64:true});
   const path='xl/worksheets/sheet1.xml'; const doc=qtFillDoc(new DOMParser().parseFromString(await zip.file(path).async('string'),'application/xml'),q,c);
+  try{ qtWidenCols(doc,qtMeasure((await qtSheetFor(q,c)).html).extra); }catch(e){ console.warn(e); }
   zip.file(path,new XMLSerializer().serializeToString(doc));
   return zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',compression:'DEFLATE'});
 }
@@ -5481,7 +5490,7 @@ function qtSheetHTML(T,doc,zk){ const ZK=Math.min(1,zk||1);
   const fam=n=>/맑은|Malgun/i.test(n||'')?"'Malgun Gothic','Apple SD Gothic Neo','Noto Sans KR',sans-serif":"'Noto Sans KR','Noto Sans CJK KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif";
   const num=(v,f)=>{ if(v===''||isNaN(+v)) return v; return /#,##0/.test(f)?Number(v).toLocaleString('ko-KR'):String(v); };
   let html='', W=colW.reduce((a,b)=>a+b,0), H=0;
-  const colTag=`<colgroup>${colW.map(w=>`<col style="width:${w}px">`).join('')}</colgroup>`;
+  const colTag=`<colgroup>${colW.map(w=>`<col style="width:${w}px">`).join('')}</colgroup>`;   // 열 너비 = 엑셀 값
   for(let r=0;r<=pa[3];r++){ if(hid[r]) continue; H+=rowH[r]; html+=`<tr style="height:${rowH[r].toFixed(2)}px">`;
     for(let c=0;c<=pa[2];c++){ const k=r+','+c; if(covered[k]) continue; const cell=cells[k]; const m=merges[k];
       let rs=1, cs=1, br=cell&&cell.s&&cell.s.border; if(m){ cs=m.c1-c+1; for(let rr=r+1;rr<=m.r1;rr++) if(!hid[rr]) rs++;
@@ -5492,18 +5501,30 @@ function qtSheetHTML(T,doc,zk){ const ZK=Math.min(1,zk||1);
       ['left','right','top','bottom'].forEach(kk=>css+=bcss(br,kk));
       const txt=cell?(cell.t==='n'?num(cell.v,s&&s.fmt||''):cell.v):'';
       const fit=txt&&(m||(br&&(br.left||br.right)))&&!(s&&s.wrap);   // 테두리 · 병합 칸은 넘치지 않게 (엑셀처럼)
-      html+=`<td${cs>1?` colspan="${cs}"`:''}${rs>1?` rowspan="${rs}"`:''}${fit?' class="f"':''} style="${css}">${esc(txt)}</td>`; }
+      html+=`<td${cs>1?` colspan="${cs}"`:''}${rs>1?` rowspan="${rs}"`:''}${fit?` class="f" data-c="${c}" data-cs="${cs}"`:''} style="${css}">${esc(txt)}</td>`; }
     html+='</tr>'; }
   /* 그림: 숨긴 행을 빼고 다시 계산한 위치 */
   const colX=[0]; colW.forEach((w,i)=>colX[i+1]=colX[i]+w); const rowY=[0]; for(let r=0;r<=60;r++) rowY[r+1]=rowY[r]+(r<=pa[3]&&!hid[r]?rowH[r]:(r>pa[3]?defH*4/3:0));
   const px=e=>e/9525; const imgs=T.imgs.map(im=>{ const x0=colX[im.from.c]+px(im.from.co), y0=rowY[im.from.r]+px(im.from.ro), x1=colX[im.to.c]+px(im.to.co), y1=rowY[im.to.r]+px(im.to.ro);
-    return `<img src="${im.src}" alt="" style="position:absolute;left:${x0.toFixed(1)}px;top:${y0.toFixed(1)}px;width:${(x1-x0).toFixed(1)}px;height:${(y1-y0).toFixed(1)}px">`; }).join('');
+    return `<img src="${im.src}" alt="" data-c="${im.from.c}" data-o="${(x0-colX[im.from.c]).toFixed(1)}" data-c2="${im.to.c}" data-o2="${(x1-colX[im.to.c]).toFixed(1)}" style="position:absolute;left:${x0.toFixed(1)}px;top:${y0.toFixed(1)}px;width:${(x1-x0).toFixed(1)}px;height:${(y1-y0).toFixed(1)}px">`; }).join('');
   return {html:`<div class="qts" style="width:${W}px;min-height:${Math.ceil(H)}px"><table style="width:${W}px">${colTag}${html}</table>${imgs}</div>`,W,H};
 }
 async function qtSheetFor(q,c,k){ const T=await qtTpl(q.tpl); return qtSheetHTML(T,qtFillDoc(new DOMParser().parseFromString(T.sheet,'application/xml'),q,c),k); }
-/* 칸보다 긴 글자는 글자 크기를 줄여 칸 안에 맞춤 (화면 글꼴이 엑셀보다 넓을 때) */
-function qtShrink(root){ root.querySelectorAll('td.f').forEach(td=>{ if(td.scrollWidth<=td.clientWidth+1) return; const fs=parseFloat(getComputedStyle(td).fontSize)||13; let k=td.clientWidth/td.scrollWidth;
-  td.style.fontSize=(fs*Math.max(.6,k*0.97)).toFixed(2)+'px'; if(td.scrollWidth>td.clientWidth+1) td.style.letterSpacing='-.03em'; }); }
+/* 칸보다 긴 글자는 글자 크기는 그대로 두고 그 칸이 걸친 열을 넓힘 (엑셀 '열 너비 자동 맞춤'처럼). 늘린 폭(px)을 열별로 돌려줌 */
+function qtAutoFit(root){
+  const box=root.querySelector('.qts'); if(!box) return []; const tbl=box.querySelector('table'); const cols=[...tbl.querySelectorAll('col')];
+  const base=cols.map(c=>parseFloat(c.style.width)||0), extra=base.map(()=>0);
+  for(let pass=0;pass<3;pass++){ let grew=false;
+    tbl.querySelectorAll('td.f').forEach(td=>{ const need=td.scrollWidth-td.clientWidth; if(need<=1) return; const c0=+td.dataset.c, cs=+td.dataset.cs||1;
+      const per=Math.ceil((need+4)/cs); for(let j=c0;j<c0+cs&&j<cols.length;j++){ extra[j]+=per; cols[j].style.width=(base[j]+extra[j])+'px'; } grew=true; });
+    const W=base.reduce((s,w,i)=>s+w+extra[i],0); tbl.style.width=W+'px'; box.style.width=W+'px'; if(!grew) break; }
+  const X=[0]; base.forEach((w,i)=>X[i+1]=X[i]+w+extra[i]);
+  box.querySelectorAll('img[data-c]').forEach(im=>{ const l=X[+im.dataset.c]+(+im.dataset.o), r=X[+im.dataset.c2]+(+im.dataset.o2); im.style.left=l.toFixed(1)+'px'; im.style.width=(r-l).toFixed(1)+'px'; });
+  return extra;
+}
+/* 화면 밖에서 그려 재고 넓힌 결과를 받음 */
+function qtMeasure(html){ const tmp=document.createElement('div'); tmp.style.cssText='position:fixed;left:-30000px;top:0;visibility:hidden;pointer-events:none'; tmp.innerHTML=html; document.body.appendChild(tmp);
+  const extra=qtAutoFit(tmp); const box=tmp.querySelector('.qts'); const out={html:tmp.innerHTML,extra,W:box?box.offsetWidth:0,H:box?box.offsetHeight:0}; tmp.remove(); return out; }
 const QT_W=905;   // 시트 폭(px) — 미리보기 배율 계산용
 const qtFile=(q,ext)=>`견적서_${(q.name||'이름없음').replace(/[\\/:*?"<>|\s]+/g,'')}_${(q.date||todayStr()).replace(/-/g,'')}.${ext}`;
 
@@ -5595,7 +5616,7 @@ let _qtPv=0;
 function qtPreview(){ clearTimeout(qtPreview._t); qtPreview._t=setTimeout(async()=>{ const sc=$('#qtPrev .qt-scale'); if(!sc) return; const my=++_qtPv; const q=qtDraft(), c=qtCalc(q);
   const pv=$('#qtPrev'); const k=pv?Math.min(1,pv.clientWidth/QT_W):1;
   let h; try{ h=(await qtSheetFor(q,c,k)).html; }catch(e){ console.warn(e); h=qtPaper(q,c); }
-  if(my!==_qtPv) return; const sc2=$('#qtPrev .qt-scale'); if(sc2){ sc2.innerHTML=h; qtShrink(sc2); qtFit(); } },90); }
+  if(my!==_qtPv) return; const sc2=$('#qtPrev .qt-scale'); if(sc2){ sc2.innerHTML=h; qtAutoFit(sc2); qtFit(); } },90); }
 function qtFit(){ const pv=$('#qtPrev'), sc=$('#qtPrev .qt-scale'); if(!pv||!sc) return; const w=(sc.firstElementChild&&sc.firstElementChild.offsetWidth)||794; sc.style.width=w+'px'; const k=Math.min(1,pv.clientWidth/w); sc.style.transform=`scale(${k})`; pv.style.height=Math.ceil(sc.scrollHeight*k)+'px'; }
 addEventListener('resize',()=>{ if(S.view==='quote') qtFit(); });
 
@@ -5666,10 +5687,9 @@ Object.assign(WACT,{
   qtXlsx:async()=>{ const q=qtDraft(); const c=qtCalc(q); if(c.rows.filter(r=>r.n).length>15){ toast('과목은 15개까지 들어가요','원본 양식 칸이 15줄이에요.'); }
     try{ const b=await qtXlsxBlob(q,c); await saveFile(qtFile(q,'xlsx'),b); }catch(e){ console.warn(e); toast('엑셀을 만들지 못했어요','인터넷 연결을 확인하고 다시 눌러 주세요.'); } },
   qtPrint:async()=>{ const q=qtDraft(); const c=qtCalc(q); let pa=document.getElementById('printArea'); if(!pa){ pa=document.createElement('div'); pa.id='printArea'; document.body.appendChild(pa); }
-    let h; try{ let sh=await qtSheetFor(q,c); const k=Math.min(718/sh.W,1000/sh.H);   /* A4 (8mm 여백) 한 장에 맞춤 */
-      sh=await qtSheetFor(q,c,k);   // 줄인 배율에서도 선이 선명하게
-      const tmp=document.createElement('div'); tmp.style.cssText='position:fixed;left:-20000px;top:0;visibility:hidden'; tmp.innerHTML=sh.html; document.body.appendChild(tmp); qtShrink(tmp); const body=tmp.innerHTML; tmp.remove();
-      h=`<div style="width:${Math.floor(sh.W*k)}px"><div style="zoom:${k}">${body}</div></div>`; }catch(e){ console.warn(e); h=qtPaper(q,c); }
+    let h; try{ let m=qtMeasure((await qtSheetFor(q,c)).html); const k=Math.min(718/m.W,1000/m.H);   /* 넓힌 표 전체를 A4 (8mm 여백) 한 장에 맞춤 */
+      m=qtMeasure((await qtSheetFor(q,c,k)).html);   // 줄인 배율에서도 선이 선명하게
+      h=`<div style="width:${Math.floor(m.W*k)}px"><div style="zoom:${k}">${m.html}</div></div>`; }catch(e){ console.warn(e); h=qtPaper(q,c); }
     pa.innerHTML=h; document.body.classList.add('printing','qt-printing'); const done=()=>{ document.body.classList.remove('printing','qt-printing'); pa.innerHTML=''; };
     addEventListener('afterprint',done,{once:true}); setTimeout(()=>{ try{ window.print(); }catch(e){} setTimeout(()=>{ if(document.body.classList.contains('printing')&&!matchMedia('print').matches) done(); },1500); },80); },
   qtSave:()=>{ const q=qtDraft(); const c=qtCalc(q); if(!c.paid) return; if(!q.id) q.id=uid('q'); store.put('quotes',{id:q.id,q:clone(q),at:Date.now()});
@@ -5881,6 +5901,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-0030';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-0033';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
