@@ -10,6 +10,9 @@
  * 커뮤니티(게시판 · 파일 · DB 배정)를 처음 켤 때: 이 코드로 바꾼 뒤 배포 관리 → 수정 → 새 버전 → 배포.
  *   드라이브 · 메일 권한을 물어보면 "허용"을 눌러 주세요. 올린 파일은 내 드라이브의 "KAIA DESK 팀 파일" 폴더에 저장돼요.
  *
+ * 팀장 권한: kaia_users 탭 H열(role)에 "팀장"이라고 적으면 그 사람은 앱의 팀 → 팀원 학생에서 직원들의 학생 명단을 볼 수 있어요(보기 전용).
+ *   I열(manager)에 팀장 아이디를 적은 직원만 그 팀장에게 보이고, I열이 비어 있으면 모든 팀장에게 보여요. 조회 기록은 kaia_log 탭에 남아요.
+ *
  * 비밀번호를 잊은 팀원: 시트의 kaia_users 탭에서 그 사람 줄을 지우면, 같은 아이디로 다시 가입할 수 있고 데이터는 그대로예요.
  */
 const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
@@ -28,7 +31,8 @@ function dataSheet_() {
 }
 function userSheet_() {
   let s = ss_().getSheetByName(USERS);
-  if (!s) { s = ss_().insertSheet(USERS); s.appendRow(['user', 'name', 'salt', 'hash', 'tokens', 'created', 'email']); s.setFrozenRows(1); }
+  if (!s) { s = ss_().insertSheet(USERS); s.appendRow(['user', 'name', 'salt', 'hash', 'tokens', 'created', 'email', 'role', 'manager']); s.setFrozenRows(1); }
+  if (s.getLastColumn() < 9) s.getRange(1, 8, 1, 2).setValues([['role', 'manager']]);   // 팀장 권한 칸 (H: 역할 · I: 담당 팀장 아이디)
   return s;
 }
 function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
@@ -66,6 +70,13 @@ function folder_() {
   const f = DriveApp.createFolder('KAIA DESK 팀 파일'); p.setProperty('FOLDER', f.getId()); return f;
 }
 function inFolder_(file) { const fid = folder_().getId(); const it = file.getParents(); while (it.hasNext()) if (it.next().getId() === fid) return true; return false; }
+const isLead_ = r => /^(팀장|lead|manager|admin)$/i.test(String(r[7] || '').trim());
+function staffOf_(lead, rows) { return rows.filter(r => norm_(r[0]) !== lead && !isLead_(r) && (!String(r[8] || '').trim() || norm_(r[8]) === lead)); }
+function log_(who, what, target) {
+  let s = ss_().getSheetByName('kaia_log');
+  if (!s) { s = ss_().insertSheet('kaia_log'); s.appendRow(['when', 'who', 'what', 'target']); s.setFrozenRows(1); }
+  s.appendRow([new Date(), who, what, target]);
+}
 function nameOf_(user) { const u = findUser_(user); return u ? String(u.r[1] || user) : user; }
 function mailLead_(lead, uid) {
   try {
@@ -80,12 +91,36 @@ function mailLead_(lead, uid) {
 
 function doGet(e) {
   const p = e.parameter || {};
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 3 });
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 4 });
   const uid = auth_(p.token); if (!uid) return out_({ error: 'auth' });
   if (p.a === 'members') {
     const v = userSheet_().getDataRange().getValues().slice(1);
     const me = v.find(r => norm_(r[0]) === uid);
-    return out_({ v: 3, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '' });
+    const lead = !!(me && isLead_(me));
+    return out_({ v: 4, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
+      role: lead ? 'lead' : '', staff: lead ? staffOf_(uid, v).map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })) : [] });
+  }
+  if (p.a === 'staffStudents') {   // 팀장 전용 · 보기 전용 · 서버에서 권한 확인
+    const v = userSheet_().getDataRange().getValues().slice(1);
+    const me = v.find(r => norm_(r[0]) === uid);
+    if (!me || !isLead_(me)) return out_({ error: 'forbidden' });
+    const allowed = staffOf_(uid, v).map(r => norm_(r[0]));
+    const of = norm_(p.of);
+    if (allowed.indexOf(of) < 0) return out_({ error: 'forbidden' });
+    const keep = ['id', 'name', 'phone', 'status', 'courses', 'goal', 'kind', 'at'];   // 필요한 항목만
+    const students = [];
+    dataSheet_().getDataRange().getValues().slice(1).forEach(r => {
+      if (norm_(r[0]) !== of || r[1] !== 'students' || r[5]) return;
+      let d = null; try { d = JSON.parse(r[3] || 'null'); } catch (err) {}
+      if (!d) return;
+      const o = {}; keep.forEach(k => { if (d[k] !== undefined) o[k] = d[k]; });
+      const logs = Array.isArray(d.logs) ? d.logs : [];
+      o.lastLog = logs.reduce((m, l) => (l && l.d && l.d > m ? l.d : m), '');
+      o.logCount = logs.length;
+      students.push(o);
+    });
+    log_(uid, 'staffStudents', of);
+    return out_({ of: of, name: nameOf_(of), students: students });
   }
   if (p.a === 'file') {
     let f; try { f = DriveApp.getFileById(String(p.id || '')); } catch (err) { return out_({ error: 'nofile' }); }
