@@ -5437,15 +5437,17 @@ function postModal(id){
   const ci=$('#cmText'); ci&&ci.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); WACT.tmCAdd({dataset:{id}}); } });
 }
 /* 첨부 올리기: 3MB 이하는 한 번에, 큰 파일은 3MB씩 나눠서 (구글 서버가 큰 요청을 한 번에 못 받아서) */
-const UP_CHUNK=1536*1024;   // 1.5MB · 3의 배수 → 조각별 base64를 이어 붙여도 깨지지 않음
+const UP_CHUNK=3*1024*1024;   // 3MB · 3의 배수 → 조각별 base64를 이어 붙여도 깨지지 않음
 async function upFile(f,prog){
   if(f.size<=UP_CHUNK){ prog&&prog(50); return await gas.call('POST',null,{a:'upload',name:f.name,type:f.type||'',data:await b64(f)}); }
-  const n=Math.ceil(f.size/UP_CHUNK), id=uid('u'); let j=null;
-  for(let i=0;i<n;i++){ const part=f.slice(i*UP_CHUNK,Math.min(f.size,(i+1)*UP_CHUNK)); let tries=0;
-    while(true){ try{ j=await gas.call('POST',null,{a:'upc',up:id,i,n,name:f.name,type:f.type||'',data:await b64(part)}); break; }catch(e){ if(++tries>=3||/auth|size|bad/.test(e.message)){ e.part=`${i+1}/${n}번째 조각`; throw e; } await new Promise(r=>setTimeout(r,1500*tries)); } }
-    if(i===0&&j&&j.part===undefined&&!j.id) throw new Error('oldserver');   // 예전 팀 서버: 나눠 올리기를 모름
-    prog&&prog(Math.round((i+1)/n*100)); }
-  if(!j||!j.id) throw new Error('join'); return j;
+  const n=Math.ceil(f.size/UP_CHUNK), id=uid('u'); let done=0;
+  const send=async i=>{ const part=f.slice(i*UP_CHUNK,Math.min(f.size,(i+1)*UP_CHUNK)); const data=await b64(part); let tries=0;
+    while(true){ try{ const j=await gas.call('POST',null,{a:'upc',up:id,i,n,name:f.name,type:f.type||'',data}); if(i<n-1&&j&&j.part===undefined) throw Object.assign(new Error('oldserver'),{fatal:1}); done++; prog&&prog(Math.round(done/n*100)); return j; }
+      catch(e){ if(e.fatal||++tries>=3||/auth|size|bad|server/.test(e.message)){ e.part=`${i+1}/${n}번째 조각`; throw e; } await new Promise(r=>setTimeout(r,1500*tries)); } } };
+  // 마지막 조각 앞까지는 3개씩 동시에 → 다 올라가면 마지막 조각(서버가 하나로 합침)
+  const rest=[...Array(n-1).keys()]; const workers=Array.from({length:Math.min(3,rest.length)},async()=>{ while(rest.length) await send(rest.shift()); });
+  await Promise.all(workers);
+  const j=await send(n-1); if(!j||!j.id) throw new Error('join'); return j;
 }
 const b64=f=>new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]||''); r.onerror=rej; r.readAsDataURL(f); });
 
@@ -6216,6 +6218,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-1241';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1249';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
