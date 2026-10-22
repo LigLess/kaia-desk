@@ -1517,6 +1517,16 @@ body.dark .cp-list,body.xg .cp-list{background:#1b1d24}
 .sim-src{font-size:11.5px;color:var(--muted)}
 .sim-c .chip{align-self:flex-start;white-space:normal}
 .sim-c .cp .in{height:32px;font-size:12.5px}
+.tm-noti{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:12px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-2);font-size:12.5px;color:var(--muted);line-height:1.55;cursor:pointer}
+.tm-noti input{margin-top:3px;flex:none}
+.tm-noti b{display:block;color:var(--fg);font-size:13px;font-weight:600}
+.tm-noti.lead{cursor:default;background:color-mix(in srgb,var(--accent) 9%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
+.tm-noti.lead svg{width:18px;height:18px;flex:none;color:var(--accent);margin-top:1px}
+.tm-lead{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--accent);color:#fff;margin-right:6px;vertical-align:1px}
+.tm-bell{display:inline-flex;width:14px;height:14px;margin-left:6px;color:var(--accent);vertical-align:-2px}
+.tm-bell svg{width:14px;height:14px}
+.toast.post-t{border-left:3px solid var(--accent)}
+.toast.lead-post{border-left:4px solid #e8590c}
 </style>
 </head>
 <body>
@@ -2488,7 +2498,7 @@ function permHint(){
     if(S.gate||S.mode!=='gas'||!('Notification' in window)) return;
     const p=Notification.permission; if(p==='granted') return;
     const t=todayStr(); if(lsGet('md.permDay')===t) return; lsSet('md.permDay',t);
-    if(p==='default') toast('PC 알림을 켜 주세요','여기를 누르면 새 DB 배정이 오면 화면 오른쪽 아래에 알림이 떠요.','alarm-t sticky',async()=>{ try{ const r=await Notification.requestPermission(); toast(r==='granted'?'알림을 허용했어요':'알림이 꺼져 있어요',r==='granted'?'이제 새 DB 배정이 오면 오른쪽 아래에 알림이 떠요.':'주소창 왼쪽 자물쇠 → 알림 → 허용으로 바꿔 주세요.'); if(r==='granted') render(); }catch(e){} });
+    if(p==='default') toast('PC 알림을 켜 주세요','여기를 누르면 DB 배정 · 팀장 글 · 알림 글이 오면 화면 오른쪽 아래와 윈도우에 알림이 떠요.','alarm-t sticky',async()=>{ try{ const r=await Notification.requestPermission(); toast(r==='granted'?'알림을 허용했어요':'알림이 꺼져 있어요',r==='granted'?'이제 새 DB 배정이 오면 오른쪽 아래에 알림이 떠요.':'주소창 왼쪽 자물쇠 → 알림 → 허용으로 바꿔 주세요.'); if(r==='granted') render(); }catch(e){} });
     else toast('알림이 차단돼 있어요','주소창 왼쪽 자물쇠 → 알림 → 허용으로 바꾸면 DB 배정 알림이 떠요.','alarm-t sticky');
   }catch(e){}
 }
@@ -5276,6 +5286,7 @@ function teamApply(d){
   if(d.col==='leads'&&!d.del){ const l=T.leads[d.id]; const u=me().user;
     if(l.to===u&&!l.seen&&l.status!=='완료'&&(!was||was.to!==u)) gas._newLeads=(gas._newLeads||[]).concat(l);
     if(was&&l.from===u&&was.status!==l.status&&l.status==='완료') gas._doneLeads=(gas._doneLeads||[]).concat(l); }
+  if(d.col==='posts'&&!d.del){ const p=T.posts[d.id]; if(p&&(p.notify||p.byRole==='lead')&&p.by!==me().user&&!was&&(p.at||0)>Date.now()-3*864e5) gas._newPosts=(gas._newPosts||[]).concat(p); }
 }
 function teamNotify(){
   let noted=[]; try{ noted=JSON.parse(lsGet('md.leadNoti')||'[]'); }catch(e){}
@@ -5286,6 +5297,15 @@ function teamNotify(){
     setTimeout(()=>{ fresh.slice(0,3).forEach(l=>{ alertShow({title:leadTitle(l),body:[l.course,l.phone].filter(Boolean).join(' · ')||'팀 → DB 배정에서 확인하세요.',nbody:[l.course,l.phone,l.memo].filter(Boolean).join(' · ')||'팀 → DB 배정에서 확인하세요.',cls:'lead-t',tag:'lead-'+l.id,go:'team',tab:'db'}); });
       if(fresh.length>3) alertShow({title:`배정된 DB ${fresh.length}건`,body:'팀 → DB 배정에서 모두 볼 수 있어요.',tag:'lead-many',go:'team',tab:'db'}); alertSound(leadTitle(fresh[0])); },500);
   }
+  /* 게시판 알림: 팀장 글은 항상 · 팀원 글은 쓴 사람이 "알림 보내기"를 켰을 때만 — 글 내용 그대로 오른쪽 아래에 */
+  let pn=[]; try{ pn=JSON.parse(lsGet('md.postNoti')||'[]'); }catch(e){}
+  const seen=+(lsGet('md.boardSeen')||0);
+  const fp=(gas._newPosts||[]).filter(p=>!pn.includes(p.id)&&(p.at||0)>seen).sort((a,b)=>(b.byRole==='lead')-(a.byRole==='lead')||(a.at||0)-(b.at||0)); gas._newPosts=[];
+  if(fp.length){ pn=pn.concat(fp.map(p=>p.id)).slice(-300); lsSet('md.postNoti',JSON.stringify(pn));
+    setTimeout(()=>{ fp.slice(0,3).forEach(p=>{ const who=`${p.byName||memberName(p.by)}${p.byRole==='lead'?' 팀장':''}`; const snip=String(p.body||'').replace(/\s+/g,' ').slice(0,140);
+        alertShow({title:`${p.byRole==='lead'?'[팀장] ':''}${p.title||'(제목 없음)'}`,body:`${who} · ${snip||(p.files&&p.files.length?'첨부 파일 '+p.files.length+'개':'게시판에서 확인하세요')}`,nbody:`${who} · ${snip}`,cls:p.byRole==='lead'?'post-t lead-post':'post-t',tag:'post-'+p.id,go:'team',tab:'board'}); });
+      if(fp.length>3) alertShow({title:`게시판 알림 ${fp.length}건`,body:'팀 → 게시판에서 모두 볼 수 있어요.',tag:'post-many',go:'team',tab:'board'});
+      alertSound(fp[0].title||'게시판 새 글'); },700); }
   done.forEach(l=>setTimeout(()=>toast(`${l.name||''} 문의 처리 완료`,`${l.toName||memberName(l.to)}님이 완료로 바꿨어요.`),600));
 }
 async function loadMembers(force){
@@ -5313,7 +5333,7 @@ function boardPane(){
     <div class="seg" style="flex-wrap:wrap;margin-bottom:12px">${['전체',...POST_CATS].map(k=>`<button class="${k===cat?'on':''}" data-act="tmCat" data-k="${k}">${k}</button>`).join('')}</div>
     ${ps.length?`<div class="list">${ps.map(p=>`<div class="row click tm-post" data-act="tmOpen" data-id="${p.id}">
       <span class="chip ${p.cat==='공지'?'warn':p.cat==='자료'?'cyan':''}">${esc(p.cat||'자유')}</span>
-      <div class="grow"><div class="t1">${p.pin&&p.cat==='공지'?'<span class="tm-pin">고정</span>':''}${esc(p.title||'(제목 없음)')}${p.by!==u&&(p.at||0)>seen?'<i class="tm-new">N</i>':''}</div>
+      <div class="grow"><div class="t1">${p.pin&&p.cat==='공지'?'<span class="tm-pin">고정</span>':''}${p.byRole==='lead'?'<span class="tm-lead">팀장</span>':''}${esc(p.title||'(제목 없음)')}${p.notify&&p.byRole!=='lead'?`<span class="tm-bell" title="알림 보낸 글">${ic('bell')}</span>`:''}${p.by!==u&&(p.at||0)>seen?'<i class="tm-new">N</i>':''}</div>
       <div class="t2">${esc(p.byName||memberName(p.by))} · ${agoTxt(p.at)}${(p.files||[]).length?` · ${ic('clip','tm-ic')}${p.files.length}`:''}${cn[p.id]?` · 댓글 ${cn[p.id]}`:''}</div></div></div>`).join('')}</div>`
     :`<div class="empty"><b>${cat==='전체'?'아직 글이 없어요':cat+' 글이 없어요'}</b>공지 · 자료 · 자유롭게 나눌 이야기를 올려 보세요.</div>`}</section>`;
 }
@@ -5369,6 +5389,8 @@ function writeModal(p){
   openModal(`${mHead(edit?'글 고치기':'글쓰기')}<div class="body">
     <div class="field"><span>분류</span><div class="seg" id="wpCat">${POST_CATS.map(c=>`<button class="${p.cat===c?'on':''}" data-act="tmWCat" data-k="${c}">${c}</button>`).join('')}</div></div>
     <label class="tm-chk" id="wpPinW" style="${p.cat==='공지'?'':'display:none'}"><input type="checkbox" id="wpPin" ${p.pin?'checked':''}> 맨 위에 고정</label>
+    ${S.myRole==='lead'?`<div class="tm-noti lead">${ic('bell')}<span><b>팀장 글은 항상 알림이 가요</b>올리면 팀원 모두의 화면 오른쪽 아래와 윈도우 알림에 이 글이 떠요.</span></div>`
+      :`<label class="tm-noti"><input type="checkbox" id="wpNoti" ${p.notify?'checked':''}><span><b>팀원 모두에게 알림 보내기</b>켜면 이 글이 팀원 화면 오른쪽 아래와 윈도우 알림에 떠요. 급하거나 꼭 봐야 하는 글에만 켜 주세요.</span></label>`}
     <label class="field"><span>제목</span><input class="in" id="wpTitle" value="${esc(p.title||'')}" maxlength="120"></label>
     <label class="field"><span>내용</span><textarea class="in" id="wpBody" rows="8">${esc(p.body||'')}</textarea></label>
     <div class="field"><span>첨부 파일 <small style="color:var(--faint)">한 파일 10MB까지</small></span><div id="wpFiles"></div>
@@ -5418,7 +5440,7 @@ Object.assign(WACT,{
     const dup=list('students').find(s=>digits(s.phone).length>=8&&digits(s.phone).slice(-8)===digits(l.phone).slice(-8)); if(dup){ closeModal(); openStudent(dup.id); toast('이미 있는 학생이에요',dup.name); return; }
     const s=wNorm({id:uid('s'),name:l.name||'이름 없음',phone:l.phone||'',status:'상담중',courses:[],goal:l.course||'',memo:[l.src?`문의 경로: ${l.src}`:'',l.memo,`${l.fromName||memberName(l.from)}님 배정`].filter(Boolean).join('\n'),logs:[],sent:{},at:Date.now()});
     store.put('students',s); const c=clone(l); if(c.status==='배정') c.status='연락중'; c.sid=s.id; teamPut('leads',c); closeModal(); openStudent(s.id); toast('학생으로 등록했어요',`${s.name} · 내 학생 목록에 추가됐어요.`); },
-  tmWrite:()=>writeModal(),
+  tmWrite:async()=>{ if(!S.members||S.myRole==null) await loadMembers(true); writeModal(); },
   tmEdit:el=>{ const p=teamData().posts[el.dataset.id]; if(p) writeModal(clone(p)); },
   tmWCat:el=>{ S._wpCat=el.dataset.k; $$('#wpCat button').forEach(b=>b.classList.toggle('on',b.dataset.k===S._wpCat)); $('#wpPinW').style.display=S._wpCat==='공지'?'':'none'; },
   tmFRm:el=>{ const k=el.dataset.k; if(k[0]==='o') S._draftFiles.splice(+k.slice(1),1); else S._newFiles.splice(+k.slice(1),1); drawDraftFiles(); },
@@ -5428,9 +5450,9 @@ Object.assign(WACT,{
     try{ for(const [i,f] of S._newFiles.entries()){ el.textContent=`올리는 중 ${i+1}/${S._newFiles.length}`; const j=await gas.call('POST',null,{a:'upload',name:f.name,type:f.type||'',data:await b64(f)}); up.push({id:j.id,name:j.name,size:j.size,type:f.type||''}); } }
     catch(e){ el.disabled=false; el.textContent='다시 올리기'; toast('파일을 올리지 못했어요',e.message==='size'?'10MB 이하 파일만 올릴 수 있어요.':'인터넷 연결이나 팀 서버 버전을 확인해 주세요.'); return; }
     const old=el.dataset.id?teamData().posts[el.dataset.id]:null;
-    const p={...(old||{}),id:old?old.id:uid('p'),cat:S._wpCat||'자유',pin:S._wpCat==='공지'&&$('#wpPin').checked,title,body,files:[...S._draftFiles,...up],by:old?old.by:m.user,byName:old?old.byName:m.name,at:old?old.at:Date.now(),...(old?{edited:Date.now()}:{})};
+    const p={...(old||{}),id:old?old.id:uid('p'),cat:S._wpCat||'자유',pin:S._wpCat==='공지'&&$('#wpPin').checked,title,body,files:[...S._draftFiles,...up],by:old?old.by:m.user,byName:old?old.byName:m.name,notify:S.myRole==='lead'||!!($('#wpNoti')&&$('#wpNoti').checked),byRole:old?old.byRole||'':(S.myRole==='lead'?'lead':''),at:old?old.at:Date.now(),...(old?{edited:Date.now()}:{})};
     if(old) (old.files||[]).filter(f=>!p.files.some(x=>x.id===f.id)).forEach(f=>gas.call('POST',null,{a:'unfile',id:f.id}).catch(()=>{}));
-    teamPut('posts',p); closeModal(); S.teamTab='board'; toast(old?'고쳤어요':'올렸어요',up.length?`파일 ${up.length}개 포함`:''); render();
+    teamPut('posts',p); closeModal(); S.teamTab='board'; toast(old?'고쳤어요':'올렸어요',(!old&&p.notify?'팀원 모두에게 알림이 가요. ':'')+(up.length?`파일 ${up.length}개 포함`:'')); render();
   },
   tmOpen:el=>postModal(el.dataset.id),
   tmPDel:async el=>{ const p=teamData().posts[el.dataset.id]; if(!p||!await confirmBox('이 글을 지울까요?','첨부 파일과 댓글도 같이 지워져요.','지우기',true)) return;
@@ -6151,6 +6173,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-0946';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1024';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
