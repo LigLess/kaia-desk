@@ -5286,7 +5286,7 @@ const TEAM_COLS=['posts','comments','leads'];
 const POST_CATS=['공지','자유','자료'];
 const LEAD_ST=['배정','연락중','완료'];
 const LEAD_CHIP={'배정':'warn','연락중':'cyan','완료':'ok'};
-const MAX_UP=10*1024*1024;
+const MAX_UP=30*1024*1024;   // 팀 서버(구글) 한 번에 주고받는 한도 때문에 30MB까지 — 더 큰 파일은 구글 드라이브 링크로
 function teamData(){ S.team=S.team||{}; TEAM_COLS.forEach(c=>{ S.team[c]=S.team[c]||{}; }); return S.team; }
 function me(){ const c=gas.cfg(); return c?{user:c.user,name:c.name||S.settings.name||c.user}:{user:'',name:S.settings.name||''}; }
 function memberName(u){ const m=(S.members||[]).find(x=>x.user===u); return m?m.name:u; }
@@ -5416,11 +5416,11 @@ function writeModal(p){
       :`<label class="tm-noti"><input type="checkbox" id="wpNoti" ${p.notify?'checked':''}><span><b>팀원 모두에게 알림 보내기</b>켜면 이 글이 팀원 화면 오른쪽 아래와 윈도우 알림에 떠요. 급하거나 꼭 봐야 하는 글에만 켜 주세요.</span></label>`}
     <label class="field"><span>제목</span><input class="in" id="wpTitle" value="${esc(p.title||'')}" maxlength="120"></label>
     <label class="field"><span>내용</span><textarea class="in" id="wpBody" rows="8">${esc(p.body||'')}</textarea></label>
-    <div class="field"><span>첨부 파일 <small style="color:var(--faint)">한 파일 10MB까지</small></span><div id="wpFiles"></div>
+    <div class="field"><span>첨부 파일 <small style="color:var(--faint)">한 파일 30MB까지 · 더 큰 파일은 구글 드라이브 공유 링크를 내용에 붙여 넣어요</small></span><div id="wpFiles"></div>
       <label class="btn sm" style="align-self:flex-start">${ic('clip')}파일 고르기<input type="file" id="wpFile" multiple hidden></label></div>
   </div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="tmSave" data-id="${edit?p.id:''}">${edit?'저장':'올리기'}</button></footer>`,'narrow');
   S._wpCat=p.cat; drawDraftFiles();
-  $('#wpFile').addEventListener('change',e=>{ [...e.target.files].forEach(f=>{ if(f.size>MAX_UP) toast('파일이 너무 커요',`${f.name} · ${fsize(f.size)} (10MB까지)`); else S._newFiles.push(f); }); e.target.value=''; drawDraftFiles(); });
+  $('#wpFile').addEventListener('change',e=>{ [...e.target.files].forEach(f=>{ if(f.size>MAX_UP) toast('파일이 너무 커요',`${f.name} · ${fsize(f.size)} — 30MB까지 올라가요. 더 큰 파일은 구글 드라이브에 올리고 공유 링크를 내용에 붙여 넣어 주세요.`,'alarm-t'); else S._newFiles.push(f); }); e.target.value=''; drawDraftFiles(); });
 }
 function drawDraftFiles(){ const el=$('#wpFiles'); if(!el) return;
   el.innerHTML=[...S._draftFiles.map((f,i)=>`<div class="tm-file">${ic('clip')}<span>${esc(f.name)}</span><small>${fsize(f.size||0)}</small><button class="btn sm ghost" data-act="tmFRm" data-k="o${i}" aria-label="빼기">${ic('x')}</button></div>`),...S._newFiles.map((f,i)=>`<div class="tm-file new">${ic('clip')}<span>${esc(f.name)}</span><small>${fsize(f.size)}</small><button class="btn sm ghost" data-act="tmFRm" data-k="n${i}" aria-label="빼기">${ic('x')}</button></div>`)].join(''); }
@@ -5471,7 +5471,7 @@ Object.assign(WACT,{
     const title=$('#wpTitle').value.trim(), body=$('#wpBody').value.trim(); if(!title){ toast('제목을 적어 주세요',''); return; }
     if(el.disabled) return; el.disabled=true; const m=me(); const up=[];
     try{ for(const [i,f] of S._newFiles.entries()){ el.textContent=`올리는 중 ${i+1}/${S._newFiles.length}`; const j=await gas.call('POST',null,{a:'upload',name:f.name,type:f.type||'',data:await b64(f)}); up.push({id:j.id,name:j.name,size:j.size,type:f.type||''}); } }
-    catch(e){ el.disabled=false; el.textContent='다시 올리기'; toast('파일을 올리지 못했어요',e.message==='size'?'10MB 이하 파일만 올릴 수 있어요.':'인터넷 연결이나 팀 서버 버전을 확인해 주세요.'); return; }
+    catch(e){ el.disabled=false; el.textContent='다시 올리기'; toast('파일을 올리지 못했어요',e.message==='size'?(S._newFiles.some(f=>f.size>15*1024*1024)?'팀 서버가 아직 15MB까지만 받아요. 팀 서버 코드를 새 버전으로 다시 배포해야 30MB까지 올라가요.':'30MB 이하 파일만 올릴 수 있어요.'):'인터넷 연결이나 팀 서버 버전을 확인해 주세요.'); return; }
     const old=el.dataset.id?teamData().posts[el.dataset.id]:null;
     const p={...(old||{}),id:old?old.id:uid('p'),cat:S._wpCat||'자유',pin:S._wpCat==='공지'&&$('#wpPin').checked,title,body,files:[...S._draftFiles,...up],by:old?old.by:m.user,byName:old?old.byName:m.name,notify:S.myRole==='lead'||!!($('#wpNoti')&&$('#wpNoti').checked),byRole:old?old.byRole||'':(S.myRole==='lead'?'lead':''),at:old?old.at:Date.now(),...(old?{edited:Date.now()}:{})};
     if(old) (old.files||[]).filter(f=>!p.files.some(x=>x.id===f.id)).forEach(f=>gas.call('POST',null,{a:'unfile',id:f.id}).catch(()=>{}));
@@ -6201,6 +6201,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-1127';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1137';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

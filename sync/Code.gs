@@ -21,7 +21,7 @@ const DATA = 'kaia_data';
 const USERS = 'kaia_users';
 const TEAM_OWNER = '_team';
 const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
-const MAX_FILE = 15 * 1024 * 1024;
+const MAX_FILE = 31 * 1024 * 1024;   // 게시판 첨부 한 파일 30MB (구글 앱스 스크립트 요청 한도 약 50MB 안쪽)
 
 function ss_() { return SpreadsheetApp.getActive(); }
 function dataSheet_() {
@@ -91,13 +91,13 @@ function mailLead_(lead, uid) {
 
 function doGet(e) {
   const p = e.parameter || {};
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 4 });
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 5 });
   const uid = auth_(p.token); if (!uid) return out_({ error: 'auth' });
   if (p.a === 'members') {
     const v = userSheet_().getDataRange().getValues().slice(1);
     const me = v.find(r => norm_(r[0]) === uid);
     const lead = !!(me && isLead_(me));
-    return out_({ v: 4, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
+    return out_({ v: 5, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
       role: lead ? 'lead' : '', staff: lead ? staffOf_(uid, v).map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })) : [] });
   }
   if (p.a === 'staffStudents') {   // 팀장 전용 · 보기 전용 · 서버에서 권한 확인
