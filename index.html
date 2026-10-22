@@ -4234,7 +4234,7 @@ function stuAssignTab(s){
        ${a.st!=='set'?`<label class="field"><span>제출 답안 · 리포트</span><textarea class="in" rows="4" data-wa="${a.id}" data-f="ans" placeholder="학생이 보낸 코드와 리포트를 붙여넣으세요">${esc(a.ans||'')}</textarea></label>`:''}
        ${a.st==='done'||a.st==='sub'?`<div class="wk-row"><input class="in" data-wa="${a.id}" data-f="score" value="${esc(a.score||'')}" placeholder="점수 (예: 8/10)" style="max-width:150px"><input class="in" data-wa="${a.id}" data-f="fb" value="${esc(a.fb||'')}" placeholder="한 줄 피드백"></div>`:''}
        <div class="btns">${a.st!=='set'?`<button class="btn sm" data-act="wPrompt" data-k="asGrade" data-id="${a.id}">${ic('send')}첨삭 요청문 복사</button>`:''}<button class="btn sm ghost" data-act="wAsCopy" data-id="${a.id}">${ic('copy')}과제 복사</button><button class="btn sm ghost" data-act="wAsDel" data-id="${a.id}">${ic('trash')}</button></div>
-     </div>`; }).join(''):'<div class="empty"><b>등록된 과제가 없어요</b><b>과제 제작</b>으로 과목 · 난이도를 고르면 시험지가 바로 만들어지고, 답안을 넣으면 자동으로 채점 · 분석돼요. 주차별 과제를 쌓아 두면 다음 과제 출제 요청문에 지난 진도와 점수가 자동으로 들어가요.</div>'}
+     </div>`; }).join(''):'<div class="empty"><b>등록된 과제가 없어요</b>위의 <strong>과제 제작</strong>으로 만들면 답안을 넣었을 때 자동으로 채점 · 분석돼요. 다른 곳에서 낸 과제는 <strong>직접 입력</strong>으로 등록한 뒤 제출 답안을 붙여넣고 첨삭 요청문을 복사해 쓰세요. 주차별 과제를 쌓아 두면 다음 과제 출제 요청문에 지난 진도와 점수가 자동으로 들어가요.</div>'}
   </div>`;
 }
 
@@ -6218,6 +6218,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-1249';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1256';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
