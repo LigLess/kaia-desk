@@ -94,15 +94,19 @@ function mailLead_(lead, uid) {
   } catch (e) {}
 }
 
-function doGet(e) {
+/* 서버에서 오류가 나도 앱이 원인을 볼 수 있게 감싸요 (편집기에서 ▶실행을 눌러도 오류 안 남) */
+function doGet(e) { try { return doGet_(e || { parameter: {} }); } catch (err) { return out_({ error: 'server', msg: String(err && err.message || err) }); } }
+function doPost(e) { try { return doPost_(e || { postData: { contents: '{}' } }); } catch (err) { return out_({ error: 'server', msg: String(err && err.message || err) }); } }
+
+function doGet_(e) {
   const p = e.parameter || {};
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 6 });
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 7 });
   const uid = auth_(p.token); if (!uid) return out_({ error: 'auth' });
   if (p.a === 'members') {
     const v = userSheet_().getDataRange().getValues().slice(1);
     const me = v.find(r => norm_(r[0]) === uid);
     const lead = !!(me && isLead_(me));
-    return out_({ v: 6, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
+    return out_({ v: 7, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
       role: lead ? 'lead' : '', staff: lead ? staffOf_(uid, v).map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })) : [] });
   }
   if (p.a === 'staffStudents') {   // 팀장 전용 · 보기 전용 · 서버에서 권한 확인
@@ -149,7 +153,7 @@ function doGet(e) {
   return out_({ now: Date.now(), user: uid, docs: docs });
 }
 
-function doPost(e) {
+function doPost_(e) {
   const b = JSON.parse(e.postData.contents || '{}');
   if (b.a === 'upload') {   // 게시판 첨부 파일 → 드라이브 폴더
     const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
