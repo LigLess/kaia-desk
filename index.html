@@ -1022,6 +1022,7 @@ body.hud.hlight .chip.violet{background:#eef2f5;color:var(--fg-2)}
 .wk{display:flex;flex-direction:column;gap:14px}
 .wk-hint{font-size:12.5px;color:var(--muted);line-height:1.6;padding:10px 12px;border-radius:12px;background:var(--surface-2)}
 .wk-hint b{color:var(--fg)}
+.field.wk-hint{display:block}
 .wk-add{display:flex;flex-direction:column;gap:10px}
 .wk-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .wk-row .in{flex:1;min-width:130px}
@@ -1492,6 +1493,30 @@ body.dark[data-bg="opal"]{--bg:#04050a;--surface:rgba(12,14,24,.56);--surface-2:
 body.dark[data-bg="opal"] .btn.pri{background:linear-gradient(100deg,#3ff0d8,#ff3d8b);border-color:transparent;color:#05060b;font-weight:700}
 body.dark[data-bg="opal"] .pane,body.dark[data-bg="opal"] .hpanel{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 24px 60px -30px rgba(255,61,139,.35),0 18px 50px -34px rgba(63,240,216,.35)}
 body.dark[data-bg="opal"] ::selection{background:#ff3d8b;color:#fff}
+/* 과목 검색 상자 */
+.cp{position:relative;min-width:0}
+.cp .cp-ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--faint);pointer-events:none;display:flex}
+.cp .cp-ic svg{width:16px;height:16px}
+.cp .in{padding-left:36px;width:100%}
+.cp .cp-x{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;background:transparent;color:var(--muted);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cp .cp-x:hover{background:var(--surface-2)}
+.cp .cp-x svg{width:14px;height:14px}
+.cp-list{position:fixed;z-index:400;max-height:320px;overflow:auto;background:var(--surface,#fff);border:1px solid var(--line-2);border-radius:12px;box-shadow:0 18px 40px -12px rgba(0,0,0,.28);padding:6px}
+body.dark .cp-list,body.xg .cp-list{background:#1b1d24}
+.cp-list{color:var(--fg)}
+.cp-opt{padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;flex-direction:column;gap:1px}
+.cp-opt b{font-weight:600;font-size:13.5px;color:var(--fg)}
+.cp-opt small{font-size:11.5px;color:var(--muted)}
+.cp-opt.hi,.cp-opt:hover{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-2)}
+.cp-more{padding:8px 10px;font-size:12px;color:var(--faint)}
+.sf-q{margin-bottom:8px}
+.sf-subj label[hidden]{display:none}
+.sim-cs{min-width:280px}
+.sim-c{display:flex;flex-direction:column;gap:5px;padding:6px 0}
+.sim-c+.sim-c{border-top:1px dashed var(--line-2)}
+.sim-src{font-size:11.5px;color:var(--muted)}
+.sim-c .chip{align-self:flex-start;white-space:normal}
+.sim-c .cp .in{height:32px;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -1853,7 +1878,7 @@ function courseObjsOf(v){
   if(Array.isArray(v)) return v.flatMap(courseObjsOf);
   if(typeof v==='object'){ const n=v.title||v.name||v.short||v['과정명']||v['과목']||v.course||''; if(!n&&!v.start&&!v.startDate) return [];
     const att=v.attendance&&typeof v.attendance==='object'?Object.values(v.attendance).filter(Boolean).length:0;
-    return [{name:String(n).trim(),start:normDate(v.startDate||v.start||v.from||v['개강일']||(Array.isArray(v.dates)&&v.dates[0])),end:normDate(v.endDate||v.end||v.to||v['종강일']||(Array.isArray(v.dates)&&v.dates[v.dates.length-1])),att,room:v.room||v['강의실']||'',time:v.time||v['강의시간']||'',kind:v.kind||v['반구분']||''}]; }
+    return [{name:String(n).trim(),start:normDate(v.startDate||v.start||v.from||v['개강일']||(Array.isArray(v.dates)&&v.dates[0])),end:normDate(v.endDate||v.end||v.to||v['종강일']||(Array.isArray(v.dates)&&v.dates[v.dates.length-1])),att,room:v.room||v['강의실']||'',time:v.time||v['강의시간']||'',kind:v.kind||v['반구분']||'',days:Array.isArray(v.days)?v.days:[],code:v.code||''}]; }
   return String(v).split(/[,\n|]+/).map(x=>x.trim()).filter(Boolean).map(name=>({name,start:'',end:'',att:0}));
 }
 function convertStudent(o,map,today){
@@ -1949,6 +1974,11 @@ function parseGridSheet(rows,ctx){
 
 /* ---------- 과목명 비슷한 정도 ---------- */
 const ALIAS=[[/python/g,'파이썬'],[/java(?!script)/g,'자바'],[/javascript|js/g,'자바스크립트'],[/claude\s*code|클로드\s*코드/g,'클로드코드'],[/chat\s*gpt|챗\s*gpt/g,'챗gpt'],[/linux/g,'리눅스'],[/react/g,'리액트'],[/＆/g,'&']];
+/* 검색: 띄어쓰기 · 대소문자 무시 + 초성(ㅍㅇㅆ) 검색 */
+const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+function choOf(s){ return [...String(s||'')].map(ch=>{ const c=ch.charCodeAt(0)-0xAC00; return c>=0&&c<11172?CHO[Math.floor(c/588)]:ch; }).join(''); }
+function sMatch(q,txt){ const n=x=>String(x||'').toLowerCase().replace(/[\s·\-_.,&/()\[\]]/g,''); const a=n(q); if(!a) return true; const b=n(txt); if(b.includes(a)) return true;
+  if(/^[ㄱ-ㅎ]+$/.test(a)) return choOf(b).includes(a); return aliasNorm(txt).includes(aliasNorm(q)); }
 function aliasNorm(s){ let x=String(s||'').toLowerCase(); for(const [re,to] of ALIAS) x=x.replace(re,to); return x.replace(/\[[^\]]*\]/g,'').replace(/\([^)]*\)/g,'').replace(/\/주$/,'').replace(/[\s·\-_.,&/]/g,''); }
 function nameSim(a,b){
   const x=aliasNorm(a), y=aliasNorm(b); if(!x||!y) return 0; if(x===y) return 1;
@@ -2008,7 +2038,17 @@ function intranetRowFromText(line){
   const room=(line.match(/20\d\d[-.]\d{1,2}[-.]\d{1,2}\s+([A-Za-z]|비대면)(?=\s|\[|$)/)||[])[1]||'';
   const tm=line.match(/(\d{1,2}:\d{2})\s*[~∼\-]\s*(\d{1,2}:\d{2})/);
   let name=''; if(code){ const rest=line.slice(code.index+code[0].length); name=(rest.split(/\s+\d{1,3}(?:,\d{3})+|\s+0\s|\t\d/)[0]||'').replace(/[⊗×✕]/g,'').trim(); }
-  return {name,start:dates[0]?normDate(dates[0]):'',end:dates[1]?normDate(dates[1]):'',room:room.toUpperCase(),time:tm?`${tm[1]}~${tm[2]}`:'',kind:(line.match(/평일|주말/)||[''])[0]};
+  const dw=(line.match(/(?:^|[\t ])([월화수목금토일]{1,7})(?=[\t ]|$)/)||[])[1]||'';
+  return {name,start:dates[0]?normDate(dates[0]):'',end:dates[1]?normDate(dates[1]):'',room:room.toUpperCase(),time:tm?`${tm[1]}~${tm[2]}`:'',kind:(line.match(/평일|주말/)||[''])[0],days:dw?[...new Set([...dw].map(x=>DOW.indexOf(x)))]:[],code:code?code[1]:''};
+}
+/* Ctrl+A 복사본: 표 한 줄이 여러 줄로 쪼개져 들어와요 → 과정코드(5자리) 기준으로 한 줄씩 다시 묶어서 읽기 */
+function intranetRowsFromText(full){
+  const flat=String(full||'').replace(/\r/g,'').replace(/\n/g,'\t'); const re=/(?:^|[\t ])(\d{5})(?=[\t ])/g; const hits=[]; let m;
+  while((m=re.exec(flat))){ const at=m.index+m[0].indexOf(m[1]); const pre=flat.slice(Math.max(0,at-90),at); if(/평일|주말|정규|특강|보강|재수강/.test(pre)) hits.push({at,pre}); }
+  const out=[];
+  hits.forEach((h,k)=>{ let seg=flat.slice(h.at,k+1<hits.length?hits[k+1].at:h.at+500); const stop=seg.search(/주말 과목 추가|조회된 데이터|등록 이후|수강정보\(/); if(stop>0) seg=seg.slice(0,stop);
+    const c=intranetRowFromText(seg.replace(/\t[\t ]*/g,'\t')); if(!c||!c.start) return; const kd=h.pre.match(/평일|주말/g); if(kd) c.kind=kd[kd.length-1]; out.push(c); });
+  return out;
 }
 function parseIntranet(html,text){
   const T=String(text||''); let full=T;
@@ -2022,12 +2062,15 @@ function parseIntranet(html,text){
   for(const tb of tables){
     const g=gridFromTable(tb); const hi=g.findIndex(r=>r&&r.some(c=>/^개강일/.test(c))&&r.some(c=>/^종강일/.test(c))); if(hi<0) continue;
     const H=g[hi].map(c=>c.replace(/[⇅↕▲▼\s]/g,'')); const col=k=>H.findIndex(c=>c===k||c.startsWith(k));
-    const iN=H.findIndex(c=>c==='과목'), iS=col('개강일'), iE=col('종강일'), iR=col('강의실'), iT=col('강의시간'), iK=col('반구분');
+    const iN=H.findIndex(c=>c==='과목'||c==='과목명'||c==='과정명'), iD=col('요일'), iS=col('개강일'), iE=col('종강일'), iR=col('강의실'), iT=col('강의시간'), iK=col('반구분');
     for(const r of g.slice(hi+1)){ if(!r) continue; const nm=iN>=0?(r[iN]||'').replace(/\s+/g,' ').trim():''; const st=normDate(r[iS]||''); if(!nm&&!st) continue;
       const tm=(r[iT]||'').match(/(\d{1,2}:\d{2})\s*[~∼\-]\s*(\d{1,2}:\d{2})/);
-      courses.push({name:nm,start:st,end:normDate(r[iE]||''),room:((r[iR]||'').match(/^\s*([A-Za-z]|비대면)/)||['',''])[1].toUpperCase(),time:tm?`${tm[1]}~${tm[2]}`:'',kind:iK>=0?r[iK]||'':''}); }
+      courses.push({name:nm,start:st,end:normDate(r[iE]||''),room:((r[iR]||'').match(/^\s*([A-Za-z]|비대면)/)||['',''])[1].toUpperCase(),time:tm?`${tm[1]}~${tm[2]}`:'',kind:iK>=0?r[iK]||'':'',days:iD>=0?[...new Set([...String(r[iD]||'').replace(/[^월화수목금토일]/g,'')].map(x=>DOW.indexOf(x)))]:[]}); }
   }
   // 2) 글(Ctrl+A 복사): 날짜 · 강의실 · 시간이 있는 줄
+  const txtRows=intranetRowsFromText(full);
+  courses.forEach(c=>{ const t=txtRows.find(x=>x.start===c.start&&(!c.room||!x.room||x.room===c.room)); if(t){ if(!c.name) c.name=t.name; if(!c.days||!c.days.length) c.days=t.days; if(!c.time) c.time=t.time; if(!c.code) c.code=t.code; } });
+  if(!courses.length) courses.push(...txtRows);
   if(!courses.length){ for(const ln of full.split(/\r?\n/)){ const c=intranetRowFromText(ln); if(c&&(c.start||c.name)) courses.push(c); } }
   if(!name&&!courses.length) return null;
   const seen=new Set(); const uniq=courses.filter(c=>{ const k=c.name+'|'+c.start+'|'+c.room; if(seen.has(k)) return false; seen.add(k); return true; });
@@ -2653,7 +2696,7 @@ function monthLabel(m){ const [y,mm]=m.split('-').map(Number); return (y!==new D
 function vNotice(){
   const t=todayStr(); const {g,keys,next}=subjectGroups();
   const q=(S.ntQ||'').trim().toLowerCase();
-  const shown=q?keys.filter(k=>k.toLowerCase().includes(q)):keys;
+  const shown=q?keys.filter(k=>sMatch(q,k)):keys;
   if(!S.ntSubj||!g[S.ntSubj]) S.ntSubj=keys[0]||null;
   const left=shown.length?shown.map(k=>{ const n=next(k); const months=[...new Set(g[k].map(c=>ym(c.start)))];
       return `<div class="row click" data-act="ntSubj" data-k="${esc(k)}" style="padding-left:10px;padding-right:10px;${S.ntSubj===k?'background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-2);':''}">
@@ -2704,7 +2747,7 @@ function vStudents(){
   <section class="pane">
     <div class="btns" style="margin-bottom:14px">
       <div style="position:relative;flex:1;min-width:200px"><input id="stuQ" class="in" placeholder="이름 · 연락처 · 메모 검색" value="${esc(S.stuQ)}" style="padding-left:38px"><span style="position:absolute;left:12px;top:11px;width:18px;height:18px;color:var(--faint)">${ic('search')}</span></div>
-      <select id="stuCourse" class="in" style="width:auto;max-width:100%"><option value="all">모든 과목</option>${courseGroups(cs).map(g=>`<option value="${esc(g.name)}" ${S.stuCourse===g.name?'selected':''}>${esc(g.name)}</option>`).join('')}</select>
+      <div style="flex:0 1 300px;min-width:200px">${cpBox('stuCourse',{value:S.stuCourse==='all'?'':S.stuCourse,ph:'과목으로 찾기 (모든 과목)'})}</div>
     </div>
     <div class="seg" style="flex-wrap:wrap;margin-bottom:10px">${['all',...STATUSES].map(k=>`<button class="${S.stuStatus===k?'on':''}" data-act="stuStatus" data-k="${k}">${k==='all'?'전체':k}${k!=='all'&&counts[k]?` ${counts[k]}`:''}</button>`).join('')}</div>
     ${(()=>{ S.stuSel=S.stuSel||{}; const ids=st.map(s=>s.id); Object.keys(S.stuSel).forEach(id=>{ if(!D().students[id]) delete S.stuSel[id]; }); const n=Object.keys(S.stuSel).length;
@@ -2934,7 +2977,7 @@ function drawStudent(){
     <label class="field"><span>수강 구분</span><input id="sfType" class="in" value="${esc(s.type||'')}" placeholder="일반 / 국비" list="typeList"><datalist id="typeList"><option>일반</option><option>국비</option></datalist></label>
     <label class="field"><span>지원 유형</span><input id="sfFunding" class="in" value="${esc(s.funding||'')}" placeholder="예: 내일배움카드, SKT 뉴딜"></label>
     <label class="field"><span>목표 · 관심 (한 줄)</span><input id="sfGoal" class="in" value="${esc(s.goal||'')}" placeholder="예: 비전공 · 정처기 후 백엔드 취업"></label>
-    <div class="field full"><span>수강 과목</span><div class="sf-subj">${(()=>{ const g=courseGroups(relevant); return g.length?g.map(x=>`<label class="check"><input type="checkbox" class="sfN" data-ids="${x.ids.join(',')}" ${x.ids.some(id=>s.courses.includes(id))?'checked':''}>${esc(x.name)}</label>`).join(''):'<span style="color:var(--faint);font-size:13px">등록된 과정이 없어요. 시간표를 먼저 올려 주세요.</span>'; })()}</div></div>
+    <div class="field full"><span>수강 과목</span>${relevant.length>6?`<div class="cp sf-q"><span class="cp-ic">${ic('search')}</span><input id="sfSubjQ" class="in cp-in-plain" placeholder="과목 검색 — 이름 일부나 초성(ㅍㅇㅆ)" autocomplete="off"></div>`:''}<div class="sf-subj">${(()=>{ const g=courseGroups(relevant).sort((a,b)=>(b.ids.some(id=>s.courses.includes(id))-a.ids.some(id=>s.courses.includes(id)))||a.name.localeCompare(b.name,'ko')); return g.length?g.map(x=>`<label class="check"><input type="checkbox" class="sfN" data-ids="${x.ids.join(',')}" ${x.ids.some(id=>s.courses.includes(id))?'checked':''}>${esc(x.name)}</label>`).join(''):'<span style="color:var(--faint);font-size:13px">등록된 과정이 없어요. 시간표를 먼저 올려 주세요.</span>'; })()}<span id="sfSubjNone" hidden style="color:var(--faint);font-size:13px">찾는 과목이 없어요</span></div></div>
     ${(s.prevCourses||[]).length?`<div class="field full"><span>시간표에 없는 수강 이력 <small style="color:var(--faint)">(이전 프로그램 · 같은 날짜 수업이 시간표에 올라오면 자동 연결)</small></span><div class="btns">${s.prevCourses.map(p=>typeof p==='string'?{name:p}:p).map(p=>`<span class="chip">${esc(p.name)}${p.start?` ${yyDot(p.start)}~${yyDot(p.end)}`:''}${p.att?` · 출석 ${p.att}회`:''}</span>`).join('')}</div></div>`:''}
     <label class="field full"><span>메모</span><textarea id="sfMemo" class="in" rows="5">${esc(s.memo||'')}</textarea></label>
     <div class="field full wk-hint">상담 · 통화 · 진단 기록과 콜백은 <b>기록</b> 탭, 과제는 <b>과제</b> 탭, 자소서 · 면접 첨삭은 <b>첨삭</b> 탭에서 관리해요.</div>
@@ -3487,30 +3530,94 @@ function applyTheme(name){
   const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',BG_THEMES[key].meta?BG_THEMES[key].meta:BG_THEMES[key].xr?'#fbf4f1':BG_THEMES[key].xl?'#f6f4fd':BG_THEMES[key].xg?'#050505':BG_THEMES[key].xw?'#f6f7f9':BG_THEMES[key].exec?'#f6f6f3':BG_THEMES[key].hlight?'#f1f4f7':BG_THEMES[key].light?'#ffffff':BG_THEMES[key].hud?'#000000':'#05040f');
   if(was!==!!BG_THEMES[key].hud&&typeof render==='function'&&S.mode!=='loading'&&$('#view .view')) render();
 }
+/* ===== 과목 검색 상자 (공용) =====
+   cpBox(key,{value,ph,data,clear}) → 입력칸 + 아래 목록. 글자를 치면 바로 걸러지고(띄어쓰기 무시 · 초성 ㅍㅇㅆ 가능), ↑↓ Enter로 고를 수 있어요.
+   CPK[key]={items:()=>[{v,t,s,k}], pick:(v,box)=>{}}  — v=null 이면 지우기 */
+const CPK={};
+function cpBox(key,o={}){
+  return `<div class="cp" data-cp="${key}" ${o.data||''}><span class="cp-ic">${ic('search')}</span><input class="in cp-in" value="${esc(o.value||'')}" placeholder="${esc(o.ph||'과목 검색')}" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false">${o.value&&o.clear!==false?`<button type="button" class="cp-x" aria-label="지우기">${ic('x')}</button>`:''}<div class="cp-list" role="listbox" hidden></div></div>`;
+}
+function cpDraw(box,all){
+  const inp=box.querySelector('.cp-in'), L=box.querySelector('.cp-list'), def=CPK[box.dataset.cp]; if(!def) return;
+  const q=all?'':inp.value.trim(); const items=def.items().filter(x=>!q||sMatch(q,x.t)||sMatch(q,x.s||'')||sMatch(q,x.k||''));
+  box._items=items.slice(0,80); box._hi=box._items.length?0:-1;
+  L.innerHTML=box._items.length?box._items.map((x,i)=>`<div class="cp-opt ${i===0?'hi':''}" role="option" data-i="${i}"><b>${esc(x.t)}</b>${x.s?`<small>${esc(x.s)}</small>`:''}</div>`).join('')+(items.length>80?`<div class="cp-more">${items.length-80}개 더 있어요 · 글자를 더 쳐 보세요</div>`:''):`<div class="cp-more">찾는 과목이 없어요</div>`;
+  L.hidden=false; inp.setAttribute('aria-expanded','true'); cpPlace(box);
+}
+/* 목록은 화면 기준으로 띄워요 → 표 · 창 안에서도 잘리지 않음. 아래 공간이 모자라면 위로 */
+function cpPlace(box){ const L=box.querySelector('.cp-list'); if(!L||L.hidden) return; const r=box.querySelector('.cp-in').getBoundingClientRect();
+  const below=innerHeight-r.bottom-12, above=r.top-12, up=below<220&&above>below; const mh=Math.max(140,Math.min(320,up?above-6:below-6));
+  L.style.left=Math.max(8,Math.min(r.left,innerWidth-Math.max(r.width,260)-8))+'px'; L.style.width=Math.max(r.width,260)+'px'; L.style.maxHeight=mh+'px';
+  if(up){ L.style.top=''; L.style.bottom=(innerHeight-r.top+6)+'px'; } else { L.style.bottom=''; L.style.top=(r.bottom+6)+'px'; } }
+addEventListener('scroll',()=>document.querySelectorAll('.cp-list:not([hidden])').forEach(L=>cpPlace(L.closest('.cp'))),true);
+addEventListener('resize',()=>document.querySelectorAll('.cp-list:not([hidden])').forEach(L=>cpPlace(L.closest('.cp'))));
+function cpClose(box){ const L=box&&box.querySelector('.cp-list'); if(L){ L.hidden=true; box.querySelector('.cp-in').setAttribute('aria-expanded','false'); } }
+function cpPick(box,i){ const x=box._items&&box._items[i]; if(!x) return; cpClose(box); const def=CPK[box.dataset.cp]; box.querySelector('.cp-in').value=x.v==='-'?'':x.t; def&&def.pick(x.v,box); }
+document.addEventListener('focusin',e=>{ const inp=e.target.closest&&e.target.closest('.cp-in'); if(inp){ const box=inp.closest('.cp'); inp.select(); cpDraw(box,true); } });
+document.addEventListener('input',e=>{ if(e.target.classList&&e.target.classList.contains('cp-in')) cpDraw(e.target.closest('.cp')); });
+document.addEventListener('keydown',e=>{
+  const inp=e.target.classList&&e.target.classList.contains('cp-in')?e.target:null; if(!inp) return; const box=inp.closest('.cp'); const n=(box._items||[]).length;
+  const hl=i=>{ box._hi=i; box.querySelectorAll('.cp-opt').forEach((o,j)=>o.classList.toggle('hi',j===i)); const o=box.querySelector('.cp-opt.hi'); o&&o.scrollIntoView({block:'nearest'}); };
+  if(e.key==='ArrowDown'){ e.preventDefault(); if(box.querySelector('.cp-list').hidden) cpDraw(box); else if(n) hl(Math.min(n-1,box._hi+1)); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); if(n) hl(Math.max(0,box._hi-1)); }
+  else if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); if(box._hi>=0) cpPick(box,box._hi); }
+  else if(e.key==='Escape'){ if(!box.querySelector('.cp-list').hidden){ e.stopPropagation(); cpClose(box); } }
+},true);
+document.addEventListener('mousedown',e=>{
+  const o=e.target.closest&&e.target.closest('.cp-opt'); if(o){ e.preventDefault(); cpPick(o.closest('.cp'),+o.dataset.i); return; }
+  const x=e.target.closest&&e.target.closest('.cp-x'); if(x){ e.preventDefault(); const box=x.closest('.cp'); const def=CPK[box.dataset.cp]; box.querySelector('.cp-in').value=''; def&&def.pick(null,box); return; }
+  document.querySelectorAll('.cp-list:not([hidden])').forEach(L=>{ if(!L.closest('.cp').contains(e.target)) cpClose(L.closest('.cp')); });
+},true);
+document.addEventListener('focusout',e=>{ if(e.target.classList&&e.target.classList.contains('cp-in')){ const box=e.target.closest('.cp'); setTimeout(()=>{ if(!box.contains(document.activeElement)) cpClose(box); },120); } });
+
+/* 학생 목록: 과목으로 찾기 */
+CPK.stuCourse={
+  items:()=>{ const st=list('students'); return courseGroups(list('courses')).map(g=>{ const n=st.filter(s=>(s.courses||[]).some(id=>g.ids.includes(id))).length; return {v:g.name,t:g.name,s:`학생 ${n}명 · 수업 ${g.ids.length}개`,k:g.ids.map(id=>subjectOf(D().courses[id])).join(' ')}; }).sort((a,b)=>(b.s.match(/\d+/)[0]-a.s.match(/\d+/)[0])||a.t.localeCompare(b.t,'ko')); },
+  pick:v=>{ S.stuCourse=v||'all'; render(); }
+};
+/* 학생 창: 수강 과목 체크 목록 바로 거르기 */
+document.addEventListener('input',e=>{ if(e.target.id!=='sfSubjQ') return; const q=e.target.value.trim(); let n=0;
+  $$('.sf-subj label.check').forEach(l=>{ const on=!q||sMatch(q,l.textContent)||l.querySelector('input').checked; l.hidden=!on; if(on) n++; });
+  const em=$('#sfSubjNone'); if(em) em.hidden=!!n; });
 /* ===== 이전 프로그램 학생 데이터(JSON) 가져오기 ===== */
 const normName=s=>String(s||'').toLowerCase().replace(/[\s()\[\]·\-_.,]/g,'');
-function matchCourseIds(cobjs,status){
-  const t=todayStr(); const cs=list('courses'); const ids=[],miss=[];
-  for(const raw of cobjs){
-    const co=typeof raw==='string'?{name:raw}:raw; if(!co||(!co.name&&!co.start)) continue;
-    let best=null,bs=0;
-    if(co.start){ // 날짜가 있으면 같은 날(±3일) 개강한 수업 중에서만 찾기
-      for(const c of cs){ if(!c.start||Math.abs(diffDays(c.start,co.start))>3) continue;
-        let sc=co.name?Math.max(nameSim(co.name,c.name),nameSim(co.name,subjectOf(c))):0;
-        const sameRoom=co.room&&c.room&&String(co.room).trim().toUpperCase()===String(c.room).trim().toUpperCase();
-        if(co.room&&c.room&&!sameRoom) sc-=0.4;                       // 강의실이 다르면 다른 반
-        if(sameRoom) sc+=0.6;
-        if(co.time&&c.time&&co.time.replace(/\s/g,'').slice(0,5)===String(c.time).replace(/\s/g,'').slice(0,5)) sc+=0.3;
-        sc-=Math.abs(diffDays(c.start,co.start))*0.05; if(sc>bs){ bs=sc; best=c; } }
-      if(best&&bs>=0.5){ ids.push(best.id); continue; }
-      miss.push(co); continue;
-    }
-    const cands=cs.map(c=>({c,sc:Math.max(nameSim(co.name,c.name),nameSim(co.name,subjectOf(c)))})).filter(x=>x.sc>=0.75).map(x=>x.c);
-    if(!cands.length){ miss.push(co); continue; }
-    const run=cands.filter(c=>c.start<=t&&courseEnd(c)>=t), up=cands.filter(c=>c.start>t).sort((a,b)=>a.start<b.start?-1:1), past=cands.filter(c=>courseEnd(c)<t).sort((a,b)=>a.start<b.start?1:-1);
-    ids.push((status==='수료'?(past[0]||run[0]||up[0]):(run[0]||up[0]||past[0])).id);
-  }
-  return {ids:[...new Set(ids)],miss};
+const tmKey=x=>String(x||'').replace(/\s/g,'').slice(0,5);
+const roomKey=x=>String(x||'').trim().toUpperCase().replace(/\[.*$/,'');
+/* 인트라넷 수업 1줄 → 시간표 수업 찾기. 확실하지 않으면 null (잘못 연결하느니 "직접 고르기"로 남김) */
+function courseFit(co,cs){
+  const sc=[];
+  for(const c of cs){ if(!c.start||Math.abs(diffDays(c.start,co.start))>3) continue;
+    const ns=co.name?Math.max(nameSim(co.name,c.name),nameSim(co.name,subjectOf(c))):null;
+    if(co.name&&ns<0.45) continue;                                   // 이름이 다르면 다른 수업
+    const sameRoom=co.room&&c.room?roomKey(co.room)===roomKey(c.room):null;
+    const sameTime=co.time&&c.time?tmKey(co.time)===tmKey(c.time):null;
+    const cd=(c.days&&c.days.length?c.days:defaultDays(c)).slice().sort().join(), sameDays=co.days&&co.days.length?[...co.days].sort().join()===cd:null;
+    if(!co.name&&!(sameTime&&(sameRoom||sameDays))) continue;          // 이름이 없으면 시간 + (강의실 또는 요일)이 모두 맞아야
+    if(co.kind&&c.kind&&/평일|주말/.test(co.kind)&&/평일|주말/.test(c.kind)&&co.kind!==c.kind) continue;
+    let v=(ns||0)*2+(sameRoom?0.4:sameRoom===false?-0.4:0)+(sameTime?0.5:sameTime===false?-0.5:0)+(sameDays?0.3:sameDays===false?-0.3:0)-Math.abs(diffDays(c.start,co.start))*0.15;
+    sc.push({c,v}); }
+  sc.sort((x,y)=>y.v-x.v);
+  if(!sc.length) return null;
+  if(sc.length>1&&sc[0].v-sc[1].v<0.15&&!co.name) return null;        // 후보가 비슷하면 고르지 않음
+  return sc[0].c;
+}
+function matchOne(co,status,cs){
+  const t=todayStr();
+  if(co.start){ const c=courseFit(co,cs); return c?c.id:null; }   // 날짜가 있으면 같은 날(±3일) 개강 수업 중에서만 — 과목 이름이 있으면 이름이 맞아야 연결
+  const cands=cs.map(c=>({c,sc:Math.max(nameSim(co.name,c.name),nameSim(co.name,subjectOf(c)))})).filter(x=>x.sc>=0.75).map(x=>x.c);
+  if(!cands.length) return null;
+  const run=cands.filter(c=>c.start<=t&&courseEnd(c)>=t), up=cands.filter(c=>c.start>t).sort((a,b)=>a.start<b.start?-1:1), past=cands.filter(c=>courseEnd(c)<t).sort((a,b)=>a.start<b.start?1:-1);
+  return (status==='수료'?(past[0]||run[0]||up[0]):(run[0]||up[0]||past[0])).id;
+}
+/* fix: {k: courseId | '-'} — 가져오기 화면에서 직접 고른 수업(k = 원래 목록 순서) */
+function matchCourseIds(cobjs,status,fix){
+  const cs=list('courses'); const ids=[],miss=[],rows=[];
+  (cobjs||[]).forEach((raw,k)=>{
+    const co=typeof raw==='string'?{name:raw}:raw; if(!co||(!co.name&&!co.start)) return;
+    const f=fix&&fix[k]; const id=f==='-'?null:f&&D().courses[f]?f:matchOne(co,status,cs);
+    rows.push({k,co,id,manual:!!f}); if(id) ids.push(id); else if(f!=='-') miss.push(co);
+  });
+  return {ids:[...new Set(ids)],miss,rows};
 }
 function relinkStudents(){
   let n=0;
@@ -3523,6 +3630,10 @@ function relinkStudents(){
   return n;
 }
 let SIM=null;
+CPK.simCourse={
+  items:()=>[{v:'-',t:'연결 안 함',s:'이 수업은 학생에 넣지 않아요'}].concat(list('courses').filter(c=>c.start).sort((a,b)=>b.start.localeCompare(a.start)).map(c=>({v:c.id,t:c.name,s:`${fmtMD(c.start)} 개강 · ${daysLabel(c.days,c.daysB)} ${c.time||''} · ${roomLabel(c)||''}`,k:`${c.start} ${c.start.slice(5).replace('-','/')} ${+c.start.slice(5,7)}/${+c.start.slice(8)} ${subjectOf(c)}`}))),
+  pick:(v,box)=>{ if(v==null) return; const i=box.dataset.i,k=box.dataset.k; SIM.fix=SIM.fix||{}; SIM.fix[i]={...(SIM.fix[i]||{}),[k]:v}; drawStuImport(); }
+};
 async function handleStudentJson(file){
   let obj; try{ obj=JSON.parse(await file.text()); }catch(e){ toast('JSON 파일을 읽지 못했어요','이전 프로그램에서 내보낸 .json 파일인지 확인해 주세요.'); return; }
   if(obj&&obj.app==='kaia-desk'){ restoreFrom(file); return; }
@@ -3534,7 +3645,7 @@ async function handleStudentJson(file){
   drawStuImport();
 }
 function stuPreview(){
-  return SIM.items.map((o,i)=>{ const c=convertStudent(o,SIM.map,todayStr()); if(!c) return null; const m=matchCourseIds(c.courses,c.status);
+  return SIM.items.map((o,i)=>{ const c=convertStudent(o,SIM.map,todayStr()); if(!c) return null; const m=matchCourseIds(c.courses,c.status,(SIM.fix||{})[i]);
     const ex=list('students').find(s=>(c.appNo&&s.appNo===c.appNo)||(s.name===c.name&&(!c.phone||!s.phone||s.phone.replace(/\D/g,'')===c.phone.replace(/\D/g,''))));
     return {i,c,m,ex}; }).filter(Boolean);
 }
@@ -3550,10 +3661,13 @@ function drawStuImport(){
     <div class="tablewrap"><table class="t"><thead><tr><th><label class="check"><input type="checkbox" data-act="simAll" ${nSel===rows.length?'checked':''} aria-label="전체 선택"></label></th><th>이름</th><th class="hide-m">연락처</th><th>상태</th><th>수강 과정</th><th class="hide-m">상담 기록</th><th></th></tr></thead><tbody>
     ${rows.slice(0,300).map(({i,c,m,ex})=>`<tr><td><label class="check"><input type="checkbox" data-act="simSel" data-i="${i}" ${SIM.sel[i]?'checked':''}></label></td><td>${esc(c.name)}</td><td class="hide-m num">${esc(c.phone)}</td>
       <td><span class="chip ${STATUS_CHIP[c.status]||''}">${esc(c.status)}</span>${c.origStatus&&c.origStatus!==c.status?`<div style="font-size:11px;color:var(--faint)">원래: ${esc(c.origStatus)}</div>`:''}${c.type||c.funding?`<div style="font-size:11px;color:var(--faint)">${esc([c.type,c.funding].filter(Boolean).join(' · '))}</div>`:''}</td>
-      <td class="wrap">${m.ids.map(id=>`<span class="chip ok" style="margin:2px 4px 2px 0">${esc(D().courses[id].name)} ${fmtMD(D().courses[id].start)}</span>`).join('')}${m.miss.map(n=>`<span class="chip warn" style="margin:2px 4px 2px 0" title="시간표에 없는 수업 · 기억해 뒀다가 시간표가 올라오면 연결">${esc(n.name||'과목명 없음')}${n.start?` ${fmtMD(n.start)}`:''}${n.room?` ${esc(n.room)}`:''}</span>`).join('')}${!m.ids.length&&!m.miss.length?'<span style="color:var(--faint)">없음</span>':''}</td>
+      <td class="wrap sim-cs">${m.rows.map(r=>{ const c2=r.id&&D().courses[r.id]; const src=[r.co.name||'과목명 없음',r.co.start?fmtMD(r.co.start)+' 개강':'',r.co.days&&r.co.days.length?r.co.days.map(x=>DOW[x]).join(''):'',r.co.time||'',r.co.room||''].filter(Boolean).join(' · ');
+        return `<div class="sim-c"><div class="sim-src" title="인트라넷에서 읽은 내용">${esc(src)}</div>
+          ${c2?`<span class="chip ok">${r.manual?'직접 고름 · ':''}${esc(c2.name)} ${fmtMD(c2.start)}${c2.time?' '+esc(c2.time):''}${c2.room?' '+esc(roomLabel(c2)):''}</span>`:`<span class="chip warn">${(SIM.fix||{})[i]&&SIM.fix[i][r.k]==='-'?'연결 안 함':'시간표에서 못 찾음'}</span>`}
+          ${noCourses?'':cpBox('simCourse',{ph:c2?'다른 수업으로 바꾸기 — 과목 · 날짜 검색':'시간표에서 직접 고르기 — 과목 · 날짜 검색',data:`data-i="${i}" data-k="${r.k}"`,clear:false})}</div>`; }).join('')}${!m.rows.length?'<span style="color:var(--faint)">없음</span>':''}</td>
       <td class="hide-m num">${c.logs.length?c.logs.length+'건':''}</td><td>${ex?'<span class="chip cyan">이미 있음</span>':''}</td></tr>`).join('')}
     </tbody></table></div>${rows.length>300?`<p style="margin:0;font-size:12px;color:var(--faint)">미리보기는 300명까지 보여요. 가져오기는 전체에 적용돼요.</p>`:''}
-    <p style="margin:0;font-size:12px;color:var(--faint)">초록 수업은 시간표의 같은 날짜 · 비슷한 이름 수업과 연결된 것, 노란 수업은 시간표에 아직 없는 것(지난 수업 등)이에요. 상태 칸이 없으면 수업 날짜로 수강중 · 등록대기 · 수료를 정해요.</p>
+    <p style="margin:0;font-size:12px;color:var(--faint)">회색 글씨는 인트라넷에서 읽은 내용이에요. 초록 수업이 <b>같은 과목 · 같은 개강일</b>인지 꼭 확인하고, 다르면 아래 검색 칸에서 맞는 수업을 고르세요. 노란 칸은 시간표에서 확실한 수업을 못 찾은 것(잘못 연결하지 않으려고 비워 둠)이에요. 상태 칸이 없으면 수업 날짜로 수강중 · 등록대기 · 수료를 정해요.</p>
   </div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="simDo" ${nSel?'':'disabled'}>${nSel}명 가져오기</button></footer>`;
   if(modalEl&&modalEl._kind==='stuimport'){ const sc=modalEl.querySelector('.sheet').scrollTop; modalEl.querySelector('.sheet').innerHTML=html; modalEl.querySelector('.sheet').scrollTop=sc; } else { openModal(html,'wide'); modalEl._kind='stuimport'; }
 }
@@ -6037,6 +6151,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-0100';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-0941';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
