@@ -4219,7 +4219,7 @@ function stuAssignTab(s){
   const t=todayStr(); const as=(s.assigns||[]).slice().sort((a,b)=>(b.week||0)-(a.week||0));
   const next=(as[0]?+as[0].week||0:0)+1;
   return `<div class="body wk">
-   <div class="btns"><button class="btn pri sm" data-act="qzOpen">${ic('plus')}과제 제작</button><button class="btn sm" data-act="wAsNew">${ic('plus')}직접 입력</button><button class="btn sm ghost" data-act="wPrompt" data-k="asMake">${ic('send')}Claude 출제 요청문</button></div>
+   <div class="btns"><button class="btn pri sm" data-act="qzOpen">${ic('plus')}과제 제작</button><button class="btn sm" data-act="wAsNew">${ic('plus')}직접 입력</button><label class="btn sm" title="예전에 Word로 뽑아 준 시험지를 다시 등록하면 채점할 수 있어요">${ic('up')}뽑아 둔 시험지 불러오기<input type="file" id="qzSheetIn" accept=".doc,.htm,.html" hidden></label><button class="btn sm ghost" data-act="wPrompt" data-k="asMake">${ic('send')}Claude 출제 요청문</button></div>
    ${s._asNew?`<div class="wk-panel"><b>${next}주차 과제</b>
      <div class="wk-row"><input id="waWeek" class="in" type="number" min="1" value="${next}" style="max-width:90px" aria-label="주차"><input id="waTitle" class="in" placeholder="범위 · 제목 (예: 리스트 · 딕셔너리)"><input id="waDue" class="in" type="date" value="${addDays(t,7)}" aria-label="마감"></div>
      <textarea id="waBody" class="in" rows="4" placeholder="과제 내용 (Claude가 만든 문제를 붙여넣어도 돼요)"></textarea>
@@ -5250,9 +5250,9 @@ Object.assign(WACT,{
   qzBack:()=>{ const sid=QW.back; closeModal(); if(sid){ openStudent(sid); SM._tab='as'; drawStudent(); } },
   qzMake:()=>{ const tp=qzSelTopics(); if(!tp.length){ toast('영역을 하나 이상 골라 주세요',''); return; } QW.topics=tp; QW.qs=qzPick(QW.sub,QW.lv,tp,QW.per); QW.step=3; drawQuiz(); },
   qzShuffle:()=>{ QW.qs=qzPick(QW.sub,QW.lv,QW.topics,QW.per); drawQuiz(); },
-  qzWord:()=>{ const s=D().students[$('#qzSid').value]; const qz={sub:QW.sub,lv:QW.lv,qs:QW.qs,title:qzTitle(QW.sub,QW.lv)}; saveFile(qzFileName(qz,s&&s.name,'과제'),wordDoc(wsHTML(qz,{name:s?s.name:''}),qz.title)); },
-  qzPrint:()=>{ const s=D().students[$('#qzSid').value]; printHTML(wsHTML({sub:QW.sub,lv:QW.lv,qs:QW.qs,title:qzTitle(QW.sub,QW.lv)},{name:s?s.name:''})); },
-  qzSave:()=>{ const sid=$('#qzSid').value; if(!sid){ toast('학생을 골라 주세요','학생 없이 쓸 때는 Word나 인쇄만 하면 돼요.'); return; }
+  qzWord:()=>{ qzAutoReg(); const s=D().students[$('#qzSid').value]; const qz={sub:QW.sub,lv:QW.lv,qs:QW.qs,title:qzTitle(QW.sub,QW.lv)}; saveFile(qzFileName(qz,s&&s.name,'과제'),wordDoc(wsHTML(qz,{name:s?s.name:''}),qz.title)); },
+  qzPrint:()=>{ qzAutoReg(); const s=D().students[$('#qzSid').value]; printHTML(wsHTML({sub:QW.sub,lv:QW.lv,qs:QW.qs,title:qzTitle(QW.sub,QW.lv)},{name:s?s.name:''})); },
+  qzSave:()=>{ const sid=$('#qzSid').value; if(!sid){ toast('학생을 골라 주세요','학생 없이 쓸 때는 Word나 인쇄만 하면 돼요.'); return; } if(QW._reg===sid+'|'+QW.qs.map(q=>q.q).join('|')){ closeModal(); openStudent(sid); SM._tab='as'; drawStudent(); toast('이미 등록했어요','학생 → 과제 탭에 있어요.'); return; }
     const s=wNorm(clone(D().students[sid])); const week=(s.assigns.reduce((m,a)=>Math.max(m,+a.week||0),0))+1;
     const a={id:wid('a'),week,kind:'quiz',title:qzTitle(QW.sub,QW.lv),body:'',due:$('#qzDue').value||'',st:'set',setAt:todayStr(),at:Date.now(),quiz:{sub:QW.sub,lv:QW.lv,qs:QW.qs}};
     s.assigns.push(a); store.put('students',s); closeModal(); openStudent(sid); SM._tab='as'; drawStudent(); toast('과제를 등록했어요',`${week}주차 · Word 저장이나 인쇄로 학생에게 전달하세요.`); },
@@ -5281,6 +5281,41 @@ document.addEventListener('change',async e=>{ const el=e.target; if(!el.dataset|
   try{ const ans=await answersFromFile(f,a.quiz.qs.length); const got=ans.filter(Boolean).length; if(!got){ toast('답을 찾지 못했어요','답안표에 번호(1~4)가 적혀 있는지 확인하거나 붙여넣기를 써 주세요.'); return; }
     a.qAns=ans; if(a.st==='set'){ a.st='sub'; a.subAt=todayStr(); } wRedraw(); toast('답안 파일을 읽었어요',`${got}/${a.quiz.qs.length}문항 인식 · 확인 후 채점하세요.`); }
   catch(err){ console.warn(err); toast('파일을 읽지 못했어요','Word(.docx) 파일인지 확인해 주세요.'); } });
+
+/* 학생을 고른 채로 Word · 인쇄만 눌러도 그 학생 과제로 함께 등록 (등록을 깜빡해서 채점을 못 하는 일 방지) */
+function qzAutoReg(){ const sid=$('#qzSid')&&$('#qzSid').value; if(!sid||!D().students[sid]||QW._reg===sid+'|'+QW.qs.map(q=>q.q).join('|')) return;
+  const s=wNorm(clone(D().students[sid])); const week=(s.assigns.reduce((m,a)=>Math.max(m,+a.week||0),0))+1;
+  s.assigns.push({id:wid('a'),week,kind:'quiz',title:qzTitle(QW.sub,QW.lv),body:'',due:($('#qzDue')&&$('#qzDue').value)||'',st:'set',setAt:todayStr(),at:Date.now(),quiz:{sub:QW.sub,lv:QW.lv,qs:QW.qs}});
+  store.put('students',s); QW._reg=sid+'|'+QW.qs.map(q=>q.q).join('|'); toast('학생 과제로도 등록했어요',`${s.name} · ${week}주차 — 답안이 오면 학생 → 과제 탭에서 채점하세요.`); }
+/* ===== 예전에 Word로 뽑아 준 시험지(.doc) → 다시 과제로 등록 =====
+   시험지의 문제 · 보기 순서를 문제은행과 맞춰서 정답 · 영역을 되찾아요. (등록을 안 누르고 Word만 받은 경우) */
+function qzFromSheet(html){
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const title=((doc.querySelector('.ttl')||doc.querySelector('title')||{}).textContent||'').trim();
+  const nz=x=>String(x||'').replace(/\s+/g,' ').trim();
+  const lv=Math.max(1,QLEVEL.findIndex((x,i)=>i&&title.includes(` ${x} 단계`)));
+  const keys=Object.keys(QBANK).sort((a,b)=>QBANK[b].name.length-QBANK[a].name.length);
+  const sub=keys.find(k=>title.startsWith(QBANK[k].name+' '))||keys.find(k=>title.includes(QBANK[k].name));
+  const blocks=[...doc.querySelectorAll('.q')]; if(!blocks.length) throw new Error('noq');
+  const qs=[]; let miss=0;
+  blocks.forEach(b=>{ const qt=nz((b.querySelector('.qt')||{}).textContent).replace(/^\d+\.\s*/,''); const code=nz((b.querySelector('pre')||{}).textContent);
+    const ops=[...b.querySelectorAll('.op')].map(o=>nz(o.textContent).replace(/^[①②③④]\s*/,''));
+    let hit=null, hsub=sub;
+    for(const k of (sub?[sub]:[]).concat(keys.filter(k=>k!==sub))){ hit=QBANK[k].q.find(q=>nz(q.q)===qt&&nz(q.c)===code&&q.o.every(o=>ops.includes(nz(o)))); if(hit){ hsub=k; break; } }
+    if(!hit){ miss++; return; }
+    qs.push({t:hit.t,l:hit.l,q:hit.q,c:hit.c||'',o:ops,a:ops.indexOf(nz(hit.o[hit.a-1]))+1,e:hit.e,_s:hsub}); });
+  const s2=sub||(qs[0]&&qs[0]._s); qs.forEach(q=>delete q._s);
+  return {title:title||(s2?qzTitle(s2,lv):'시험지'),sub:s2,lv,qs,miss};
+}
+document.addEventListener('change',async e=>{
+  if(e.target.id!=='qzSheetIn'||!e.target.files[0]) return; const f=e.target.files[0]; e.target.value='';
+  try{ const r=qzFromSheet(await f.text());
+    if(!r.qs.length||!r.sub){ toast('시험지를 읽지 못했어요','KAIA DESK에서 Word로 받은 시험지(.doc) 파일인지 확인해 주세요.','alarm-t'); return; }
+    wNorm(SM); const week=(SM.assigns.reduce((m,a)=>Math.max(m,+a.week||0),0))+1;
+    SM.assigns.push({id:wid('a'),week,kind:'quiz',title:r.title,body:'',due:'',st:'sub',setAt:todayStr(),subAt:todayStr(),at:Date.now(),quiz:{sub:r.sub,lv:r.lv,qs:r.qs}});
+    SM._tab='as'; wRedraw(); toast('시험지를 다시 등록했어요',`${r.title} · ${r.qs.length}문항${r.miss?` (${r.miss}문항은 문제은행에서 못 찾아 빠졌어요)`:''} · 아래에 학생 답을 넣고 채점하세요.`,r.miss?'alarm-t':'');
+  }catch(err){ console.warn(err); toast('시험지를 읽지 못했어요','KAIA DESK에서 Word로 받은 시험지(.doc) 파일인지 확인해 주세요.','alarm-t'); }
+});
 /* ===== 팀 커뮤니티: 게시판 · 파일 · DB 배정 (팀 서버 로그인 시) ===== */
 const TEAM_COLS=['posts','comments','leads'];
 const POST_CATS=['공지','자유','자료'];
@@ -6218,6 +6253,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-1256';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1300';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
