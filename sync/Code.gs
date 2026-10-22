@@ -94,6 +94,12 @@ function mailLead_(lead, uid) {
   } catch (e) {}
 }
 
+/* 처음 한 번: 편집기 위쪽 함수 목록에서 "authorize"를 고르고 ▶실행 → 권한 허용 (드라이브에 첨부 파일을 저장하는 권한) */
+function authorize() {
+  const f = folder_(); const t = tmpFolder_();
+  const x = t.createFile('권한확인.txt', 'ok', 'text/plain'); x.setTrashed(true);
+  Logger.log('권한 확인 완료 — 팀 파일 폴더: ' + f.getName());
+}
 /* 서버에서 오류가 나도 앱이 원인을 볼 수 있게 감싸요 (편집기에서 ▶실행을 눌러도 오류 안 남) */
 function doGet(e) { try { return doGet_(e || { parameter: {} }); } catch (err) { return out_({ error: 'server', msg: String(err && err.message || err) }); } }
 function doPost(e) { try { return doPost_(e || { postData: { contents: '{}' } }); } catch (err) { return out_({ error: 'server', msg: String(err && err.message || err) }); } }
