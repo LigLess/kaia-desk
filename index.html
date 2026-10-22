@@ -1440,7 +1440,7 @@ h2 .tm-chk{margin:0}
   body.qt-printing #printArea *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body.qt-printing .qtp .rf,body.qt-printing .qtp .ft{break-inside:avoid}
   body.printing::before,body.printing::after{display:none!important;content:none!important}
-  @page{size:A4;margin:8mm}
+  @page{size:A4;margin:20mm 8mm 8mm}
 }
 
 .tm-staffbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}.tm-staffbar .in{max-width:220px}
@@ -5986,7 +5986,7 @@ Object.assign(WACT,{
   qtXlsx:async()=>{ const q=qtDraft(); const c=qtCalc(q); if(c.rows.filter(r=>r.n).length>15){ toast('과목은 15개까지 들어가요','원본 양식 칸이 15줄이에요.'); }
     try{ const b=await qtXlsxBlob(q,c); await saveFile(qtFile(q,'xlsx'),b); }catch(e){ console.warn(e); toast('엑셀을 만들지 못했어요','인터넷 연결을 확인하고 다시 눌러 주세요.'); } },
   qtPrint:async()=>{ const q=qtDraft(); const c=qtCalc(q); let pa=document.getElementById('printArea'); if(!pa){ pa=document.createElement('div'); pa.id='printArea'; document.body.appendChild(pa); }
-    let h; try{ let m=qtMeasure((await qtSheetFor(q,c)).html); const k=Math.min(718/m.W,1000/m.H);   /* 넓힌 표 전체를 A4 (8mm 여백) 한 장에 맞춤 */
+    let h; try{ let m=qtMeasure((await qtSheetFor(q,c)).html); const k=Math.min(718/m.W,990/m.H);   /* 넓힌 표 전체를 A4 (위 20mm · 나머지 8mm 여백) 한 장에 맞춤 */
       m=qtMeasure((await qtSheetFor(q,c,k)).html);   // 줄인 배율에서도 선이 선명하게
       h=`<div style="width:${Math.floor(m.W*k)}px"><div style="zoom:${k}">${m.html}</div></div>`; }catch(e){ console.warn(e); h=qtPaper(q,c); }
     pa.innerHTML=h; document.body.classList.add('printing','qt-printing'); const done=()=>{ document.body.classList.remove('printing','qt-printing'); pa.innerHTML=''; };
@@ -6201,6 +6201,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-1114';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1127';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
