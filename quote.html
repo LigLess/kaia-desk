@@ -1827,9 +1827,11 @@ function qtRefund(label,days,segs){ let i=0,nums='',txt=''; segs.forEach(([n,t,c
 function qtJoined(q,rows,i){ if(i<=0) return false; const r=rows[i]; if(r.join===true) return true; if(r.join===false||q.mergeAuto===false) return false; const a=r.cat||'', b=rows[i-1].cat||''; return !!a&&a===b; }
 function qtRuns(q,rows){ const runs=[]; rows.forEach((r,i)=>{ if(qtJoined(q,rows,i)&&runs.length) runs[runs.length-1].b=i; else runs.push({a:i,b:i}); }); return runs; }
 function qtCatShow(q,rows){ const out=rows.map(()=>''); qtRuns(q,rows).forEach(g=>{ out[g.a]=rows[g.a].cat||''; }); return out; }
+/* 할인으로 0원이 된 과목(무료 항목 아님)은 견적서에 '(지원과목)'을 붙여요 */
+const qtShowName=r=>r&&!r.free&&r.orig!=null&&r.alloc===0?`${r.n}(지원과목)`:(r?r.n:'');
 function qtPaper(q,c){
   const rows=c.rows.filter(r=>r.n); const cs=qtCatShow(q,rows);
-  const body=rows.map((r,i)=>`<tr><td>${esc(cs[i])}</td><td class="l">${esc(r.n)}</td><td>${r.free?'':esc(r.type)}</td><td>${esc(qtMD(r.s,r.pat))}</td><td>${esc(qtMD(r.e,r.pat))}</td><td>${esc(r.time)}</td><td>${r.cnt!==''&&r.cnt!=null?esc(r.cnt)+'회':''}</td><td class="r">${r.alloc==null?'':qtWon(r.alloc)}</td></tr>`).join('')||'<tr><td colspan="8">&nbsp;</td></tr>';
+  const body=rows.map((r,i)=>`<tr><td>${esc(cs[i])}</td><td class="l">${esc(qtShowName(r))}</td><td>${r.free?'':esc(r.type)}</td><td>${esc(qtMD(r.s,r.pat))}</td><td>${esc(qtMD(r.e,r.pat))}</td><td>${esc(r.time)}</td><td>${r.cnt!==''&&r.cnt!=null?esc(r.cnt)+'회':''}</td><td class="r">${r.alloc==null?'':qtWon(r.alloc)}</td></tr>`).join('')||'<tr><td colspan="8">&nbsp;</td></tr>';
   const bank=q.tpl==='ai'?QT.bank_ai:QT.bank_it;
   return `<div class="qtp">
   <h3>${esc(QT.title)}</h3>
@@ -1908,7 +1910,7 @@ function qtFillDoc(doc,q,c){
   const FIRST=6, LAST=20; const rows=c.rows.filter(r=>r.n).slice(0,LAST-FIRST+1);
   qtCell(doc,'K3',qtSpaced(q.name)); qtCell(doc,'Q3',qtDateLong(q.date));
   for(let i=0;i<=LAST-FIRST;i++){ const n=FIRST+i, r=rows[i];
-    qtCell(doc,'C'+n,r?r.cat:''); qtCell(doc,'E'+n,r?r.n:''); qtCell(doc,'H'+n,r&&!r.free?r.type:'');
+    qtCell(doc,'C'+n,r?r.cat:''); qtCell(doc,'E'+n,qtShowName(r)); qtCell(doc,'H'+n,r&&!r.free?r.type:'');
     qtCell(doc,'I'+n,r?qtMD(r.s,r.pat):''); qtCell(doc,'K'+n,r?qtMD(r.e,r.pat):''); qtCell(doc,'M'+n,r?r.time:'');
     qtCell(doc,'O'+n,r&&r.cnt!==''&&r.cnt!=null?r.cnt+'회':''); qtCell(doc,'P'+n,r&&r.alloc!=null?r.alloc:'');
     const row=[...doc.getElementsByTagNameNS(QT_NS,'row')].find(x=>x.getAttribute('r')===String(n)); if(row){ if(r) row.removeAttribute('hidden'); else row.setAttribute('hidden','1'); } }
@@ -2015,7 +2017,7 @@ function qtMakeView(){
   const rowsHtml=q.rows.map((r,i)=>{ const x=c.rows[i]; return `<div class="qt-row ${r.free?'free':''}" data-rid="${r.id}">
     <div class="qt-r1"><span class="qt-no">${i+1}</span>${r.free?`<input class="in qt-n" data-q="n" value="${esc(r.n)}" placeholder="예: 무료 1회 재수강권" autocomplete="off">`:cpBox('qtCourse',{value:r.n,cls:'qt-n',inAttr:'data-q="n"',clear:false,ph:'과목 이름 검색'})}
       ${r.free?'<span class="chip">무료</span>':`<select class="in qt-t" data-q="type">${['평일','주말'].map(t=>`<option ${r.type===t?'selected':''}>${t}</option>`).join('')}</select>`}
-      <span class="qt-amt">${r.free?'':x.orig==null?'<span class="chip warn">표에 없음</span>':`${x.alloc!==x.orig?`<s>${qtWon(x.orig)}</s>`:''}<b>${qtWon(x.alloc)}</b>`}</span>
+      <span class="qt-amt">${r.free?'':x.orig==null?'<span class="chip warn">표에 없음</span>':`${x.alloc===0?'<span class="chip cyan">지원과목</span> ':''}${x.alloc!==x.orig?`<s>${qtWon(x.orig)}</s>`:''}<b>${qtWon(x.alloc)}</b>`}</span>
       <button class="btn sm ghost" data-act="qtRowUp" data-k="${r.id}" aria-label="위로" ${i?'':'disabled'}>${ic('up2')}</button><button class="btn sm ghost" data-act="qtRowDel" data-k="${r.id}" aria-label="빼기">${ic('x')}</button></div>
     <div class="qt-r2">
       <label><span>과정 ${i?(()=>{ const on=qtJoined(q,q.rows.filter(x=>x.n),q.rows.filter(x=>x.n).indexOf(r)); return `<button class="qt-join ${on?'on':''}" data-act="qtJoin" data-k="${r.id}" title="자동 → 위와 합치기 → 따로 순서로 바뀌어요">${r.join===true?'위와 합침':r.join===false?'따로':on?'자동 합침':'자동'}</button>`; })():''}</span><input class="in" data-q="cat" value="${esc(r.cat)}" list="qtCats"></label>
