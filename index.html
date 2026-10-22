@@ -1528,6 +1528,8 @@ body.dark .cp-list,body.xg .cp-list{background:#1b1d24}
 .toast.post-t{border-left:3px solid var(--accent)}
 .toast.lead-post{border-left:4px solid #e8590c}
 .guide-wrap{border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px var(--line-2),0 18px 40px -24px rgba(0,0,0,.35);height:calc(100vh - 230px);min-height:480px}
+.qt-r1 .cp,.qt-add .cp{flex:1;min-width:0}
+.qt-r1 .cp .in{font-weight:600}
 .guide-view a.btn{text-decoration:none}
 .guide-wrap iframe{display:block;width:100%;height:100%;border:0;background:#fff}
 @media (max-width:900px){.guide-wrap{height:calc(100vh - 210px);border-radius:14px}}
@@ -1992,7 +1994,7 @@ const ALIAS=[[/python/g,'파이썬'],[/java(?!script)/g,'자바'],[/javascript|j
 const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
 function choOf(s){ return [...String(s||'')].map(ch=>{ const c=ch.charCodeAt(0)-0xAC00; return c>=0&&c<11172?CHO[Math.floor(c/588)]:ch; }).join(''); }
 function sMatch(q,txt){ const n=x=>String(x||'').toLowerCase().replace(/[\s·\-_.,&/()\[\]]/g,''); const a=n(q); if(!a) return true; const b=n(txt); if(b.includes(a)) return true;
-  if(/^[ㄱ-ㅎ]+$/.test(a)) return choOf(b).includes(a); return aliasNorm(txt).includes(aliasNorm(q)); }
+  if(/^[ㄱ-ㅎ]+$/.test(a)) return choOf(b).includes(a)||choOf(aliasNorm(txt)).includes(a); return aliasNorm(txt).includes(aliasNorm(q)); }
 function aliasNorm(s){ let x=String(s||'').toLowerCase(); for(const [re,to] of ALIAS) x=x.replace(re,to); return x.replace(/\[[^\]]*\]/g,'').replace(/\([^)]*\)/g,'').replace(/\/주$/,'').replace(/[\s·\-_.,&/]/g,''); }
 function nameSim(a,b){
   const x=aliasNorm(a), y=aliasNorm(b); if(!x||!y) return 0; if(x===y) return 1;
@@ -3557,40 +3559,49 @@ function applyTheme(name){
    CPK[key]={items:()=>[{v,t,s,k}], pick:(v,box)=>{}}  — v=null 이면 지우기 */
 const CPK={};
 function cpBox(key,o={}){
-  return `<div class="cp" data-cp="${key}" ${o.data||''}><span class="cp-ic">${ic('search')}</span><input class="in cp-in" value="${esc(o.value||'')}" placeholder="${esc(o.ph||'과목 검색')}" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false">${o.value&&o.clear!==false?`<button type="button" class="cp-x" aria-label="지우기">${ic('x')}</button>`:''}<div class="cp-list" role="listbox" hidden></div></div>`;
+  return `<div class="cp" data-cp="${key}" ${o.data||''}><span class="cp-ic">${ic('search')}</span><input class="in cp-in ${o.cls||''}" ${o.id?`id="${o.id}"`:''} ${o.inAttr||''} value="${esc(o.value||'')}" placeholder="${esc(o.ph||'과목 검색')}" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false">${o.value&&o.clear!==false?`<button type="button" class="cp-x" aria-label="지우기">${ic('x')}</button>`:''}<div class="cp-list" role="listbox" hidden></div></div>`;
 }
+/* 목록은 <body> 바로 아래로 옮겨 띄워요 → 창 · 표 · 겹친 패널에 가려지거나 잘리지 않음 */
+function cpL(box){ let L=box._L; if(!L){ L=box.querySelector('.cp-list'); if(!L) return null; box._L=L; } if(L.parentNode!==document.body){ document.body.appendChild(L); } L._box=box; return L; }
+function cpGc(){ document.querySelectorAll('body>.cp-list').forEach(L=>{ if(!L._box||!L._box.isConnected) L.remove(); }); }
 function cpDraw(box,all){
-  const inp=box.querySelector('.cp-in'), L=box.querySelector('.cp-list'), def=CPK[box.dataset.cp]; if(!def) return;
-  const q=all?'':inp.value.trim(); const items=def.items().filter(x=>!q||sMatch(q,x.t)||sMatch(q,x.s||'')||sMatch(q,x.k||''));
+  const inp=box.querySelector('.cp-in'), def=CPK[box.dataset.cp]; if(!def) return; cpGc(); const L=cpL(box); if(!L) return;
+  const q=all?'':inp.value.trim(); const jamo=/^[ㄱ-ㅎ\s]+$/.test(q);
+  let items=def.items().filter(x=>!q||sMatch(q,x.t)||(!jamo&&(sMatch(q,x.s||'')||sMatch(q,x.k||''))));
+  if(q&&!jamo){ const n=t=>String(t).toLowerCase().replace(/\s/g,''); const a=n(q); items=items.map((x,i)=>({x,i,r:n(x.t).startsWith(a)?0:n(x.t).includes(a)?1:2})).sort((p,q2)=>p.r-q2.r||p.i-q2.i).map(o=>o.x); }
   box._items=items.slice(0,80); box._hi=box._items.length?0:-1;
   L.innerHTML=box._items.length?box._items.map((x,i)=>`<div class="cp-opt ${i===0?'hi':''}" role="option" data-i="${i}"><b>${esc(x.t)}</b>${x.s?`<small>${esc(x.s)}</small>`:''}</div>`).join('')+(items.length>80?`<div class="cp-more">${items.length-80}개 더 있어요 · 글자를 더 쳐 보세요</div>`:''):`<div class="cp-more">찾는 과목이 없어요</div>`;
-  L.hidden=false; inp.setAttribute('aria-expanded','true'); cpPlace(box);
+  L.hidden=false; L.scrollTop=0; inp.setAttribute('aria-expanded','true'); cpPlace(box);
 }
-/* 목록은 화면 기준으로 띄워요 → 표 · 창 안에서도 잘리지 않음. 아래 공간이 모자라면 위로 */
-function cpPlace(box){ const L=box.querySelector('.cp-list'); if(!L||L.hidden) return; const r=box.querySelector('.cp-in').getBoundingClientRect();
-  const below=innerHeight-r.bottom-12, above=r.top-12, up=below<220&&above>below; const mh=Math.max(140,Math.min(320,up?above-6:below-6));
-  L.style.left=Math.max(8,Math.min(r.left,innerWidth-Math.max(r.width,260)-8))+'px'; L.style.width=Math.max(r.width,260)+'px'; L.style.maxHeight=mh+'px';
+function cpPlace(box){ const L=box._L; if(!L||L.hidden) return; if(!box.isConnected){ L.hidden=true; return; } const r=box.querySelector('.cp-in').getBoundingClientRect();
+  const vh=(window.visualViewport&&visualViewport.height)||innerHeight;
+  const below=vh-r.bottom-12, above=r.top-12, up=below<200&&above>below; const mh=Math.max(140,Math.min(320,up?above-6:below-6));
+  L.style.left=Math.max(8,Math.min(r.left,innerWidth-Math.max(r.width,260)-8))+'px'; L.style.width=Math.min(innerWidth-16,Math.max(r.width,260))+'px'; L.style.maxHeight=mh+'px';
   if(up){ L.style.top=''; L.style.bottom=(innerHeight-r.top+6)+'px'; } else { L.style.bottom=''; L.style.top=(r.bottom+6)+'px'; } }
-addEventListener('scroll',()=>document.querySelectorAll('.cp-list:not([hidden])').forEach(L=>cpPlace(L.closest('.cp'))),true);
-addEventListener('resize',()=>document.querySelectorAll('.cp-list:not([hidden])').forEach(L=>cpPlace(L.closest('.cp'))));
-function cpClose(box){ const L=box&&box.querySelector('.cp-list'); if(L){ L.hidden=true; box.querySelector('.cp-in').setAttribute('aria-expanded','false'); } }
-function cpPick(box,i){ const x=box._items&&box._items[i]; if(!x) return; cpClose(box); const def=CPK[box.dataset.cp]; box.querySelector('.cp-in').value=x.v==='-'?'':x.t; def&&def.pick(x.v,box); }
-document.addEventListener('focusin',e=>{ const inp=e.target.closest&&e.target.closest('.cp-in'); if(inp){ const box=inp.closest('.cp'); inp.select(); cpDraw(box,true); } });
+const cpOpen=()=>[...document.querySelectorAll('body>.cp-list:not([hidden])')];
+addEventListener('scroll',e=>cpOpen().forEach(L=>{ if(!L.contains(e.target)) cpPlace(L._box); }),true);
+addEventListener('resize',()=>cpOpen().forEach(L=>cpPlace(L._box)));
+if(window.visualViewport) visualViewport.addEventListener('resize',()=>cpOpen().forEach(L=>cpPlace(L._box)));
+function cpClose(box){ const L=box&&box._L; if(L){ L.hidden=true; const i=box.querySelector('.cp-in'); i&&i.setAttribute('aria-expanded','false'); } }
+let cpSkip=0;   // 고른 직후 다시 포커스될 때 목록이 또 열리지 않게
+function cpPick(box,i){ const x=box._items&&box._items[i]; if(!x) return; cpClose(box); cpSkip=Date.now(); const def=CPK[box.dataset.cp]; box.querySelector('.cp-in').value=x.v==='-'?'':x.t; def&&def.pick(x.v,box); }
+document.addEventListener('focusin',e=>{ const inp=e.target.closest&&e.target.closest('.cp-in'); if(inp){ if(Date.now()-cpSkip<400) return; const box=inp.closest('.cp'); inp.select(); cpDraw(box,true); } });
 document.addEventListener('input',e=>{ if(e.target.classList&&e.target.classList.contains('cp-in')) cpDraw(e.target.closest('.cp')); });
 document.addEventListener('keydown',e=>{
-  const inp=e.target.classList&&e.target.classList.contains('cp-in')?e.target:null; if(!inp) return; const box=inp.closest('.cp'); const n=(box._items||[]).length;
-  const hl=i=>{ box._hi=i; box.querySelectorAll('.cp-opt').forEach((o,j)=>o.classList.toggle('hi',j===i)); const o=box.querySelector('.cp-opt.hi'); o&&o.scrollIntoView({block:'nearest'}); };
-  if(e.key==='ArrowDown'){ e.preventDefault(); if(box.querySelector('.cp-list').hidden) cpDraw(box); else if(n) hl(Math.min(n-1,box._hi+1)); }
-  else if(e.key==='ArrowUp'){ e.preventDefault(); if(n) hl(Math.max(0,box._hi-1)); }
-  else if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); if(box._hi>=0) cpPick(box,box._hi); }
-  else if(e.key==='Escape'){ if(!box.querySelector('.cp-list').hidden){ e.stopPropagation(); cpClose(box); } }
+  const inp=e.target.classList&&e.target.classList.contains('cp-in')?e.target:null; if(!inp) return; const box=inp.closest('.cp'); const n=(box._items||[]).length; const L=box._L; const open=L&&!L.hidden;
+  const hl=i=>{ box._hi=i; L.querySelectorAll('.cp-opt').forEach((o,j)=>o.classList.toggle('hi',j===i)); const o=L.querySelector('.cp-opt.hi'); o&&o.scrollIntoView({block:'nearest'}); };
+  if(e.key==='ArrowDown'){ e.preventDefault(); if(!open) cpDraw(box); else if(n) hl(Math.min(n-1,box._hi+1)); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); if(open&&n) hl(Math.max(0,box._hi-1)); }
+  else if(e.key==='Enter'&&!e.isComposing){ if(open&&box._hi>=0){ e.preventDefault(); e.stopPropagation(); cpPick(box,box._hi); } }   // 목록에 없는 이름은 원래 동작(직접 추가)으로
+  else if(e.key==='Escape'){ if(open){ e.stopPropagation(); cpClose(box); } }
 },true);
-document.addEventListener('mousedown',e=>{
-  const o=e.target.closest&&e.target.closest('.cp-opt'); if(o){ e.preventDefault(); cpPick(o.closest('.cp'),+o.dataset.i); return; }
+document.addEventListener('pointerdown',e=>{
+  const o=e.target.closest&&e.target.closest('.cp-opt'); if(o){ e.preventDefault(); const L=o.closest('.cp-list'); cpPick(L._box,+o.dataset.i); return; }
+  if(e.target.closest&&e.target.closest('.cp-list')){ e.preventDefault(); return; }   // 목록 스크롤 · 빈 곳 누름: 입력칸 포커스 유지
   const x=e.target.closest&&e.target.closest('.cp-x'); if(x){ e.preventDefault(); const box=x.closest('.cp'); const def=CPK[box.dataset.cp]; box.querySelector('.cp-in').value=''; def&&def.pick(null,box); return; }
-  document.querySelectorAll('.cp-list:not([hidden])').forEach(L=>{ if(!L.closest('.cp').contains(e.target)) cpClose(L.closest('.cp')); });
+  cpOpen().forEach(L=>{ if(!L._box.contains(e.target)) cpClose(L._box); });
 },true);
-document.addEventListener('focusout',e=>{ if(e.target.classList&&e.target.classList.contains('cp-in')){ const box=e.target.closest('.cp'); setTimeout(()=>{ if(!box.contains(document.activeElement)) cpClose(box); },120); } });
+document.addEventListener('focusout',e=>{ if(e.target.classList&&e.target.classList.contains('cp-in')){ const box=e.target.closest('.cp'); setTimeout(()=>{ if(!box.contains(document.activeElement)) cpClose(box); },150); } });
 
 /* 학생 목록: 과목으로 찾기 */
 CPK.stuCourse={
@@ -5812,6 +5823,10 @@ const QT_W=905;   // 시트 폭(px) — 미리보기 배율 계산용
 const qtFile=(q,ext)=>`견적서_${(q.name||'이름없음').replace(/[\\/:*?"<>|\s]+/g,'')}_${(q.date||todayStr()).replace(/-/g,'')}.${ext}`;
 
 /* ---------- 화면 ---------- */
+/* 과목 고르기: 휴대폰에서도 보이는 검색 목록 (datalist는 폰에서 잘 안 보여서 바꿈) */
+const qtCourseItems=()=>qtPrices().map(p=>({v:p.n,t:p.n,s:`${qtWon(p.p)}원${p.cat?' · '+p.cat:''}${p.t?' · '+p.t:''}`,k:p.cat||''}));
+CPK.qtAddC={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=box.querySelector('input'); i.value=v; WACT.qtAdd(); if(matchMedia('(pointer:coarse)').matches) setTimeout(()=>{ const x=$('#qtAddIn'); x&&x.blur(); },0); }};
+CPK.qtCourse={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=box.querySelector('input'); i.value=v; i.dispatchEvent(new Event('change',{bubbles:true})); }};
 function vQuote(){
   const tab=S.qtTab||'make'; if(tab==='make') setTimeout(qtPreview,0);
   const tabs=`<div class="seg qt-tabs"><button class="${tab==='make'?'on':''}" data-act="qtTab" data-k="make">견적 작성</button><button class="${tab==='saved'?'on':''}" data-act="qtTab" data-k="saved">저장한 견적 ${list('quotes').length||''}</button><button class="${tab==='price'?'on':''}" data-act="qtTab" data-k="price">수강료표</button></div>`;
@@ -5820,7 +5835,7 @@ function vQuote(){
 function qtMakeView(){
   const q=qtDraft(); const c=qtCalc(q); const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   const rowsHtml=q.rows.map((r,i)=>{ const x=c.rows[i]; return `<div class="qt-row ${r.free?'free':''}" data-rid="${r.id}">
-    <div class="qt-r1"><span class="qt-no">${i+1}</span><input class="in qt-n" data-q="n" value="${esc(r.n)}" list="qtCourses" placeholder="${r.free?'예: 무료 1회 재수강권':'과목 이름 검색'}" autocomplete="off">
+    <div class="qt-r1"><span class="qt-no">${i+1}</span>${r.free?`<input class="in qt-n" data-q="n" value="${esc(r.n)}" placeholder="예: 무료 1회 재수강권" autocomplete="off">`:cpBox('qtCourse',{value:r.n,cls:'qt-n',inAttr:'data-q="n"',clear:false,ph:'과목 이름 검색'})}
       ${r.free?'<span class="chip">무료</span>':`<select class="in qt-t" data-q="type">${['평일','주말'].map(t=>`<option ${r.type===t?'selected':''}>${t}</option>`).join('')}</select>`}
       <span class="qt-amt">${r.free?'':x.orig==null?'<span class="chip warn">표에 없음</span>':`${x.alloc!==x.orig?`<s>${qtWon(x.orig)}</s>`:''}<b>${qtWon(x.alloc)}</b>`}</span>
       <button class="btn sm ghost" data-act="qtRowUp" data-k="${r.id}" aria-label="위로" ${i?'':'disabled'}>${ic('up2')}</button><button class="btn sm ghost" data-act="qtRowDel" data-k="${r.id}" aria-label="빼기">${ic('x')}</button></div>
@@ -5849,7 +5864,7 @@ function qtMakeView(){
     </section>
     <section class="pane"><h2>과목 <small>${c.paid}과목 · 1개월 단위</small><label class="qt-chk sm r" style="margin:0"><input type="checkbox" data-act="qtMergeAuto" ${q.mergeAuto!==false?'checked':''}> 같은 과정 칸 자동 합치기</label></h2>
       ${rowsHtml||'<div class="empty"><b>과목을 추가하세요</b>아래 칸에 과목 이름을 치면 수강료표에서 찾아 줘요. 정가 · 구분 · 시간 · 횟수는 자동으로 들어가요.</div>'}
-      <div class="qt-add"><input class="in" id="qtAddIn" list="qtCourses" placeholder="과목 추가 — 이름 일부를 치고 고르세요" autocomplete="off"><button class="btn pri" data-act="qtAdd">${ic('plus')}추가</button><button class="btn" data-act="qtAddFree">무료 항목</button></div>
+      <div class="qt-add">${cpBox('qtAddC',{id:'qtAddIn',clear:false,ph:'과목 추가 — 이름 일부나 초성(ㅍㅇㅆ)을 치고 고르세요'})}<button class="btn pri" data-act="qtAdd">${ic('plus')}추가</button><button class="btn" data-act="qtAddFree">무료 항목</button></div>
     </section>
     <section class="pane"><h2>할인 <small>순서대로 곱해요 (통 할인 X)</small></h2>
       <div class="qt-disc">
@@ -6185,6 +6200,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-1040';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1109';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
