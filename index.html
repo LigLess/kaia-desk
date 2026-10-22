@@ -1527,6 +1527,10 @@ body.dark .cp-list,body.xg .cp-list{background:#1b1d24}
 .tm-bell svg{width:14px;height:14px}
 .toast.post-t{border-left:3px solid var(--accent)}
 .toast.lead-post{border-left:4px solid #e8590c}
+.guide-wrap{border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 0 0 1px var(--line-2),0 18px 40px -24px rgba(0,0,0,.35);height:calc(100vh - 230px);min-height:480px}
+.guide-view a.btn{text-decoration:none}
+.guide-wrap iframe{display:block;width:100%;height:100%;border:0;background:#fff}
+@media (max-width:900px){.guide-wrap{height:calc(100vh - 210px);border-radius:14px}}
 </style>
 </head>
 <body>
@@ -2120,6 +2124,7 @@ receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/
 clip:'<path d="M20 11.5 12.2 19.3a5 5 0 0 1-7.1-7.1l8.1-8.1a3.4 3.4 0 0 1 4.8 4.8l-8 8a1.7 1.7 0 0 1-2.4-2.4l7.4-7.4"/>',
 edit:'<path d="M4 20h4.2L19 9.2a2.1 2.1 0 0 0 0-3L17.8 5a2.1 2.1 0 0 0-3 0L4 15.8z"/><path d="M13.5 6.5l4 4"/>',
 trash:'<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.9 12.5a1 1 0 0 0 1 .9h7.2a1 1 0 0 0 1-.9L17.5 7"/>',
+book:'<path d="M4 5.5A2 2 0 0 1 6 3.5h5.5v16H6a2 2 0 0 0-2 2z"/><path d="M20 5.5a2 2 0 0 0-2-2h-5.5v16H18a2 2 0 0 1 2 2z"/>',
 search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
 send:'<path d="M20.5 3.5 3.5 10.6l6.7 2.7 2.7 6.7z"/><path d="m10.2 13.3 4.6-4.6"/>',
 };
@@ -2507,8 +2512,8 @@ function permHint(){
 const NAV=[
  {v:'home',t:'홈',i:'home'},{v:'timetable',t:'시간표',i:'cal'},{v:'notice',t:'개강안내',i:'mail'},{v:'students',t:'학생',i:'users'},{v:'alarms',t:'알림',i:'bell',badge:true},{v:'team',t:'팀',i:'team',tb:true},
  {sep:1},
- {v:'tasks',t:'업무',i:'task',sec:1},{v:'quote',t:'견적서',i:'receipt',sec:1},{v:'snippets',t:'문구함',i:'quote',sec:1},{v:'settings',t:'설정',i:'gear',sec:1}];
-const TITLES={home:'홈',timetable:'시간표',notice:'개강안내',students:'학생',alarms:'알림',team:'팀',tasks:'업무',quote:'견적서',snippets:'문구함',settings:'설정'};
+ {v:'tasks',t:'업무',i:'task',sec:1},{v:'quote',t:'견적서',i:'receipt',sec:1},{v:'snippets',t:'문구함',i:'quote',sec:1},{v:'guide',t:'가이드',i:'book',sec:1},{v:'settings',t:'설정',i:'gear',sec:1}];
+const TITLES={home:'홈',timetable:'시간표',notice:'개강안내',students:'학생',alarms:'알림',team:'팀',tasks:'업무',quote:'견적서',snippets:'문구함',guide:'사용 가이드',settings:'설정'};
 const DOCK=[['home','홈','home'],['timetable','시간표','cal'],['notice','안내','mail'],['students','학생','users'],['team','팀','team'],['tasks','업무','task']];
 let navBound=false;
 /* 메뉴가 오른쪽 버튼과 겹치지 않게: 넘치면 보조 메뉴 글자 → 전체 글자 순서로 숨김 */
@@ -2566,11 +2571,18 @@ function render(){
   renderDirty=false;
   document.body.classList.toggle('gate',!!S.gate);
   renderSide();
-  const V={home:vHome,timetable:vTimetable,notice:vNotice,students:vStudents,alarms:vAlarms,team:vTeam,progress:vHome,tasks:vTasks,quote:vQuote,snippets:vSnippets,settings:vSettings}[S.view]||vHome;
+  const V={home:vHome,timetable:vTimetable,notice:vNotice,students:vStudents,alarms:vAlarms,team:vTeam,progress:vHome,tasks:vTasks,quote:vQuote,snippets:vSnippets,guide:vGuide,settings:vSettings}[S.view]||vHome;
+  if(S.view==='guide'&&!S.gate&&$('#view').dataset.v==='guide'&&$('#guideFrame')){ afterRender(); return; }   // 가이드는 다시 그리지 않음 (보던 위치 유지)
   const html=S.gate?vLogin():(S.demo?demoBanner():'')+V();
   const view=$('#view'); const same=view.dataset.v===S.view; view.dataset.v=S.view; const quiet=!!S._quiet&&same; S._quiet=false; view.classList.toggle('quiet',quiet); S._q=quiet;
   view.innerHTML=html; if(!same){ view.style.animation='none'; view.offsetHeight; view.style.animation=''; }
   afterRender();
+}
+/* 사용 가이드: 같은 사이트의 guide.html을 앱 안에서 그대로 보여 줘요 */
+const GUIDE_URL=/github\.io$/.test(location.hostname)?'guide.html':'https://ligless.github.io/kaia-desk/guide.html';
+function vGuide(){
+  return `<div class="view guide-view">${vh('사용 가이드','처음 쓰는 사람도 따라 할 수 있게 화면마다 순서를 정리했어요',`<a class="btn" href="${GUIDE_URL}" target="_blank" rel="noopener">${ic('right')}새 창으로 열기</a>`)}
+    <div class="guide-wrap"><iframe id="guideFrame" src="${GUIDE_URL}" title="KAIA DESK 사용 가이드" loading="eager"></iframe></div></div>`;
 }
 function demoBanner(){ return `<div class="banner"><p><b>예시 화면입니다.</b> 이름 앞에 "예시"가 붙은 데이터는 둘러보기용이에요. 엑셀 시간표를 올리면 예시는 사라지고 실제 데이터로 시작해요.</p><div class="btns"><button class="btn sm pri" data-act="startReal">내 데이터로 시작</button></div></div>`; }
 function syncChip(){ if(S.mode==='gas'){ const st=store.syncState||'ok'; return `<span class="sync ${st==='busy'?'busy':st==='off'?'off':''}" title="구글 시트 동기화"><i></i><span>${st==='busy'?'저장 중':st==='off'?'오프라인':'동기화됨'}</span></span>`; } return ''; }
@@ -6173,6 +6185,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-1024';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1040';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

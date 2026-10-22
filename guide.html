@@ -32,6 +32,7 @@ p{margin:0}
 .top nav{display:flex;gap:22px}
 .top nav a{color:var(--ink-2);text-decoration:none;font-size:14.5px;font-weight:500}
 .top nav a:hover{color:var(--accent)}
+.inapp .top .go{display:none}
 .top .go{background:var(--accent);color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:9px 16px;border-radius:999px}
 
 /* 첫 화면 */
@@ -178,7 +179,7 @@ footer{border-top:1px solid var(--line);padding:36px 0 60px;font-size:14px;color
 </style>
 </head>
 <body>
-<script>document.documentElement.classList.add('js')</script>
+<script>document.documentElement.classList.add('js');if(window.top!==window)document.documentElement.classList.add('inapp')</script>
 <header class="top"><div class="wrap">
   <a class="brand" href="#top">KAIA DESK 사용 가이드</a>
   <nav aria-label="목차"><a href="#start">시작하기</a><a href="#daily">매일 쓰는 기능</a><a href="#quote">견적서</a><a href="#team">팀 기능</a><a href="#faq">자주 묻는 질문</a></nav>
