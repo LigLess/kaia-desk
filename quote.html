@@ -1526,6 +1526,19 @@ body.dark .cp-list,body.xg .cp-list{background:#1b1d24}
 .guide-view a.btn{text-decoration:none}
 .guide-wrap iframe{display:block;width:100%;height:100%;border:0;background:#fff}
 @media (max-width:900px){.guide-wrap{height:calc(100vh - 210px);border-radius:14px}}
+.qzr-steps{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:0}
+.qzr-steps>li{display:grid;grid-template-columns:86px 1fr;gap:14px;padding:12px 0;border-top:1px solid var(--line);position:relative}
+.qzr-steps>li:first-child{border-top:0}
+.qzr-when{font-size:12px;font-weight:700;color:var(--accent);padding-top:2px}
+.qzr-steps b{font-size:14px;color:var(--fg)}
+.qzr-steps ul{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.7;color:var(--fg-2)}
+.qzr-tk{margin:4px 0 12px;padding-left:20px;font-size:13px;line-height:1.8;color:var(--fg-2)}
+.qzr-msg{border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);padding:12px 14px}
+.qzr-msgh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.qzr-msgh b{font-size:13px}
+.qzr-msg pre{margin:0;white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.75;color:var(--fg)}
+.qzr.print .qzr-when{color:#1769c2}.qzr.print .qzr-steps b{color:#111}.qzr.print .qzr-steps ul{color:#333}.qzr.print .qzr-steps>li{border-color:#ddd}
+@media (max-width:640px){.qzr-steps>li{grid-template-columns:1fr;gap:4px}}
 </style>
 <style>
 html{height:auto!important;overflow-y:auto!important}
@@ -1792,7 +1805,9 @@ function qtCalc(q){
   use.forEach(s=>{ const p=parseFloat(s.p); if(p>0){ f*=1-p/100; run=orig*f; steps.push({label:s.k,pct:p,after:run}); } });
   const unit=+q.unit||1; const tgt=parseInt(String(q.target||'').replace(/[^\d]/g,''),10);
   const onReal=QT_ONLINE[q.online]||0; const carve=!!(q.onCarve&&onReal);
-  const base=tgt>0?tgt:Math.round(orig*f/unit)*unit;               // 할인까지 끝난 금액 (또는 목표 금액)
+  const calc=Math.round(orig*f/unit)*unit;                         // 할인까지 끝난 금액
+  const cut=tgt>0?0:calc%1000;                                      // 천 원 미만(백 원 단위까지)은 빼 줘요 — 반올림 X (801,900 → 801,000)
+  const base=tgt>0?tgt:calc-cut;                                    // 최종 금액 (또는 목표 금액)
   const offline=carve?Math.max(0,base-onReal):base;                // 인터넷강의 빼주기: 같은 총액 안에서 인강 금액을 먼저 떼고 남은 금액이 수강료
   let rem=offline; rows.forEach(r=>{ if(r.free||r.orig==null){ r.alloc=null; return; } r.alloc=Math.min(r.orig,Math.max(rem,0)); rem-=r.alloc; });
   const disc=orig?1-base/orig:0; const warn=[];
@@ -1802,7 +1817,7 @@ function qtCalc(q){
   if(tgt>0&&base>orig+(carve?onReal:0)) warn.push('목표 금액이 정가 합계보다 커요.');
   if(carve&&base<onReal) warn.push('총액이 인터넷강의 금액보다 적어서 수강료가 0원이 됐어요.');
   const listed=rows.filter(r=>r.n).length;   // 마스터본 '등록 과목' = 과목 칸에 적힌 줄 수 (무료 항목 포함)
-  return {rows,listed,paid:n,orig,factor:f,steps,base,offline,tierPct,emp:!!emp,carve,onList:onReal||null,onReal,total:carve?base:base+onReal,disc,warn,target:tgt>0};
+  return {rows,listed,paid:n,orig,factor:f,steps,cut,base,offline,tierPct,emp:!!emp,carve,onList:onReal||null,onReal,total:carve?base:base+onReal,disc,warn,target:tgt>0};
 }
 
 /* ---------- 견적서 용지 (화면 미리보기 · 인쇄) ---------- */
@@ -2057,6 +2072,7 @@ function qtSumHTML(q,c){
       <div><span>정가 합계</span><b>${qtWon(c.orig)}</b></div>
       ${c.steps.map(s=>`<div class="st"><span>× (1 − ${s.pct}%) ${esc(s.label)}</span><b>${qtWon(Math.round(s.after))}</b></div>`).join('')}
       ${c.emp?`<div class="st"><span>재직자 할인은 단독 적용</span><b></b></div>`:''}
+      ${c.cut?`<div class="st"><span>천 원 미만 빼기 (−${qtWon(c.cut)}원)</span><b>${qtWon(c.base)}</b></div>`:''}
       ${c.target?`<div class="st"><span>목표 금액 적용</span><b>${qtWon(c.base)}</b></div>`:''}
       ${c.carve?`<div class="st"><span>인터넷강의 빼주기 ${qtWon(c.base)} = 인강 ${qtWon(c.onReal)} + 수강료</span><b>${qtWon(c.offline)}</b></div>`:''}
       <div><span>오프라인 수강료 ${c.orig?`<em>${(c.disc*100).toFixed(1)}% 인하${c.carve?' (인강 포함 총액 기준)':''}</em>`:''}</span><b>${qtWon(c.offline)}</b></div>
