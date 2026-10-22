@@ -69,6 +69,11 @@ function folder_() {
   if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
   const f = DriveApp.createFolder('KAIA DESK 팀 파일'); p.setProperty('FOLDER', f.getId()); return f;
 }
+function tmpFolder_() {   // 나눠 올린 조각을 잠깐 두는 곳 (합친 뒤 휴지통으로)
+  const p = PropertiesService.getScriptProperties(); const id = p.getProperty('TMP');
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  const f = folder_().createFolder('_올리는 중'); p.setProperty('TMP', f.getId()); return f;
+}
 function inFolder_(file) { const fid = folder_().getId(); const it = file.getParents(); while (it.hasNext()) if (it.next().getId() === fid) return true; return false; }
 const isLead_ = r => /^(팀장|lead|manager|admin)$/i.test(String(r[7] || '').trim());
 function staffOf_(lead, rows) { return rows.filter(r => norm_(r[0]) !== lead && !isLead_(r) && (!String(r[8] || '').trim() || norm_(r[8]) === lead)); }
@@ -91,13 +96,13 @@ function mailLead_(lead, uid) {
 
 function doGet(e) {
   const p = e.parameter || {};
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 5 });
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 6 });
   const uid = auth_(p.token); if (!uid) return out_({ error: 'auth' });
   if (p.a === 'members') {
     const v = userSheet_().getDataRange().getValues().slice(1);
     const me = v.find(r => norm_(r[0]) === uid);
     const lead = !!(me && isLead_(me));
-    return out_({ v: 5, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
+    return out_({ v: 6, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
       role: lead ? 'lead' : '', staff: lead ? staffOf_(uid, v).map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })) : [] });
   }
   if (p.a === 'staffStudents') {   // 팀장 전용 · 보기 전용 · 서버에서 권한 확인
@@ -126,7 +131,12 @@ function doGet(e) {
     let f; try { f = DriveApp.getFileById(String(p.id || '')); } catch (err) { return out_({ error: 'nofile' }); }
     if (!inFolder_(f)) return out_({ error: 'nofile' });
     const b = f.getBlob();
-    return out_({ name: f.getName(), type: b.getContentType(), data: Utilities.base64Encode(b.getBytes()) });
+    const bytes = b.getBytes();
+    if (p.len) {   // 큰 파일은 3MB씩 나눠서 내려받아요
+      const off = Math.max(0, Number(p.off || 0)), len = Math.min(3 * 1024 * 1024, Math.max(1, Number(p.len)));
+      return out_({ name: f.getName(), type: b.getContentType(), size: bytes.length, off: off, data: Utilities.base64Encode(bytes.slice(off, off + len)) });
+    }
+    return out_({ name: f.getName(), type: b.getContentType(), data: Utilities.base64Encode(bytes) });
   }
   const since = Number(p.since || 0);
   const docs = [];
@@ -144,6 +154,23 @@ function doPost(e) {
   if (b.a === 'upload') {   // 게시판 첨부 파일 → 드라이브 폴더
     const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
     const bytes = Utilities.base64Decode(String(b.data || ''));
+    if (!bytes.length || bytes.length > MAX_FILE) return out_({ error: 'size' });
+    const name = String(b.name || 'file').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120);
+    const f = folder_().createFile(Utilities.newBlob(bytes, String(b.type || 'application/octet-stream'), name));
+    f.setDescription(uid);
+    return out_({ ok: true, id: f.getId(), name: name, size: bytes.length, type: String(b.type || '') });
+  }
+  if (b.a === 'upc') {      // 큰 첨부: 3MB씩 나눠 받아서 마지막 조각에서 하나로 합쳐요
+    const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
+    const id = String(b.up || '').replace(/[^\w-]/g, '').slice(0, 40), i = Number(b.i), n = Number(b.n);
+    if (!id || !(n > 0 && n <= 20) || !(i >= 0 && i < n)) return out_({ error: 'bad' });
+    const tmp = tmpFolder_(), key = uid + '.' + id + '.';
+    tmp.createFile(key + i, String(b.data || ''), 'text/plain');
+    if (i < n - 1) return out_({ ok: true, part: i });
+    const parts = []; let txt = '';
+    for (let k = 0; k < n; k++) { const it = tmp.getFilesByName(key + k); if (!it.hasNext()) return out_({ error: 'missing', part: k }); const f = it.next(); parts.push(f); txt += f.getBlob().getDataAsString(); }
+    parts.forEach(f => { try { f.setTrashed(true); } catch (err) {} });
+    const bytes = Utilities.base64Decode(txt); txt = '';
     if (!bytes.length || bytes.length > MAX_FILE) return out_({ error: 'size' });
     const name = String(b.name || 'file').replace(/[\\/:*?"<>|]/g, '_').slice(0, 120);
     const f = folder_().createFile(Utilities.newBlob(bytes, String(b.type || 'application/octet-stream'), name));

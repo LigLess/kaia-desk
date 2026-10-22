@@ -5436,6 +5436,17 @@ function postModal(id){
   </div>${p.by===u?`<footer><button class="btn ghost danger" data-act="tmPDel" data-id="${id}">삭제</button><span style="flex:1"></span><button class="btn" data-act="tmEdit" data-id="${id}">고치기</button></footer>`:''}`,'narrow');
   const ci=$('#cmText'); ci&&ci.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.isComposing){ e.preventDefault(); WACT.tmCAdd({dataset:{id}}); } });
 }
+/* 첨부 올리기: 3MB 이하는 한 번에, 큰 파일은 3MB씩 나눠서 (구글 서버가 큰 요청을 한 번에 못 받아서) */
+const UP_CHUNK=3*1024*1024;   // 3의 배수 → 조각별 base64를 이어 붙여도 깨지지 않음
+async function upFile(f,prog){
+  if(f.size<=UP_CHUNK){ prog&&prog(50); return await gas.call('POST',null,{a:'upload',name:f.name,type:f.type||'',data:await b64(f)}); }
+  const n=Math.ceil(f.size/UP_CHUNK), id=uid('u'); let j=null;
+  for(let i=0;i<n;i++){ const part=f.slice(i*UP_CHUNK,Math.min(f.size,(i+1)*UP_CHUNK)); let tries=0;
+    while(true){ try{ j=await gas.call('POST',null,{a:'upc',up:id,i,n,name:f.name,type:f.type||'',data:await b64(part)}); break; }catch(e){ if(++tries>=3||/auth|size|bad/.test(e.message)) throw e; await new Promise(r=>setTimeout(r,1500*tries)); } }
+    if(i===0&&j&&j.part===undefined&&!j.id) throw new Error('oldserver');   // 예전 팀 서버: 나눠 올리기를 모름
+    prog&&prog(Math.round((i+1)/n*100)); }
+  if(!j||!j.id) throw new Error('join'); return j;
+}
 const b64=f=>new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result).split(',')[1]||''); r.onerror=rej; r.readAsDataURL(f); });
 
 Object.assign(WACT,{
@@ -5470,8 +5481,8 @@ Object.assign(WACT,{
   tmSave:async el=>{
     const title=$('#wpTitle').value.trim(), body=$('#wpBody').value.trim(); if(!title){ toast('제목을 적어 주세요',''); return; }
     if(el.disabled) return; el.disabled=true; const m=me(); const up=[];
-    try{ for(const [i,f] of S._newFiles.entries()){ el.textContent=`올리는 중 ${i+1}/${S._newFiles.length}`; const j=await gas.call('POST',null,{a:'upload',name:f.name,type:f.type||'',data:await b64(f)}); up.push({id:j.id,name:j.name,size:j.size,type:f.type||''}); } }
-    catch(e){ el.disabled=false; el.textContent='다시 올리기'; toast('파일을 올리지 못했어요',e.message==='size'?(S._newFiles.some(f=>f.size>15*1024*1024)?'팀 서버가 아직 15MB까지만 받아요. 팀 서버 코드를 새 버전으로 다시 배포해야 30MB까지 올라가요.':'30MB 이하 파일만 올릴 수 있어요.'):'인터넷 연결이나 팀 서버 버전을 확인해 주세요.'); return; }
+    try{ for(const [i,f] of S._newFiles.entries()){ const tag=S._newFiles.length>1?` ${i+1}/${S._newFiles.length}`:''; el.textContent=`올리는 중${tag}`; const j=await upFile(f,pct=>{ el.textContent=`올리는 중${tag} · ${pct}%`; }); up.push({id:j.id,name:j.name,size:j.size,type:f.type||''}); } }
+    catch(e){ el.disabled=false; el.textContent='다시 올리기'; toast('파일을 올리지 못했어요',e.message==='oldserver'?'3MB가 넘는 파일은 팀 서버 코드를 새 버전(Code.gs)으로 다시 배포해야 올라가요.':e.message==='size'?(S._newFiles.some(f=>f.size>15*1024*1024)?'팀 서버가 아직 15MB까지만 받아요. 팀 서버 코드를 새 버전으로 다시 배포해야 30MB까지 올라가요.':'30MB 이하 파일만 올릴 수 있어요.'):'인터넷 연결이나 팀 서버 버전을 확인해 주세요.'); return; }
     const old=el.dataset.id?teamData().posts[el.dataset.id]:null;
     const p={...(old||{}),id:old?old.id:uid('p'),cat:S._wpCat||'자유',pin:S._wpCat==='공지'&&$('#wpPin').checked,title,body,files:[...S._draftFiles,...up],by:old?old.by:m.user,byName:old?old.byName:m.name,notify:S.myRole==='lead'||!!($('#wpNoti')&&$('#wpNoti').checked),byRole:old?old.byRole||'':(S.myRole==='lead'?'lead':''),at:old?old.at:Date.now(),...(old?{edited:Date.now()}:{})};
     if(old) (old.files||[]).filter(f=>!p.files.some(x=>x.id===f.id)).forEach(f=>gas.call('POST',null,{a:'unfile',id:f.id}).catch(()=>{}));
@@ -5484,7 +5495,11 @@ Object.assign(WACT,{
   tmCAdd:el=>{ const i=$('#cmText'); const t=i&&i.value.trim(); if(!t) return; const m=me(); teamPut('comments',{id:uid('c'),post:el.dataset.id,t,by:m.user,byName:m.name,at:Date.now()}); postModal(el.dataset.id); render(); setTimeout(()=>{ const x=$('#cmText'); x&&x.focus(); },50); },
   tmCDel:el=>{ teamDel('comments',el.dataset.id); postModal(el.dataset.k); render(); },
   tmDl:async el=>{ toast('파일 받는 중',el.dataset.k);
-    try{ const j=await gas.call('GET',{a:'file',id:el.dataset.id}); const bin=atob(j.data); const u8=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u8[i]=bin.charCodeAt(i);
+    try{ const dec=d=>{ const bin=atob(d||''); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; };
+      let j=await gas.call('GET',{a:'file',id:el.dataset.id,off:0,len:UP_CHUNK}); let u8;
+      if(j.size==null) u8=dec(j.data);   // 예전 팀 서버: 한 번에 통째로
+      else { u8=new Uint8Array(j.size); let got=dec(j.data); u8.set(got,0); let off=got.length;
+        while(off<j.size){ toast('파일 받는 중',`${el.dataset.k} · ${Math.round(off/j.size*100)}%`); const k=await gas.call('GET',{a:'file',id:el.dataset.id,off,len:UP_CHUNK}); got=dec(k.data); if(!got.length) throw new Error('short'); u8.set(got,off); off+=got.length; } }
       const url=URL.createObjectURL(new Blob([u8],{type:j.type||'application/octet-stream'})); const a=document.createElement('a'); a.href=url; a.download=j.name||el.dataset.k; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); }
     catch(e){ toast('파일을 받지 못했어요','지워졌거나 팀 서버에 연결되지 않아요.'); } },
   tmEmail:async()=>{ const v=$('#tmEmailIn').value.trim(); try{ const j=await gas.call('POST',null,{a:'email',email:v}); S.myEmail=j.email||''; toast(v?'메일 알림을 켰어요':'메일 알림을 껐어요',v?`DB가 배정되면 ${v}로도 알려 드려요.`:''); render(); }catch(e){ toast('저장하지 못했어요',e.message==='email'?'메일 주소 형식을 확인해 주세요.':'팀 서버 버전을 확인해 주세요.'); } },
@@ -6201,6 +6216,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-1137';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1144';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
