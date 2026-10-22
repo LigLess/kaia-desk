@@ -1533,6 +1533,19 @@ body.dark .cp-list,body.xg .cp-list{background:#1b1d24}
 .guide-view a.btn{text-decoration:none}
 .guide-wrap iframe{display:block;width:100%;height:100%;border:0;background:#fff}
 @media (max-width:900px){.guide-wrap{height:calc(100vh - 210px);border-radius:14px}}
+.qzr-steps{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:0}
+.qzr-steps>li{display:grid;grid-template-columns:86px 1fr;gap:14px;padding:12px 0;border-top:1px solid var(--line);position:relative}
+.qzr-steps>li:first-child{border-top:0}
+.qzr-when{font-size:12px;font-weight:700;color:var(--accent);padding-top:2px}
+.qzr-steps b{font-size:14px;color:var(--fg)}
+.qzr-steps ul{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.7;color:var(--fg-2)}
+.qzr-tk{margin:4px 0 12px;padding-left:20px;font-size:13px;line-height:1.8;color:var(--fg-2)}
+.qzr-msg{border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line-2);padding:12px 14px}
+.qzr-msgh{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.qzr-msgh b{font-size:13px}
+.qzr-msg pre{margin:0;white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.75;color:var(--fg)}
+.qzr.print .qzr-when{color:#1769c2}.qzr.print .qzr-steps b{color:#111}.qzr.print .qzr-steps ul{color:#333}.qzr.print .qzr-steps>li{border-color:#ddd}
+@media (max-width:640px){.qzr-steps>li{grid-template-columns:1fr;gap:4px}}
 </style>
 </head>
 <body>
@@ -5201,6 +5214,44 @@ function chartTrend(pts,print){
     <polyline points="${pts.map((p,i)=>x(i)+','+y(p.p)).join(' ')}" fill="none" stroke="${acc}" stroke-width="2.4" stroke-linejoin="round"/>${pts.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.p)}" r="4" fill="${acc}"/><text x="${x(i)}" y="${y(p.p)-10}" text-anchor="middle" font-size="11" font-weight="700" fill="${print?'#222':'currentColor'}">${p.p}%</text><text x="${x(i)}" y="${H-2}" text-anchor="middle" font-size="10.5" fill="${print?'#777':'currentColor'}" opacity=".75">${esc(p.l)}</text>`).join('')}</svg>`;
 }
 
+/* ---------- 학습 로드맵 + 전달 멘트 (결과를 바탕으로 자동) ---------- */
+function qzRoad(s,a){
+  const qz=a.quiz, B=QBANK[qz.sub], r=a.res, p=pct(r.ok,r.n), lv=qz.lv, L=QLEVEL;
+  const rows=Object.keys(r.by).map(k=>({k:+k,n:B.topics[k].n,p:pct(r.by[k].c,r.by[k].n)}));
+  const weak=rows.filter(x=>x.p<50).sort((x,y)=>x.p-y.p), mid=rows.filter(x=>x.p>=50&&x.p<80).sort((x,y)=>x.p-y.p), good=rows.filter(x=>x.p>=80).sort((x,y)=>y.p-x.p);
+  const tip=(row,shift)=>B.topics[row.k].study[Math.max(0,Math.min(2,lv-1+shift))];
+  const nm=xs=>xs.map(x=>x.n).join(', ');
+  const up=p>=85, keep=p>=60&&!up, back=p<60;
+  const nextLv=up?Math.min(3,lv+1):back?Math.max(1,lv-1):lv;
+  const phases=[];
+  // 1단계: 바로 (1~2주)
+  const f=weak.length?weak:mid.length?mid:[];
+  phases.push({when:'1~2주차',title:f.length?`${nm(f)} 다지기`:'지금 수준 굳히기',
+    items:(f.length?f.slice(0,3).map(x=>`${x.n}: ${tip(x,x.p<50?-1:0)}`):[`${nm(good)||B.name} 영역은 이미 잘하고 있어요. 틀린 문제만 다시 풀어 보며 실수를 줄여요.`])
+      .concat([`틀린 ${r.n-r.ok}문항을 해설과 함께 다시 풀고, 왜 틀렸는지 한 줄로 적어 와요.`].filter(()=>r.n-r.ok>0))});
+  // 2단계: 확인 (3~4주)
+  phases.push({when:'3~4주차',title:up?`${L[nextLv]} 단계 도전`:back?`${L[nextLv]} 단계로 기초 다시 확인`:`${L[lv]} 단계 보완 과제로 확인`,
+    items:[ (up?`${B.name} ${L[nextLv]} 단계 과제로 한 단계 올려서 실력을 확인해요.`:back?`${B.name} ${L[nextLv]} 단계 과제로 기본 개념부터 다시 확인해요.`:`${nm(f.length?f:rows)} 위주의 보완 과제(${L[lv]} 단계)를 한 번 더 풀어요.`),
+      ...(mid.length&&weak.length?[`${nm(mid)}: ${tip(mid[0],0)}`]:[]),
+      `목표: 정답률 ${up?80:85}% 이상${up?'':' → 다음 단계로'}` ]});
+  // 3단계: 다음 목표
+  const goal=String(s.goal||'');
+  phases.push({when:'그다음',title:lv>=3&&up?'실전 · 자격증 준비':'다음 단계로 이어가기',
+    items:[ lv>=3&&up?'기출 · 실전 문제로 감을 유지하고, 시간 재고 풀어 보는 연습을 해요.':`${L[Math.min(3,nextLv+(up?0:1))]} 단계까지 올라가면 ${B.cat==='cert'?'기출 문제 풀이':'작은 프로젝트(직접 코드 짜 보기)'}로 넘어가요.`,
+      ...(goal?[`학생 목표(${goal})에 맞춰 다음 과목 · 일정은 상담 때 함께 정해요.`]:['다음 상담 때 목표(자격증 · 취업 · 과목)를 함께 정해 진도를 맞춰요.']) ]});
+  // 전달 멘트 (칭찬 → 보완 → 다음 행동)
+  const me=(S.settings&&(S.settings.mentor||(S.settings.name?S.settings.name+' 멘토':'')))||'담당 멘토';
+  const nmS=(s.name||'').replace(/^예시\s*/,'');
+  const praise=good.length?`특히 ${nm(good.slice(0,2))} 부분은 정확하게 이해하고 있어서 좋았어요.`:p>0?`어려운 문제도 끝까지 풀어 본 점이 좋았어요.`:`처음이라 어려웠을 텐데 끝까지 해 본 것 자체가 시작이에요.`;
+  const need=weak.length?`${nm(weak.slice(0,2))} 부분은 아직 헷갈리는 것 같아서 이 부분을 먼저 다지면 좋겠어요.`:mid.length?`${nm(mid.slice(0,2))} 부분만 조금 더 연습하면 완벽해요.`:'지금처럼만 하면 다음 단계도 충분히 해낼 수 있어요.';
+  const plan=`앞으로 1~2주는 「${phases[0].title}」, 3~4주차에는 「${phases[1].title}」 순서로 진행할게요.`;
+  const msg=`${nmS}님, ${me}입니다.\n이번 ${B.name} ${L[lv]} 단계 과제 결과 ${r.n}문항 중 ${r.ok}문항 맞히셨어요 (${p}점).\n${praise}\n${need}\n${plan}\n틀린 문제는 해설과 함께 다시 정리해 드릴게요. 궁금한 점은 언제든 편하게 물어봐 주세요!`;
+  const talk=[`잘한 점 먼저: ${good.length?nm(good.slice(0,2)):'끝까지 푼 태도'} → 자신감부터 살려 주기`,
+    `보완할 점 하나만: ${weak.length?nm(weak.slice(0,1)):mid.length?nm(mid.slice(0,1)):'실수 줄이기'} → "이것만 잡으면 된다"로 범위를 좁혀 말하기`,
+    `다음 행동 약속: ${phases[0].title} → 다음 과제 날짜를 그 자리에서 정하기`];
+  return {phases,msg,talk};
+}
+
 /* ---------- 분석 리포트 ---------- */
 function quizReport(s,a,print){
   const qz=a.quiz, B=QBANK[qz.sub], r=a.res; const p=pct(r.ok,r.n);
@@ -5215,6 +5266,7 @@ function quizReport(s,a,print){
    <div class="qzr-grid"><div class="qzr-box"><h4>영역별 정답률</h4>${chartBars(rows,print)}</div><div class="qzr-box"><h4>균형</h4>${chartRadar(rows,print)}</div></div>
    ${hist.length>1?`<div class="qzr-box"><h4>${esc(B.name)} 점수 추이</h4>${chartTrend(hist,print)}</div>`:''}
    <div class="qzr-box"><h4>영역별 진단 · 이렇게 공부하세요</h4>${rows.slice().sort((x,y)=>x.p-y.p).map(row=>{ const [st,cls]=topicState(row.p); return `<div class="qzr-tp"><div class="qzr-tph"><span class="chip ${cls}">${st}</span><b>${esc(row.n)}</b><span class="qzr-m">${row.c}/${row.t} 정답 · ${row.p}%${row.b?` · 빈칸 ${row.b}`:''}</span></div><p>${esc(tipFor(row))}</p></div>`; }).join('')}</div>
+   ${(()=>{ const R=qzRoad(s,a); return `<div class="qzr-box qzr-road"><h4>학습 로드맵</h4><ol class="qzr-steps">${R.phases.map(ph=>`<li><div class="qzr-when">${esc(ph.when)}</div><div><b>${esc(ph.title)}</b><ul>${ph.items.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div></li>`).join('')}</ol></div>`+(print?'':`<div class="qzr-box qzr-talk"><h4>학생에게 이렇게 전달하세요 <small>상담 · 통화 때 순서</small></h4><ol class="qzr-tk">${R.talk.map(t=>`<li>${esc(t)}</li>`).join('')}</ol><div class="qzr-msg"><div class="qzr-msgh"><b>문자 · 카톡으로 보낼 때</b><button class="btn sm pri" data-act="qzRoadCopy" data-id="${esc(s.id||'')}" data-aid="${esc(a.id)}">${ic('copy')}복사</button></div><pre>${esc(R.msg)}</pre></div></div>`); })()}
    ${wrong.length&&B.ref?`<div class="qzr-box"><h4>참고 테이블</h4><pre>${esc(B.ref)}</pre></div>`:''}
    ${wrong.length?`<div class="qzr-box"><h4>틀린 문제 다시 보기 <small>${wrong.length}문항</small></h4>${wrong.map(x=>`<div class="qzr-w"><p class="qzr-wq"><b>${x.i+1}.</b> ${esc(x.q.q)} <span class="qzr-m">[${esc(B.topics[x.q.t].n)}]</span></p>${x.q.c?`<pre>${esc(x.q.c)}</pre>`:''}<p class="qzr-wa">학생 답 <b class="bad">${x.ans?CIRC[x.ans]+' '+esc(x.q.o[x.ans-1]):'빈칸'}</b> · 정답 <b class="ok">${CIRC[x.q.a]} ${esc(x.q.o[x.q.a-1])}</b></p><p class="qzr-we">${esc(x.q.e)}</p></div>`).join('')}</div>`:''}
   </div>`;
@@ -5266,6 +5318,7 @@ Object.assign(WACT,{
   qzGrade:el=>{ const a=qzFind(el.dataset.id); if(!a) return; const n=a.quiz.qs.length; a.qAns=a.qAns||Array(n).fill(0); const filled=a.qAns.filter(Boolean).length;
     if(!filled){ toast('답안을 먼저 넣어 주세요',''); return; } gradeQuiz(a); wPersist(); const sid=SM.id; openReport(sid,a.id); },
   qzRegrade:el=>{ const a=qzFind(el.dataset.id); if(!a) return; delete a.res; a.st='sub'; a.doneAt=''; wRedraw(); },
+  qzRoadCopy:el=>{ const st=D().students[el.dataset.id]; const x=st&&(st.assigns||[]).find(y=>y.id===el.dataset.aid); if(x&&x.res) copyText(qzRoad(st,x).msg); },
   qzOpenRep:el=>{ wSync(); wPersist(); openReport(SM.id,el.dataset.id); },
   qzBackStu:el=>{ closeModal(); openStudent(el.dataset.id); SM._tab='as'; drawStudent(); },
   qzRepPrint:el=>{ const s=D().students[el.dataset.id]; const a=s&&(s.assigns||[]).find(x=>x.id===el.dataset.aid); if(a) printHTML(`<div class="ws">${quizReport(s,a,true)}</div>`); },
@@ -6253,6 +6306,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-1300';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1304';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
