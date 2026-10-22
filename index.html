@@ -5825,6 +5825,7 @@ const qtFile=(q,ext)=>`견적서_${(q.name||'이름없음').replace(/[\\/:*?"<>|
 /* ---------- 화면 ---------- */
 /* 과목 고르기: 휴대폰에서도 보이는 검색 목록 (datalist는 폰에서 잘 안 보여서 바꿈) */
 const qtCourseItems=()=>qtPrices().map(p=>({v:p.n,t:p.n,s:`${qtWon(p.p)}원${p.cat?' · '+p.cat:''}${p.t?' · '+p.t:''}`,k:p.cat||''}));
+CPK.qtStu={items:()=>list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(x=>({v:x.name,t:x.name,s:[x.status,x.phone].filter(Boolean).join(' · ')})),pick:(v,box)=>{ if(v==null) return; const i=box.querySelector('input'); i.value=v; i.dispatchEvent(new Event('input',{bubbles:true})); }};
 CPK.qtAddC={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=box.querySelector('input'); i.value=v; WACT.qtAdd(); if(matchMedia('(pointer:coarse)').matches) setTimeout(()=>{ const x=$('#qtAddIn'); x&&x.blur(); },0); }};
 CPK.qtCourse={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=box.querySelector('input'); i.value=v; i.dispatchEvent(new Event('change',{bubbles:true})); }};
 function vQuote(){
@@ -5856,7 +5857,7 @@ function qtMakeView(){
    <div class="qt-form">
     <section class="pane"><h2>받는 사람</h2>
       <div class="qt-head">
-        <label class="field"><span>성함</span><input class="in" data-qh="name" value="${esc(q.name)}" list="qtStus" placeholder="학생 이름" autocomplete="off"></label>
+        <div class="field"><span>성함</span>${list('students').length?cpBox('qtStu',{value:q.name,inAttr:'data-qh="name"',clear:false,ph:'학생 이름 — 내 학생에서 고르거나 직접 입력'}):`<input class="in" data-qh="name" value="${esc(q.name)}" placeholder="학생 이름" autocomplete="off">`}</div>
         <label class="field"><span>상담일</span><input class="in" type="date" data-qh="date" value="${esc(q.date)}"></label>
         <div class="field"><span>양식</span><div class="seg"><button class="${q.tpl!=='ai'?'on':''}" data-act="qtTpl" data-k="it">IT 견적서</button><button class="${q.tpl==='ai'?'on':''}" data-act="qtTpl" data-k="ai">AI 견적서</button></div></div>
       </div>
@@ -6200,6 +6201,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261022-1109';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261022-1114';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
