@@ -1524,7 +1524,7 @@ body.dark .cp-list,body.xg .cp-list{background:#1b1d24}
 .tm-noti b{display:block;color:var(--fg);font-size:13px;font-weight:600}
 .tm-noti.lead{cursor:default;background:color-mix(in srgb,var(--accent) 9%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent)}
 .tm-noti.lead svg{width:18px;height:18px;flex:none;color:var(--accent);margin-top:1px}
-.tm-lead{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--accent);color:#fff;margin-right:6px;vertical-align:1px}
+.tm-leadb{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--accent);color:#fff;margin-right:6px;vertical-align:1px}
 .tm-bell{display:inline-flex;width:14px;height:14px;margin-left:6px;color:var(--accent);vertical-align:-2px}
 .tm-bell svg{width:14px;height:14px}
 .toast.post-t{border-left:3px solid var(--accent)}
@@ -5753,7 +5753,7 @@ function boardPane(){
     <div class="seg" style="flex-wrap:wrap;margin-bottom:12px">${['전체',...POST_CATS].map(k=>`<button class="${k===cat?'on':''}" data-act="tmCat" data-k="${k}">${k}</button>`).join('')}</div>
     ${ps.length?`<div class="list">${ps.map(p=>`<div class="row click tm-post" data-act="tmOpen" data-id="${p.id}">
       <span class="chip ${p.cat==='공지'?'warn':p.cat==='자료'?'cyan':''}">${esc(p.cat||'자유')}</span>
-      <div class="grow"><div class="t1">${p.pin&&p.cat==='공지'?'<span class="tm-pin">고정</span>':''}${p.byRole==='lead'?'<span class="tm-lead">팀장</span>':''}${esc(p.title||'(제목 없음)')}${p.notify&&p.byRole!=='lead'?`<span class="tm-bell" title="알림 보낸 글">${ic('bell')}</span>`:''}${p.by!==u&&(p.at||0)>seen?'<i class="tm-new">N</i>':''}</div>
+      <div class="grow"><div class="t1">${p.pin&&p.cat==='공지'?'<span class="tm-pin">고정</span>':''}${p.byRole==='lead'?'<span class="tm-leadb">팀장</span>':''}${esc(p.title||'(제목 없음)')}${p.notify&&p.byRole!=='lead'?`<span class="tm-bell" title="알림 보낸 글">${ic('bell')}</span>`:''}${p.by!==u&&(p.at||0)>seen?'<i class="tm-new">N</i>':''}</div>
       <div class="t2">${esc(p.byName||memberName(p.by))} · ${agoTxt(p.at)}${(p.files||[]).length?` · ${ic('clip','tm-ic')}${p.files.length}`:''}${cn[p.id]?` · 댓글 ${cn[p.id]}`:''}</div></div></div>`).join('')}</div>`
     :`<div class="empty"><b>${cat==='전체'?'아직 글이 없어요':cat+' 글이 없어요'}</b>공지 · 자료 · 자유롭게 나눌 이야기를 올려 보세요.</div>`}</section>`;
 }
@@ -6622,6 +6622,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261023-2015';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261023-2142';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
