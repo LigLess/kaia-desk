@@ -4077,12 +4077,13 @@ function pasteStudentsGo(){
 /* ===== 끌어다 놓기 ===== */
 let dragDepth=0;
 const hasFiles=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
-document.addEventListener('dragenter',e=>{ if(!hasFiles(e)||S.locked) return; e.preventDefault(); dragDepth++; $('#dropzone').classList.add('show'); });
+document.addEventListener('dragenter',e=>{ if(!hasFiles(e)||S.locked) return; e.preventDefault(); dragDepth++; const dz=$('#dropzone'); const w=!!$('#wpFile'); dz.querySelector('b').textContent=w?'여기에 놓으면 첨부돼요':'여기에 놓으세요'; dz.querySelector('span').textContent=w?'PDF · 압축 · 한글 · 이미지 등 어떤 파일이든 (한 파일 30MB까지)':'엑셀(.xlsx · .xls · .csv)은 시간표로, .json은 학생 데이터로 가져와요'; dz.classList.add('show'); });
 document.addEventListener('dragover',e=>{ if(hasFiles(e)) e.preventDefault(); });
 document.addEventListener('dragleave',e=>{ if(!hasFiles(e)) return; dragDepth=Math.max(0,dragDepth-1); if(!dragDepth) $('#dropzone').classList.remove('show'); });
 document.addEventListener('drop',e=>{
   if(!hasFiles(e)) return; e.preventDefault(); dragDepth=0; $('#dropzone').classList.remove('show'); if(S.locked) return;
   const files=[...e.dataTransfer.files];
+  if($('#wpFile')){ wpAddFiles(files); return; }   // 게시판 글쓰기 창이 열려 있으면 첨부로
   const xl=files.filter(f=>/\.(xlsx|xlsm|xls|csv)$/i.test(f.name)); const js=files.filter(f=>/\.json$/i.test(f.name));
   if(xl.length) handleXlsx(xl); else if(js.length) handleStudentJson(js[0]);
   else toast('이 파일은 읽을 수 없어요','엑셀(.xlsx · .xls · .csv)이나 .json 파일을 놓아 주세요.');
@@ -5812,12 +5813,14 @@ function writeModal(p){
       :`<label class="tm-noti"><input type="checkbox" id="wpNoti" ${p.notify?'checked':''}><span><b>팀원 모두에게 알림 보내기</b>켜면 이 글이 팀원 화면 오른쪽 아래와 윈도우 알림에 떠요. 급하거나 꼭 봐야 하는 글에만 켜 주세요.</span></label>`}
     <label class="field"><span>제목</span><input class="in" id="wpTitle" value="${esc(p.title||'')}" maxlength="120"></label>
     <label class="field"><span>내용</span><textarea class="in" id="wpBody" rows="8">${esc(p.body||'')}</textarea></label>
-    <div class="field"><span>첨부 파일 <small style="color:var(--faint)">한 파일 30MB까지 · 더 큰 파일은 구글 드라이브 공유 링크를 내용에 붙여 넣어요</small></span><div id="wpFiles"></div>
+    <div class="field"><span>첨부 파일 <small style="color:var(--faint)">PDF · 압축 · 한글 · 이미지 등 모두 가능 · 한 파일 30MB까지 · 창에 끌어다 놓아도 돼요</small></span><div id="wpFiles"></div>
       <label class="btn sm" style="align-self:flex-start">${ic('clip')}파일 고르기<input type="file" id="wpFile" multiple hidden></label></div>
   </div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="tmSave" data-id="${edit?p.id:''}">${edit?'저장':'올리기'}</button></footer>`,'narrow');
   S._wpCat=p.cat; drawDraftFiles();
-  $('#wpFile').addEventListener('change',e=>{ [...e.target.files].forEach(f=>{ if(f.size>MAX_UP) toast('파일이 너무 커요',`${f.name} · ${fsize(f.size)} — 30MB까지 올라가요. 더 큰 파일은 구글 드라이브에 올리고 공유 링크를 내용에 붙여 넣어 주세요.`,'alarm-t'); else S._newFiles.push(f); }); e.target.value=''; drawDraftFiles(); });
+  $('#wpFile').addEventListener('change',e=>{ wpAddFiles([...e.target.files]); e.target.value=''; });
 }
+/* 글쓰기 첨부: 파일 고르기 · 창에 끌어다 놓기 모두 여기로 — PDF · 압축 · 한글 · 이미지 등 종류 제한 없음 (한 파일 30MB) */
+function wpAddFiles(files){ files.forEach(f=>{ if(f.size>MAX_UP) toast('파일이 너무 커요',`${f.name} · ${fsize(f.size)} — 30MB까지 올라가요. 더 큰 파일은 구글 드라이브에 올리고 공유 링크를 내용에 붙여 넣어 주세요.`,'alarm-t'); else if(!S._newFiles.some(x=>x.name===f.name&&x.size===f.size)) S._newFiles.push(f); }); drawDraftFiles(); }
 function drawDraftFiles(){ const el=$('#wpFiles'); if(!el) return;
   el.innerHTML=[...S._draftFiles.map((f,i)=>`<div class="tm-file">${ic('clip')}<span>${esc(f.name)}</span><small>${fsize(f.size||0)}</small><button class="btn sm ghost" data-act="tmFRm" data-k="o${i}" aria-label="빼기">${ic('x')}</button></div>`),...S._newFiles.map((f,i)=>`<div class="tm-file new">${ic('clip')}<span>${esc(f.name)}</span><small>${fsize(f.size)}</small><button class="btn sm ghost" data-act="tmFRm" data-k="n${i}" aria-label="빼기">${ic('x')}</button></div>`)].join(''); }
 function postModal(id){
@@ -6619,6 +6622,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261023-1353';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261023-1504';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
