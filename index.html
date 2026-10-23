@@ -1363,6 +1363,8 @@ h2 .tm-chk{margin:0}
 @media (max-width:420px){.tm-g2{grid-template-columns:minmax(0,1fr)}}
 
 #view.quiet,#view.quiet *{animation:none!important}
+#view.quiet .loading i{animation:spin .9s linear infinite!important}
+#view.quiet .dbadge.now{animation:pulse 2.4s ease-in-out infinite!important}
 
 /* ===== 견적서 ===== */
 .qt-tabs{margin:0 0 14px;display:inline-flex!important;width:auto!important;max-width:100%}
@@ -2607,7 +2609,7 @@ function go(v){
   if(v!==S.view) sfx('nav');
   const doIt=()=>{ S.view=v; closeDrawer(); render(); $('#main').scrollTop=0; window.scrollTo&&window.scrollTo(0,0); };
   if(FX.on()&&v!==S.view&&$('#view .view')){ FX.shatter(); S._fxAssemble=true; setTimeout(doIt,120); }
-  else { if(FX.on()) S._fxAssemble=true; doIt(); }
+  else { if(FX.on()&&v!==S.view) S._fxAssemble=true; doIt(); }
   try{ history.replaceState(null,'','#'+v); }catch(e){}
 }
 function openDrawer(){ $('#sheetnav').classList.add('open'); $('#scrim').classList.add('show'); renderSide(); }
@@ -2623,7 +2625,7 @@ function render(){
   const V={home:vHome,timetable:vTimetable,notice:vNotice,students:vStudents,alarms:vAlarms,team:vTeam,progress:vHome,tasks:vTasks,quote:vQuote,snippets:vSnippets,guide:vGuide,settings:vSettings}[S.view]||vHome;
   if(S.view==='guide'&&!S.gate&&$('#view').dataset.v==='guide'&&$('#guideFrame')){ afterRender(); return; }   // 가이드는 다시 그리지 않음 (보던 위치 유지)
   const html=S.gate?vLogin():(S.demo?demoBanner():'')+V();
-  const view=$('#view'); const same=view.dataset.v===S.view; view.dataset.v=S.view; const quiet=!!S._quiet&&same; S._quiet=false; view.classList.toggle('quiet',quiet); S._q=quiet;
+  const view=$('#view'); const same=view.dataset.v===S.view; view.dataset.v=S.view; const quiet=same&&!S._anim; S._quiet=false; S._anim=false; /* 같은 화면 안에서 다시 그릴 때(검색 · 탭 · 동기화)는 움직임 없이 — 화면을 바꿀 때만 한 번 */ view.classList.toggle('quiet',quiet); S._q=quiet;
   view.innerHTML=html; if(!same){ view.style.animation='none'; view.offsetHeight; view.style.animation=''; }
   afterRender();
 }
@@ -6493,7 +6495,7 @@ const ACT={
   imSheet:el=>{ IM.si=+el.dataset.i; drawImport(); },
   imDo:()=>doImport(),
   cmd:()=>openCmd(),
-  fxMode:el=>{ S.settings.fx=el.dataset.k; store.saveSettings(); applyFx(); if(el.dataset.k==='shard'||el.dataset.k==='stack'){ S._fxAssemble=true; } render(); },
+  fxMode:el=>{ S.settings.fx=el.dataset.k; store.saveSettings(); applyFx(); if(el.dataset.k==='shard'||el.dataset.k==='stack'){ S._fxAssemble=true; } S._anim=true; render(); },
   brief:()=>{ sfx('ok'); speak(briefingText()); },
   replayBoot:()=>{ try{ sessionStorage.removeItem('md.booted'); }catch(e){} sfx('boot'); const L=bootLines(); L.ready=true; bootSequence(L); },
   syncOn:async el=>{ const u=$('#syncUrl').value, k=$('#syncKey').value; if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u.trim())){ toast('웹 앱 주소를 확인해 주세요','https://script.google.com/macros/s/…/exec 형식이에요.'); return; } if(!k.trim()){ toast('비밀 키를 넣어 주세요',''); return; } el.disabled=true; await gas.connect(u,k); el.disabled=false; },
@@ -6617,6 +6619,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261023-1056';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261023-1353';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
