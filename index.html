@@ -1551,6 +1551,12 @@ body.dark[data-bg="starhill"]{--bg:#060b22;--surface:rgba(10,14,40,.55);--surfac
 body.dark[data-bg="starhill"] .btn.pri{background:linear-gradient(100deg,#a9bcff,#e9a6d2);border-color:transparent;color:#0a0d26;font-weight:700}
 body.dark[data-bg="starhill"] .pane,body.dark[data-bg="starhill"] .hpanel{box-shadow:0 0 0 1px rgba(255,255,255,.08),0 24px 60px -30px rgba(233,166,210,.32),0 18px 50px -34px rgba(169,188,255,.35)}
 body.dark[data-bg="starhill"] ::selection{background:#e9a6d2;color:#0a0d26}
+body[data-bg="beach"]{--bg:#cfeeff;--bg-soft:#e6f6ff;--surface:rgba(255,255,255,.86);--surface-2:rgba(236,247,255,.9);--surface-3:#dcefff;--fg:#0b2233;--fg-2:#24425a;--muted:#55707f;--faint:#8aa3b2;--line:rgba(11,43,68,.10);--line-2:rgba(11,43,68,.18);
+  --ink:#0b2233;--ink-fg:#ffffff;--ink-soft:rgba(11,34,51,.06);--accent:#0b8bd1;--accent-2:#1aa0e6;--accent-soft:rgba(11,139,209,.12);--bar:rgba(255,255,255,.78);--bar-line:rgba(11,43,68,.10);--pill-bg:#0b2233;--spot:rgba(11,139,209,.06);
+  --shadow-sm:0 1px 2px rgba(10,50,80,.06);--shadow-md:0 14px 34px -18px rgba(10,50,80,.30),0 2px 6px rgba(10,50,80,.06);background:#cfeeff}
+body[data-bg="beach"] .pane,body[data-bg="beach"] .hpanel{backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2)}
+body[data-bg="beach"] .btn.pri{background:linear-gradient(100deg,#0b8bd1,#2cc3d8);border-color:transparent;color:#fff}
+body[data-bg="beach"] ::selection{background:#0b8bd1;color:#fff}
 </style>
 </head>
 <body>
@@ -2909,8 +2915,8 @@ function vSettings(){
   const s=S.settings; const offs=s.offsets||[];
   const tplF=(k,l)=>`<label class="field full"><span>${l}</span><textarea class="in" data-set="tpl.${k}" rows="6">${esc(s.tpl[k])}</textarea></label>`;
   const zoomRows=(s.zooms||[]).map((z,i)=>`<div class="btns" style="flex-wrap:nowrap"><input class="in" data-zoom="${i}" data-f="k" value="${esc(z.k)}" style="width:64px;text-align:center" maxlength="3" aria-label="계정 이름"><input class="in" data-zoom="${i}" data-f="id" value="${esc(z.id)}" placeholder="회의 ID" style="flex:1;min-width:0"><input class="in" data-zoom="${i}" data-f="pw" value="${esc(z.pw)}" placeholder="회의 PW" style="width:120px"><button class="btn sm ghost" data-act="zoomDel" data-i="${i}" aria-label="삭제">${ic('x')}</button></div>`).join('');
-  const sw=(light)=>Object.entries(BG_THEMES).filter(([k,th])=>!th.hud&&!!th.light===light).map(([k,th])=>`<button class="swatch ${s.theme===k?'on':''}" data-act="theme" data-k="${k}" style="background:${th.preview}"><span>${th.name}</span></button>`).join('');
-  const themes=`<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">모던</div><div class="swatches">${Object.entries(BG_THEMES).filter(([k,th])=>th.hud).map(([k,th])=>`<button class="swatch ${s.theme===k?'on':''}" data-act="theme" data-k="${k}" style="background:${th.preview}"><span>${th.name}</span></button>`).join('')}</div><div style="font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 8px">기하학</div><div class="swatches">${sw(true)}</div><div style="font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 8px">다크</div><div class="swatches">${sw(false)}</div>`;
+  const sw=(light)=>Object.entries(BG_THEMES).filter(([k,th])=>!th.hud&&!th.scene&&!!th.light===light).map(([k,th])=>`<button class="swatch ${s.theme===k?'on':''}" data-act="theme" data-k="${k}" style="background:${th.preview}"><span>${th.name}</span></button>`).join('');
+  const themes=`<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px">모던</div><div class="swatches">${Object.entries(BG_THEMES).filter(([k,th])=>th.hud).map(([k,th])=>`<button class="swatch ${s.theme===k?'on':''}" data-act="theme" data-k="${k}" style="background:${th.preview}"><span>${th.name}</span></button>`).join('')}</div><div style="font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 8px">기하학</div><div class="swatches">${sw(true)}</div><div style="font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 8px">다크</div><div class="swatches">${sw(false)}</div><div style="font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 8px">풍경</div><div class="swatches">${Object.entries(BG_THEMES).filter(([k,th])=>th.scene).map(([k,th])=>`<button class="swatch ${s.theme===k?'on':''}" data-act="theme" data-k="${k}" style="background:${th.preview}"><span>${th.name}</span></button>`).join('')}</div>`;
   return `<div class="view">${vh('설정',S.mode==='db'?'내 Claude 계정에 저장돼서 PC와 휴대폰에서 같은 데이터가 보여요':S.mode==='local'?'지금 화면은 이 기기에만 저장돼요':'')}
   <section class="pane"><h2>내 정보</h2><div class="form">
     <label class="field"><span>이름</span><input class="in" data-set="name" value="${esc(s.name)}"></label>
@@ -3226,8 +3232,10 @@ const BG_THEMES={
     preview:'radial-gradient(circle at 22% 28%,#00e0c6 0,transparent 45%),radial-gradient(circle at 78% 30%,#ff3d8b 0,transparent 45%),radial-gradient(circle at 55% 82%,#ffb21f 0,transparent 45%),radial-gradient(circle at 30% 85%,#2f6bff 0,transparent 40%),#04050a'},
   midnight:{name:'미드나잇 스틸',base:['#07090d','#0d1219','#0a0f16'],blobs:['#2f5b86','#2b6f72','#4a6d96','#1f3f5f','#5f7d99'],silk:['#c9d4e2','#9fb8d0','#dfe6ee'],dim:0.42,meta:'#07090d',
     preview:'radial-gradient(circle at 25% 30%,rgba(79,130,180,.55) 0,transparent 50%),radial-gradient(circle at 75% 75%,rgba(43,111,114,.45) 0,transparent 55%),linear-gradient(160deg,#0d1219,#07090d)'},
-  starhill:{name:'별똥별 언덕',kind:'starhill',silk:[],meta:'#060b22',
+  starhill:{name:'별똥별 언덕',kind:'starhill',scene:true,silk:[],meta:'#060b22',
     preview:'linear-gradient(200deg,transparent 30%,rgba(255,255,255,.9) 31%,transparent 33%) 0 0/60% 40% no-repeat,radial-gradient(1px 1px at 20% 20%,#fff 99%,transparent),radial-gradient(1px 1px at 70% 30%,#fff 99%,transparent),radial-gradient(1.5px 1.5px at 45% 12%,#fff 99%,transparent),radial-gradient(120% 70% at 50% 100%,#0a0e22 0 34%,transparent 35%),radial-gradient(90% 40% at 50% 78%,rgba(214,140,190,.55),transparent 70%),linear-gradient(180deg,#040820,#13205a 55%,#4b3c86 80%,#0a0e22 81%)'},
+  beach:{name:'여름 바다',light:true,kind:'beach',scene:true,meta:'#bfe8ff',
+    preview:'radial-gradient(14% 22% at 80% 22%,#fff8d6 0 40%,transparent 41%),radial-gradient(60% 30% at 70% 100%,#f2d6a2 0 55%,transparent 56%),linear-gradient(180deg,#7cc8f5 0,#c8ecff 46%,#1f9bd6 47%,#46c9d6 66%,#f3dcae 67%)'},
   space:{name:'딥 스페이스',space:true,silk:['#c890ff','#86a9ff'],
     preview:'radial-gradient(circle at 110% -40%,#7426d6 0 55%,transparent 56%),radial-gradient(circle at -10% 160%,#2449cf 0 62%,transparent 63%),#05030f'},
 };
@@ -3287,6 +3295,76 @@ const bgfx={
     });
     for(const s of this.stars){ s.y-=s.v; if(s.y<-0.02){ s.y=1.02; s.x=Math.random(); }
       const al=(0.25+0.75*Math.abs(Math.sin(t*s.s+s.p)))*(th.space?0.85:0.55); x.fillStyle=`rgba(255,255,255,${al.toFixed(3)})`; x.beginPath(); x.arc(s.x*W,s.y*H,s.r,0,6.283); x.fill(); }
+  },
+  /* 여름 바다: 맑은 하늘 · 햇살 · 뭉게구름 · 반짝이는 바다 · 밀려왔다 빠지는 파도 · 모래사장 파라솔 아래 쉬는 사람 · 야자수 · 갈매기 */
+  beach(x,W,H,t){
+    const sc=this.s||1, key=W+'x'+H, HZ=H*.5, SH=H*.7;   // 수평선 · 물가 기준선
+    const shore=u=>SH+H*.025*Math.sin(u*5.2+.8)+H*.012*Math.sin(u*13+2);
+    if(this._bcKey!==key){ this._bcKey=key;
+      const c=document.createElement('canvas'); c.width=W; c.height=H; const g=c.getContext('2d');
+      const sky=g.createLinearGradient(0,0,0,HZ); sky.addColorStop(0,'#5fb8f0'); sky.addColorStop(.55,'#a9dcfb'); sky.addColorStop(1,'#e4f6ff'); g.fillStyle=sky; g.fillRect(0,0,W,HZ+1);
+      const sun=g.createRadialGradient(W*.8,H*.16,0,W*.8,H*.16,Math.max(W,H)*.32); sun.addColorStop(0,'rgba(255,252,225,1)'); sun.addColorStop(.06,'rgba(255,248,210,.95)'); sun.addColorStop(.2,'rgba(255,240,200,.35)'); sun.addColorStop(1,'rgba(255,240,200,0)'); g.fillStyle=sun; g.fillRect(0,0,W,HZ);
+      const sea=g.createLinearGradient(0,HZ,0,SH+H*.05); sea.addColorStop(0,'#1478c2'); sea.addColorStop(.35,'#1f9bd6'); sea.addColorStop(.75,'#3cc4d6'); sea.addColorStop(1,'#7fe0d6'); g.fillStyle=sea; g.fillRect(0,HZ,W,SH+H*.06-HZ);
+      const haze=g.createLinearGradient(0,HZ-H*.02,0,HZ+H*.03); haze.addColorStop(0,'rgba(255,255,255,0)'); haze.addColorStop(.5,'rgba(255,255,255,.55)'); haze.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=haze; g.fillRect(0,HZ-H*.02,W,H*.05);
+      // 모래 + 결
+      g.beginPath(); g.moveTo(0,H); for(let px=0;px<=W;px+=6) g.lineTo(px,shore(px/W)+H*.035); g.lineTo(W,H); g.closePath();
+      const sand=g.createLinearGradient(0,SH,0,H); sand.addColorStop(0,'#f1d9a6'); sand.addColorStop(1,'#e9c98c'); g.fillStyle=sand; g.fill();
+      g.save(); g.clip(); for(let i=0;i<W*H/120;i++){ g.fillStyle=Math.random()<.5?'rgba(150,110,50,.10)':'rgba(255,255,255,.22)'; g.fillRect(Math.random()*W,SH+Math.random()*(H-SH),sc,sc); } g.restore();
+      this._bcSky=c;
+      this._bcClouds=[...Array(5)].map((_,i)=>({x:Math.random(),y:.06+Math.random()*.22,s:.7+Math.random()*.8,v:.004+Math.random()*.006}));
+      this._bcGlint=[...Array(Math.round(W/(5*sc)))].map(()=>({x:Math.random(),y:Math.random(),p:Math.random()*6.28,s:1+Math.random()*2}));
+      this._bcGulls=[...Array(3)].map((_,i)=>({x:Math.random(),y:.12+Math.random()*.18,v:.008+Math.random()*.01,p:Math.random()*6.28,s:.8+Math.random()*.5}));
+    }
+    x.drawImage(this._bcSky,0,0);
+    // 구름
+    for(const cl of this._bcClouds){ cl.x+=cl.v/30; if(cl.x>1.2) cl.x=-.2; const cx=cl.x*W, cy=cl.y*H, r=H*.035*cl.s;
+      x.fillStyle='rgba(255,255,255,.88)'; x.beginPath(); [[0,0,1],[1.1,.15,.8],[-1.1,.2,.75],[.5,-.45,.8],[-.45,-.35,.7]].forEach(([ox,oy,k])=>{ x.moveTo(cx+ox*r+r*k,cy+oy*r); x.arc(cx+ox*r,cy+oy*r,r*k,0,6.283); }); x.fill(); }
+    // 갈매기
+    x.strokeStyle='rgba(40,60,80,.65)'; x.lineWidth=1.4*sc; x.lineCap='round';
+    for(const b of this._bcGulls){ b.x+=b.v/30; if(b.x>1.1) b.x=-.1; const bx=b.x*W, by=(b.y+Math.sin(t*.5+b.p)*.01)*H, w=7*sc*b.s, f=Math.sin(t*4+b.p)*2.5*sc;
+      x.beginPath(); x.moveTo(bx-w,by-f); x.quadraticCurveTo(bx-w*.45,by-w*.5-f*.3,bx,by); x.quadraticCurveTo(bx+w*.45,by-w*.5-f*.3,bx+w,by-f); x.stroke(); }
+    // 바다 물결 + 햇빛 반짝임
+    x.strokeStyle='rgba(255,255,255,.18)'; x.lineWidth=1*sc;
+    for(let i=0;i<9;i++){ const yy=HZ+(SH-HZ)*(i+.5)/9; x.beginPath(); for(let px=0;px<=W;px+=10){ const y=yy+Math.sin(px/W*18+t*.8+i)*(1+i*.35)*sc; px?x.lineTo(px,y):x.moveTo(px,y); } x.stroke(); }
+    for(const gl of this._bcGlint){ const a=Math.max(0,Math.sin(t*gl.s+gl.p)); if(a<.55) continue; const gx=gl.x*W, gy=HZ+gl.y*(SH-HZ), near=gl.x>.6?1.6:1;
+      x.fillStyle=`rgba(255,255,240,${((a-.55)*2*near*.8).toFixed(3)})`; x.fillRect(gx-3*sc*near,gy,6*sc*near,1.3*sc); }
+    // 파도: 모래 위로 밀려왔다가 빠짐 (두 겹)
+    for(let k=0;k<2;k++){ const ph=t*.55+k*Math.PI, reach=(Math.sin(ph)*.5+.5)*H*.035, yo=k*H*.012;
+      const edge=u=>shore(u)+reach+yo+Math.sin(u*22+t*1.3+k)*1.6*sc;
+      x.beginPath(); x.moveTo(0,shore(0)-H*.01); for(let px=0;px<=W;px+=6) x.lineTo(px,edge(px/W)); x.lineTo(W,shore(1)-H*.01); x.closePath();
+      x.fillStyle=k?'rgba(120,225,220,.45)':'rgba(170,236,230,.55)'; x.fill();
+      x.beginPath(); for(let px=0;px<=W;px+=6){ const y=edge(px/W); px?x.lineTo(px,y):x.moveTo(px,y); } x.strokeStyle=`rgba(255,255,255,${(.75-k*.25).toFixed(2)})`; x.lineWidth=(2.2-k*.6)*sc; x.stroke();
+      // 젖은 모래 자국
+      x.beginPath(); for(let px=0;px<=W;px+=6){ const y=edge(px/W)+3*sc; px?x.lineTo(px,y):x.moveTo(px,y); } x.strokeStyle='rgba(190,150,90,.18)'; x.lineWidth=4*sc; x.stroke(); }
+    // 야자수 (왼쪽 끝, 바람에 살랑)
+    const pxB=W*.04, pyB=H*1.02, top=[W*.11,H*.56]; const sway=Math.sin(t*.7)*4*sc;
+    x.strokeStyle='#7a5532'; x.lineWidth=9*sc; x.lineCap='round'; x.beginPath(); x.moveTo(pxB,pyB); x.quadraticCurveTo(W*.02,H*.8,top[0]+sway*.3,top[1]); x.stroke();
+    x.strokeStyle='rgba(90,60,30,.35)'; x.lineWidth=1.2*sc; for(let i=1;i<9;i++){ const u=i/9; const qx=(1-u)*(1-u)*pxB+2*(1-u)*u*W*.02+u*u*(top[0]+sway*.3), qy=(1-u)*(1-u)*pyB+2*(1-u)*u*H*.8+u*u*top[1]; x.beginPath(); x.moveTo(qx-4*sc,qy); x.lineTo(qx+4*sc,qy+2*sc); x.stroke(); }
+    const L=H*.17; x.fillStyle='#6b4a2a'; [[-6,6],[4,7],[-1,10]].forEach(([ox,oy])=>{ x.beginPath(); x.arc(top[0]+sway*.3+ox*sc,top[1]+oy*sc,5*sc,0,6.283); x.fill(); });
+    [[-2.75,1],[-2.35,.95],[-1.95,.8],[-1.5,.9],[-1.05,1],[-.6,.95],[-.15,.9],[.3,.75],[-3.1,.8],[-1.25,.6]].forEach(([a,k],i)=>{ const aa=a+Math.sin(t*.9+i)*.05; const ex=top[0]+sway*.3+Math.cos(aa)*L*k, ey=top[1]+Math.sin(aa)*L*k*.6+L*k*.25;
+      const mx=top[0]+sway*.3+Math.cos(aa)*L*k*.5, my=top[1]+Math.sin(aa)*L*k*.5-L*.08;
+      x.fillStyle=i%2?'#2f8f4e':'#3aa35a'; x.beginPath(); x.moveTo(top[0]+sway*.3,top[1]); x.quadraticCurveTo(mx,my-6*sc,ex,ey); x.quadraticCurveTo(mx,my+7*sc,top[0]+sway*.3,top[1]+3*sc); x.fill(); });
+    // 파라솔 + 비치타월 + 쉬는 사람 (오른쪽 아래)
+    const bx=W*.84, by=H*.9, R=Math.min(W,H)*.14, tilt=-.18+Math.sin(t*.8)*.012;
+    x.fillStyle='rgba(120,90,40,.18)'; x.beginPath(); x.ellipse(bx-R*.55,by+R*.12,R*1.15,R*.24,0,0,6.283); x.fill();   // 그늘
+    // 타월
+    x.save(); x.translate(bx-R*.72,by+R*.02); x.rotate(-.05); x.fillStyle='#ffffff'; x.fillRect(-R*.75,-R*.12,R*1.5,R*.26); x.fillStyle='#ff7a6b'; for(let i=0;i<5;i++) x.fillRect(-R*.75+i*R*.3,-R*.12,R*.15,R*.26); x.restore();
+    // 사람 (누워서 쉬는 모습: 머리 · 선글라스 · 몸 · 다리)
+    x.save(); x.translate(bx-R*.72,by-R*.02); x.rotate(-.05); const sk='#e9b48a';
+    x.fillStyle=sk; x.beginPath(); x.arc(-R*.6,-R*.02,R*.085,0,6.283); x.fill();
+    x.fillStyle='#3a2a20'; x.beginPath(); x.arc(-R*.63,-R*.05,R*.085,Math.PI*.9,Math.PI*1.9); x.fill();
+    x.fillStyle='#14202b'; x.fillRect(-R*.58,-R*.05,R*.07,R*.03);
+    x.fillStyle='#2f7fd1'; x.beginPath(); x.ellipse(-R*.3,R*.02,R*.24,R*.075,0,0,6.283); x.fill();
+    x.strokeStyle=sk; x.lineWidth=R*.07; x.lineCap='round'; x.beginPath(); x.moveTo(-R*.08,R*.03); x.lineTo(R*.32,R*.0); x.moveTo(-R*.08,R*.05); x.lineTo(R*.28,R*.09); x.stroke();
+    x.beginPath(); x.moveTo(-R*.42,R*.0); x.quadraticCurveTo(-R*.55,-R*.2,-R*.68,-R*.12); x.stroke();   // 머리 뒤로 받친 팔
+    x.restore();
+    // 파라솔 기둥 + 우산
+    x.save(); x.translate(bx,by+R*.15); x.rotate(tilt); x.strokeStyle='#f6f2ea'; x.lineWidth=3.2*sc; x.beginPath(); x.moveTo(0,0); x.lineTo(0,-R*1.25); x.stroke();
+    const cols=['#ff6b5e','#ffffff']; const n=8; for(let i=0;i<n;i++){ const a0=Math.PI+i*Math.PI/n, a1=a0+Math.PI/n; x.fillStyle=cols[i%2]; x.beginPath(); x.moveTo(0,-R*1.25); x.ellipse(0,-R*1.15,R,R*.42,0,a0,a1); x.closePath(); x.fill(); }
+    x.strokeStyle='rgba(0,0,0,.08)'; x.lineWidth=1*sc; x.beginPath(); x.ellipse(0,-R*1.15,R,R*.42,0,Math.PI,2*Math.PI); x.stroke();
+    x.fillStyle='#f6f2ea'; x.beginPath(); x.arc(0,-R*1.58+R*.01,2.6*sc,0,6.283); x.fill(); x.restore();
+    // 비치볼
+    const bbx=W*.66, bby=H*.93+Math.abs(Math.sin(t*1.2))*-2*sc, br=R*.12; ['#ff6b5e','#ffd34d','#36a3ff','#ffffff'].forEach((c2,i)=>{ x.fillStyle=c2; x.beginPath(); x.moveTo(bbx,bby); x.arc(bbx,bby,br,i*Math.PI/2+t*.0,(i+1)*Math.PI/2); x.closePath(); x.fill(); });
   },
   /* 별똥별 언덕: 깊은 밤하늘 · 은하수 · 반짝이는 별 · 가끔 떨어지는 별똥별 · 언덕 위 풀과 나무 한 그루 */
   starhill(x,W,H,t){
@@ -3510,6 +3588,7 @@ const bgfx={
       :Wt?{o:['#ffffff','#eef3fb'],ln:'14,23,38',w1:'#8db8ff',w2:'#1f6feb',acc:'#1f6feb',logo:'#0e1726',al:'#ff6a3d'}
       :T.exec?{o:['#ffffff','#eef0ff'],ln:'12,12,16',w1:'#93a6ff',w2:'#3554ff',acc:'#3554ff',logo:'#0c0c10',al:'#ff6a3d'}
       // 화이트 계열: 잉크 + 블루, 컨셉별 링 트랙 질감
+      :k==='beach'?{o:['#ffffff','#e6f6ff'],ln:'12,44,66',w1:'#86d8ff',w2:'#0b8bd1',acc:'#0b8bd1',logo:'#0b2b44',al:'#ff7a45',tex:'strand'}
       :k==='linen'?{o:['#fffdf8','#efeadf'],ln:'29,27,22',w1:'#a9c7b9',w2:'#2e5e4e',acc:'#2e5e4e',logo:'#1d1b16',al:'#c27803',tex:'strand'}
       :k==='starhill'?{o:['rgba(255,255,255,.08)','rgba(255,255,255,.02)'],ln:'255,255,255',w1:'#9fb6ff',w2:'#e39ad0',acc:'#ffe1b0',logo:'#ffffff',lw:'#060b22',al:'#ffd27a',dark:1,tex:'stars'}
       :k==='opal'?{o:['rgba(255,255,255,.09)','rgba(255,255,255,.02)'],ln:'255,255,255',w1:'#3ff0d8',w2:'#ff3d8b',acc:'#fff1b8',logo:'#ffffff',lw:'#04050a',al:'#ffb21f',dark:1,tex:'stars'}
@@ -3909,13 +3988,14 @@ function loaderPalette(){
     rose:{bg:'radial-gradient(70% 70% at 50% 45%,#fffafa,#fbf0ee 75%)',ink:'196,120,138',a1:'#c4788a',a2:'#f3b3bd',text:'#9a7d80',name:'#5a3a40',logo:'brightness(0) invert(55%) sepia(30%) saturate(700%) hue-rotate(305deg)'},
     lavender:{bg:'radial-gradient(70% 70% at 50% 45%,#fdfcff,#f1eefc 75%)',ink:'124,104,206',a1:'#7c68ce',a2:'#c3b6ff',text:'#857ca6',name:'#3a3262',logo:'brightness(0) invert(42%) sepia(40%) saturate(900%) hue-rotate(215deg)'},
     oxblood:{bg:'radial-gradient(70% 70% at 50% 45%,#fbfaf7,#f0ece5 75%)',ink:'122,30,44',a1:'#7a1e2c',a2:'#c98e97',head:'#7a1e2c',text:'#77707a',name:'#17151a',logo:'brightness(0)'},
+    beach:{bg:'linear-gradient(180deg,#7cc8f5,#d9f2ff 55%,#7fe0d6 80%,#f3dcae)',ink:'11,139,209',a1:'#0b8bd1',a2:'#ff7a6b',text:'#2e4a5c',name:'#0b2b44',logo:'brightness(0) invert(14%) sepia(30%) saturate(1600%) hue-rotate(175deg)'},
     starhill:{bg:'linear-gradient(180deg,#030617,#0f1a4c 60%,#4a3b84 92%,#c58aa8)',ink:'200,210,255',a1:'#9fb6ff',a2:'#e39ad0',text:'rgba(235,240,255,.75)',name:'#ffffff',logo:'brightness(0) invert(1)'},
     opal:{bg:'radial-gradient(80% 70% at 50% 40%,#101a2a,#08060f 60%,#020206)',ink:'120,255,235',a1:'#3ff0d8',a2:'#ff3d8b',text:'rgba(235,245,255,.75)',name:'#ffffff',logo:'brightness(0) invert(1)'},
     linen:{bg:'radial-gradient(70% 70% at 60% 30%,#fffdf8,#f3efe6 75%)',ink:'46,94,78',a1:'#2e5e4e',a2:'#8fb5a5',text:'#6f6a5f',name:'#1d1b16',logo:'brightness(0) invert(9%) sepia(8%) saturate(900%) hue-rotate(10deg)'},
     midnight:{bg:'radial-gradient(80% 70% at 50% 40%,#132030,#0b111a 55%,#06080c)',ink:'170,200,230',a1:'#9cc2e6',a2:'#4f86b8',text:'rgba(205,218,232,.7)',name:'#eef3f8',logo:'brightness(0) invert(1)'},
     space:{bg:'radial-gradient(80% 70% at 50% 40%,#1b1238,#0a0716 60%,#030208)',ink:'200,185,255',a1:'#b39dff',a2:'#6aa8ff',text:'rgba(225,215,255,.7)',name:'#f5f2ff',logo:'brightness(0) invert(1)'}
   };
-  const FX={jarvisLight:'plain',jarvis:'exec',rose:'plain',lavender:'plain',exec:'exec',dotwave:'dots',contour:'contour',bloom:'bloom',network:'net',studio:'strand',linen:'strand',midnight:'glow',oxblood:'exec',opal:'glow',starhill:'stars',aurora:'glow',sunset:'glow',ocean:'caustic',space:'stars'};
+  const FX={jarvisLight:'plain',jarvis:'exec',rose:'plain',lavender:'plain',exec:'exec',dotwave:'dots',contour:'contour',bloom:'bloom',network:'net',studio:'strand',linen:'strand',midnight:'glow',oxblood:'exec',opal:'glow',starhill:'stars',beach:'plain',aurora:'glow',sunset:'glow',ocean:'caustic',space:'stars'};
   const o=P[k]||{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#f4f4f6 75%)',ink:'11,11,15',a1:'#0b0b0f',a2:'#4a4a52',text:'#6b6b73',name:'#0b0b0f',logo:'brightness(0)'}; o.fx=FX[k]||'plain'; return o;
 }
 function bootSequence(lines){
@@ -6377,6 +6457,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261023-1034';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261023-1049';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
