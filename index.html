@@ -5935,7 +5935,8 @@ function staffPane(){
 Object.assign(WACT,{
   tmStaff:async el=>{ const u=el.dataset.k; S.staffSel=u; S.staffData=S.staffData||{}; if(!S.staffData[u]||el.dataset.r){ delete S.staffData[u]; render();
       try{ const j=await gas.call('GET',{a:'staffStudents',of:u}); S.staffData[u]={at:Date.now(),students:Array.isArray(j.students)?j.students:[]}; }
-      catch(e){ S.staffData[u]={err:e.message==='forbidden'?'팀장 권한이 없거나 이 팀원을 볼 수 없어요.':'팀 서버 코드를 새 버전으로 배포했는지 확인해 주세요.'}; } }
+      catch(e){ let sv='?'; try{ const pg=await gas.call('GET',{a:'ping'}); sv='v'+pg.v; }catch(x){ sv='응답 없음'; }
+        S.staffData[u]={err:e.message==='forbidden'?'팀장 권한이 없거나 이 팀원을 볼 수 없어요.':`팀 서버에서 불러오지 못했어요. (원인: ${String(e.message).replace(/Failed to fetch|Load failed/i,'팀 서버가 응답하지 않음')}${e.msg?' · '+e.msg.slice(0,160):''} · 팀 서버 ${sv})`}; } }
     render(); },
   tmStaffPh:()=>{ S.staffPh=!S.staffPh; render(); },
 });
@@ -6622,6 +6623,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261023-2142';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261023-2148';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
