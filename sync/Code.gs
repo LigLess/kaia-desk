@@ -106,13 +106,19 @@ function doPost(e) { try { return doPost_(e || { postData: { contents: '{}' } })
 
 function doGet_(e) {
   const p = e.parameter || {};
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 7 });
+  if (p.a === 'cal') {   // 휴대폰 달력 구독 (열쇠가 맞을 때만, 로그인 없이)
+    const uid = PropertiesService.getScriptProperties().getProperty('calk_' + String(p.k || '').replace(/[^\w]/g, ''));
+    let txt = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//KAIA DESK//KO\r\nX-WR-CALNAME:KAIA DESK 알림\r\nEND:VCALENDAR';
+    if (uid) { const it = tmpFolder_().getFilesByName('cal_' + uid + '.ics'); if (it.hasNext()) txt = it.next().getBlob().getDataAsString('UTF-8'); }
+    return ContentService.createTextOutput(txt).setMimeType(ContentService.MimeType.ICAL);
+  }
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 8 });
   const uid = auth_(p.token); if (!uid) return out_({ error: 'auth' });
   if (p.a === 'members') {
     const v = userSheet_().getDataRange().getValues().slice(1);
     const me = v.find(r => norm_(r[0]) === uid);
     const lead = !!(me && isLead_(me));
-    return out_({ v: 7, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
+    return out_({ v: 8, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
       role: lead ? 'lead' : '', staff: lead ? staffOf_(uid, v).map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })) : [] });
   }
   if (p.a === 'staffStudents') {   // 팀장 전용 · 보기 전용 · 서버에서 권한 확인
@@ -186,6 +192,19 @@ function doPost_(e) {
     const f = folder_().createFile(Utilities.newBlob(bytes, String(b.type || 'application/octet-stream'), name));
     f.setDescription(uid);
     return out_({ ok: true, id: f.getId(), name: name, size: bytes.length, type: String(b.type || '') });
+  }
+  if (b.a === 'calkey') {   // 휴대폰 달력 구독 링크용 열쇠 (본인만 · 새로 만들면 예전 링크는 끊겨요)
+    const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
+    const P = PropertiesService.getScriptProperties(); let key = P.getProperty('calu_' + uid);
+    if (!key || b.reset) { if (key) P.deleteProperty('calk_' + key); key = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '').slice(0, 8); P.setProperty('calu_' + uid, key); P.setProperty('calk_' + key, uid); }
+    return out_({ ok: true, key: key });
+  }
+  if (b.a === 'calput') {   // 앱이 만든 달력 일정(ics)을 저장 → 구독 링크로 내보냄
+    const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
+    const txt = String(b.data || ''); if (!/^BEGIN:VCALENDAR/.test(txt) || txt.length > 2000000) return out_({ error: 'bad' });
+    const name = 'cal_' + uid + '.ics'; const it = tmpFolder_().getFilesByName(name);
+    if (it.hasNext()) it.next().setContent(txt); else tmpFolder_().createFile(name, txt, 'text/calendar');
+    return out_({ ok: true });
   }
   if (b.a === 'unfile') {
     const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
