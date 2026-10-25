@@ -1601,6 +1601,8 @@ body[data-bg="spring"] .core-next,body[data-bg="spring"] .core-label,body[data-b
 .cu-nf{font-size:12.5px;font-weight:600;margin-bottom:6px;overflow-wrap:anywhere}.cu-nf small{color:var(--muted);font-weight:500}.cu-st{color:var(--accent);font-size:12px}
 .cu-ng{display:grid;grid-template-columns:1fr 150px auto;gap:6px}
 @media (max-width:640px){.cu-item{flex-wrap:wrap}.cu-act{width:100%;justify-content:flex-start}.cu-ng{grid-template-columns:1fr 1fr auto}}
+.cu-vwm{max-width:min(1100px,96vw)!important;width:96vw}
+.cu-vw{padding:0!important}.cu-vw iframe{display:block;width:100%;height:min(78vh,1000px);border:0;background:#525659}
 </style>
 </head>
 <body>
@@ -6038,6 +6040,17 @@ function curriDraw(){ const el=$('#cuNew'); if(!el) return;
 document.addEventListener('input',e=>{ const d=e.target.dataset; if(d&&d.cu!=null){ const x=S._cuNew&&S._cuNew[+d.cu]; if(x) x[d.f]=e.target.value; }
   if(e.target.id==='cuQ'){ S.cuQ=e.target.value; clearTimeout(S._cuT); S._cuT=setTimeout(()=>{ const pos=e.target.selectionStart; render(); const x=$('#cuQ'); if(x){ x.focus(); try{ x.setSelectionRange(pos,pos); }catch(err){} } },200); } });
 
+/* 앱 안에서 바로 보기: PC는 창 안에 PDF가 열리고, 폰은 '열기'를 누르면 PDF 보기 앱으로 열려요 */
+function curriViewer(p,r){
+  if(S._cuVw&&S._cuVw.url) URL.revokeObjectURL(S._cuVw.url);
+  const url=URL.createObjectURL(r.blob); const ext=(r.name.match(/\.[^.]+$/)||[''])[0];
+  S._cuVw={url,blob:r.blob,file:(p.title||curriTitle(r.name)).replace(/[\\/:*?"<>|]/g,'_')+ext};
+  const mobile=matchMedia('(pointer:coarse)').matches, canFrame=/pdf|image|text/.test(r.blob.type)&&!mobile;
+  openModal(`${mHead(esc(p.title||curriTitle(r.name)))}<div class="body cu-vw">${canFrame?`<iframe id="cuVwFrame" src="${url}" title="${esc(p.title||'')}"></iframe>`
+    :`<div class="empty" style="padding:30px 10px"><b>${mobile?'휴대폰에서는 PDF 보기 앱으로 열려요':'이 파일은 미리보기를 지원하지 않아요'}</b>아래 <b>열기</b>를 누르면 ${mobile?'PDF가 열리고, 공유 → 인쇄로 바로 출력할 수 있어요':'컴퓨터에 있는 프로그램으로 열려요'}.</div>`}</div>
+    <footer><button class="btn ghost" data-act="close">닫기</button><button class="btn" data-act="cuVwOpen">${ic('right')}${canFrame?'새 창으로 열기':'열기'}</button><button class="btn" data-act="cuVwDl">${ic('dl')}다운로드</button><button class="btn pri" data-act="cuVwPrint">인쇄</button></footer>`,'wide cu-vwm');
+  modalEl._kind='cuvw';
+}
 /* 인쇄: 숨긴 창에 PDF를 띄워 바로 인쇄 대화상자 (폰은 새 탭에서 열어 공유 → 인쇄) */
 function curriPrintBlob(blob,name){
   const url=URL.createObjectURL(blob);
@@ -6063,9 +6076,12 @@ Object.assign(WACT,{
     if(fail){ toast(`${ok}개 올렸어요 · ${fail}개 실패`,'실패한 파일은 다시 올리기를 눌러 주세요.','alarm-t'); const g=$('#cuGo'); if(g){ g.disabled=false; g.textContent='실패한 파일 다시 올리기'; } }
     else { closeModal(); S.teamTab='curri'; toast(`커리큘럼 ${ok}개를 올렸어요`,'팀원 모두가 바로 볼 수 있어요.'); }
     render(); },
-  cuView:async el=>{ const p=teamData().posts[el.dataset.id]; if(!p) return; const w=window.open('','_blank');
-    try{ const r=await curriFile(p,el,'여는 중'); const url=URL.createObjectURL(r.blob); if(w){ w.location.href=url; } else window.open(url,'_blank'); setTimeout(()=>URL.revokeObjectURL(url),120000); curriMarkCached(); }
-    catch(e){ if(w) w.close(); toast('열지 못했어요','지워졌거나 팀 서버에 연결되지 않아요.'); } },
+  cuView:async el=>{ const p=teamData().posts[el.dataset.id]; if(!p) return;
+    try{ const r=await curriFile(p,el,'여는 중'); curriMarkCached(); curriViewer(p,r); }
+    catch(e){ toast('열지 못했어요','지워졌거나 팀 서버에 연결되지 않아요.'); } },
+  cuVwOpen:()=>{ const v=S._cuVw; if(!v) return; const a=document.createElement('a'); a.href=v.url; a.target='_blank'; a.rel='noopener'; document.body.appendChild(a); a.click(); a.remove(); },
+  cuVwDl:()=>{ const v=S._cuVw; if(!v) return; const a=document.createElement('a'); a.href=v.url; a.download=v.file; document.body.appendChild(a); a.click(); a.remove(); },
+  cuVwPrint:()=>{ const v=S._cuVw; if(!v) return; const fr=$('#cuVwFrame'); if(fr&&fr.contentWindow&&!matchMedia('(pointer:coarse)').matches){ try{ fr.contentWindow.focus(); fr.contentWindow.print(); return; }catch(e){} } curriPrintBlob(v.blob,v.file); },
   cuDl:async el=>{ const p=teamData().posts[el.dataset.id]; if(!p) return;
     try{ const r=await curriFile(p,el,'받는 중'); const ext=(r.name.match(/\.[^.]+$/)||[''])[0]; const url=URL.createObjectURL(r.blob); const a=document.createElement('a'); a.href=url; a.download=(p.title||curriTitle(r.name)).replace(/[\\/:*?"<>|]/g,'_')+ext; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); curriMarkCached(); }
     catch(e){ toast('받지 못했어요','지워졌거나 팀 서버에 연결되지 않아요.'); } },
@@ -6828,6 +6844,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261025-1035';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261025-1050';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
