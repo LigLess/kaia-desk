@@ -1588,6 +1588,19 @@ body[data-bg="spring"] .core-next,body[data-bg="spring"] .core-label,body[data-b
 .cal-url{display:flex;gap:8px}.cal-url .in{flex:1;min-width:0;font-size:12px}
 .cal-how{margin-top:12px;padding:10px 14px;border-radius:12px;background:var(--surface-2)}.cal-how summary{cursor:pointer;font-weight:600;font-size:13.5px}
 .cal-how ol{margin:8px 0 0;padding-left:20px;font-size:13px;line-height:1.85;color:var(--fg-2)}.cal-note{margin:8px 0 0;font-size:12px;color:var(--faint)}
+.cu-tools{margin-bottom:10px}.cu-q .in{padding-left:36px;width:100%}
+.cu-cats{flex-wrap:wrap;margin-bottom:12px}.cu-cats small{opacity:.6;margin-left:3px}
+.cu-list{display:flex;flex-direction:column;gap:8px}
+.cu-item{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.cu-ic{flex:none;width:44px;height:52px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:.04em;color:#fff;background:linear-gradient(160deg,#e5484d,#b4232a);box-shadow:0 6px 14px -8px rgba(180,35,42,.6)}
+.cu-main{flex:1;min-width:0}.cu-t{font-weight:700;font-size:14.5px;line-height:1.4;color:var(--fg);overflow-wrap:anywhere}
+.cu-m{margin-top:4px;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.cu-act{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.cu-lead{margin:0;font-size:13px;color:var(--muted);line-height:1.7}
+.cu-new{display:flex;flex-direction:column;gap:8px;margin-top:4px}.cu-nr{padding:10px 12px;border-radius:12px;background:var(--surface-2)}
+.cu-nf{font-size:12.5px;font-weight:600;margin-bottom:6px;overflow-wrap:anywhere}.cu-nf small{color:var(--muted);font-weight:500}.cu-st{color:var(--accent);font-size:12px}
+.cu-ng{display:grid;grid-template-columns:1fr 150px auto;gap:6px}
+@media (max-width:640px){.cu-item{flex-wrap:wrap}.cu-act{width:100%;justify-content:flex-start}.cu-ng{grid-template-columns:1fr 1fr auto}}
 </style>
 </head>
 <body>
@@ -4084,12 +4097,13 @@ function pasteStudentsGo(){
 /* ===== 끌어다 놓기 ===== */
 let dragDepth=0;
 const hasFiles=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
-document.addEventListener('dragenter',e=>{ if(!hasFiles(e)||S.locked) return; e.preventDefault(); dragDepth++; const dz=$('#dropzone'); const w=!!$('#wpFile'); dz.querySelector('b').textContent=w?'여기에 놓으면 첨부돼요':'여기에 놓으세요'; dz.querySelector('span').textContent=w?'PDF · 압축 · 한글 · 이미지 등 어떤 파일이든 (한 파일 30MB까지)':'엑셀(.xlsx · .xls · .csv)은 시간표로, .json은 학생 데이터로 가져와요'; dz.classList.add('show'); });
+document.addEventListener('dragenter',e=>{ if(!hasFiles(e)||S.locked) return; e.preventDefault(); dragDepth++; const dz=$('#dropzone'); const w=!!($('#wpFile')||$('#cuFile')); dz.querySelector('b').textContent=w?'여기에 놓으면 첨부돼요':'여기에 놓으세요'; dz.querySelector('span').textContent=w?'PDF · 압축 · 한글 · 이미지 등 어떤 파일이든 (한 파일 30MB까지)':'엑셀(.xlsx · .xls · .csv)은 시간표로, .json은 학생 데이터로 가져와요'; dz.classList.add('show'); });
 document.addEventListener('dragover',e=>{ if(hasFiles(e)) e.preventDefault(); });
 document.addEventListener('dragleave',e=>{ if(!hasFiles(e)) return; dragDepth=Math.max(0,dragDepth-1); if(!dragDepth) $('#dropzone').classList.remove('show'); });
 document.addEventListener('drop',e=>{
   if(!hasFiles(e)) return; e.preventDefault(); dragDepth=0; $('#dropzone').classList.remove('show'); if(S.locked) return;
   const files=[...e.dataTransfer.files];
+  if($('#cuFile')){ curriAdd(files); return; }   // 커리큘럼 올리기 창
   if($('#wpFile')){ wpAddFiles(files); return; }   // 게시판 글쓰기 창이 열려 있으면 첨부로
   const xl=files.filter(f=>/\.(xlsx|xlsm|xls|csv)$/i.test(f.name)); const js=files.filter(f=>/\.json$/i.test(f.name));
   if(xl.length) handleXlsx(xl); else if(js.length) handleStudentJson(js[0]);
@@ -5703,7 +5717,7 @@ function teamDel(col,id){ delete teamData()[col][id]; store.saveLocal(); gas.enq
 function myLeads(){ const u=me().user; return Object.values(teamData().leads).filter(l=>l.to===u); }
 function unseenLeads(){ return myLeads().filter(l=>!l.seen&&l.status!=='완료'); }
 function seenBoardAt(){ return +lsGet('md.boardSeen')||0; }
-function newPosts(){ const u=me().user, t=seenBoardAt(); return Object.values(teamData().posts).filter(p=>p.by!==u&&(p.at||0)>t).length; }
+function newPosts(){ const u=me().user, t=seenBoardAt(); return Object.values(teamData().posts).filter(p=>p.cat!=='커리큘럼'&&p.by!==u&&(p.at||0)>t).length; }
 function teamBadge(){ return S.mode==='gas'?unseenLeads().length+newPosts():0; }
 
 /* 서버에서 들어온 팀 문서 반영 + 나에게 온 배정 알림 */
@@ -5713,7 +5727,7 @@ function teamApply(d){
   if(d.col==='leads'&&!d.del){ const l=T.leads[d.id]; const u=me().user;
     if(l.to===u&&!l.seen&&l.status!=='완료'&&(!was||was.to!==u)) gas._newLeads=(gas._newLeads||[]).concat(l);
     if(was&&l.from===u&&was.status!==l.status&&l.status==='완료') gas._doneLeads=(gas._doneLeads||[]).concat(l); }
-  if(d.col==='posts'&&!d.del){ const p=T.posts[d.id]; if(p&&(p.notify||p.byRole==='lead')&&p.by!==me().user&&!was&&(p.at||0)>Date.now()-3*864e5) gas._newPosts=(gas._newPosts||[]).concat(p); }
+  if(d.col==='posts'&&!d.del){ const p=T.posts[d.id]; if(p&&p.cat!=='커리큘럼'&&(p.notify||p.byRole==='lead')&&p.by!==me().user&&!was&&(p.at||0)>Date.now()-3*864e5) gas._newPosts=(gas._newPosts||[]).concat(p); }
 }
 function teamNotify(){
   let noted=[]; try{ noted=JSON.parse(lsGet('md.leadNoti')||'[]'); }catch(e){}
@@ -5748,13 +5762,13 @@ function vTeam(){
   if(!S.members) loadMembers().then(()=>{ if(S.view==='team') scheduleRender(); });
   const old=S.teamOld?`<div class="banner"><p><b>팀 서버 업데이트가 필요해요.</b> 커뮤니티 기능은 새 팀 서버 코드에서 동작해요. 팀 서버를 만든 사람이 Code.gs를 새 버전으로 바꾸고 <b>배포 관리 → 수정 → 새 버전</b>으로 다시 배포해 주세요.</p></div>`:'';
   const tab=S.teamTab||'db'; const nL=unseenLeads().length, nP=newPosts();
-  const tabs=`<div class="seg tm-tabs"><button class="${tab==='db'?'on':''}" data-act="tmTab" data-k="db">DB 배정${nL?` <b class="tm-n">${nL}</b>`:''}</button><button class="${tab==='board'?'on':''}" data-act="tmTab" data-k="board">게시판${nP?` <b class="tm-n">${nP}</b>`:''}</button>${S.myRole==='lead'?`<button class="${tab==='staff'?'on':''}" data-act="tmTab" data-k="staff">팀원 학생</button>`:''}</div>`;
-  return `<div class="view">${head}${old}${tabs}${tab==='db'?leadsPane():tab==='staff'&&S.myRole==='lead'?staffPane():boardPane()}</div>`;
+  const tabs=`<div class="seg tm-tabs"><button class="${tab==='db'?'on':''}" data-act="tmTab" data-k="db">DB 배정${nL?` <b class="tm-n">${nL}</b>`:''}</button><button class="${tab==='board'?'on':''}" data-act="tmTab" data-k="board">게시판${nP?` <b class="tm-n">${nP}</b>`:''}</button><button class="${tab==='curri'?'on':''}" data-act="tmTab" data-k="curri">커리큘럼</button>${S.myRole==='lead'?`<button class="${tab==='staff'?'on':''}" data-act="tmTab" data-k="staff">팀원 학생</button>`:''}</div>`;
+  return `<div class="view">${head}${old}${tabs}${tab==='db'?leadsPane():tab==='staff'&&S.myRole==='lead'?staffPane():tab==='curri'?curriPane():boardPane()}</div>`;
 }
 function boardPane(){
   const cat=S.boardCat||'전체'; const u=me().user, seen=seenBoardAt();
   const C=teamData().comments; const cn={}; Object.values(C).forEach(c=>{ cn[c.post]=(cn[c.post]||0)+1; });
-  const ps=Object.values(teamData().posts).filter(p=>cat==='전체'||p.cat===cat).sort((a,b)=>((b.cat==='공지'&&b.pin)-(a.cat==='공지'&&a.pin))||(b.at||0)-(a.at||0));
+  const ps=Object.values(teamData().posts).filter(p=>p.cat!=='커리큘럼'&&(cat==='전체'||p.cat===cat)).sort((a,b)=>((b.cat==='공지'&&b.pin)-(a.cat==='공지'&&a.pin))||(b.at||0)-(a.at||0));
   const files=cat==='자료'||cat==='전체'?Object.values(teamData().posts).reduce((n,p)=>n+(p.files||[]).length,0):0;
   return `<section class="pane"><h2>게시판 <small>${ps.length}개 글${files?` · 파일 ${files}개`:''}</small></h2>
     <div class="seg" style="flex-wrap:wrap;margin-bottom:12px">${['전체',...POST_CATS].map(k=>`<button class="${k===cat?'on':''}" data-act="tmCat" data-k="${k}">${k}</button>`).join('')}</div>
@@ -5948,6 +5962,122 @@ Object.assign(WACT,{
   tmStaffPh:()=>{ S.staffPh=!S.staffPh; render(); },
 });
 document.addEventListener('input',e=>{ if(e.target.id==='staffQ'){ S.staffQ=e.target.value; clearTimeout(S._sq); S._sq=setTimeout(()=>{ const pos=e.target.selectionStart; render(); const x=$('#staffQ'); if(x){ x.focus(); try{ x.setSelectionRange(pos,pos); }catch(err){} } },250); } });
+/* ===== 커리큘럼 자료실 =====
+   팀 게시판(posts)에 분류 '커리큘럼'으로 저장해요 → 팀 서버 코드 수정 없이 팀 모두에게 공유 · 올린 사람만 고치기/지우기.
+   파일은 팀 드라이브 폴더에 있고, 한 번 받은 파일은 이 기기에 저장해 두어 다음부터 바로 열리고 인쇄돼요. */
+const CURRI='커리큘럼';
+const CURRI_GUESS=[[/aice|자격|정보처리|sqld|adsp|컴활/i,'자격증'],[/blender|3d|디자인|이미지|포토|일러/i,'디자인 · 3D'],[/vrew|영상|유튜브|쇼츠|숏폼/i,'영상 · 콘텐츠'],[/claude|chatgpt|gpt|gemini|프롬프트|생성형|llm|에이전트/i,'AI 도구 활용'],[/python|파이썬|자바|java|코딩|개발|웹|앱|데이터|sql|머신러닝|딥러닝/i,'개발 · 데이터'],[/업무|자동화|엑셀|사무|마케팅|블로그|창업|pot/i,'업무 · 마케팅']];
+const curriGuess=n=>{ for(const [re,c] of CURRI_GUESS) if(re.test(n)) return c; return '기타'; };
+const curriTitle=n=>String(n||'').replace(/\.[^.]+$/,'').replace(/[_]+/g,' ').replace(/\s+/g,' ').trim();
+const CURRI_KO={claude:'클로드',chatgpt:'챗지피티 챗gpt',gpt:'지피티',gemini:'제미나이',vrew:'브루',blender:'블렌더',aice:'에이스',python:'파이썬',java:'자바',notion:'노션',excel:'엑셀',midjourney:'미드저니',canva:'캔바',figma:'피그마'};
+const curriKey=p=>{ const t=`${p.title||''} ${p.sub||''}`; return t+' '+Object.entries(CURRI_KO).filter(([k])=>t.toLowerCase().includes(k)).map(([,v])=>v).join(' '); };
+function curriList(){ return Object.values(teamData().posts).filter(p=>p.cat===CURRI); }
+function curriCats(){ return [...new Set(curriList().map(p=>p.sub||'기타'))].sort((a,b)=>a.localeCompare(b,'ko')); }
+
+/* 파일 받기 (3MB씩) + 이 기기 저장소(Cache Storage)에 보관 */
+async function teamFileBlob(fid,label,prog){
+  const key=`/kaia-file/${fid}`;
+  try{ const c=await caches.open('kaia-files'); const hit=await c.match(key); if(hit){ const b=await hit.blob(); return {blob:b,name:decodeURIComponent(hit.headers.get('x-name')||''),type:b.type}; } }catch(e){}
+  const dec=d=>{ const bin=atob(d||''); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; };
+  let j=await gas.call('GET',{a:'file',id:fid,off:0,len:UP_CHUNK}); let u8;
+  if(j.size==null) u8=dec(j.data);
+  else { u8=new Uint8Array(j.size); let got=dec(j.data); u8.set(got,0); let off=got.length; prog&&prog(off/j.size);
+    while(off<j.size){ const k=await gas.call('GET',{a:'file',id:fid,off,len:UP_CHUNK}); got=dec(k.data); if(!got.length) throw new Error('short'); u8.set(got,off); off+=got.length; prog&&prog(off/j.size); } }
+  const type=j.type||(/\.pdf$/i.test(j.name||label)?'application/pdf':'application/octet-stream'); const blob=new Blob([u8],{type});
+  try{ const c=await caches.open('kaia-files'); await c.put(key,new Response(blob,{headers:{'content-type':type,'x-name':encodeURIComponent(j.name||label||'')}})); }catch(e){}
+  return {blob,name:j.name||label,type};
+}
+async function curriFile(p,btn,verb){
+  const f=(p.files||[])[0]; if(!f) throw new Error('nofile');
+  const old=btn&&btn.innerHTML; if(btn){ btn.disabled=true; btn.textContent=`${verb} 0%`; }
+  try{ return await teamFileBlob(f.id,f.name,k=>{ if(btn) btn.textContent=`${verb} ${Math.round(k*100)}%`; }); }
+  finally{ if(btn){ btn.disabled=false; btn.innerHTML=old; } }
+}
+async function curriCached(fid){ try{ const c=await caches.open('kaia-files'); return !!(await c.match(`/kaia-file/${fid}`)); }catch(e){ return false; } }
+
+function curriPane(){
+  const q=(S.cuQ||'').trim(), cat=S.cuCat||'전체', u=me().user;
+  const all=curriList(), cats=curriCats();
+  const L=all.filter(p=>(cat==='전체'||(p.sub||'기타')===cat)&&(!q||q.split(/\s+/).every(w=>sMatch(w,curriKey(p))))).sort((a,b)=>(a.sub||'').localeCompare(b.sub||'','ko')||String(a.title).localeCompare(String(b.title),'ko'));
+  setTimeout(curriMarkCached,0);
+  return `<section class="pane cu-pane"><h2>커리큘럼 <small>${all.length}개 · 팀 모두가 같이 봐요</small><button class="btn sm pri r" data-act="cuUpOpen">${ic('up')}자료 올리기</button></h2>
+    <div class="cu-tools"><div class="cp cu-q"><span class="cp-ic">${ic('search')}</span><input id="cuQ" class="in" value="${esc(S.cuQ||'')}" placeholder="과정 이름 검색 — 예: 클로드, 블렌더, 영상, ㅋㄹㄷ" autocomplete="off"></div></div>
+    ${cats.length>1?`<div class="seg cu-cats">${['전체',...cats].map(k=>`<button class="${k===cat?'on':''}" data-act="cuCat" data-k="${esc(k)}">${esc(k)} <small>${k==='전체'?all.length:all.filter(p=>(p.sub||'기타')===k).length}</small></button>`).join('')}</div>`:''}
+    ${L.length?`<div class="cu-list">${L.map(p=>{ const f=(p.files||[])[0]||{}; const mine=p.by===u; return `<div class="cu-item" data-fid="${esc(f.id||'')}">
+      <div class="cu-ic">${/\.pdf$/i.test(f.name||'')?'PDF':esc(((f.name||'').split('.').pop()||'').slice(0,4).toUpperCase()||'FILE')}</div>
+      <div class="cu-main"><div class="cu-t">${esc(p.title||curriTitle(f.name))}</div><div class="cu-m"><span class="chip">${esc(p.sub||'기타')}</span>${f.size?fsize(f.size):''} · ${esc(p.byName||memberName(p.by))} · ${agoTxt(p.at)}<span class="cu-off" hidden>· 이 기기에 저장됨</span></div></div>
+      <div class="cu-act"><button class="btn sm" data-act="cuView" data-id="${p.id}">${ic('search')}보기</button><button class="btn sm" data-act="cuDl" data-id="${p.id}">${ic('dl')}다운로드</button><button class="btn sm pri" data-act="cuPrint" data-id="${p.id}">인쇄</button>${mine?`<button class="btn sm ghost" data-act="cuEdit" data-id="${p.id}" aria-label="고치기">${ic('edit')}</button><button class="btn sm ghost" data-act="cuDel" data-id="${p.id}" aria-label="지우기">${ic('trash')}</button>`:''}</div></div>`; }).join('')}</div>`
+      :`<div class="empty"><b>${all.length?'찾는 커리큘럼이 없어요':'아직 올린 커리큘럼이 없어요'}</b>${all.length?'검색어나 분류를 바꿔 보세요.':'오른쪽 위 <b>자료 올리기</b>를 누르고 PDF 파일을 여러 개 한꺼번에 골라 올리면 돼요. 분류는 이름을 보고 자동으로 정해 줘요.'}</div>`}
+  </section>`;
+}
+async function curriMarkCached(){ for(const el of document.querySelectorAll('.cu-item[data-fid]')){ const fid=el.dataset.fid; if(fid&&await curriCached(fid)){ const s=el.querySelector('.cu-off'); s&&(s.hidden=false); } } }
+
+/* 올리기 창: 여러 파일 한 번에 · 이름 · 분류 고치기 */
+function curriUpModal(){
+  S._cuNew=[];
+  openModal(`${mHead('커리큘럼 올리기')}<div class="body">
+    <p class="cu-lead">PDF · PPT · 한글 · 워드 파일을 <b>여러 개 한꺼번에</b> 골라도 돼요(한 파일 30MB까지). 이름은 파일 이름에서, 분류는 이름을 보고 자동으로 정해요. 올리기 전에 고칠 수 있어요.</p>
+    <label class="btn pri" style="align-self:flex-start">${ic('clip')}파일 고르기<input type="file" id="cuFile" multiple accept=".pdf,.ppt,.pptx,.doc,.docx,.hwp,.hwpx,.xls,.xlsx,.png,.jpg,.jpeg,.zip" hidden></label>
+    <div id="cuNew"></div>
+    <datalist id="cuCatList">${[...new Set([...curriCats(),...CURRI_GUESS.map(x=>x[1]),'기타'])].map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+  </div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="cuUpGo" id="cuGo" disabled>올리기</button></footer>`,'');
+  modalEl._kind='cuup';
+  $('#cuFile').addEventListener('change',e=>{ curriAdd([...e.target.files]); e.target.value=''; });
+}
+function curriAdd(files){
+  const have=new Set(curriList().map(p=>((p.files||[])[0]||{}).name));
+  files.forEach(f=>{ if(f.size>MAX_UP){ toast('파일이 너무 커요',`${f.name} · ${fsize(f.size)} — 30MB까지`,'alarm-t'); return; } if(S._cuNew.some(x=>x.f.name===f.name&&x.f.size===f.size)) return;
+    S._cuNew.push({f,title:curriTitle(f.name),sub:curriGuess(f.name),dup:have.has(f.name)}); });
+  curriDraw();
+}
+function curriDraw(){ const el=$('#cuNew'); if(!el) return;
+  el.innerHTML=S._cuNew.length?`<div class="cu-new">${S._cuNew.map((x,i)=>`<div class="cu-nr"><div class="cu-nf">${esc(x.f.name)} <small>${fsize(x.f.size)}</small>${x.dup?' <span class="chip warn">이미 같은 파일이 있어요</span>':''}${x.st?` <b class="cu-st">${esc(x.st)}</b>`:''}</div>
+    <div class="cu-ng"><input class="in" data-cu="${i}" data-f="title" value="${esc(x.title)}" placeholder="과정 이름"><input class="in" data-cu="${i}" data-f="sub" value="${esc(x.sub)}" list="cuCatList" placeholder="분류"><button class="btn sm ghost" data-act="cuRm" data-k="${i}" aria-label="빼기">${ic('x')}</button></div></div>`).join('')}</div>`:'';
+  const g=$('#cuGo'); if(g){ g.disabled=!S._cuNew.length; g.textContent=S._cuNew.length?`${S._cuNew.length}개 올리기`:'올리기'; }
+}
+document.addEventListener('input',e=>{ const d=e.target.dataset; if(d&&d.cu!=null){ const x=S._cuNew&&S._cuNew[+d.cu]; if(x) x[d.f]=e.target.value; }
+  if(e.target.id==='cuQ'){ S.cuQ=e.target.value; clearTimeout(S._cuT); S._cuT=setTimeout(()=>{ const pos=e.target.selectionStart; render(); const x=$('#cuQ'); if(x){ x.focus(); try{ x.setSelectionRange(pos,pos); }catch(err){} } },200); } });
+
+/* 인쇄: 숨긴 창에 PDF를 띄워 바로 인쇄 대화상자 (폰은 새 탭에서 열어 공유 → 인쇄) */
+function curriPrintBlob(blob,name){
+  const url=URL.createObjectURL(blob);
+  const mobile=matchMedia('(pointer:coarse)').matches;
+  if(mobile||!/pdf|image/.test(blob.type)){ const w=window.open(url,'_blank'); if(!w){ const a=document.createElement('a'); a.href=url; a.target='_blank'; a.click(); } toast('새 창에서 열었어요',mobile?'공유(또는 ⋮) → 인쇄를 눌러 주세요.':'파일을 연 프로그램에서 인쇄해 주세요.'); setTimeout(()=>URL.revokeObjectURL(url),60000); return; }
+  let fr=document.getElementById('cuPrintFrame'); if(fr) fr.remove();
+  fr=document.createElement('iframe'); fr.id='cuPrintFrame'; fr.style.cssText='position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0'; fr.src=url; document.body.appendChild(fr);
+  fr.onload=()=>{ setTimeout(()=>{ try{ fr.contentWindow.focus(); fr.contentWindow.print(); }catch(e){ window.open(url,'_blank'); } },400); };
+  setTimeout(()=>URL.revokeObjectURL(url),120000);
+}
+Object.assign(WACT,{
+  cuCat:el=>{ S.cuCat=el.dataset.k; render(); },
+  cuUpOpen:()=>curriUpModal(),
+  cuRm:el=>{ S._cuNew.splice(+el.dataset.k,1); curriDraw(); },
+  cuUpGo:async el=>{ if(el.disabled) return; el.disabled=true; const m=me(); let ok=0;
+    for(const x of S._cuNew){ if(x.done) continue; x.st='올리는 중'; curriDraw(); $('#cuGo').disabled=true;
+      try{ const j=await upFile(x.f,pct=>{ x.st=`올리는 중 ${pct}%`; const r=document.querySelectorAll('.cu-st')[S._cuNew.indexOf(x)]; if(r) r.textContent=x.st; });
+        teamPut('posts',{id:uid('p'),cat:CURRI,sub:(x.sub||'기타').trim(),title:(x.title||curriTitle(x.f.name)).trim(),body:'',files:[{id:j.id,name:j.name,size:j.size,type:x.f.type||''}],by:m.user,byName:m.name,at:Date.now()});
+        x.done=true; x.st='완료'; ok++; }
+      catch(e){ x.st=`실패 (${e.msg||e.message})`; }
+      curriDraw(); $('#cuGo').disabled=true; }
+    const fail=S._cuNew.filter(x=>!x.done).length;
+    if(fail){ toast(`${ok}개 올렸어요 · ${fail}개 실패`,'실패한 파일은 다시 올리기를 눌러 주세요.','alarm-t'); const g=$('#cuGo'); if(g){ g.disabled=false; g.textContent='실패한 파일 다시 올리기'; } }
+    else { closeModal(); S.teamTab='curri'; toast(`커리큘럼 ${ok}개를 올렸어요`,'팀원 모두가 바로 볼 수 있어요.'); }
+    render(); },
+  cuView:async el=>{ const p=teamData().posts[el.dataset.id]; if(!p) return; const w=window.open('','_blank');
+    try{ const r=await curriFile(p,el,'여는 중'); const url=URL.createObjectURL(r.blob); if(w){ w.location.href=url; } else window.open(url,'_blank'); setTimeout(()=>URL.revokeObjectURL(url),120000); curriMarkCached(); }
+    catch(e){ if(w) w.close(); toast('열지 못했어요','지워졌거나 팀 서버에 연결되지 않아요.'); } },
+  cuDl:async el=>{ const p=teamData().posts[el.dataset.id]; if(!p) return;
+    try{ const r=await curriFile(p,el,'받는 중'); const ext=(r.name.match(/\.[^.]+$/)||[''])[0]; const url=URL.createObjectURL(r.blob); const a=document.createElement('a'); a.href=url; a.download=(p.title||curriTitle(r.name)).replace(/[\\/:*?"<>|]/g,'_')+ext; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); curriMarkCached(); }
+    catch(e){ toast('받지 못했어요','지워졌거나 팀 서버에 연결되지 않아요.'); } },
+  cuPrint:async el=>{ const p=teamData().posts[el.dataset.id]; if(!p) return;
+    try{ const r=await curriFile(p,el,'준비 중'); curriPrintBlob(r.blob,r.name); curriMarkCached(); }
+    catch(e){ toast('인쇄하지 못했어요','지워졌거나 팀 서버에 연결되지 않아요.'); } },
+  cuEdit:el=>{ const p=teamData().posts[el.dataset.id]; if(!p) return;
+    openModal(`${mHead('커리큘럼 고치기')}<div class="body"><label class="field"><span>과정 이름</span><input class="in" id="cuEt" value="${esc(p.title||'')}"></label><label class="field"><span>분류</span><input class="in" id="cuEs" value="${esc(p.sub||'')}" list="cuCatList2"><datalist id="cuCatList2">${curriCats().map(c=>`<option value="${esc(c)}">`).join('')}</datalist></label></div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="cuEditSave" data-id="${p.id}">저장</button></footer>`,'narrow'); },
+  cuEditSave:el=>{ const p=teamData().posts[el.dataset.id]; if(!p) return; teamPut('posts',{...p,title:$('#cuEt').value.trim()||p.title,sub:$('#cuEs').value.trim()||'기타',edited:Date.now()}); closeModal(); render(); },
+  cuDel:async el=>{ const p=teamData().posts[el.dataset.id]; if(!p||!await confirmBox(`"${p.title}"을(를) 지울까요?`,'팀원 모두의 커리큘럼 목록에서 사라져요.','지우기',true)) return;
+    (p.files||[]).forEach(f=>gas.call('POST',null,{a:'unfile',id:f.id}).catch(()=>{})); teamDel('posts',p.id); render(); },
+});
 /* ===== 녹화본 전달 알림 =====
    수강중 학생 × 연결된 수업의 수업일 → 다음 날부터 "000학생 - 000과목 녹화본 제공 필요" (제공완료 누를 때까지)
    녹화본 유효기간이 1주일이라 1주일 지난 수업은 목록에서 빠짐. 완료 기록은 학생 데이터(rec)에 저장 → PC · 폰 같이 맞춰짐 */
@@ -6698,6 +6828,6 @@ async function boot(){
 boot();
 
 </script>
-<script>window.APP_VER='kaia-desk-261024-1441';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261025-1035';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
