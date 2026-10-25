@@ -2162,6 +2162,26 @@ function parseIntranet(html,text){
   const seen=new Set(); const uniq=courses.filter(c=>{ const k=c.name+'|'+c.start+'|'+c.room; if(seen.has(k)) return false; seen.add(k); return true; });
   return {이름:name,원서번호:(lab('원서번호').match(/\d+/)||[''])[0],담당멘토:lab('담당멘토'),국비지원:lab('국비지원'),수강과정:uniq};
 }
+
+/* ===== 전화번호 자동 정리: 01012345678 → 010-1234-5678 =====
+   숫자 · 하이픈 · 띄어쓰기 · 점만 있는 값만 바꿔요. "010-1234-5678 (어머니)"처럼 다른 글자가 섞이면 그대로 둬요. */
+function phoneDigitsOk(v){ return /^[\d\s\-.()+]*$/.test(String(v||'')); }
+function fmtPhoneLive(v){
+  if(!phoneDigitsOk(v)) return v; let d=String(v).replace(/\D/g,''); if(d.startsWith('82')&&/^\+?82/.test(String(v).trim())) d='0'+d.slice(2);
+  if(!d) return ''; d=d.slice(0,11);
+  if(/^02/.test(d)){ if(d.length<=2) return d; if(d.length<=5) return `02-${d.slice(2)}`; if(d.length<=9) return `02-${d.slice(2,5)}-${d.slice(5)}`; return `02-${d.slice(2,6)}-${d.slice(6,10)}`; }
+  if(/^1[5-9]\d{2}/.test(d)&&d.length<=8){ return d.length<=4?d:`${d.slice(0,4)}-${d.slice(4)}`; }
+  if(/^0/.test(d)){ if(d.length<=3) return d; const mob=/^01/.test(d);
+    if(d.length<=(mob?7:6)) return `${d.slice(0,3)}-${d.slice(3)}`;
+    if(d.length===11||(mob&&d.length>7&&d.length<11)) return `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`;
+    return `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`; }
+  return d.length===8?`${d.slice(0,4)}-${d.slice(4)}`:d;
+}
+function fmtPhone(v){
+  const s=String(v??'').trim(); if(!s||!phoneDigitsOk(s)) return v; const d=s.replace(/\D/g,'');
+  if(/^01\d{8}$/.test(d)) return `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`;   // 011-123-4567 (예전 10자리)
+  return fmtPhoneLive(s);
+}
 /* ===== APP ===== */
 const LOGO='data:image/png;base64,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';
 const $=(s,r=document)=>r.querySelector(s);
@@ -2276,6 +2296,7 @@ const store={db:null,base:null,setRef:null,dl:null,chains:{},
     return this.chains[key];
   },
   put(col,obj){
+    if(obj&&typeof obj.phone==='string'&&obj.phone) obj.phone=fmtPhone(obj.phone);
     D()[col][obj.id]=obj;
     if(S.demo){ demoNote(); return Promise.resolve(); }
     if(S.mode==='local'){ this.saveLocal(); return Promise.resolve(); }
@@ -5714,7 +5735,7 @@ const leadTitle=l=>`${l.name||'이름 없음'}문의 배정_${l.fromName||member
 function agoTxt(ts){ if(!ts) return ''; const s=(Date.now()-ts)/1000; if(s<60) return '방금'; if(s<3600) return Math.floor(s/60)+'분 전'; if(s<86400) return Math.floor(s/3600)+'시간 전'; const d=new Date(ts); return `${d.getMonth()+1}/${d.getDate()}`; }
 const fsize=n=>n>1048576?(n/1048576).toFixed(1)+'MB':Math.max(1,Math.round(n/1024))+'KB';
 function linkify(t){ return esc(t).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>'); }
-function teamPut(col,obj){ teamData()[col][obj.id]=obj; store.saveLocal(); gas.enqueue(col,obj.id,clone(obj),false); }
+function teamPut(col,obj){ if(obj&&typeof obj.phone==='string'&&obj.phone) obj.phone=fmtPhone(obj.phone); teamData()[col][obj.id]=obj; store.saveLocal(); gas.enqueue(col,obj.id,clone(obj),false); }
 function teamDel(col,id){ delete teamData()[col][id]; store.saveLocal(); gas.enqueue(col,id,null,true); }
 function myLeads(){ const u=me().user; return Object.values(teamData().leads).filter(l=>l.to===u); }
 function unseenLeads(){ return myLeads().filter(l=>!l.seen&&l.status!=='완료'); }
@@ -6843,7 +6864,15 @@ async function boot(){
 }
 boot();
 
+/* 전화번호 칸: 치는 대로 010-1234-5678 모양으로 (커서 위치 유지) */
+const isPhoneIn=el=>el&&el.tagName==='INPUT'&&!el.readOnly&&(el.type==='tel'||el.inputMode==='tel'||/phone/i.test(el.id||'')||/phone|tel/i.test(el.name||''));
+document.addEventListener('input',e=>{ const el=e.target; if(!isPhoneIn(el)||e.isComposing) return; const v=el.value; if(!phoneDigitsOk(v)) return;
+  const pos=el.selectionStart??v.length; const nd=v.slice(0,pos).replace(/\D/g,'').length; const f=fmtPhoneLive(v); if(f===v) return; el.value=f;
+  let i=0,c=0; while(i<f.length&&c<nd){ if(/\d/.test(f[i])) c++; i++; } try{ el.setSelectionRange(i,i); }catch(_){} },true);
+document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; } },true);
+document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
+
 </script>
-<script>window.APP_VER='kaia-desk-261025-1117';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261025-1543';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
