@@ -2998,7 +2998,7 @@ function vSettings(){
     <label class="field"><span>소속 · 직함 (사이드바 표시)</span><input class="in" data-set="role" value="${esc(s.role)}"></label>
     <label class="field"><span>안내 문구 {지점}</span><input class="in" data-set="branch" value="${esc(s.branch)}"></label>
     <label class="field"><span>안내 문구 {멘토}</span><input class="in" data-set="mentor" value="${esc(s.mentor)}"></label></div></section>
-  <section class="pane"><h2>배경 <small>움직이는 배경 테마 · PC와 휴대폰에 함께 적용돼요</small></h2>${themes}<div class="btns" style="margin-top:16px"><label class="check"><input type="checkbox" data-act="sfxToggle" ${s.sfx?'checked':''}>효과음</label><button class="btn sm" data-act="brief">${ic('send')}음성 브리핑 미리 듣기</button><button class="btn sm" data-act="replayBoot">로딩 화면 다시 보기</button></div>
+  <section class="pane"><h2>배경 <small>움직이는 배경 테마 · PC와 휴대폰에 함께 적용돼요</small></h2>${themes}<div class="btns" style="margin-top:16px"><label class="check"><input type="checkbox" data-act="sfxToggle" ${s.sfx?'checked':''}>효과음</label><button class="btn sm" data-act="bootPreview">${ic('right')}로딩 화면 · 소리 미리 보기</button><button class="btn sm" data-act="brief">${ic('send')}음성 브리핑 미리 듣기</button><button class="btn sm" data-act="replayBoot">로딩 화면 다시 보기</button></div>
     <div class="field" style="margin-top:18px"><span>화면 전환 효과</span><div class="seg">${[['shard','파편 조립'],['stack','차곡차곡'],['rise','스르륵'],['off','끄기']].map(([k,l])=>`<button class="${(s.fx||'rise')===k?'on':''}" data-act="fxMode" data-k="${k}">${l}</button>`).join('')}</div><span style="font-size:12px;color:var(--faint);font-weight:400">파편 조립: 메뉴를 옮기면 창이 유리 파편으로 흩어졌다가, 새 창의 파편들이 하나씩 날아와 맞춰져요. 차곡차곡: 각 창이 아래에서 하나씩 올라와 제자리에 딱 맞물려요. 효과음을 켜 두면 조립 소리도 나요.</span></div></section>
   <section class="pane"><h2>알림</h2><div class="form">
     <div class="field full"><span>개강·종강 며칠 전에 알릴까요</span><div class="btns">${[14,7,3,1].map(o=>`<label class="check"><input type="checkbox" data-act="offToggle" data-o="${o}" ${offs.includes(o)?'checked':''}>${o}일 전</label>`).join('')}</div></div>
@@ -4212,73 +4212,161 @@ function loaderPalette(){
   const FX={jarvisLight:'plain',jarvis:'exec',rose:'plain',lavender:'plain',exec:'exec',dotwave:'dots',contour:'contour',bloom:'bloom',network:'net',studio:'strand',linen:'strand',midnight:'glow',oxblood:'exec',opal:'glow',starhill:'stars',beach:'plain',spring:'plain',autumn:'plain',winter:'stars',rain:'glow',aurora:'glow',sunset:'glow',ocean:'caustic',space:'stars'};
   const o=P[k]||{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#f4f4f6 75%)',ink:'11,11,15',a1:'#0b0b0f',a2:'#4a4a52',text:'#6b6b73',name:'#0b0b0f',logo:'brightness(0)'}; o.fx=FX[k]||'plain'; return o;
 }
-/* ---------- 로딩 화면 효과음: 물방울이 떨어질 때 "톡", 물이 찰수록 음이 조금씩 올라가요 (병에 물 채울 때처럼) ---------- */
-const dropAudio={ctx:null,out:null,lastTick:0,lastBub:0,bed:null,
+/* ---------- 로딩 화면 효과음: 테마마다 다른 악기 · 음계 · 배경음 ----------
+   물방울이 떨어질 때마다 그 테마의 악기로 한 음씩, 물이 찰수록 음계를 따라 올라가요. 다 차면 테마별 마무리 소리. */
+const SND_SCALE={maj:[0,2,4,7,9,12,14,16,19,21,24],min:[0,3,5,7,10,12,15,17,19,22,24],lyd:[0,2,4,6,7,9,11,12,14,16,18,19,21,23,24],dor:[0,2,3,5,7,9,10,12,14,15,17,19],whole:[0,2,4,6,8,10,12,14,16,18,20,22,24],sakura:[0,1,5,7,8,12,13,17,19,20,24],mixo:[0,2,4,5,7,9,10,12,14,16,17,19]};
+/* inst: 물방울 악기 · water: 물소리 섞는 정도 · bed: 깔리는 배경음 · amb: 가끔 들리는 소리 · echo: 메아리 · wet: 울림 · end: 마무리 화음 */
+const SND_THEME={
+  exec:       {root:72,sc:'maj',inst:'wood',water:.45,bed:'water',amb:null,echo:0,wet:.14,end:[72,79,84],endInst:'wood',endGap:.07},
+  jarvisLight:{root:76,sc:'lyd',inst:'blip',water:.28,bed:'hum',amb:'data',echo:.22,wet:.2,end:[76,83,88],endInst:'glass',endGap:.05,sweep:1},
+  jarvis:     {root:57,sc:'min',inst:'bell',water:.4,bed:'hum',amb:'sparkle',ambRate:.5,echo:.15,wet:.38,end:[69,76,81],endInst:'bell',endGap:.1,gong:45},
+  rose:       {root:79,sc:'maj',inst:'box',water:.35,bed:'water',amb:'sparkle',ambRate:.6,echo:.12,wet:.3,end:[79,83,86,91],endInst:'box',endGap:.11},
+  lavender:   {root:74,sc:'lyd',inst:'glass',water:.45,bed:'wind',amb:null,echo:.2,wet:.48,end:[62,69,74,78],endInst:'pad',endGap:0},
+  oxblood:    {root:60,sc:'dor',inst:'pluck',bright:.35,water:.3,bed:'water',amb:null,echo:0,wet:.26,end:[57,64,69,72],endInst:'pluck',endGap:.045},
+  dotwave:    {root:84,sc:'maj',inst:'square',water:.18,bed:'water',amb:'data',ambRate:1.2,echo:.1,wet:.1,end:[84,88,91,96],endInst:'square',endGap:.06},
+  contour:    {root:50,sc:'min',inst:'sonar',water:.5,bed:'water',amb:'sonar',echo:.38,wet:.3,end:[62,69],endInst:'sonar',endGap:.35},
+  bloom:      {root:65,sc:'lyd',inst:'soft',water:.6,bed:'ink',amb:null,echo:.1,wet:.42,end:[53,60,65,69],endInst:'pad',endGap:0},
+  network:    {root:81,sc:'maj',inst:'glass',water:.3,bed:'hum',amb:'link',echo:.25,wet:.25,end:[81,86,88,93,98],endInst:'glass',endGap:.05},
+  studio:     {root:67,sc:'maj',inst:'pluck',bright:.75,water:.32,bed:'water',amb:'scratch',echo:0,wet:.2,end:[55,62,67,71,74],endInst:'pluck',endGap:.035},
+  linen:      {root:69,sc:'maj',inst:'kalimba',water:.4,bed:'paper',amb:'paper',echo:0,wet:.24,end:[69,73,76,81],endInst:'kalimba',endGap:.09},
+  aurora:     {root:76,sc:'lyd',inst:'glass',chorus:1,water:.45,bed:'water',amb:'sparkle',echo:.28,wet:.46,end:[64,71,76,78,83],endInst:'pad',endGap:0,sparkleEnd:1},
+  sunset:     {root:62,sc:'mixo',inst:'soft',water:.6,bed:'water',amb:null,echo:.12,wet:.36,end:[50,57,62,66,69],endInst:'pad',endGap:0},
+  ocean:      {root:55,sc:'maj',inst:'bell',water:.85,bed:'ocean',amb:'bubbles',echo:.15,wet:.4,end:[55,62,67],endInst:'bell',endGap:.12,wash:1},
+  opal:       {root:78,sc:'lyd',inst:'fm',water:.38,bed:'hum',amb:'sparkle',echo:.22,wet:.36,end:[66,73,78,85],endInst:'fm',endGap:.08},
+  midnight:   {root:58,sc:'min',inst:'metal',water:.42,bed:'hum',amb:null,echo:.18,wet:.32,end:[46,58,65],endInst:'metal',endGap:.14},
+  space:      {root:64,sc:'whole',inst:'blip',water:.25,bed:'space',amb:'sparkle',echo:.45,wet:.52,end:[52,59,64,71],endInst:'pad',endGap:0,sweep:1},
+  spring:     {root:72,sc:'sakura',inst:'pluck',bright:.9,water:.35,bed:'wind',amb:'birds',echo:.1,wet:.3,end:[84,86,89,91,96,98],endInst:'glock',endGap:.07},
+  beach:      {root:67,sc:'maj',inst:'steel',water:.5,bed:'ocean',amb:'gull',echo:.05,wet:.18,end:[67,71,74,79],endInst:'steel',endGap:.09,wash:1},
+  autumn:     {root:57,sc:'min',inst:'pluck',bright:.4,water:.32,bed:'wind',amb:'leaf',echo:0,wet:.3,end:[45,52,57,60,64],endInst:'pluck',endGap:.05},
+  starhill:   {root:76,sc:'maj',inst:'celesta',water:.32,bed:'night',amb:'twinkle',echo:.3,wet:.46,end:[76,79,84,88,91],endInst:'celesta',endGap:.08,swoosh:1},
+  winter:     {root:79,sc:'maj',inst:'glock',water:.28,bed:'wind',amb:'sleigh',echo:.12,wet:.46,end:[79,83,86,91],endInst:'glock',endGap:.09,sleighEnd:1},
+  rain:       {root:60,sc:'dor',inst:'epiano',water:.55,bed:'rain',amb:'drizzle',echo:.1,wet:.36,end:[48,55,62,63,67],endInst:'epiano',endGap:.06,thunder:1},
+};
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+const dropAudio={ctx:null,out:null,lastTick:0,lastBub:0,bed:null,th:null,step:0,
   on(){ try{ return S.settings.sfx!==false; }catch(e){ return true; } },
-  init(){ if(this.ctx) return this.ctx; try{ const a=audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); this.ctx=a;
-      const master=a.createGain(); master.gain.value=0.95;
-      // 휴대폰 스피커에서도 또렷하게: 아주 약한 압축 → 작은 소리는 살리고 큰 소리는 눌러 줘요
-      const comp=a.createDynamicsCompressor(); comp.threshold.value=-26; comp.knee.value=18; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.2;
-      const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=7500;
-      // 작은 방 울림 (물방울이 유리 그릇 안에서 울리는 느낌)
-      const len=Math.floor(a.sampleRate*1.3), ir=a.createBuffer(2,len,a.sampleRate); for(let ch=0;ch<2;ch++){ const d=ir.getChannelData(ch); for(let k=0;k<len;k++) d[k]=(Math.random()*2-1)*Math.pow(1-k/len,3.4)*(k<a.sampleRate*0.012?k/(a.sampleRate*0.012):1); }
-      const rev=a.createConvolver(); rev.buffer=ir; const wet=a.createGain(); wet.gain.value=0.26;
-      lp.connect(comp); lp.connect(rev); rev.connect(wet); wet.connect(comp); comp.connect(master); master.connect(a.destination); this.out=lp;
-      const un=()=>this.unlock(); ['touchend','pointerdown','click','keydown'].forEach(ev=>addEventListener(ev,un,{capture:true,passive:true}));
-      this._unl=()=>['touchend','pointerdown','click','keydown'].forEach(ev=>removeEventListener(ev,un,{capture:true}));
-      if(a.state==='suspended') a.resume().catch(()=>{});
-    }catch(e){ this.ctx=null; } return this.ctx; },
-  /* 휴대폰은 화면을 한 번 눌러야 소리가 나요(브라우저 규칙). 누르는 순간 바로 풀어 줌 */
+  init(){ if(!this.ctx){ try{ this.ctx=audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+        const un=()=>this.unlock(); ['touchend','pointerdown','click','keydown'].forEach(ev=>addEventListener(ev,un,{capture:true,passive:true}));
+        this._unl=()=>['touchend','pointerdown','click','keydown'].forEach(ev=>removeEventListener(ev,un,{capture:true}));
+        if(this.ctx.state==='suspended') this.ctx.resume().catch(()=>{}); }catch(e){ this.ctx=null; } }
+    return this.ctx; },
+  /* 테마마다 소리 회로를 새로 짜요: 울림 크기 · 메아리 · 압축 */
+  setup(key){ const a=this.init(); if(!a) return; this.th=SND_THEME[key]||SND_THEME.aurora; this.key=key; this.step=0; this.ambT=0; const th=this.th;
+    if(this.chain){ try{ this.chain.master.gain.setTargetAtTime(0,a.currentTime,0.05); }catch(e){} }
+    const master=a.createGain(); master.gain.value=0.95*({dotwave:2,exec:1.7,linen:1.25,studio:1.15,oxblood:1.15,autumn:1.15,spring:1.15,ocean:.8,beach:.78,jarvis:.85,midnight:.9}[key]||1);
+    const comp=a.createDynamicsCompressor(); comp.threshold.value=-26; comp.knee.value=18; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.2;
+    const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=key==='sunset'||key==='bloom'?5200:8000;
+    const rl=th.wet>.4?2.2:1.3, len=Math.floor(a.sampleRate*rl), ir=a.createBuffer(2,len,a.sampleRate); for(let ch=0;ch<2;ch++){ const d=ir.getChannelData(ch); for(let k=0;k<len;k++) d[k]=(Math.random()*2-1)*Math.pow(1-k/len,3)*(k<a.sampleRate*0.012?k/(a.sampleRate*0.012):1); }
+    const rev=a.createConvolver(); rev.buffer=ir; const wet=a.createGain(); wet.gain.value=th.wet;
+    lp.connect(comp); lp.connect(rev); rev.connect(wet); wet.connect(comp);
+    if(th.echo){ const dl=a.createDelay(1.5); dl.delayTime.value=key==='contour'?0.42:key==='space'?0.36:0.27; const fb=a.createGain(); fb.gain.value=th.echo; const dg=a.createGain(); dg.gain.value=0.55; const df=a.createBiquadFilter(); df.type='lowpass'; df.frequency.value=3200;
+      lp.connect(dl); dl.connect(df); df.connect(fb); fb.connect(dl); df.connect(dg); dg.connect(comp); }
+    comp.connect(master); master.connect(a.destination); this.out=lp; this.chain={master}; },
   unlock(){ const a=this.ctx; if(!a) return; try{ if(a.state!=='running') a.resume().catch(()=>{}); const b=a.createBuffer(1,1,22050), src=a.createBufferSource(); src.buffer=b; src.connect(a.destination); src.start(0); }catch(e){} if(a.state==='running'&&this._unl){ this._unl(); this._unl=null; } },
   locked(){ return !!this.ctx&&this.ctx.state!=='running'; },
-  ok(){ return this.on()&&this.init()&&this.ctx.state==='running'; },
-  noise(sec){ const a=this.ctx, b=a.createBuffer(1,Math.floor(a.sampleRate*sec),a.sampleRate), d=b.getChannelData(0); let l=0; for(let k=0;k<d.length;k++){ const w=Math.random()*2-1; l=(l+0.02*w)/1.02; d[k]=l*3.2+w*0.12; } return b; },   // 갈색 잡음 = 물 흐르는 소리 바탕
-  /* 출렁임 바탕음: 물결 에너지 · 기울기에 따라 커지고, 왼쪽↔오른쪽으로 쏠림 */
-  bedStart(){ if(this.bed||!this.ok()) return; const a=this.ctx; const src=a.createBufferSource(); src.buffer=this.noise(2.5); src.loop=true;
-    const bp=a.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=420; bp.Q.value=1.4;
-    const hp=a.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=140;
-    const g=a.createGain(); g.gain.value=0.0001; const pan=a.createStereoPanner?a.createStereoPanner():null;
-    src.connect(hp).connect(bp).connect(g); if(pan){ g.connect(pan).connect(this.out); } else g.connect(this.out);
-    // 찰랑임 층: 더 높은 대역, 물결이 빠를 때만 살짝
-    const bp2=a.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=2600; bp2.Q.value=2.2; const g2=a.createGain(); g2.gain.value=0.0001; src.connect(bp2).connect(g2).connect(this.out);
-    src.start(); this.bed={src,bp,g,pan,bp2,g2}; },
-  frame(e,tilt,tv,level){ const B=this.bed; if(!B||!this.ctx) return; const t=this.ctx.currentTime;
-    const slosh=Math.min(1,e*1.6+Math.abs(tv)*0.18), lap=Math.min(1,Math.abs(tv)*0.22+e*0.6);
-    B.g.gain.setTargetAtTime(0.0001+Math.min(0.9,slosh*0.9*(0.6+level*0.4)),t,0.06);
-    B.bp.frequency.setTargetAtTime(260+level*520+Math.abs(tv)*160,t,0.08);
-    if(B.pan) B.pan.pan.setTargetAtTime(Math.max(-.7,Math.min(.7,tilt*1.8)),t,0.1);
-    B.g2.gain.setTargetAtTime(0.0001+Math.min(0.25,lap*lap*0.16*(0.3+level)),t,0.05); B.bp2.frequency.setTargetAtTime(2200+Math.abs(tv)*500,t,0.1); },
-  bedStop(){ const B=this.bed; if(!B) return; this.bed=null; try{ const t=this.ctx.currentTime; B.g.gain.setTargetAtTime(0.0001,t,0.18); B.g2.gain.setTargetAtTime(0.0001,t,0.12); B.src.stop(t+1.2); }catch(e){} },
-  /* 물방울이 수면에 닿는 소리: 사인파가 짧게 위로 미끄러지는 "톡" + 맑은 배음 + 작은 공기방울 */
-  plop(level,big,pan){ if(!this.ok()) return; const a=this.ctx, t=a.currentTime+0.004;
-    const f0=big?300:480+level*680+(Math.random()-.5)*60;
-    const p=a.createStereoPanner?a.createStereoPanner():null; if(p){ p.pan.value=Math.max(-.6,Math.min(.6,pan||0)); p.connect(this.out); }
-    const dst=p||this.out;
-    const o=a.createOscillator(), g=a.createGain(); o.type='sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f0*(big?2.1:2.7),t+(big?0.09:0.045));
-    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(big?0.22:0.15,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+(big?0.24:0.13)); o.connect(g).connect(dst); o.start(t); o.stop(t+0.3);
-    const o2=a.createOscillator(), g2=a.createGain(); o2.type='sine'; o2.frequency.setValueAtTime(f0*2.9,t+0.012); o2.frequency.exponentialRampToValueAtTime(f0*3.7,t+0.05);
-    g2.gain.setValueAtTime(0.0001,t+0.012); g2.gain.exponentialRampToValueAtTime(0.035,t+0.016); g2.gain.exponentialRampToValueAtTime(0.0001,t+0.08); o2.connect(g2).connect(dst); o2.start(t+0.012); o2.stop(t+0.12);
-    // 수면이 갈라지는 짧은 "촥"
-    const n=a.createBufferSource(); n.buffer=this.noise(0.12); const hp=a.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=big?1800:2600; const ng=a.createGain(); ng.gain.setValueAtTime(0.0001,t); ng.gain.exponentialRampToValueAtTime(big?0.1:0.035,t+0.004); ng.gain.exponentialRampToValueAtTime(0.0001,t+(big?0.2:0.07)); n.connect(hp).connect(ng).connect(dst); n.start(t); n.stop(t+0.25);
-    // 뒤따르는 작은 공기방울 1~2개
-    for(let k=0;k<(big?3:1+(Math.random()<.5));k++) this.bubble(level,0.05+k*0.045+Math.random()*0.03,true);
-    if(big){ const th=a.createOscillator(), tg=a.createGain(); th.type='sine'; th.frequency.setValueAtTime(150,t); th.frequency.exponentialRampToValueAtTime(58,t+0.28); tg.gain.setValueAtTime(0.0001,t); tg.gain.exponentialRampToValueAtTime(0.17,t+0.01); tg.gain.exponentialRampToValueAtTime(0.0001,t+0.38); th.connect(tg).connect(dst); th.start(t); th.stop(t+0.42); }
+  ok(){ return this.on()&&this.init()&&this.out&&this.ctx.state==='running'; },
+  noise(sec,white){ const a=this.ctx, b=a.createBuffer(1,Math.floor(a.sampleRate*sec),a.sampleRate), d=b.getChannelData(0); let l=0; for(let k=0;k<d.length;k++){ const w=Math.random()*2-1; if(white){ d[k]=w; continue; } l=(l+0.02*w)/1.02; d[k]=l*3.2+w*0.12; } return b; },
+  env(g,t,v,att,dec){ g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002,v),t+att); g.gain.exponentialRampToValueAtTime(0.0001,t+att+dec); },
+  osc(type,f,t,v,att,dec,dst,glide){ const a=this.ctx, o=a.createOscillator(), g=a.createGain(); o.type=type; o.frequency.setValueAtTime(f,t); if(glide) o.frequency.exponentialRampToValueAtTime(f*glide,t+Math.min(dec,0.06)); this.env(g,t,v,att,dec); o.connect(g).connect(dst); o.start(t); o.stop(t+att+dec+0.05); return o; },
+  pan(p){ const a=this.ctx; if(!a.createStereoPanner) return this.out; const n=a.createStereoPanner(); n.pan.value=Math.max(-.7,Math.min(.7,p||0)); n.connect(this.out); return n; },
+  /* 악기 하나로 음 하나 */
+  note(inst,m,t,v,dst){ const f=mtof(m), a=this.ctx, O=(ty,ff,vv,at,de,gl)=>this.osc(ty,ff,t,vv,at,de,dst,gl); const th=this.th||{};
+    switch(inst){
+      case 'wood': O('triangle',f,v,.002,.2); O('sine',f*4,v*.25,.001,.035); break;
+      case 'blip': O('sine',f,v,.002,.11,1.35); O('square',f*2,v*.05,.001,.04); break;
+      case 'bell': { const c=a.createOscillator(), mo=a.createOscillator(), mg=a.createGain(), g=a.createGain(); c.frequency.value=f; mo.frequency.value=f*3.5; mg.gain.setValueAtTime(f*2.2,t); mg.gain.exponentialRampToValueAtTime(f*.05,t+1.2); mo.connect(mg).connect(c.frequency); this.env(g,t,v,.003,1.4); c.connect(g).connect(dst); c.start(t); mo.start(t); c.stop(t+1.5); mo.stop(t+1.5); break; }
+      case 'fm': { const c=a.createOscillator(), mo=a.createOscillator(), mg=a.createGain(), g=a.createGain(); c.frequency.value=f; mo.frequency.value=f*1.414; mg.gain.setValueAtTime(f*1.6,t); mg.gain.exponentialRampToValueAtTime(f*.02,t+.9); mo.connect(mg).connect(c.frequency); this.env(g,t,v,.003,1.1); c.connect(g).connect(dst); c.start(t); mo.start(t); c.stop(t+1.2); mo.stop(t+1.2); break; }
+      case 'box': O('sine',f,v,.002,.8); O('sine',f*4.02,v*.22,.001,.18); O('sine',f*2,v*.1,.002,.3); break;
+      case 'glass': O('sine',f,v,.005,.95); O('sine',f*2.01,v*.18,.004,.5); O('sine',f*5.4,v*.05,.002,.15); if(th.chorus){ O('sine',f*1.006,v*.5,.01,.9); O('sine',f*.994,v*.5,.01,.9); } break;
+      case 'soft': { const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=1600; lp.connect(dst); this.osc('triangle',f,t,v*1.1,.025,.6,lp); this.osc('sine',f/2,t,v*.3,.03,.5,lp); break; }
+      case 'epiano': O('sine',f,v,.003,1.1); O('sine',f*2,v*.28,.002,.5); O('sine',f*3,v*.07,.001,.2); O('sine',f*7,v*.02,.001,.04); break;
+      case 'square': { const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2600; lp.connect(dst); this.osc('square',f,t,v*.45,.002,.14,lp); break; }
+      case 'metal': [[1,1,1.3],[2.76,.4,.7],[5.4,.18,.35],[8.93,.08,.18]].forEach(([r,vv,d])=>O('sine',f*r,v*vv,.002,d)); break;
+      case 'kalimba': O('sine',f,v,.002,.55); O('sine',f*6.25,v*.2,.001,.05); O('sine',f*2.02,v*.08,.002,.15); break;
+      case 'glock': O('sine',f,v,.001,1.1); O('sine',f*2.76,v*.3,.001,.3); O('sine',f*5.4,v*.1,.001,.1); break;
+      case 'celesta': O('sine',f,v,.002,1.3); O('sine',f*4,v*.25,.001,.25); O('sine',f*2,v*.12,.002,.5); break;
+      case 'steel': { const o=this.osc('sine',f,t,v,.003,.55,dst); o.frequency.setValueAtTime(f*1.02,t); o.frequency.exponentialRampToValueAtTime(f,t+.05); O('sine',f*2,v*.4,.003,.35); O('sine',f*3.9,v*.18,.002,.15); break; }
+      case 'sonar': O('sine',f,v,.004,1.7); O('sine',f*2,v*.08,.004,.6); break;
+      case 'pluck': { const sr=a.sampleRate, N=Math.max(2,Math.round(sr/f)), len=Math.floor(sr*1.3), b=a.createBuffer(1,len,sr), d=b.getChannelData(0); const br=th.bright??.5;
+        for(let k=0;k<N;k++) d[k]=Math.random()*2-1; for(let ps=Math.round((1-br)*5);ps>0;ps--) for(let k=1;k<N;k++) d[k]=(d[k]+d[k-1])*0.5;  /* 밝기에 따라 첫 울림을 부드럽게 */ for(let k=N;k<len;k++) d[k]=(d[k-N]*(0.5+br*0.5)+d[k-N+1]*(0.5-br*0.5))*0.994;
+        const s=a.createBufferSource(); s.buffer=b; const g=a.createGain(); g.gain.value=v*1.4; s.connect(g).connect(dst); s.start(t); s.stop(t+1.3); break; }
+      case 'pad': { const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(500,t); lp.frequency.linearRampToValueAtTime(1900,t+1.2); lp.connect(dst);
+        [-7,0,7].forEach(dt=>{ const o=a.createOscillator(), g=a.createGain(); o.type='sawtooth'; o.frequency.value=f; o.detune.value=dt; g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(v*.22,t+.45); g.gain.setTargetAtTime(0.0001,t+1.3,.5); o.connect(g).connect(lp); o.start(t); o.stop(t+3.6); }); break; }
+      default: O('sine',f,v,.003,.5);
+    } },
+  /* 물이 찰수록 테마 음계를 따라 한 음씩 올라감 */
+  plop(level,big,pan){ if(!this.ok()) return; const a=this.ctx, t=a.currentTime+0.004, th=this.th, dst=this.pan(pan);
+    if(th.water>0){ const f0=big?300:480+level*680+(Math.random()-.5)*60, w=th.water;
+      this.osc('sine',f0,t,(big?.2:.13)*w,.003,big?.24:.12,dst,big?2.1:2.7);
+      const n=a.createBufferSource(); n.buffer=this.noise(0.12); const hp=a.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=big?1800:2600; const ng=a.createGain(); this.env(ng,t,(big?.09:.03)*w,.004,big?.2:.07); n.connect(hp).connect(ng).connect(dst); n.start(t); n.stop(t+.25);
+      for(let k=0;k<(big?3:(Math.random()<.5?1:0));k++) this.bubble(level,0.05+k*0.045+Math.random()*0.03,true); }
+    const sc=SND_SCALE[th.sc]||SND_SCALE.maj;
+    if(big){ this.note(th.inst,th.root-12,t+.01,.16,dst); if(th.gong) this.gong(th.gong,t); }
+    else { const i=Math.min(sc.length-1,Math.round(level*(sc.length-1))+(Math.random()<.25?-1:0)); this.note(th.inst,th.root+sc[Math.max(0,i)],t+.006,.12,dst); this.step++; }
     this.bedStart(); },
-  /* 공기방울이 올라와 터지는 "뽁" (위로 휘는 짧은 음) */
-  bubble(level,delay=0,force){ if(!this.ok()) return; const a=this.ctx, now=a.currentTime; if(!force&&now-this.lastBub<0.07) return; this.lastBub=now; const t=now+0.003+delay, f=900+Math.random()*1300+level*400;
-    const o=a.createOscillator(), g=a.createGain(); o.type='sine'; o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*1.75,t+0.035); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.028,t+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t+0.06); o.connect(g).connect(this.out); o.start(t); o.stop(t+0.08); },
-  /* 튄 물방울이 다시 떨어지는 아주 작은 "찰" (너무 자주 나지 않게) */
-  tick(level){ if(!this.ok()) return; const a=this.ctx, now=a.currentTime; if(now-this.lastTick<0.04) return; this.lastTick=now; const t=now+0.003, f=1500+level*900+Math.random()*700;
-    const o=a.createOscillator(), g=a.createGain(); o.type='sine'; o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*1.5,t+0.022); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.024,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+0.045); o.connect(g).connect(this.out); o.start(t); o.stop(t+0.06); },
-  /* 다 찼을 때: 맑은 유리잔 울림 */
-  full(){ this.bedStop(); if(!this.ok()) return; const a=this.ctx, t=a.currentTime+0.02;
-    [[1046.5,0,.05],[1568,0.06,.035],[2093,0.12,.022],[3136,0.16,.01]].forEach(([f,dl,v])=>{ const o=a.createOscillator(), g=a.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t+dl); g.gain.exponentialRampToValueAtTime(v,t+dl+0.008); g.gain.exponentialRampToValueAtTime(0.0001,t+dl+1.5); o.connect(g).connect(this.out); o.start(t+dl); o.stop(t+dl+1.6); }); }
+  gong(m,t){ const f=mtof(m); [[1,.16,2.6],[1.48,.06,1.6],[2.2,.04,1.1],[2.97,.025,.8]].forEach(([r,v,d])=>this.osc('sine',f*r,t,v,.008,d,this.out)); },
+  bubble(level,delay=0,force){ if(!this.ok()) return; const a=this.ctx, now=a.currentTime; if(!force&&now-this.lastBub<0.07) return; this.lastBub=now; const f=900+Math.random()*1300+level*400; this.osc('sine',f,now+.003+delay,.026*Math.max(.35,this.th.water),.004,.055,this.out,1.75); },
+  tick(level){ if(!this.ok()) return; const a=this.ctx, now=a.currentTime; if(now-this.lastTick<0.04) return; this.lastTick=now; const f=1500+level*900+Math.random()*700; this.osc('sine',f,now+.003,.022*Math.max(.4,this.th.water),.003,.04,this.out,1.5); },
+  /* 깔리는 배경음: 물 출렁임 + 테마 배경(바다 · 비 · 바람 · 우주 · 낮은 울림 · 종이) */
+  bedStart(){ if(this.bed||!this.ok()) return; const a=this.ctx, th=this.th, B={srcs:[]};
+    const src=a.createBufferSource(); src.buffer=this.noise(2.5); src.loop=true; B.srcs.push(src);
+    const hp=a.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=140; const bp=a.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=420; bp.Q.value=1.4;
+    const g=a.createGain(); g.gain.value=0.0001; const pan=a.createStereoPanner?a.createStereoPanner():null; src.connect(hp).connect(bp).connect(g); if(pan) g.connect(pan).connect(this.out); else g.connect(this.out);
+    const bp2=a.createBiquadFilter(); bp2.type='bandpass'; bp2.frequency.value=2600; bp2.Q.value=2.2; const g2=a.createGain(); g2.gain.value=0.0001; src.connect(bp2).connect(g2).connect(this.out);
+    Object.assign(B,{bp,g,pan,bp2,g2}); const t=a.currentTime;
+    const lfo=(node,param,rate,depth)=>{ const o=a.createOscillator(), og=a.createGain(); o.frequency.value=rate; og.gain.value=depth; o.connect(og).connect(param); o.start(); B.srcs.push(o); };
+    const layer=(white,type,freq,q,v)=>{ const s=a.createBufferSource(); s.buffer=this.noise(3,white); s.loop=true; const f=a.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q; const lg=a.createGain(); lg.gain.setValueAtTime(0.0001,t); lg.gain.linearRampToValueAtTime(v,t+.8); s.connect(f).connect(lg).connect(this.out); s.start(); B.srcs.push(s); return {f,lg}; };
+    if(th.bed==='ocean'){ const L=layer(false,'lowpass',700,.7,.16); lfo(null,L.lg.gain,0.16,.11); lfo(null,L.f.frequency,0.16,300); }
+    else if(th.bed==='rain'){ layer(true,'highpass',1800,.5,.035); layer(false,'lowpass',400,.7,.05); }
+    else if(th.bed==='wind'||th.bed==='night'){ const L=layer(false,'bandpass',600,2.5,th.bed==='night'?.05:.08); lfo(null,L.f.frequency,0.11,320); lfo(null,L.lg.gain,0.07,.03); }
+    else if(th.bed==='hum'){ [55,110,165].forEach((f,k)=>{ const o=a.createOscillator(), og=a.createGain(); o.frequency.value=f*(th.root<60?1:1.5); og.gain.setValueAtTime(0.0001,t); og.gain.linearRampToValueAtTime([.03,.012,.005][k],t+1); o.connect(og).connect(this.out); o.start(); B.srcs.push(o); }); }
+    else if(th.bed==='space'){ [th.root-24,th.root-17].forEach(m=>{ [-6,6].forEach(dt=>{ const o=a.createOscillator(), og=a.createGain(); o.type='triangle'; o.frequency.value=mtof(m); o.detune.value=dt; og.gain.setValueAtTime(0.0001,t); og.gain.linearRampToValueAtTime(.022,t+1.4); o.connect(og).connect(this.out); o.start(); B.srcs.push(o); }); }); }
+    else if(th.bed==='ink'){ bp.frequency.value=260; }
+    else if(th.bed==='paper'){ layer(true,'bandpass',3500,1.2,.008); }
+    src.start(); this.bed=B; },
+  frame(e,tilt,tv,level,dt){ const B=this.bed; if(!B||!this.ctx) return; const t=this.ctx.currentTime, w=this.th.water;
+    const slosh=Math.min(1,e*1.6+Math.abs(tv)*0.18), lap=Math.min(1,Math.abs(tv)*0.22+e*0.6);
+    B.g.gain.setTargetAtTime(0.0001+Math.min(0.9,slosh*0.9*(0.6+level*0.4))*w,t,0.06);
+    B.bp.frequency.setTargetAtTime((this.th.bed==='ink'?180:260)+level*520+Math.abs(tv)*160,t,0.08);
+    if(B.pan) B.pan.pan.setTargetAtTime(Math.max(-.7,Math.min(.7,tilt*1.8)),t,0.1);
+    B.g2.gain.setTargetAtTime(0.0001+Math.min(0.25,lap*lap*0.16*(0.3+level))*w,t,0.05); B.bp2.frequency.setTargetAtTime(2200+Math.abs(tv)*500,t,0.1);
+    this.amb(dt||0.016,level); },
+  /* 가끔 들리는 테마 소리 */
+  amb(dt,level){ const th=this.th; if(!th.amb||!this.ok()) return; const R={data:3,sparkle:1.4,twinkle:1.1,birds:.55,gull:.16,leaf:1.3,sleigh:.4,sonar:.3,link:.8,scratch:.7,paper:2.2,bubbles:2.5,drizzle:26}[th.amb]*(th.ambRate||1);
+    if(Math.random()>R*dt) return; const a=this.ctx, t=a.currentTime+.01, rnd=(x,y)=>x+Math.random()*(y-x), O=(ty,f,v,at,de,gl,dl=0,p=0)=>this.osc(ty,f,t+dl,v,at,de,this.pan(p),gl);
+    switch(th.amb){
+      case 'data': O('square',rnd(2200,4200),.012,.001,.025,null,0,rnd(-.6,.6)); if(Math.random()<.4) O('square',rnd(2200,4200),.01,.001,.02,null,.05); break;
+      case 'sparkle': case 'twinkle': { const m=th.root+12+SND_SCALE[th.sc][Math.floor(Math.random()*6)]; this.note(th.amb==='twinkle'?'celesta':'glass',m,t,th.amb==='twinkle'?.03:.035,this.pan(rnd(-.7,.7))); break; }
+      case 'birds': { const n=2+Math.floor(Math.random()*4), base=rnd(2600,3600), p=rnd(-.7,.7); for(let k=0;k<n;k++) O('sine',base*rnd(.9,1.1),.03,.004,.06,rnd(1.25,1.6),k*rnd(.07,.11),p); break; }
+      case 'gull': { const o=O('sine',1350,.03,.05,.45,null,0,rnd(-.5,.5)); o.frequency.setValueAtTime(1350,t); o.frequency.exponentialRampToValueAtTime(820,t+.42); break; }
+      case 'leaf': { const n=a.createBufferSource(); n.buffer=this.noise(.12,true); const hp=a.createBiquadFilter(); hp.type='bandpass'; hp.frequency.value=rnd(2500,5000); hp.Q.value=.9; const g=a.createGain(); this.env(g,t,.035,.005,rnd(.04,.1)); n.connect(hp).connect(g).connect(this.pan(rnd(-.8,.8))); n.start(t); n.stop(t+.15); break; }
+      case 'sleigh': { const p=rnd(-.5,.5); for(let k=0;k<6;k++) O('sine',rnd(4200,6800),.012,.001,.09,null,k*.035+rnd(0,.02),p); break; }
+      case 'sonar': this.note('sonar',th.root+24,t,.035,this.pan(rnd(-.4,.4))); break;
+      case 'link': { const m=th.root+SND_SCALE[th.sc][Math.floor(Math.random()*5)]; O('sine',mtof(m),.03,.002,.12,null,0,-.4); O('sine',mtof(m+7),.03,.002,.14,null,.07,.4); break; }
+      case 'scratch': { const n=a.createBufferSource(); n.buffer=this.noise(.2,true); const f=a.createBiquadFilter(); f.type='bandpass'; f.Q.value=3; f.frequency.setValueAtTime(rnd(2500,3500),t); f.frequency.linearRampToValueAtTime(rnd(4000,5500),t+.14); const g=a.createGain(); this.env(g,t,.03,.02,.12); n.connect(f).connect(g).connect(this.pan(rnd(-.4,.4))); n.start(t); n.stop(t+.2); break; }
+      case 'paper': { const n=a.createBufferSource(); n.buffer=this.noise(.03,true); const f=a.createBiquadFilter(); f.type='highpass'; f.frequency.value=3000; const g=a.createGain(); this.env(g,t,.018,.001,.012); n.connect(f).connect(g).connect(this.pan(rnd(-.6,.6))); n.start(t); n.stop(t+.04); break; }
+      case 'bubbles': this.bubble(level,0,true); break;
+      case 'drizzle': O('sine',rnd(2500,6000),.008,.001,.012,1.3,0,rnd(-.8,.8)); break;
+    } },
+  bedStop(){ const B=this.bed; if(!B) return; this.bed=null; try{ const t=this.ctx.currentTime; this.chain.master.gain.setTargetAtTime(0.0001,t+1.2,0.4); B.g.gain.setTargetAtTime(0.0001,t,0.18); B.g2.gain.setTargetAtTime(0.0001,t,0.12); B.srcs.forEach(s=>{ try{ s.stop(t+2.6); }catch(e){} }); }catch(e){} },
+  /* 다 찼을 때: 테마별 마무리 */
+  full(){ const th=this.th; if(!this.ok()){ this.bedStop(); return; } const a=this.ctx, t=a.currentTime+0.02;
+    th.end.forEach((m,k)=>this.note(th.endInst,m,t+k*th.endGap,th.endInst==='pad'?.12:.1,this.pan((k/(th.end.length-1||1)-.5)*.8)));
+    if(th.sweep){ const o=this.osc('sine',300,t,.04,.05,.5,this.out); o.frequency.setValueAtTime(300,t); o.frequency.exponentialRampToValueAtTime(2400,t+.45); }
+    if(th.gong) this.gong(th.gong,t);
+    if(th.wash||th.swoosh){ const n=a.createBufferSource(); n.buffer=this.noise(2,!!th.swoosh); const f=a.createBiquadFilter(); f.type=th.swoosh?'bandpass':'lowpass'; f.Q.value=th.swoosh?4:.7; f.frequency.setValueAtTime(th.swoosh?7000:400,t); f.frequency.exponentialRampToValueAtTime(th.swoosh?900:1500,t+.9); const g=a.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(th.swoosh?.05:.14,t+.35); g.gain.exponentialRampToValueAtTime(0.0001,t+1.8); const p=a.createStereoPanner?a.createStereoPanner():null; if(p){ p.pan.setValueAtTime(th.swoosh?-.8:0,t); p.pan.linearRampToValueAtTime(th.swoosh?.8:0,t+1); n.connect(f).connect(g).connect(p).connect(this.out); } else n.connect(f).connect(g).connect(this.out); n.start(t); n.stop(t+2); }
+    if(th.sparkleEnd) for(let k=0;k<6;k++) this.note('glass',th.root+24+SND_SCALE.lyd[k*2%12],t+.2+k*.09,.03,this.pan(Math.random()*1.4-.7));
+    if(th.sleighEnd) for(let k=0;k<10;k++) this.osc('sine',4200+Math.random()*2600,t+k*.04,.012,.001,.1,this.out);
+    if(th.thunder){ const n=a.createBufferSource(); n.buffer=this.noise(3); const f=a.createBiquadFilter(); f.type='lowpass'; f.frequency.value=180; const g=a.createGain(); g.gain.setValueAtTime(0.0001,t+.3); g.gain.linearRampToValueAtTime(.22,t+.8); g.gain.exponentialRampToValueAtTime(0.0001,t+2.8); n.connect(f).connect(g).connect(this.out); n.start(t+.3); n.stop(t+3); }
+    this.bedStop(); }
 };
+/* 설정에서 지금 테마의 로딩 화면 · 소리를 다시 보기 */
+function bootPreview(){ try{ sessionStorage.removeItem('md.booted'); }catch(e){} dropAudio.unlock(); const L=['INITIALIZING KAIA DESK','LINKING DATA CORE…','로딩 화면 미리 보기','SYSTEM ONLINE']; L.ready=true; return bootSequence(L); }
 function bootSequence(lines){
   let seen=false; try{ seen=sessionStorage.getItem('md.booted')==='1'; }catch(e){}
   if(seen) return Promise.resolve();
   try{ sessionStorage.setItem('md.booted','1'); }catch(e){}
-  dropAudio.init();
+  dropAudio.setup(document.body.dataset.bg||'aurora');
   return new Promise(res=>{
     const P=loaderPalette(); const light=/^(255|2[0-4]\d)/.test('')||['exec','jarvisLight'].includes(document.body.dataset.bg)||!['aurora','sunset','ocean','space','jarvis','midnight','opal','starhill','winter','rain'].includes(document.body.dataset.bg);
     const under=light?'brightness(0) invert(1)':'brightness(0) opacity(.78)';
@@ -4321,7 +4409,7 @@ function bootSequence(lines){
       /* 스프링: 물높이 · 기울기, 에너지 감쇠 */
       lv+=((target-level)*28-lv*8.5)*dt; level+=lv*dt;
       tv+=(-tilt*30-tv*2.6)*dt; tilt+=tv*dt;
-      E*=Math.exp(-1.25*dt); dropAudio.frame(E/R,tilt,tv,Math.max(0,level));
+      E*=Math.exp(-1.25*dt); dropAudio.frame(E/R,tilt,tv,Math.max(0,level),dt);
       /* 다음 방울: 상태 문구마다 한 방울 */
       if(introDone&&!done&&spawned-1<lines.length&&t-lastSpawn>0.34){ setLine(lines[spawned-1]); spawnDrop(false); lastSpawn=t; }
       /* 유리 원 (아주 옅게) */
@@ -6814,6 +6902,7 @@ const ACT={
   cmd:()=>openCmd(),
   fxMode:el=>{ S.settings.fx=el.dataset.k; store.saveSettings(); applyFx(); if(el.dataset.k==='shard'||el.dataset.k==='stack'){ S._fxAssemble=true; } S._anim=true; render(); },
   brief:()=>{ sfx('ok'); speak(briefingText()); },
+  bootPreview:()=>{ if(!S.settings.sfx) toast('효과음이 꺼져 있어요','아래 효과음을 켜면 소리도 같이 나와요.'); bootPreview(); },
   replayBoot:()=>{ try{ sessionStorage.removeItem('md.booted'); }catch(e){} sfx('boot'); const L=bootLines(); L.ready=true; bootSequence(L); },
   syncOn:async el=>{ const u=$('#syncUrl').value, k=$('#syncKey').value; if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u.trim())){ toast('웹 앱 주소를 확인해 주세요','https://script.google.com/macros/s/…/exec 형식이에요.'); return; } if(!k.trim()){ toast('비밀 키를 넣어 주세요',''); return; } el.disabled=true; await gas.connect(u,k); el.disabled=false; },
   openLogin:()=>{ S.gate=true; S.loginTab='in'; render(); },
@@ -6945,6 +7034,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261026-2322';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261026-2343';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
