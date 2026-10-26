@@ -4217,7 +4217,7 @@ const dropAudio={ctx:null,out:null,lastTick:0,lastBub:0,bed:null,
   on(){ try{ return S.settings.sfx!==false; }catch(e){ return true; } },
   init(){ if(this.ctx) return this.ctx; try{ const a=audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); this.ctx=a;
       const master=a.createGain(); master.gain.value=0.95;
-      // 휴대폰 스피커에서도 또렷하게: 아주 약한 압축 → 작은 소리는 살리고 큰 소리는 눌러 줌
+      // 휴대폰 스피커에서도 또렷하게: 아주 약한 압축 → 작은 소리는 살리고 큰 소리는 눌러 줘요
       const comp=a.createDynamicsCompressor(); comp.threshold.value=-26; comp.knee.value=18; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.2;
       const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=7500;
       // 작은 방 울림 (물방울이 유리 그릇 안에서 울리는 느낌)
@@ -6945,6 +6945,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261026-2321';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261026-2322';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
