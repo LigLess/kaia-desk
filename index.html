@@ -4212,10 +4212,43 @@ function loaderPalette(){
   const FX={jarvisLight:'plain',jarvis:'exec',rose:'plain',lavender:'plain',exec:'exec',dotwave:'dots',contour:'contour',bloom:'bloom',network:'net',studio:'strand',linen:'strand',midnight:'glow',oxblood:'exec',opal:'glow',starhill:'stars',beach:'plain',spring:'plain',autumn:'plain',winter:'stars',rain:'glow',aurora:'glow',sunset:'glow',ocean:'caustic',space:'stars'};
   const o=P[k]||{bg:'radial-gradient(70% 70% at 50% 45%,#ffffff,#f4f4f6 75%)',ink:'11,11,15',a1:'#0b0b0f',a2:'#4a4a52',text:'#6b6b73',name:'#0b0b0f',logo:'brightness(0)'}; o.fx=FX[k]||'plain'; return o;
 }
+/* ---------- 로딩 화면 효과음: 물방울이 떨어질 때 "톡", 물이 찰수록 음이 조금씩 올라가요 (병에 물 채울 때처럼) ---------- */
+const dropAudio={ctx:null,out:null,lastTick:0,
+  on(){ try{ return S.settings.sfx!==false; }catch(e){ return true; } },
+  init(){ if(this.ctx) return this.ctx; try{ const a=audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); this.ctx=a;
+      const master=a.createGain(); master.gain.value=0.9; const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=6500;
+      // 짧은 잔향 (작은 방 울림) — 소리가 딱딱하지 않고 맑게 퍼지도록
+      const len=Math.floor(a.sampleRate*1.1), ir=a.createBuffer(2,len,a.sampleRate); for(let ch=0;ch<2;ch++){ const d=ir.getChannelData(ch); for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.2); }
+      const rev=a.createConvolver(); rev.buffer=ir; const wet=a.createGain(); wet.gain.value=0.22;
+      lp.connect(master); lp.connect(rev); rev.connect(wet); wet.connect(master); master.connect(a.destination); this.out=lp;
+      if(a.state==='suspended'){ const go=()=>{ a.resume().catch(()=>{}); removeEventListener('pointerdown',go,true); removeEventListener('keydown',go,true); }; addEventListener('pointerdown',go,true); addEventListener('keydown',go,true); a.resume().catch(()=>{}); }
+    }catch(e){ this.ctx=null; } return this.ctx; },
+  ok(){ return this.on()&&this.init()&&this.ctx.state==='running'; },
+  /* 물방울이 수면에 닿는 소리: 사인파가 짧게 위로 미끄러지는 "톡" + 맑은 배음 */
+  plop(level,big,pan){ if(!this.ok()) return; const a=this.ctx, t=a.currentTime+0.005;
+    const f0=big?300:520+level*620+(Math.random()-.5)*40;
+    const p=a.createStereoPanner?a.createStereoPanner():null; if(p){ p.pan.value=Math.max(-.6,Math.min(.6,pan||0)); p.connect(this.out); }
+    const dst=p||this.out;
+    const o=a.createOscillator(), g=a.createGain(); o.type='sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f0*(big?2.1:2.6),t+(big?0.09:0.05));
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(big?0.2:0.13,t+0.004); g.gain.exponentialRampToValueAtTime(0.0001,t+(big?0.22:0.12)); o.connect(g).connect(dst); o.start(t); o.stop(t+0.3);
+    const o2=a.createOscillator(), g2=a.createGain(); o2.type='sine'; o2.frequency.setValueAtTime(f0*2.9,t+0.012); o2.frequency.exponentialRampToValueAtTime(f0*3.6,t+0.05);
+    g2.gain.setValueAtTime(0.0001,t+0.012); g2.gain.exponentialRampToValueAtTime(0.03,t+0.016); g2.gain.exponentialRampToValueAtTime(0.0001,t+0.08); o2.connect(g2).connect(dst); o2.start(t+0.012); o2.stop(t+0.12);
+    if(big){ // 첫 방울: 낮은 울림 + 물 튀는 소리
+      const th=a.createOscillator(), tg=a.createGain(); th.type='sine'; th.frequency.setValueAtTime(140,t); th.frequency.exponentialRampToValueAtTime(55,t+0.25); tg.gain.setValueAtTime(0.0001,t); tg.gain.exponentialRampToValueAtTime(0.16,t+0.01); tg.gain.exponentialRampToValueAtTime(0.0001,t+0.35); th.connect(tg).connect(dst); th.start(t); th.stop(t+0.4);
+      const n=a.createBufferSource(), b=a.createBuffer(1,Math.floor(a.sampleRate*0.35),a.sampleRate), d=b.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.4); n.buffer=b;
+      const bp=a.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=3200; bp.Q.value=0.8; const ng=a.createGain(); ng.gain.value=0.07; n.connect(bp).connect(ng).connect(dst); n.start(t+0.01); } },
+  /* 튄 물방울이 다시 떨어지는 아주 작은 소리 (너무 자주 나지 않게) */
+  tick(level){ if(!this.ok()) return; const a=this.ctx, now=a.currentTime; if(now-this.lastTick<0.045) return; this.lastTick=now; const t=now+0.003, f=1400+level*900+Math.random()*500;
+    const o=a.createOscillator(), g=a.createGain(); o.type='sine'; o.frequency.setValueAtTime(f,t); o.frequency.exponentialRampToValueAtTime(f*1.5,t+0.025); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.022,t+0.003); g.gain.exponentialRampToValueAtTime(0.0001,t+0.05); o.connect(g).connect(this.out); o.start(t); o.stop(t+0.07); },
+  /* 다 찼을 때: 맑은 유리잔 울림 */
+  full(){ if(!this.ok()) return; const a=this.ctx, t=a.currentTime+0.02;
+    [[1046.5,0,.05],[1568,0.06,.035],[2093,0.12,.022]].forEach(([f,dl,v])=>{ const o=a.createOscillator(), g=a.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t+dl); g.gain.exponentialRampToValueAtTime(v,t+dl+0.01); g.gain.exponentialRampToValueAtTime(0.0001,t+dl+1.3); o.connect(g).connect(this.out); o.start(t+dl); o.stop(t+dl+1.4); }); }
+};
 function bootSequence(lines){
   let seen=false; try{ seen=sessionStorage.getItem('md.booted')==='1'; }catch(e){}
   if(seen) return Promise.resolve();
   try{ sessionStorage.setItem('md.booted','1'); }catch(e){}
+  dropAudio.init();
   return new Promise(res=>{
     const P=loaderPalette(); const light=/^(255|2[0-4]\d)/.test('')||['exec','jarvisLight'].includes(document.body.dataset.bg)||!['aurora','sunset','ocean','space','jarvis','midnight','opal','starhill','winter','rain'].includes(document.body.dataset.bg);
     const under=light?'brightness(0) invert(1)':'brightness(0) opacity(.78)';
@@ -4246,7 +4279,7 @@ function bootSequence(lines){
       const amp=R*0.012+E*0.55+Math.min(R*0.05,Math.abs(lv)*R*0.9);
       return lvlY(level)+Math.sin(px*k1+t*2.3)*amp*0.55+Math.sin(px*k2-t*3.4+1.3)*amp*0.35+Math.sin(px*k3+t*5.1)*E*0.25+tilt*(px-cx)/R*R*0.22; };
     const spawnDrop=(big)=>{ const off=big?0:(Math.random()-.5)*R*0.5; drops.push({x:cx+off,y:big?cy-H*0.3:cy-R-H*0.12-Math.random()*20,vy:big?R*3:R*1.6,r:big?R*0.085:R*(0.05+Math.random()*0.015),big}); spawned++; };
-    const finish=fast=>{ if(done) return; done=true; setTimeout(()=>el.classList.add('out'),fast?0:380); setTimeout(()=>{ cancelAnimationFrame(raf); removeEventListener('resize',size); el.remove(); res(); },fast?420:1000); };
+    const finish=fast=>{ if(done) return; done=true; if(!fast) dropAudio.full(); setTimeout(()=>el.classList.add('out'),fast?0:380); setTimeout(()=>{ cancelAnimationFrame(raf); removeEventListener('resize',size); el.remove(); res(); },fast?420:1000); };
     el.addEventListener('click',()=>finish(true));
     spawnDrop(true);
     const frame=now=>{
@@ -4303,7 +4336,7 @@ function bootSequence(lines){
       } else logoU.style.clipPath='inset(100% 0 0 0)';
       /* 떨어지는 방울 */
       for(let n=drops.length-1;n>=0;n--){ const d=drops[n]; d.vy+=G*dt*(d.big?1.05:1); d.y+=d.vy*dt; const sy=d.big?lvlY(Math.max(level,0)):surf(d.x,t);
-        if(d.y+d.r>=sy){ drops.splice(n,1); landed++;
+        if(d.y+d.r>=sy){ drops.splice(n,1); landed++; dropAudio.plop(Math.max(0,level),d.big,(d.x-cx)/R);
           const imp=d.big?R*0.11:R*0.05; E+=imp; tv+=(d.x-cx)/R*(d.big?1.2:2.4)*(Math.random()<.5?1:-1)*0.6+((Math.random()-.5)*1.2);
           target=d.big?BASE:Math.min(1,BASE+(1-BASE)*Math.min(1,(landed-1)/Math.max(1,lines.length)*(lines.ready?1:0.92)));
           if(d.big){ introDone=true; lastSpawn=t-0.12; ring(t,R,R*1.9,.28,1.2); ring(t+0.1,R,R*1.45,.18,1); }
@@ -4314,7 +4347,7 @@ function bootSequence(lines){
         x.beginPath(); x.moveTo(0,-d.r*1.25); x.bezierCurveTo(d.r*0.9,-d.r*0.2,d.r,d.r*0.9,0,d.r); x.bezierCurveTo(-d.r,d.r*0.9,-d.r*0.9,-d.r*0.2,0,-d.r*1.25);
         x.fillStyle=P.a1; x.globalAlpha=.92; x.fill(); x.globalAlpha=1; x.restore(); }
       /* 튀는 물방울 */
-      for(let n=spl.length-1;n>=0;n--){ const s=spl[n]; s.vy+=G*dt; s.x+=s.vx*dt; s.y+=s.vy*dt; if(s.vy>0&&s.y>=surf(s.x,t)){ spl.splice(n,1); E+=R*0.006; continue; } if(s.y>cy+R+40){ spl.splice(n,1); continue; } x.beginPath(); x.arc(s.x,s.y,s.r,0,Math.PI*2); x.fillStyle=P.a2; x.globalAlpha=.9; x.fill(); x.globalAlpha=1; }
+      for(let n=spl.length-1;n>=0;n--){ const s=spl[n]; s.vy+=G*dt; s.x+=s.vx*dt; s.y+=s.vy*dt; if(s.vy>0&&s.y>=surf(s.x,t)){ spl.splice(n,1); E+=R*0.006; if(Math.random()<.5) dropAudio.tick(level); continue; } if(s.y>cy+R+40){ spl.splice(n,1); continue; } x.beginPath(); x.arc(s.x,s.y,s.r,0,Math.PI*2); x.fillStyle=P.a2; x.globalAlpha=.9; x.fill(); x.globalAlpha=1; }
       /* 바깥 잔물결 */
       for(let n=rings.length-1;n>=0;n--){ const r=rings[n]; const p=(t-r.t)/r.dur; if(p<0) continue; if(p>=1){ rings.splice(n,1); continue; } const e=1-Math.pow(1-p,3); x.beginPath(); x.arc(cx,cy,r.r0+(r.r1-r.r0)*e,0,Math.PI*2); x.strokeStyle=ink(r.a*Math.pow(1-p,1.7)); x.lineWidth=1.2; x.stroke(); }
       /* 로고 · 이름 */
@@ -6880,6 +6913,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261025-1552';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261026-1232';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
