@@ -6963,7 +6963,7 @@ const rmBase=n=>rmLevel(n).replace(/\s*\d+$/,'').trim()||rmLevel(n);      // Pyt
 const rmYM=v=>v?`${v.slice(2,4)}.${v.slice(5,7)}`:'';
 function rmNew(){ return {src:'',srcLabel:'',name:'',rows:[],orig:0,quoted:0,dept:'',mcf:'X',pay:'카드',period:'',space:false,kind:'pay',paid:'',codAmt:10000,codDate:'',receipt:'-',
   cat:'tier',tier:{과목:{on:true,p:5},당일:{on:false,p:10},리뷰:{on:false,p:5}},empPct:30,subDisc:'',subDiscRow:'',subDiscOn:false,support:'',supportOn:false,notice:true}; }
-function rmDraft(){ if(!S.rm){ try{ S.rm=JSON.parse(lsGet('md.rmDraft')||'null'); }catch(e){} if(!S.rm||!Array.isArray(S.rm.rows)) S.rm=rmNew(); } return S.rm; }
+function rmDraft(){ if(!S.rm){ try{ S.rm=JSON.parse(lsGet('md.rmDraft')||'null'); }catch(e){} if(!S.rm||!Array.isArray(S.rm.rows)) S.rm=rmNew(); if(!S.rm.subDiscOn){ S.rm.subDiscRow=''; S.rm.subDisc=''; } if(!S.rm.supportOn) S.rm.support=''; } return S.rm; }
 function rmKeep(){ try{ lsSet('md.rmDraft',JSON.stringify(S.rm)); }catch(e){} }
 
 /* 견적 → 요청메모 바탕값 */
@@ -7030,10 +7030,11 @@ function rmCalc(R){
   const final=rmNum(R.paid)||0;                       // 할인 후 원래 내야 할 금액 (COD여도 이 금액 기준)
   const disc=Math.max(0,R.orig-final);
   const al=rmAlloc(R,final); const sup=al.filter(r=>r.alloc===0&&r.orig>0); const part=al.filter(r=>r.alloc>0&&r.alloc<r.orig);
-  let pi=R.subDiscRow!==''&&al[+R.subDiscRow]?+R.subDiscRow:(part.length?al.indexOf(part[part.length-1]):-1);
+  const manual=!!R.subDiscOn&&R.subDiscRow!==''&&R.subDiscRow!=null&&!!al[+R.subDiscRow];   // 직접 고치기를 켰을 때만 고른 과목 사용 (예전 화면에서 골라 둔 값은 무시)
+  let pi=manual?+R.subDiscRow:(part.length?al.indexOf(part[part.length-1]):-1);
   /* 깎인 과목이 딱 떨어지지 않아도(지원 과목만 있거나 정가를 모를 때) 할인이 있으면 마지막으로 돈을 낸 과목에 표시 */
   if(pi<0&&disc>0&&al.length){ const payers=al.filter(r=>r.alloc>0); pi=al.indexOf(payers.length?payers[payers.length-1]:al[al.length-1]); }
-  const autoAmt=pi>=0?(part.includes(al[pi])||R.subDiscRow!==''?al[pi].orig-al[pi].alloc:(sup.length?0:disc)):0;
+  const autoAmt=pi>=0?(part.includes(al[pi])||manual?al[pi].orig-al[pi].alloc:(sup.length?0:disc)):0;
   const amt=R.subDiscOn&&rmNum(R.subDisc)!=null?rmNum(R.subDisc):autoAmt;
   const supText=R.supportOn&&R.support.trim()?R.support.trim():rmJoinLv(sup);
   const warn=[]; if(!R.rows.length) warn.push('견적을 불러오거나 과목을 추가해 주세요'); if(R.rows.some(r=>r.miss)) warn.push('수강료표에 없는 과목이 있어요 — 정가를 확인해 주세요');
@@ -7389,6 +7390,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261027-1403';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261027-1415';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
