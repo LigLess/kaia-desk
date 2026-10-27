@@ -1603,6 +1603,23 @@ body[data-bg="spring"] .core-next,body[data-bg="spring"] .core-label,body[data-b
 @media (max-width:640px){.cu-item{flex-wrap:wrap}.cu-act{width:100%;justify-content:flex-start}.cu-ng{grid-template-columns:1fr 1fr auto}}
 .cu-vwm{max-width:min(1100px,96vw)!important;width:96vw}
 .cu-vw{padding:0!important}.cu-vw iframe{display:block;width:100%;height:min(78vh,1000px);border:0;background:#525659}
+
+/* ===== 요청메모 ===== */
+.rm-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rm-hint{margin:8px 0 0;font-size:12px;color:var(--faint)}
+.rm-warn{margin:8px 0 0;font-size:12.5px;color:var(--warn)}
+.rm-src{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:13px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.rm-src svg{width:16px;height:16px;color:var(--ok)}.rm-src small{width:100%;color:var(--faint);font-size:11.5px}
+.rm-rows{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.rm-r{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:4px 2px;border-bottom:1px dashed var(--line)}.rm-r b{font-weight:600;flex:1;min-width:0}.rm-r span{color:var(--muted);font-variant-numeric:tabular-nums}.rm-r small{color:var(--faint)}
+.rm-hand{display:inline-block;margin-left:4px;padding:0 6px;border-radius:6px;background:var(--warn-soft);color:var(--warn);font-size:10.5px;font-weight:700;vertical-align:1px}
+.rm-calc{height:40px;display:flex;align-items:center;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
+.rm-sm{font-size:12.5px}
+.rm-tier{display:flex;flex-wrap:wrap;gap:8px}
+.rm-t{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;border:1px solid var(--line);font-size:13px;cursor:pointer;opacity:.6}.rm-t.on{opacity:1;border-color:var(--accent);background:var(--accent-soft)}
+.rm-t .in{width:56px;height:30px;padding:0 6px;text-align:right}
+.rm-text{width:100%;min-height:520px;font-size:13px;line-height:1.55;font-family:var(--mono),ui-monospace,monospace;white-space:pre;resize:vertical}
+@media (max-width:640px){.rm-form{grid-template-columns:minmax(0,1fr)}.rm-text{min-height:420px;font-size:12px}}
 </style>
 </head>
 <body>
@@ -4127,14 +4144,15 @@ function pasteStudentsGo(){
 /* ===== 끌어다 놓기 ===== */
 let dragDepth=0;
 const hasFiles=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
-document.addEventListener('dragenter',e=>{ if(!hasFiles(e)||S.locked) return; e.preventDefault(); dragDepth++; const dz=$('#dropzone'); const w=!!($('#wpFile')||$('#cuFile')); dz.querySelector('b').textContent=w?'여기에 놓으면 첨부돼요':'여기에 놓으세요'; dz.querySelector('span').textContent=w?'PDF · 압축 · 한글 · 이미지 등 어떤 파일이든 (한 파일 30MB까지)':'엑셀(.xlsx · .xls · .csv)은 시간표로, .json은 학생 데이터로 가져와요'; dz.classList.add('show'); });
+document.addEventListener('dragenter',e=>{ if(!hasFiles(e)||S.locked) return; e.preventDefault(); dragDepth++; const dz=$('#dropzone'); const w=!!($('#wpFile')||$('#cuFile')); const rmz=S.view==='quote'&&S.qtTab==='memo'; dz.querySelector('b').textContent=rmz?'견적서를 여기에 놓으세요':w?'여기에 놓으면 첨부돼요':'여기에 놓으세요'; dz.querySelector('span').textContent=rmz?'견적서 엑셀(.xlsx)을 읽어 요청메모를 만들어요':w?'PDF · 압축 · 한글 · 이미지 등 어떤 파일이든 (한 파일 30MB까지)':'엑셀(.xlsx · .xls · .csv)은 시간표로, .json은 학생 데이터로 가져와요'; dz.classList.add('show'); });
 document.addEventListener('dragover',e=>{ if(hasFiles(e)) e.preventDefault(); });
 document.addEventListener('dragleave',e=>{ if(!hasFiles(e)) return; dragDepth=Math.max(0,dragDepth-1); if(!dragDepth) $('#dropzone').classList.remove('show'); });
 document.addEventListener('drop',e=>{
   if(!hasFiles(e)) return; e.preventDefault(); dragDepth=0; $('#dropzone').classList.remove('show'); if(S.locked) return;
   const files=[...e.dataTransfer.files];
   if($('#cuFile')){ curriAdd(files); return; }   // 커리큘럼 올리기 창
-  if($('#wpFile')){ wpAddFiles(files); return; }   // 게시판 글쓰기 창이 열려 있으면 첨부로
+  if($('#wpFile')){ wpAddFiles(files); return; }
+  if(S.view==='quote'&&S.qtTab==='memo'){ const f=files.find(x=>/\.xls[xm]?$/i.test(x.name)); if(f){ rmLoadFile(f); return; } }   // 요청메모: 견적서 파일   // 게시판 글쓰기 창이 열려 있으면 첨부로
   const xl=files.filter(f=>/\.(xlsx|xlsm|xls|csv)$/i.test(f.name)); const js=files.filter(f=>/\.json$/i.test(f.name));
   if(xl.length) handleXlsx(xl); else if(js.length) handleStudentJson(js[0]);
   else toast('이 파일은 읽을 수 없어요','엑셀(.xlsx · .xls · .csv)이나 .json 파일을 놓아 주세요.');
@@ -6736,8 +6754,8 @@ CPK.qtAddC={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=box.
 CPK.qtCourse={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=box.querySelector('input'); i.value=v; i.dispatchEvent(new Event('change',{bubbles:true})); }};
 function vQuote(){
   const tab=S.qtTab||'make'; if(tab==='make') setTimeout(qtPreview,0);
-  const tabs=`<div class="seg qt-tabs"><button class="${tab==='make'?'on':''}" data-act="qtTab" data-k="make">견적 작성</button><button class="${tab==='saved'?'on':''}" data-act="qtTab" data-k="saved">저장한 견적 ${list('quotes').length||''}</button><button class="${tab==='price'?'on':''}" data-act="qtTab" data-k="price">수강료표</button></div>`;
-  return `<div class="view">${vh('견적서','과목만 고르면 정가 · 순차 할인 · 과목별 금액이 계산되고, 원본 엑셀 양식 그대로 받을 수 있어요',`<button class="btn" data-act="qtNew">${ic('plus')}새 견적</button>`)}${tabs}${tab==='price'?qtPriceView():tab==='saved'?qtSavedView():qtMakeView()}</div>`;
+  const tabs=`<div class="seg qt-tabs"><button class="${tab==='make'?'on':''}" data-act="qtTab" data-k="make">견적 작성</button><button class="${tab==='saved'?'on':''}" data-act="qtTab" data-k="saved">저장한 견적 ${list('quotes').length||''}</button><button class="${tab==='memo'?'on':''}" data-act="qtTab" data-k="memo">요청메모</button><button class="${tab==='price'?'on':''}" data-act="qtTab" data-k="price">수강료표</button></div>`;
+  return `<div class="view">${vh('견적서','과목만 고르면 정가 · 순차 할인 · 과목별 금액이 계산되고, 원본 엑셀 양식 그대로 받을 수 있어요',`<button class="btn" data-act="qtNew">${ic('plus')}새 견적</button>`)}${tabs}${tab==='price'?qtPriceView():tab==='saved'?qtSavedView():tab==='memo'?rmView():qtMakeView()}</div>`;
 }
 function qtMakeView(){
   const q=qtDraft(); const c=qtCalc(q); const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
@@ -6808,7 +6826,7 @@ function qtSumHTML(q,c){
       ${c.onList?`<div><span>온라인 수강료 (${esc(q.online)})</span><b>${qtWon(c.onReal)}</b></div>`:''}
     </div>
     ${c.warn.length?`<ul class="qt-warn">${c.warn.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}
-    <div class="btns qt-acts"><button class="btn pri" data-act="qtXlsx" ${c.paid?'':'disabled'}>${ic('dl')}엑셀 받기</button><button class="btn" data-act="qtPrint" ${c.paid?'':'disabled'}>인쇄 · PDF</button><button class="btn" data-act="qtSave" ${c.paid?'':'disabled'}>저장</button></div>`;
+    <div class="btns qt-acts"><button class="btn pri" data-act="qtXlsx" ${c.paid?'':'disabled'}>${ic('dl')}엑셀 받기</button><button class="btn" data-act="qtPrint" ${c.paid?'':'disabled'}>인쇄 · PDF</button><button class="btn" data-act="qtSave" ${c.paid?'':'disabled'}>저장</button><button class="btn" data-act="qtToMemo" ${c.paid?'':'disabled'}>요청메모</button></div>`;
 }
 /* 입력할 때마다 숫자 · 미리보기만 다시 그림 (입력칸은 그대로 → 커서가 튀지 않음) */
 function qtRefresh(){
@@ -6829,7 +6847,7 @@ addEventListener('resize',()=>{ if(S.view==='quote') qtFit(); });
 function qtSavedView(){
   const L=list('quotes').sort((a,b)=>(b.at||0)-(a.at||0));
   return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
-    <button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
+    <button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm" data-act="rmOpenQuote" data-id="${x.id}">요청메모</button><button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
     :'<div class="empty"><b>저장한 견적이 없어요</b>견적 작성 화면에서 "저장"을 누르면 여기에 모여요.</div>'}</section>`;
 }
 function qtPriceView(){
@@ -6876,6 +6894,7 @@ function qtRecord(q,c){ return `견적서 (${q.tpl==='ai'?'AI':'IT'}) · ${c.pai
 
 Object.assign(WACT,{
   qtTab:el=>{ S.qtTab=el.dataset.k; render(); },
+  qtToMemo:()=>{ S.rm=rmFromQuote(qtDraft(),'작성 중인 견적'); rmKeep(); S.rmEdited=false; S.qtTab='memo'; render(); },
   qtNew:async()=>{ const q=qtDraft(); if(q.rows.length&&!await confirmBox('새 견적을 시작할까요?','지금 쓰던 내용은 지워져요. 남기려면 먼저 "저장"을 눌러 주세요.','새로 시작')) return; S.qt=qtNew(); qtKeep(); S.qtTab='make'; render(); },
   qtTpl:el=>{ const q=qtDraft(); q.tpl=el.dataset.k; q.tplSet=true; qtKeep(); render(); },
   qtAdd:()=>{ const i=$('#qtAddIn'); const v=i&&i.value.trim(); if(!v){ i&&i.focus(); return; } if(S._qtLast===v&&Date.now()-(S._qtLastT||0)<600) return; S._qtLast=v; S._qtLastT=Date.now(); i.value=''; const q=qtDraft(); q.rows.push(qtRowFrom(v)); qtAutoTpl(); qtKeep(); render(); const x=$('#qtAddIn'); x&&x.focus(); if(!qtFind(v)) toast('수강료표에 없는 과목이에요','목록에서 고르거나 수강료표 탭에서 추가해 주세요.'); },
@@ -6908,6 +6927,202 @@ Object.assign(WACT,{
   qtPDel:async el=>{ const P=clone(qtPrices()); const p=P[+el.dataset.k]; if(!p||!await confirmBox(`"${p.n}"을(를) 지울까요?`,'수강료표에서 빠지고, 새 견적에서 고를 수 없어요.','지우기',true)) return; P.splice(+el.dataset.k,1); qtPriceSave(P); render(); },
   qtPReset:async()=>{ if(!await confirmBox('수강료표를 기본값으로 되돌릴까요?','2026.10.01 게시 사진 기준으로 돌아가요. 고친 내용은 사라져요.','되돌리기',true)) return; S.settings.prices=null; store.saveSettings(); render(); },
   qtPExp:()=>saveFile(`수강료표_${todayStr().replace(/-/g,'')}.json`,new Blob([JSON.stringify(qtPrices(),null,1)],{type:'application/json'})),
+});
+/* ===== 견적서 → 요청메모 (수납 · 할인) =====
+   견적(작성 중 · 저장한 견적 · 견적서 엑셀 파일)을 불러오면 과목 · 원 수강료 · 기간이 자동으로 들어가고,
+   손으로 넣는 건 납부금액 · 할인 종류 · 과목할인 금액(필요할 때) · COD 금액과 납부 예정일뿐이에요.
+   만들어지는 글은 실제 요청메모 양식(줄 순서 · 띄어쓰기 · 빈 줄)을 그대로 따라요. */
+const RM_DEPTS=QT_CATS;
+const RM_PAYS=['카드','현금','계좌이체','카드+현금'];
+const rmWon=n=>Math.round(+n||0).toLocaleString('ko-KR');
+const rmNum=v=>{ const n=parseInt(String(v??'').replace(/[^\d-]/g,''),10); return isNaN(n)?null:n; };
+const rmStrip=n=>String(n||'').replace(/\(지원과목\)\s*$/,'').trim();
+const rmLevel=n=>rmStrip(n).replace(qtSuffix,'').trim();                 // Python2/주 → Python2
+const rmBase=n=>rmLevel(n).replace(/\s*\d+$/,'').trim()||rmLevel(n);      // Python2 → Python
+const rmYM=v=>v?`${v.slice(2,4)}.${v.slice(5,7)}`:'';
+function rmNew(){ return {src:'',srcLabel:'',name:'',rows:[],orig:0,quoted:0,dept:'',mcf:'X',pay:'카드',period:'',space:false,kind:'pay',paid:'',codAmt:10000,codDate:'',receipt:'-',
+  cat:'tier',tier:{과목:{on:true,p:5},당일:{on:false,p:10},리뷰:{on:false,p:5}},empPct:30,subDisc:'',subDiscRow:'',support:'',notice:true}; }
+function rmDraft(){ if(!S.rm){ try{ S.rm=JSON.parse(lsGet('md.rmDraft')||'null'); }catch(e){} if(!S.rm||!Array.isArray(S.rm.rows)) S.rm=rmNew(); } return S.rm; }
+function rmKeep(){ try{ lsSet('md.rmDraft',JSON.stringify(S.rm)); }catch(e){} }
+
+/* 견적 → 요청메모 바탕값 */
+function rmFromQuote(q,label){
+  const c=qtCalc(q); const R=rmNew();
+  R.src='quote'; R.srcLabel=label; R.name=String(q.name||'').replace(/\s+/g,'');
+  R.rows=c.rows.filter(r=>r.n&&!r.free).map(r=>({n:r.n,cat:r.cat||qtCatGuess(r.n),s:r.s||'',e:r.e||'',orig:r.orig||0}));
+  rmFinish(R,c.orig,c.offline);
+  const st=q.steps||[]; const has=k=>st.find(s=>s.k===k&&parseFloat(s.p)>0);
+  if(has('재직자')){ R.cat='emp'; R.empPct=parseFloat(has('재직자').p)||30; }
+  else if(c.target||has('자율할인')||has('추가 할인')){ R.cat='su'; }
+  else { R.cat='tier'; R.tier.과목={on:c.tierPct>0,p:c.tierPct||5}; R.tier.당일={on:!!has('당일할인'),p:has('당일할인')?parseFloat(has('당일할인').p):10}; R.tier.리뷰={on:!!has('리뷰할인'),p:has('리뷰할인')?parseFloat(has('리뷰할인').p):5}; }
+  return R;
+}
+function rmFinish(R,orig,quoted){
+  R.orig=orig||R.rows.reduce((a,r)=>a+(r.orig||0),0); R.quoted=quoted||0; R.paid=R.quoted?rmWon(R.quoted):'';
+  const cnt={}; R.rows.forEach(r=>{ if(r.cat) cnt[r.cat]=(cnt[r.cat]||0)+1; }); R.dept=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0]||'';
+  const ss=R.rows.map(r=>r.s).filter(Boolean).sort(), es=R.rows.map(r=>r.e).filter(Boolean).sort();
+  R.period=ss.length?`${rmYM(ss[0])}~${rmYM(es.length?es[es.length-1]:ss[ss.length-1])}`:'';
+}
+
+/* 견적서 엑셀(.xlsx) 읽기 — 앱이 만든 견적서와 마스터본 양식(같은 칸 위치) 모두 */
+async function rmReadXlsx(file){
+  const Z=await loadJSZip(); const zip=await Z.loadAsync(await file.arrayBuffer()); const P=s=>new DOMParser().parseFromString(s,'application/xml');
+  const wb=P(await zip.file('xl/workbook.xml').async('string')); const sheets=[...wb.getElementsByTagNameNS(QT_NS,'sheet')];
+  const rels=zip.file('xl/_rels/workbook.xml.rels')?P(await zip.file('xl/_rels/workbook.xml.rels').async('string')):null;
+  const ss=zip.file('xl/sharedStrings.xml')?[...P(await zip.file('xl/sharedStrings.xml').async('string')).getElementsByTagNameNS(QT_NS,'si')].map(si=>[...si.getElementsByTagNameNS(QT_NS,'t')].map(t=>t.textContent).join('')):[];
+  const cellsOf=async path=>{ const f=zip.file(path); if(!f) return null; const d=P(await f.async('string')); const M={};
+    [...d.getElementsByTagNameNS(QT_NS,'c')].forEach(c=>{ const t=c.getAttribute('t'), v=c.getElementsByTagNameNS(QT_NS,'v')[0];
+      let val=t==='inlineStr'?[...c.getElementsByTagNameNS(QT_NS,'t')].map(x=>x.textContent).join(''):v?v.textContent:''; if(t==='s') val=ss[+val]||''; else if(t!=='inlineStr'&&t!=='str'&&val!==''&&!isNaN(val)) val=+val; M[c.getAttribute('r')]=val; }); return M; };
+  /* 견적서 시트 고르기: 성함(K3) · 과목 칸(E6~)이 있는 첫 시트 */
+  const paths=sheets.map(s=>{ const rid=s.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id'); const r=rels&&[...rels.getElementsByTagName('Relationship')].find(x=>x.getAttribute('Id')===rid); const tg=r?r.getAttribute('Target'):''; return {name:s.getAttribute('name'),path:tg?(tg.startsWith('/')?tg.slice(1):'xl/'+tg.replace(/^\.\.\//,'')):''}; });
+  let M=null, used='';
+  for(const p of paths){ const m=await cellsOf(p.path); if(m&&(m.K3||m.E6)&&[...Array(15)].some((_,i)=>m['E'+(6+i)])){ M=m; used=p.name; break; } }
+  if(!M) M=await cellsOf('xl/worksheets/sheet1.xml');
+  if(!M) throw new Error('nosheet');
+  return {M,used};
+}
+function rmFromCells(M,fname){
+  const R=rmNew(); R.src='file'; R.srcLabel=fname; R.name=String(M.K3||'').replace(/\s+/g,'');
+  let yr=new Date().getFullYear(), cm=new Date().getMonth()+1; const qd=String(M.Q3||'').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+  if(qd){ yr=+qd[1]; cm=+qd[2]; } else if(typeof M.Q3==='number'&&M.Q3>20000){ const d=serialToYmd(M.Q3); yr=+d.slice(0,4); cm=+d.slice(5,7); }
+  /* 견적서 날짜엔 연도가 없어요(10월24일) → 상담일과 가장 가까운 해로, 종강일은 개강일보다 뒤로 */
+  const qday=new Date(yr,cm-1,qd?+qd[3]:15);
+  const md=v=>{ if(typeof v==='number'&&v>20000) return serialToYmd(v); const m=String(v||'').match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/); return m?[+m[1],+m[2]]:null; };
+  const near=v=>{ const x=md(v); if(!x) return ''; if(typeof x==='string') return x; const best=[yr-1,yr,yr+1].map(y=>new Date(y,x[0]-1,x[1])).sort((a,b)=>Math.abs(a-qday)-Math.abs(b-qday))[0]; return ymd(best); };
+  const after=(v,s)=>{ const x=md(v); if(!x) return ''; if(typeof x==='string') return x; let y=s?+s.slice(0,4):yr; let d=new Date(y,x[0]-1,x[1]); if(s&&ymd(d)<s) d=new Date(y+1,x[0]-1,x[1]); return ymd(d); };
+  let cat=''; let allocSum=0, missing=[];
+  for(let i=6;i<=20;i++){ const n=rmStrip(M['E'+i]); if(M['C'+i]) cat=String(M['C'+i]).trim(); if(!n) continue; if(/무료|재수강권/.test(n)&&!(+M['P'+i])) continue;
+    const p=qtFind(n); const alloc=typeof M['P'+i]==='number'?M['P'+i]:rmNum(M['P'+i])||0; allocSum+=alloc; if(!p) missing.push(n);
+    const sd=near(M['I'+i]); R.rows.push({n,cat:cat||qtCatGuess(n),s:sd,e:after(M['K'+i],sd),orig:p?p.p:alloc}); }
+  const quoted=typeof M.Q21==='number'?M.Q21:rmNum(M.Q21)||allocSum;
+  rmFinish(R,0,quoted); R.missing=missing; return R;
+}
+
+/* 낸 금액을 과목 순서대로 채움 (견적서와 같은 규칙: 앞 과목부터 정가 → 뒤 과목이 지원 · 할인) */
+function rmAlloc(R,paid){ let rem=paid; return R.rows.map(r=>{ const a=Math.min(r.orig,Math.max(rem,0)); rem-=a; return {...r,alloc:a}; }); }
+function rmJoinLv(rows){ const out=[]; rows.forEach(r=>{ const lv=rmLevel(r.n), b=rmBase(r.n), m=lv.match(/(\d+)$/); const last=out[out.length-1];
+  if(m&&last&&last.b===b&&last.nums) last.nums.push(m[1]); else out.push({b,nums:m?[m[1]]:null,lv}); }); return out.map(o=>o.nums?`${o.b}${o.nums.join(',')}`:o.lv).join('/'); }
+function rmCalc(R){
+  const final=rmNum(R.paid)||0; const disc=Math.max(0,(R.orig||0)-final);
+  const al=rmAlloc(R,final); const sup=al.filter(r=>r.alloc===0&&r.orig>0); const part=al.filter(r=>r.alloc>0&&r.alloc<r.orig);
+  const pi=R.subDiscRow!==''&&al[+R.subDiscRow]?+R.subDiscRow:(part.length?al.indexOf(part[part.length-1]):-1);
+  const autoAmt=pi>=0?al[pi].orig-al[pi].alloc:0; const amt=rmNum(R.subDisc)??autoAmt;
+  return {final,disc,al,sup,part,pi,autoAmt,amt,supText:R.support.trim()||rmJoinLv(sup)};
+}
+function rmRate(R,k){
+  if(R.cat==='su') return `수변 ${rmWon(k.disc)}원(원장님승인) -> ${rmWon(k.disc)}원 할인`;
+  if(R.cat==='emp') return `재직자할인${R.empPct}% -> ${rmWon(k.disc)}원 할인`;
+  const parts=['과목','당일','리뷰'].filter(x=>R.tier[x].on).map(x=>`${x}${R.tier[x].p}%`);
+  return `${parts.join(', ')||'과목0%'} -> ${rmWon(k.disc)}원 할인`;
+}
+function rmText(R){
+  const k=rmCalc(R); const sep=R.space?' / ':'/';
+  const subs=[]; R.rows.forEach(r=>{ const b=rmBase(r.n); if(!subs.includes(b)) subs.push(b); });
+  const content=[R.name||'(이름)',...subs,R.period||'(기간)'].join(sep);
+  const cod=R.kind==='cod', codAmt=rmNum(R.codAmt)||0, bal=Math.max(0,k.final-codAmt);
+  const cd=R.codDate?`${R.codDate.slice(2,4)}.${R.codDate.slice(5,7)}.${R.codDate.slice(8,10)}`:'(날짜)';
+  const L=['*수납','',`학과 : ${R.dept||'(학과)'}`,'',`MCF 안내여부: ${R.mcf}`,'',`결제수단 : ${R.pay}`,'',`결제내용 : ${content}`,'',
+    cod?`납부금액 : ${rmWon(codAmt)}원(COD)`:`납부금액 : ${rmWon(k.final)}원`,'',
+    cod?`잔액: ${rmWon(bal)}원`:'잔액: -','',
+    cod?`납부일정: ${cd} 잔액 ${rmWon(bal)}원 납부 예정`:'납부일정: -','',
+    `현금영수증 : ${R.receipt||'-'}`,'---------------------------------','* 할인','',`원 수강료 : ${rmWon(R.orig)}원`,'',`할인율 : ${rmRate(R,k)}`];
+  const tail=[]; if(k.supText) tail.push(`> 과목지원 = ${k.supText}`);
+  if(k.pi>=0&&k.amt>0) tail.push(`> 과목할인 = ${rmLevel(k.al[k.pi].n)}에서 ${rmWon(k.amt)}원 할인${R.notice?'(수강생안내완료)':''}`);
+  if(tail.length) L.push('',...tail);
+  return L.join('\n');
+}
+
+/* ---------- 화면 ---------- */
+function rmView(){
+  const R=rmDraft(); const k=rmCalc(R); const saved=list('quotes').sort((a,b)=>(b.at||0)-(a.at||0));
+  const seg=(key,opts,cur)=>`<div class="seg" style="flex-wrap:wrap">${opts.map(([v,l])=>`<button class="${cur===v?'on':''}" data-act="rmSet" data-k="${key}" data-v="${esc(v)}">${l}</button>`).join('')}</div>`;
+  const has=R.rows.length;
+  const rowsInfo=has?`<div class="rm-rows">${k.al.map((r,i)=>`<div class="rm-r"><b>${esc(rmLevel(r.n))}</b><span>${qtWon(r.orig)}원</span>${r.alloc===0?'<span class="chip cyan">지원</span>':r.alloc<r.orig?`<span class="chip warn">-${qtWon(r.orig-r.alloc)}</span>`:''}${r.s?`<small>${esc(rmYM(r.s))}~${esc(rmYM(r.e||r.s))}</small>`:''}</div>`).join('')}</div>`:'';
+  const T=R.tier;
+  return `<div class="qt-grid rm-grid"><div class="qt-form">
+   <section class="pane"><h2>견적 불러오기 <small>과목 · 원 수강료 · 기간이 자동으로 들어가요</small></h2>
+     <div class="btns"><button class="btn" data-act="rmFromDraft">${ic('receipt')}작성 중인 견적</button>
+       ${saved.length?`<select class="in" id="rmSaved" style="width:auto;min-width:200px"><option value="">저장한 견적에서 고르기…</option>${saved.map(x=>`<option value="${x.id}">${esc(x.q.name||'이름 없음')} · ${esc(x.q.date||'')} · ${qtWon(qtCalc(x.q).total)}원</option>`).join('')}</select>`:''}
+       <label class="btn pri" for="rmFile">${ic('up')}견적서 파일 올리기</label><input id="rmFile" type="file" accept=".xlsx,.xlsm" hidden></div>
+     <p class="rm-hint">견적서 엑셀(.xlsx)을 이 화면에 끌어다 놓아도 돼요.</p>
+     ${has?`<div class="rm-src">${ic('check')} <b>${esc(R.name||'이름 없음')}</b> · ${R.rows.length}과목 · 원 수강료 ${qtWon(R.orig)}원${R.quoted?` · 견적 금액 ${qtWon(R.quoted)}원`:''}<small>${esc(R.srcLabel||'')}</small></div>${rowsInfo}
+       ${(R.missing||[]).length?`<p class="rm-warn">수강료표에 없는 과목이라 정가를 견적 금액으로 넣었어요: ${esc(R.missing.join(', '))}</p>`:''}`:'<div class="empty" style="padding:18px 8px"><b>먼저 견적을 불러오세요</b>작성 중인 견적, 저장한 견적, 견적서 엑셀 파일 중 하나를 고르면 돼요.</div>'}
+   </section>
+   <section class="pane"><h2>수납</h2>
+     <div class="field" style="margin-bottom:16px"><span>수납 종류</span>${seg('kind',[['pay','일반 수납'],['cod','COD (일부만 먼저 납부)']],R.kind)}</div>
+     <div class="form rm-form">
+       <label class="field"><span>학과</span><select class="in" data-rm="dept"><option value="">고르세요</option>${RM_DEPTS.map(d=>`<option ${R.dept===d?'selected':''}>${d}</option>`).join('')}</select></label>
+       <div class="field"><span>MCF 안내여부</span>${seg('mcf',[['X','X'],['O','O']],R.mcf)}</div>
+       <div class="field full"><span>결제수단</span>${seg('pay',RM_PAYS.map(p=>[p,p]),R.pay)}</div>
+       <label class="field"><span>이름</span><input class="in" data-rm="name" value="${esc(R.name)}"></label>
+       <label class="field"><span>기간 <small>(26.06~26.12)</small></span><input class="in" data-rm="period" value="${esc(R.period)}" placeholder="26.06~26.12"></label>
+       <label class="check full rm-sm"><input type="checkbox" data-rm="space" ${R.space?'checked':''}>결제내용을 띄어 쓰기 (정예진 / Python / 26.08~26.09)</label>
+       ${R.kind==='cod'?`
+       <label class="field"><span>최종 수강료 (할인 후) <b class="rm-hand">수기</b></span><input class="in num" data-rm="paid" inputmode="numeric" value="${esc(R.paid)}" placeholder="예: 446,000"></label>
+       <label class="field"><span>COD 납부 금액 <b class="rm-hand">수기</b></span><input class="in num" data-rm="codAmt" inputmode="numeric" value="${esc(rmWon(R.codAmt))}"><span class="btns" style="margin-top:6px"><button class="btn sm" data-act="rmCod" data-v="10000">10,000</button><button class="btn sm" data-act="rmCod" data-v="50000">50,000</button></span></label>
+       <label class="field"><span>잔액 납부 예정일 <b class="rm-hand">수기</b></span><input class="in" type="date" data-rm="codDate" value="${esc(R.codDate)}"></label>
+       <div class="field"><span>잔액</span><div class="rm-calc">${qtWon(Math.max(0,k.final-(rmNum(R.codAmt)||0)))}원</div></div>`
+       :`<label class="field"><span>납부금액 <b class="rm-hand">수기</b></span><input class="in num" data-rm="paid" inputmode="numeric" value="${esc(R.paid)}" placeholder="예: 446,000"></label>`}
+       <label class="field"><span>현금영수증</span><input class="in" data-rm="receipt" value="${esc(R.receipt)}" placeholder="-"></label>
+     </div></section>
+   <section class="pane"><h2>할인</h2>
+     <div class="form rm-form">
+       <label class="field"><span>원 수강료</span><input class="in num" data-rm="orig" inputmode="numeric" value="${esc(rmWon(R.orig))}"></label>
+       <div class="field"><span>할인 금액 <small>(원 수강료 − ${R.kind==='cod'?'최종 수강료':'납부금액'})</small></span><div class="rm-calc">${qtWon(k.disc)}원</div></div>
+       <div class="field full"><span>할인율 종류</span>${seg('cat',[['su','수변'],['emp','재직자할인'],['tier','과목 · 당일 · 리뷰']],R.cat)}</div>
+       ${R.cat==='emp'?`<label class="field"><span>재직자할인 %</span><input class="in num" data-rm="empPct" inputmode="numeric" value="${esc(R.empPct)}"></label>`
+        :R.cat==='tier'?`<div class="field full"><span>들어간 할인</span><div class="rm-tier">${['과목','당일','리뷰'].map(x=>`<label class="rm-t ${T[x].on?'on':''}"><input type="checkbox" data-rm="tier.${x}.on" ${T[x].on?'checked':''}>${x}<input class="in num" data-rm="tier.${x}.p" inputmode="numeric" value="${esc(T[x].p)}">%</label>`).join('')}</div></div>`
+        :`<p class="rm-hint full" style="margin:0">"수변 ○○원(원장님승인) -> ○○원 할인"으로 들어가요. 금액은 위 할인 금액이에요.</p>`}
+       <label class="field"><span>과목할인 과목</span><select class="in" data-rm="subDiscRow"><option value="">자동${k.part.length?` (${esc(rmLevel(k.part[k.part.length-1].n))})`:' (없음)'}</option>${R.rows.map((r,i)=>`<option value="${i}" ${String(R.subDiscRow)===String(i)?'selected':''}>${esc(rmLevel(r.n))}</option>`).join('')}</select></label>
+       <label class="field"><span>과목할인 금액 <b class="rm-hand">수기</b></span><input class="in num" data-rm="subDisc" inputmode="numeric" value="${esc(R.subDisc)}" placeholder="자동 ${k.autoAmt?qtWon(k.autoAmt):'0'}"></label>
+       <label class="field full"><span>과목지원 <small>(비우면 0원이 된 과목으로 자동 — 지금: ${esc(rmJoinLv(k.sup)||'없음')})</small></span><input class="in" data-rm="support" value="${esc(R.support)}" placeholder="${esc(rmJoinLv(k.sup)||'예: Python2/C언어1,2')}"></label>
+       <label class="check full rm-sm"><input type="checkbox" data-rm="notice" ${R.notice?'checked':''}>과목할인 뒤에 (수강생안내완료) 붙이기</label>
+     </div></section>
+  </div>
+  <div class="qt-side"><section class="pane rm-out"><h2>요청메모 <small>그대로 복사해서 붙여넣으세요</small></h2>
+    <textarea class="in rm-text" id="rmText" rows="26" spellcheck="false">${esc(rmText(R))}</textarea>
+    <p class="rm-hint" id="rmEdited" ${S.rmEdited?'':'hidden'}>직접 고친 내용이 있어요. 왼쪽 값을 바꾸면 다시 자동으로 만들어져요.</p>
+    <div class="btns"><button class="btn pri" data-act="rmCopy">${ic('copy')}복사</button><button class="btn" data-act="rmReset">처음부터</button></div></section></div></div>`;
+}
+function rmUpdateText(){ const t=$('#rmText'); if(!t) return; t.value=rmText(rmDraft()); S.rmEdited=false; const e=$('#rmEdited'); if(e) e.hidden=true; }
+async function rmLoadFile(f){
+  if(!/\.xls[xm]$/i.test(f.name)){ toast('견적서 엑셀(.xlsx)만 읽을 수 있어요','.xls 파일이면 엑셀에서 "다른 이름으로 저장 → .xlsx"로 바꿔 주세요.'); return; }
+  try{ const {M,used}=await rmReadXlsx(f); const R=rmFromCells(M,`${f.name}${used?' · '+used:''}`); if(!R.rows.length){ toast('견적서에서 과목을 찾지 못했어요','견적서 양식(과목이 E6~E20 칸)인지 확인해 주세요.','alarm-t'); return; }
+    S.rm=R; rmKeep(); S.rmEdited=false; render(); toast('견적서를 읽었어요',`${R.name||'이름 없음'} · ${R.rows.length}과목 · 원 수강료 ${qtWon(R.orig)}원`); }
+  catch(e){ console.warn(e); toast('견적서를 읽지 못했어요','엑셀 파일이 열려 있거나 손상된 건 아닌지 확인해 주세요.','alarm-t'); }
+}
+Object.assign(WACT,{
+  rmFromDraft:()=>{ const q=qtDraft(); if(!q.rows.filter(r=>r.n&&!r.free).length){ toast('작성 중인 견적이 비어 있어요','견적 작성 탭에서 과목을 먼저 넣어 주세요.'); return; } S.rm=rmFromQuote(q,'작성 중인 견적'); rmKeep(); S.rmEdited=false; render(); },
+  rmOpenQuote:el=>{ const x=D().quotes[el.dataset.id]; if(!x) return; S.rm=rmFromQuote(x.q,`저장한 견적 · ${x.q.date||''}`); rmKeep(); S.rmEdited=false; S.qtTab='memo'; render(); },
+  rmSet:el=>{ const R=rmDraft(); R[el.dataset.k]=el.dataset.v; rmKeep(); render(); },
+  rmCod:el=>{ const R=rmDraft(); R.codAmt=+el.dataset.v; rmKeep(); render(); },
+  rmCopy:()=>{ const t=$('#rmText'); copyText(t?t.value:rmText(rmDraft())); },
+  rmReset:async()=>{ if(!await confirmBox('요청메모를 처음부터 쓸까요?','불러온 견적과 입력한 값이 지워져요.')) return; S.rm=rmNew(); rmKeep(); S.rmEdited=false; render(); },
+});
+/* 입력: 글만 다시 만듦 (입력칸 커서 유지) · 고르기/체크: 화면 다시 그림 */
+document.addEventListener('input',e=>{ const el=e.target;
+  if(el.id==='rmText'){ S.rmEdited=true; const x=$('#rmEdited'); if(x) x.hidden=false; return; }
+  const key=el.dataset&&el.dataset.rm; if(!key||el.type==='checkbox'||el.tagName==='SELECT') return; const R=rmDraft();
+  if(key.startsWith('tier.')){ const [,x,f]=key.split('.'); R.tier[x][f]=el.value.replace(/[^\d.]/g,''); }
+  else if(key==='orig') R.orig=rmNum(el.value)||0;
+  else if(key==='codAmt') R.codAmt=rmNum(el.value)||0;
+  else if(key==='empPct') R.empPct=el.value.replace(/[^\d.]/g,'');
+  else R[key]=el.value;
+  rmKeep(); rmUpdateText();
+  clearTimeout(rmRefresh._t); rmRefresh._t=setTimeout(rmRefresh,500);
+});
+/* 숫자칸은 잠시 뒤 콤마 · 계산값(할인 금액 · 지원 과목 표시)도 갱신 — 쓰던 칸 커서는 지켜 줌 */
+function rmRefresh(){ const a=document.activeElement; const key=a&&a.dataset&&a.dataset.rm; const pos=a&&a.selectionStart;
+  if(S.view!=='quote'||S.qtTab!=='memo') return; const keepText=S.rmEdited?$('#rmText').value:null;
+  render(); if(key){ const n=document.querySelector(`[data-rm="${key}"]`); if(n){ n.focus(); try{ const L=n.value.length; n.setSelectionRange(Math.min(pos,L),Math.min(pos,L)); }catch(_){} } }
+  if(keepText!=null){ $('#rmText').value=keepText; S.rmEdited=true; $('#rmEdited').hidden=false; } }
+document.addEventListener('change',e=>{ const el=e.target;
+  if(el.id==='rmFile'&&el.files[0]){ rmLoadFile(el.files[0]); el.value=''; return; }
+  if(el.id==='rmSaved'&&el.value){ const x=D().quotes[el.value]; if(x){ S.rm=rmFromQuote(x.q,`저장한 견적 · ${x.q.date||''}`); rmKeep(); S.rmEdited=false; render(); } return; }
+  const key=el.dataset&&el.dataset.rm; if(!key) return; const R=rmDraft();
+  if(el.type==='checkbox'){ if(key.startsWith('tier.')){ const [,x]=key.split('.'); R.tier[x].on=el.checked; } else R[key]=el.checked; rmKeep(); render(); return; }
+  if(el.tagName==='SELECT'){ R[key]=el.value; rmKeep(); render(); return; }
+  if(key==='paid'){ const n=rmNum(el.value); R.paid=n==null?'':rmWon(n); rmKeep(); }
 });
 /* ===== EVENTS ===== */
 function ackToggle(key){
@@ -7118,6 +7333,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261027-0020';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261027-1246';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
