@@ -7040,6 +7040,7 @@ function rmCalc(R){
   if(!final) warn.push(R.kind==='cod'?'원래 내야 할 금액(할인 후)을 넣어 주세요':'납부금액을 넣어 주세요'); if(final>R.orig&&R.orig) warn.push('납부금액이 원 수강료보다 커요');
   if(!R.dept) warn.push('학과를 골라 주세요'); if(!R.period) warn.push('기간(26.06~26.12)을 넣어 주세요'); if(!R.name) warn.push('이름을 넣어 주세요');
   if(R.kind==='cod'&&!R.codDate) warn.push('잔액 납부 예정일을 골라 주세요');
+  if(R.kind==='cod'&&final&&final<=(rmNum(R.codAmt)||0)) warn.push('할인 후 총 수강료에 COD 금액을 넣은 것 같아요 — 학생이 내야 할 전체 금액(예: 600,000)을 넣어 주세요');
   return {final,disc,al,sup,part,pi,autoAmt,amt,supText,warn};
 }
 function rmRate(R,k){
@@ -7093,12 +7094,12 @@ function rmView(){
    <section class="pane"><h2><i class="rm-step">2</i>받은 금액</h2>
      ${rmChips('kind',[['pay','일반 수납','전액 결제'],['cod','COD','일부만 먼저 (10,000원 등)']],R.kind,'big')}
      <div class="form rm-form" style="margin-top:14px">
-       <label class="field full"><span>${cod?'원래 내야 할 금액 (할인 후 수강료)':'납부금액 (실제로 받은 금액)'} <b class="rm-hand">입력</b></span>
+       <label class="field full"><span>${cod?'할인 후 총 수강료 (학생이 내야 할 전체 금액 · COD 금액 아님)':'납부금액 (실제로 받은 금액)'} <b class="rm-hand">입력</b></span>
          <input class="in num rm-big" data-rm="paid" inputmode="numeric" value="${esc(R.paid)}" placeholder="예: 446,000">${quotedBtn?`<div class="rm-chips" style="margin-top:6px">${quotedBtn}</div>`:''}
-         ${cod?'<small class="rm-hint" style="margin:4px 0 0">과목할인 · 할인율 금액은 이 금액 기준으로 계산돼요 (COD 금액 아님).</small>':''}</label>
+         ${cod?'<small class="rm-hint" style="margin:4px 0 0">예: 원 수강료 1,000,000원을 수변 40% 해서 600,000원이면 600,000을 넣어요. 할인율 · 과목할인은 이 금액으로 계산돼서 일반 수납과 똑같이 나와요.</small>':''}</label>
        ${cod?`<div class="field"><span>오늘 받은 COD 금액</span>${rmChips('codAmt',[[10000,'10,000원'],[50000,'50,000원']],R.codAmt)}<input class="in num" data-rm="codAmt" inputmode="numeric" value="${esc(rmWon(R.codAmt))}" style="margin-top:6px"></div>
        <div class="field"><span>잔액 납부 예정일</span><input class="in" type="date" data-rm="codDate" value="${esc(R.codDate)}">${rmChips('codDate',[[addDays(t,7),'1주 뒤'],[addDays(t,14),'2주 뒤'],...(firstS&&firstS>t?[[firstS,'개강일']]:[])],R.codDate)}</div>
-       <div class="field full rm-bal">잔액 <b>${qtWon(Math.max(0,k.final-(rmNum(R.codAmt)||0)))}원</b> = ${qtWon(k.final)} − COD ${qtWon(rmNum(R.codAmt)||0)}</div>`:''}
+       <div class="field full rm-bal">할인 후 총 수강료 <b>${qtWon(k.final)}원</b> = 오늘 COD <b>${qtWon(rmNum(R.codAmt)||0)}원</b> + 잔액 <b>${qtWon(Math.max(0,k.final-(rmNum(R.codAmt)||0)))}원</b></div>`:''}
        <div class="field full"><span>결제수단</span>${rmChips('pay',RM_PAYS.map(p=>[p,p]),R.pay)}</div>
        <div class="field"><span>MCF 안내여부</span>${rmChips('mcf',[['X','X'],['O','O']],R.mcf)}</div>
        <div class="field"><span>현금영수증</span>${rmChips('receipt',[['-','-'],['소득공제','소득공제'],['지출증빙','지출증빙']],R.receipt)}</div>
@@ -7108,6 +7109,7 @@ function rmView(){
        <button class="rm-cat ${R.cat==='su'?'on':''}" data-act="rmSet" data-k="cat" data-v="su"><b>수변</b><span>원장님 승인 금액 할인</span>${preview(`수변 (원장님승인)${rmWon(k.disc)}원`)}</button>
        <button class="rm-cat ${R.cat==='emp'?'on':''}" data-act="rmSet" data-k="cat" data-v="emp"><b>재직자할인</b><span>재직자 % 할인</span>${preview(`재직자할인${R.empPct}%`)}</button>
        <button class="rm-cat ${R.cat==='tier'?'on':''}" data-act="rmSet" data-k="cat" data-v="tier"><b>과목 · 당일 · 리뷰</b><span>기본 할인 조합</span>${preview(['과목','당일','리뷰'].filter(x=>T[x].on).map(x=>`${x}${T[x].p}%`).join(', ')||'고르세요')}</button></div>
+     ${R.cat==='su'?`<div class="field" style="margin-top:12px"><span>수변 % 로 할인 후 금액 계산 <small>(누르면 ${cod?'할인 후 총 수강료':'납부금액'} 칸이 채워져요 · 천 원 미만 버림)</small></span><div class="rm-chips">${[10,20,30,40,50].map(p=>`<button class="rm-chip sm" data-act="rmSuPct" data-p="${p}">${p}% → ${qtWon(Math.floor(R.orig*(1-p/100)/1000)*1000)}원</button>`).join('')}</div></div>`:''}
      ${R.cat==='emp'?`<div class="field" style="margin-top:12px"><span>재직자할인 %</span>${rmChips('empPct',[[30,'30%'],[20,'20%'],[10,'10%']],R.empPct)}</div>`
       :R.cat==='tier'?`<div class="rm-tier" style="margin-top:12px">${['과목','당일','리뷰'].map(x=>`<div class="rm-t ${T[x].on?'on':''}"><button class="rm-tg" data-act="rmTier" data-x="${x}">${T[x].on?ic('check'):''}${x}</button><div class="rm-chips">${(x==='과목'?[5,10,15,20,25]:x==='당일'?[10,5]:[5]).map(p=>`<button class="rm-chip sm ${T[x].on&&+T[x].p===p?'on':''}" data-act="rmTierP" data-x="${x}" data-p="${p}">${p}%</button>`).join('')}</div></div>`).join('')}</div>`:''}
      <div class="rm-line">할인율 : ${esc(rmRate(R,k))}</div>
@@ -7145,6 +7147,7 @@ Object.assign(WACT,{
   rmFromDraft:()=>{ const q=qtDraft(); if(!q.rows.filter(r=>r.n&&!r.free).length){ toast('작성 중인 견적이 비어 있어요','견적 작성 탭에서 과목을 먼저 넣어 주세요.'); return; } S.rm=rmSync(rmFromQuote(q,'작성 중인 견적')); rmKeep(); S.rmEdited=false; render(); },
   rmOpenQuote:el=>{ const x=D().quotes[el.dataset.id]; if(!x) return; S.rm=rmSync(rmFromQuote(x.q,`저장한 견적 · ${x.q.date||''}`)); rmKeep(); S.rmEdited=false; S.qtTab='memo'; render(); },
   rmSet:el=>{ const R=rmDraft(); const k=el.dataset.k, v=el.dataset.v; if(k==='codAmt'||k==='empPct') R[k]=+v; else if(k==='space') R.space=!!v; else R[k]=v; rmKeep(); render(); },
+  rmSuPct:el=>{ const R=rmDraft(); rmSync(R); if(!R.orig){ toast('과목 정가를 먼저 넣어 주세요',''); return; } R.paid=rmWon(Math.floor(R.orig*(1-(+el.dataset.p)/100)/1000)*1000); rmKeep(); render(); },
   rmQuoted:()=>{ const R=rmDraft(); R.paid=rmWon(R.quoted); rmKeep(); render(); },
   rmTier:el=>{ const R=rmDraft(), x=el.dataset.x; R.tier[x].on=!R.tier[x].on; rmKeep(); render(); },
   rmTierP:el=>{ const R=rmDraft(), x=el.dataset.x; R.tier[x].on=true; R.tier[x].p=+el.dataset.p; rmKeep(); render(); },
@@ -7386,6 +7389,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261027-1352';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261027-1403';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
