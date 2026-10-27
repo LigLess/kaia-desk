@@ -1622,6 +1622,13 @@ body.dark .cal-day .t1{color:#fff}body.dark .cal-day .t2{color:rgba(255,255,255,
 .mb-t td{vertical-align:middle}.mb-t tr.mb-bad td{background:var(--warn-soft)}.mb-t .mb-pick{min-width:220px;height:34px}
 .mb-cmp{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;padding:12px 14px;border-radius:14px;font-size:13.5px}
 .mb-cmp.ok{background:var(--ok-soft);color:var(--ok)}.mb-cmp.bad{background:var(--warn-soft);color:var(--warn)}.mb-cmp svg{width:18px;height:18px}.mb-cmp small{width:100%;opacity:.8;font-size:12px}
+.mb-who{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.mb-p{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;transition:border-color .2s,background .2s}
+.mb-p:hover{border-color:var(--accent)}.mb-p.on{border-color:var(--accent);background:var(--accent-soft)}
+.mb-p input{position:absolute;opacity:0;pointer-events:none}
+.mb-ck{flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:transparent}.mb-ck svg{width:14px;height:14px}
+.mb-p.on .mb-ck{background:var(--accent);border-color:var(--accent);color:#fff}
+.mb-pi{display:flex;flex-direction:column;gap:2px;min-width:0}.mb-pi b{font-size:15px}.mb-pi small{font-size:12px;color:var(--muted)}.mb-pi .mb-sh{color:var(--faint);font-size:11.5px}
 /* ===== 요청메모 ===== */
 .rm-form{grid-template-columns:repeat(2,minmax(0,1fr))}
 .rm-step{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:50%;background:var(--accent);color:#fff;font-style:normal;font-size:12px;font-weight:700;vertical-align:1px}
@@ -7293,7 +7300,7 @@ async function mbOpen(file,dest){
     let hid=0; for(const sh of book.sheets){ if(sh.hidden){ hid++; continue; } const info=mbParse(await book.read(sh),sh.name); if(!info||info.empty){ old++; continue; } list.push({sh,info}); }
     if(!list.length){ toast('읽을 수 있는 견적서 시트가 없어요','마스터본 IT · AI 견적서 양식(과정 · 과목 · 구분 · 개강일 · 종강일 · 수강료 제목줄)이 있는 시트가 필요해요.','alarm-t'); return; }
     const act=book.sheets[book.active]; const def=Math.max(0,list.findIndex(x=>act&&x.sh.name===act.name));
-    MB={file:file.name,list,old,hid,sel:def,pick:{},dest:dest||'make'};
+    MB={file:file.name,list,old,hid,sel:def,act:def,pick:{},dest:dest||'make'};
     if(list.length===1&&MB.dest==='memo'){ const r=mbToQuote(list[0].info); if(r.same&&!r.unsure){ mbApply(r); return; } }
     mbDraw();
   }catch(e){ console.warn(e); toast('파일을 읽지 못했어요','엑셀(.xlsx)이 맞는지, 엑셀에서 열려 있지는 않은지 확인해 주세요.','alarm-t'); }
@@ -7305,11 +7312,11 @@ function mbDraw(){
       :`<select class="in mb-pick" data-i="${i}"><option value="">수강료표에서 고르기…</option>${x.cand.map(c=>`<option value="${esc(c.p.n)}">${esc(c.p.n)} (${qtWon(c.p.p)}원)</option>`).join('')}<option disabled>──────</option>${qtPrices().map(p=>`<option value="${esc(p.n)}">${esc(p.n)}</option>`).join('')}</select>`}</td><td class="num">${x.orig!=null?qtWon(x.orig):'—'}</td><td class="num">${qtWon(x.srcAmt)}</td></tr>`).join('');
   const html=`${mHead('마스터본 견적서 가져오기')}<div class="body">
     <p style="margin:0 0 10px;font-size:13px;color:var(--muted)">${esc(MB.file)} — 읽을 수 있는 견적서 ${L.length}장${MB.old||MB.hid?` · 나머지 ${MB.old+MB.hid}장은 빈 틀 · 설명 · 숨긴 시트 · 예전 양식이라 건너뛰었어요`:''}</p>
-    ${L.length>1?`<label class="field"><span>어떤 시트를 가져올까요? <small>(마지막으로 열어 둔 시트가 먼저 골라져 있어요)</small></span><select class="in" id="mbSheet">${opts}</select></label>`:''}
+    ${L.length>1?`<div class="field"><span>누구 견적서인가요? <small>(한 명을 체크하면 그 학생 걸로 ${MB.dest==='memo'?'요청메모를 써요':'가져와요'})</small></span><div class="mb-who">${L.map((x,i)=>`<label class="mb-p ${i===MB.sel?'on':''}"><input type="radio" name="mbWho" class="mb-who-in" value="${i}" ${i===MB.sel?'checked':''}><span class="mb-ck">${ic('check')}</span><span class="mb-pi"><b>${esc(x.info.name||'이름 없음')}</b><small>${esc(x.info.items.map(t=>t.n).slice(0,3).join(', '))}${x.info.items.length>3?' 외':''} · ${qtWon(x.info.offline)}원</small><small class="mb-sh">${esc(x.sh.name)}${i===MB.act?' · 마지막으로 열어 둔 시트':''}</small></span></label>`).join('')}</div></div>`:''}
     <div class="mb-head"><b>${esc(cur.info.name||'이름 없음')}</b><span>${cur.info.kind==='ai'?'AI 견적서':'IT 견적서'} · ${esc(cur.sh.name)}</span></div>
     <div class="tablewrap"><table class="t mb-t"><thead><tr><th>마스터본 과목</th><th>KAIA 수강료표 과목</th><th>정가</th><th>마스터본 금액</th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="mb-cmp ${r.same?'ok':'bad'}">${r.same?ic('check'):''}<span>원본 오프라인 수강료 <b>${qtWon(r.srcOffline)}원</b> → 변환 후 <b>${qtWon(r.newOffline)}원</b> ${r.same?'· 똑같아요':'· 달라요 — 과목을 확인해 주세요'}</span><small>${r.how==='steps'?'마스터본 할인율 그대로 옮겼어요':'원본 총액을 목표 금액으로 넣어 똑같이 맞췄어요'}${r.unsure?` · 고를 과목 ${r.unsure}개`:''}</small></div>
-  </div><footer>${L.length>1?`<button class="btn" data-act="mbAll" style="margin-right:auto">${ic('dl')}${L.length}장 모두 저장한 견적으로</button>`:''}<button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="mbGo" ${r.unsure?'disabled':''}>${MB.dest==='memo'?'요청메모로 가져오기':'견적에 넣기'}</button></footer>`;
+  </div><footer>${L.length>1?`<button class="btn" data-act="mbAll" style="margin-right:auto">${ic('dl')}${L.length}장 모두 저장한 견적으로</button>`:''}<button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="mbGo" ${r.unsure?'disabled':''}>${esc(cur.info.name||'')}${cur.info.name?' ':''}${MB.dest==='memo'?'요청메모로 가져오기':'견적에 넣기'}</button></footer>`;
   if(modalEl&&modalEl._kind==='mb') modalEl.querySelector('.sheet').innerHTML=html; else { openModal(html,'wide'); modalEl._kind='mb'; }
 }
 function mbApply(r){
@@ -7328,6 +7335,7 @@ Object.assign(WACT,{
 document.addEventListener('change',e=>{ const el=e.target;
   if(el.id==='qtMasterFile'&&el.files[0]){ mbOpen(el.files[0],'make'); el.value=''; return; }
   if(el.id==='mbSheet'){ MB.sel=+el.value; mbDraw(); return; }
+  if(el.classList&&el.classList.contains('mb-who-in')){ MB.sel=+el.value; mbDraw(); return; }
   if(el.classList&&el.classList.contains('mb-pick')){ const p=MB.pick[MB.sel]=MB.pick[MB.sel]||{}; p[+el.dataset.i]=el.value; mbDraw(); }
 });
 /* ===== EVENTS ===== */
@@ -7539,6 +7547,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261027-1735';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261027-1741';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
