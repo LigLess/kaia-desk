@@ -7023,8 +7023,11 @@ function rmFromCells(M,fname){
 function rmSync(R){ (R.rows||[]).forEach(r=>{ if(r.miss==null) r.miss=(R.missing||[]).includes(r.n); }); R.orig=(R.rows||[]).reduce((a,r)=>a+(+r.orig||0),0); return R; }
 /* 원래 내야 할 금액(할인 후)을 과목 순서대로 채움 — 견적서와 같은 규칙: 앞 과목부터 정가, 뒤 과목이 할인 · 지원 */
 function rmAlloc(R,amt){ let rem=amt; return R.rows.map(r=>{ const o=+r.orig||0, a=Math.min(o,Math.max(rem,0)); rem-=a; return {...r,orig:o,alloc:a}; }); }
-function rmJoinLv(rows){ const out=[]; rows.forEach(r=>{ const lv=rmLevel(r.n), b=rmBase(r.n), m=lv.match(/(\d+)$/); const last=out[out.length-1];
-  if(m&&last&&last.b===b&&last.nums) last.nums.push(m[1]); else out.push({b,nums:m?[m[1]]:null,lv}); }); return out.map(o=>o.nums?`${o.b}${o.nums.join(',')}`:o.lv).join('/'); }
+/* 과목지원 · 과목할인엔 반(/주 · /특 · /주말)까지 그대로 붙여요: 바이브코딩2/주 · C언어1,2/주 */
+const rmSfx=n=>{ const m=rmStrip(n).match(qtSuffix); return m?m[0]:''; };
+const rmFull=n=>rmLevel(n)+rmSfx(n);
+function rmJoinLv(rows){ const out=[]; rows.forEach(r=>{ const lv=rmLevel(r.n), b=rmBase(r.n), sf=rmSfx(r.n), m=lv.match(/(\d+)$/); const last=out[out.length-1];
+  if(m&&last&&last.b===b&&last.sf===sf&&last.nums) last.nums.push(m[1]); else out.push({b,sf,nums:m?[m[1]]:null,lv}); }); return out.map(o=>(o.nums?`${o.b}${o.nums.join(',')}`:o.lv)+o.sf).join('/'); }
 function rmCalc(R){
   rmSync(R);
   const final=rmNum(R.paid)||0;                       // 할인 후 원래 내야 할 금액 (COD여도 이 금액 기준)
@@ -7062,7 +7065,7 @@ function rmText(R){
     cod?`납부일정: ${cd} 잔액 ${rmWon(bal)}원 납부 예정`:'납부일정: -','',
     `현금영수증 : ${R.receipt||'-'}`,'---------------------------------','* 할인','',`원 수강료 : ${rmWon(R.orig)}원`,'',`할인율 : ${rmRate(R,k)}`];
   const tail=[]; if(k.supText) tail.push(`> 과목지원 = ${k.supText}`);
-  if(k.pi>=0&&k.amt>0) tail.push(`> 과목할인 = ${rmLevel(k.al[k.pi].n)}에서 ${rmWon(k.amt)}원 할인${R.notice?'(수강생안내완료)':''}`);
+  if(k.pi>=0&&k.amt>0) tail.push(`> 과목할인 = ${rmFull(k.al[k.pi].n)}에서 ${rmWon(k.amt)}원 할인${R.notice?'(수강생안내완료)':''}`);
   if(tail.length) L.push('',...tail);
   return L.join('\n');
 }
@@ -7115,7 +7118,7 @@ function rmView(){
       :R.cat==='tier'?`<div class="rm-tier" style="margin-top:12px">${['과목','당일','리뷰'].map(x=>`<div class="rm-t ${T[x].on?'on':''}"><button class="rm-tg" data-act="rmTier" data-x="${x}">${T[x].on?ic('check'):''}${x}</button><div class="rm-chips">${(x==='과목'?[5,10,15,20,25]:x==='당일'?[10,5]:[5]).map(p=>`<button class="rm-chip sm ${T[x].on&&+T[x].p===p?'on':''}" data-act="rmTierP" data-x="${x}" data-p="${p}">${p}%</button>`).join('')}</div></div>`).join('')}</div>`:''}
      <div class="rm-line">할인율 : ${esc(rmRate(R,k))}</div>
      <div class="rm-auto">
-       <div><span>과목할인</span>${k.pi>=0&&k.amt>0?`<b>${esc(rmLevel(k.al[k.pi].n))}에서 ${qtWon(k.amt)}원 할인</b>`:'<b class="muted">없음</b>'} <small>${R.subDiscOn?'직접 입력':'자동'}</small>
+       <div><span>과목할인</span>${k.pi>=0&&k.amt>0?`<b>${esc(rmFull(k.al[k.pi].n))}에서 ${qtWon(k.amt)}원 할인</b>`:'<b class="muted">없음</b>'} <small>${R.subDiscOn?'직접 입력':'자동'}</small>
          <button class="rm-link" data-act="rmToggle" data-k="subDiscOn">${R.subDiscOn?'자동으로 되돌리기':'직접 고치기'}</button></div>
        ${R.subDiscOn?`<div class="form rm-form" style="margin:8px 0 4px"><label class="field"><span>과목</span><select class="in" data-rm="subDiscRow"><option value="">자동</option>${R.rows.map((r,i)=>`<option value="${i}" ${String(R.subDiscRow)===String(i)?'selected':''}>${esc(rmLevel(r.n))}</option>`).join('')}</select></label><label class="field"><span>할인 금액</span><input class="in num" data-rm="subDisc" inputmode="numeric" value="${esc(R.subDisc)}" placeholder="${qtWon(k.autoAmt)}"></label></div>`:''}
        <div><span>과목지원</span><b>${esc(k.supText||'없음')}</b> <small>${R.supportOn?'직접 입력':'0원이 된 과목 자동'}</small>
@@ -7390,6 +7393,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261027-1415';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261027-1417';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
