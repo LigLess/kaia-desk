@@ -6999,15 +6999,23 @@ function rmFromCells(M,fname){
 }
 
 /* 낸 금액을 과목 순서대로 채움 (견적서와 같은 규칙: 앞 과목부터 정가 → 뒤 과목이 지원 · 할인) */
-function rmAlloc(R,paid){ let rem=paid; return R.rows.map(r=>{ const a=Math.min(r.orig,Math.max(rem,0)); rem-=a; return {...r,alloc:a}; }); }
+/* 원 수강료를 직접 고쳤는데 과목 정가 합과 다르면(수강료표에 없는 과목 등) 차이를 표에 없던 과목 → 마지막 과목에 더해 맞춤 */
+function rmRowsFit(R){ const rows=R.rows.map(r=>({...r})); if(!rows.length) return rows; const sum=rows.reduce((a,r)=>a+(r.orig||0),0), diff=(R.orig||0)-sum;
+  if(diff){ const miss=R.missing||[]; let t=[...rows].reverse().find(r=>miss.includes(r.n))||rows[rows.length-1]; t.orig=Math.max(0,(t.orig||0)+diff); } return rows; }
+function rmAlloc(R,paid){ let rem=paid; return rmRowsFit(R).map(r=>{ const a=Math.min(r.orig,Math.max(rem,0)); rem-=a; return {...r,alloc:a}; }); }
 function rmJoinLv(rows){ const out=[]; rows.forEach(r=>{ const lv=rmLevel(r.n), b=rmBase(r.n), m=lv.match(/(\d+)$/); const last=out[out.length-1];
   if(m&&last&&last.b===b&&last.nums) last.nums.push(m[1]); else out.push({b,nums:m?[m[1]]:null,lv}); }); return out.map(o=>o.nums?`${o.b}${o.nums.join(',')}`:o.lv).join('/'); }
 function rmCalc(R){
   const final=rmNum(R.paid)||0; const disc=Math.max(0,(R.orig||0)-final);
   const al=rmAlloc(R,final); const sup=al.filter(r=>r.alloc===0&&r.orig>0); const part=al.filter(r=>r.alloc>0&&r.alloc<r.orig);
-  const pi=R.subDiscRow!==''&&al[+R.subDiscRow]?+R.subDiscRow:(part.length?al.indexOf(part[part.length-1]):-1);
-  const autoAmt=pi>=0?al[pi].orig-al[pi].alloc:0; const amt=rmNum(R.subDisc)??autoAmt;
-  return {final,disc,al,sup,part,pi,autoAmt,amt,supText:R.support.trim()||rmJoinLv(sup)};
+  let pi=R.subDiscRow!==''&&al[+R.subDiscRow]?+R.subDiscRow:(part.length?al.indexOf(part[part.length-1]):-1);
+  const autoAmt=pi>=0?al[pi].orig-al[pi].alloc:0; let amt=rmNum(R.subDisc)??autoAmt;
+  if(pi<0&&amt>0&&al.length) pi=al.length-1;   // 금액을 직접 넣었으면 깎인 과목이 안 보여도 마지막 과목으로 줄을 만듦
+  let supText=R.support.trim()||rmJoinLv(sup), discName=pi>=0?rmLevel(al[pi].n):'';
+  /* 과목지원 칸에 "○○에서 115,000원"처럼 할인 내용을 적었으면 과목할인 줄로 옮겨요 */
+  const mv=supText.match(/^(.+?)에서\s*([\d,]+)\s*원?\s*(할인)?\s*(\(.*\))?\s*$/);
+  if(mv){ discName=mv[1].trim(); amt=rmNum(mv[2])||amt; if(pi<0) pi=0; supText=R.support.trim()?rmJoinLv(sup):''; }
+  return {final,disc,al,sup,part,pi,autoAmt,amt,supText,discName};
 }
 function rmRate(R,k){
   if(R.cat==='su') return `수변 ${rmWon(k.disc)}원(원장님승인) -> ${rmWon(k.disc)}원 할인`;
@@ -7027,7 +7035,7 @@ function rmText(R){
     cod?`납부일정: ${cd} 잔액 ${rmWon(bal)}원 납부 예정`:'납부일정: -','',
     `현금영수증 : ${R.receipt||'-'}`,'---------------------------------','* 할인','',`원 수강료 : ${rmWon(R.orig)}원`,'',`할인율 : ${rmRate(R,k)}`];
   const tail=[]; if(k.supText) tail.push(`> 과목지원 = ${k.supText}`);
-  if(k.pi>=0&&k.amt>0) tail.push(`> 과목할인 = ${rmLevel(k.al[k.pi].n)}에서 ${rmWon(k.amt)}원 할인${R.notice?'(수강생안내완료)':''}`);
+  if(k.pi>=0&&k.amt>0) tail.push(`> 과목할인 = ${k.discName}에서 ${rmWon(k.amt)}원 할인${R.notice?'(수강생안내완료)':''}`);
   if(tail.length) L.push('',...tail);
   return L.join('\n');
 }
@@ -7333,6 +7341,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261027-1246';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261027-1253';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
