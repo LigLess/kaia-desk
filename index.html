@@ -3229,7 +3229,22 @@ function pasteParse(){
   items.forEach((it,i)=>IM.sel['0:'+i]=it.ok); closeModal(); drawImport();
 }
 const courseKey=c=>`${String(c.name||'').replace(/\s/g,'')}|${c.start}|${String(c.room||'').trim()}`;
-function matchExisting(c){ const k=courseKey(c); return list('courses').find(x=>courseKey(x)===k); }
+/* 같은 과정 찾기: ① 이름 · 개강일 · 강의실 모두 같음 → ② 이름 · 개강일 같음(강의실 표기만 바뀜) → ③ 이름 같고 개강일이 2주 안(개강일 조정) */
+const cNameK=c=>String(c.name||'').replace(/\s/g,'').toLowerCase();
+function matchExisting(c){ const k=courseKey(c), cs=list('courses'); let x=cs.find(y=>courseKey(y)===k); if(x) return x;
+  x=cs.find(y=>cNameK(y)===cNameK(c)&&y.start===c.start); if(x) return x;
+  if(c.start) x=cs.filter(y=>cNameK(y)===cNameK(c)&&y.start&&Math.abs(diffDays(y.start,c.start))<=14).sort((a,b)=>Math.abs(diffDays(a.start,c.start))-Math.abs(diffDays(b.start,c.start)))[0];
+  return x||null; }
+/* 엑셀로 갱신할 때 바뀌는 내용 (미리 보기 · 알림용) */
+function courseDiff(ex,c){ const out=[]; const dl=x=>daysLabel(x.days,x.daysB);
+  if(dl(ex)!==dl(c)) out.push(`요일 ${dl(ex)} → ${dl(c)}`);
+  if(c.time&&String(ex.time||'')!==String(c.time)) out.push(`시간 ${ex.time||'-'} → ${c.time}`);
+  if(c.teacher&&String(ex.teacher||'')!==String(c.teacher)) out.push(`강사 ${ex.teacher||'-'} → ${c.teacher}`);
+  if(c.room&&String(ex.room||'')!==String(c.room)) out.push(`강의실 ${ex.room||'-'} → ${c.room}`);
+  if(c.start&&ex.start!==c.start) out.push(`개강 ${fmtMD(ex.start)} → ${fmtMD(c.start)}`);
+  if(c.end&&ex.end!==c.end) out.push(`종강 ${fmtMD(ex.end)} → ${fmtMD(c.end)}`);
+  if(c.total&&+ex.total!==+c.total) out.push(`회차 ${ex.total||'-'} → ${c.total}`);
+  return out; }
 function drawImport(){
   const sh=IM.sheets[IM.si]; const r=sh.res; const items=r.items;
   items.forEach((it,i)=>{ const k=IM.si+':'+i; if(IM.sel[k]==null) IM.sel[k]=it.ok; });
@@ -3244,9 +3259,9 @@ function drawImport(){
     ${items.length?`<div class="tablewrap"><table class="t"><thead><tr><th></th><th>과정명</th><th>강의실</th><th>개강</th><th>종강</th><th>요일 · 시간</th><th>회차</th><th>확인</th></tr></thead><tbody>
     ${items.map((it,i)=>{ const c=it.course; const k=IM.si+':'+i; const ss=sessionsOf(c); const ex=c.start&&matchExisting(c);
       return `<tr><td><label class="check"><input type="checkbox" data-act="imSel" data-k="${k}" ${IM.sel[k]?'checked':''} ${it.ok?'':'disabled'}></label></td><td class="wrap">${esc(c.name)}</td><td>${esc(c.room||c.kind)}</td><td class="num">${c.start?fmtMD(c.start):'<span style="color:var(--bad)">?</span>'}</td><td class="num">${fmtMD(c.end||ss[ss.length-1])}${c.end?'':' <span class="chip">계산</span>'}</td><td>${esc(daysLabel(c.days,c.daysB))} ${esc(c.time)}</td><td class="num">${ss.length}회</td>
-        <td class="wrap">${it.dup?`<span class="chip">중복 · ${esc(it.dup)}에 있음</span> `:ex?'<span class="chip cyan">기존 과정 갱신</span> ':'<span class="chip ok">새 과정</span> '}${c.skips&&c.skips.length?`<span class="chip bad">휴강 ${c.skips.length}일</span> `:''}${it.warn.map(w=>`<span class="chip warn">${esc(w)}</span>`).join(' ')}</td></tr>`}).join('')}</tbody></table></div>`
+        <td class="wrap">${it.dup?`<span class="chip">중복 · ${esc(it.dup)}에 있음</span> `:ex?(()=>{ const df=courseDiff(ex,c); return df.length?`<span class="chip cyan">기존 과정 갱신</span> ${df.map(d=>`<span class="chip warn">${esc(d)}</span>`).join(' ')} `:'<span class="chip">변경 없음</span> '; })():'<span class="chip ok">새 과정</span> '}${c.skips&&c.skips.length?`<span class="chip bad">휴강 ${c.skips.length}일</span> `:''}${it.warn.map(w=>`<span class="chip warn">${esc(w)}</span>`).join(' ')}</td></tr>`}).join('')}</tbody></table></div>`
     :`<div class="empty"><b>이 시트에서 과정을 찾지 못했어요</b>제목줄에 과정명 · 개강일(또는 기간)이 있어야 해요. 위의 "열 연결"에서 직접 골라 주세요.</div>`}
-    <p style="margin:0;font-size:12px;color:var(--faint)">같은 과정명 + 같은 개강일이면 기존 과정을 갱신하고 학생 연결은 그대로 둬요.</p>
+    <p style="margin:0;font-size:12px;color:var(--faint)">같은 과정명이면(개강일이 2주 안에서 바뀌었거나 강의실 표기가 달라도) 기존 과정을 갱신해요. 요일 · 시간 · 강사 · 종강 · 회차는 새 엑셀 값으로 바뀌고, 학생 연결 · 진도는 그대로 둬요.</p>
   </div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="imDo" ${nSel?'':'disabled'}>${nSel}개 가져오기</button></footer>`;
   if(modalEl&&modalEl._kind==='import'){ modalEl.querySelector('.sheet').innerHTML=html; } else { openModal(html,'wide'); modalEl._kind='import'; }
 }
@@ -3262,12 +3277,21 @@ function doImport(){
   IM.sheets.forEach((sh,si)=>sh.res.items.forEach((it,i)=>{ if(!IM.sel[si+':'+i]) return; const c=it.course;
     const ex=matchExisting(c);
     const cc={...c}; if(!cc.memo) delete cc.memo;
-    if(ex){ store.put('courses',{...ex,...cc,id:ex.id,prog:ex.prog||{},skips:[...new Set([...(ex.skips||[]),...(c.skips||[])])],extras:ex.extras||[],subject:ex.subject||'',dayText:ex.dayText||'',zoom:ex.zoom||'',src:IM.file}); upd++; }
+    if(ex){ const df=courseDiff(ex,c); const nu={...ex,...cc,id:ex.id,prog:ex.prog||{},extras:ex.extras||[],subject:ex.subject||'',zoom:ex.zoom||'',src:IM.file};
+      /* 일정 칸은 새 엑셀 값으로 확실히 바꿈 (빈 값이 예전 값을 남기지 않게) */
+      ['days','daysB','time','end','total','fixedDates','skipHol','hours','cap','assigned','note','kind'].forEach(k=>{ nu[k]=cc[k]===undefined?null:cc[k]; });
+      if(!cc.teacher) nu.teacher=ex.teacher||''; if(!cc.room) nu.room=ex.room||'';
+      /* 휴강일: 새 엑셀의 휴강 + 앱에서 직접 넣은 휴강 중 새 일정의 수업 날짜인 것만 */
+      const days0=sessionsOf({...nu,skips:[]}); const keep=(ex.skips||[]).filter(d=>days0.includes(d));
+      nu.skips=[...new Set([...(c.skips||[]),...keep])].sort();
+      /* 요일이 바뀌면 예전에 손으로 적어 둔 '안내문 요일 표기'는 맞지 않으니 비움 → 새 요일로 자동 */
+      nu.dayText=df.some(d=>d.startsWith('요일'))?'':(ex.dayText||'');
+      store.put('courses',nu); upd++; if(df.length) (IM.changed=IM.changed||[]).push(`${c.name}: ${df.join(', ')}`); }
     else { store.put('courses',{...cc,memo:cc.memo||'',id:uid('c'),prog:{},skips:c.skips||[],extras:[],src:IM.file,at:Date.now()}); add++; }
     month[ym(c.start)]=1; }));
   closeModal(); const ms=Object.keys(month).sort(); const m=ms.find(x=>x>=ym(todayStr()))||ms[0]; if(m) S.calMonth=m;
   const linked=relinkStudents();
-  toast('시간표를 가져왔어요',`새 과정 ${add}개 · 갱신 ${upd}개. 개강·종강 알림이 자동으로 잡혔어요.${linked?` 학생 ${linked}명도 과정에 자동 연결했어요.`:''}`); render();
+  toast('시간표를 가져왔어요',`새 과정 ${add}개 · 갱신 ${upd}개.${(IM.changed||[]).length?' 바뀐 내용 — '+IM.changed.slice(0,3).join(' / ')+(IM.changed.length>3?` 외 ${IM.changed.length-3}개`:''):''}${linked?` 학생 ${linked}명도 과정에 자동 연결했어요.`:''}`,(IM.changed||[]).length?'alarm-t':''); render();
 }
 
 /* ---------- files out ---------- */
@@ -7547,6 +7571,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261027-1741';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261028-1628';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
