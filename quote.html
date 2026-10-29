@@ -1806,6 +1806,8 @@ body.dark .bg-view,body.hud:not(.hlight):not(.exec) .bg-view{--bgp:#10131b;--bgp
 .qp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .qp-sum{margin:0;font-size:13px;font-weight:600;color:var(--fg-2)}
 @media (max-width:640px){.qp-grid{grid-template-columns:1fr 1fr}}
+
+.qt-sort{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:4px 0 8px}.qt-sort>span{font-size:12px;font-weight:700;color:var(--muted);margin-right:4px}
 </style>
 <style>
 html{height:auto!important;overflow-y:auto!important}
@@ -2401,12 +2403,16 @@ function qtSavedView(){
     :'<div class="empty"><b>저장한 견적이 없어요</b>견적 작성 화면에서 "저장"을 누르면 여기에 모여요.</div>'}</section>`;
 }
 function qtPriceView(){
+  if(typeof qpTidy==='function') qpTidy();
   const qf=(S.qtFind||'').trim().toLowerCase(); const P=qtPrices(); const edited=Array.isArray(S.settings.prices)&&S.settings.prices.length;
   const shown=P.map((p,i)=>({p,i})).filter(({p})=>!qf||p.n.toLowerCase().includes(qf)||(p.cat||'').toLowerCase().includes(qf));
+  const so=S.qtSort||lsGet('md.qtSort')||'base', ci=c=>{ const k=QT_CATS.indexOf(c); return k<0?99:k; }, cat=p=>p.cat||qtCatGuess(p.n), ko=(a,b)=>a.p.n.localeCompare(b.p.n,'ko',{numeric:true});
+  if(so==='cat') shown.sort((a,b)=>ci(cat(a.p))-ci(cat(b.p))||ko(a,b)); else if(so==='name') shown.sort(ko); else if(so==='low') shown.sort((a,b)=>a.p.p-b.p.p||ko(a,b)); else if(so==='high') shown.sort((a,b)=>b.p.p-a.p.p||ko(a,b));
+  const sortBar=`<div class="seg qt-sort"><span>정렬</span>${[['base','기본 순서'],['cat','과정별'],['name','가나다순'],['low','수강료 낮은순'],['high','수강료 높은순']].map(([k,t])=>`<button class="${so===k?'on':''}" data-act="qtSort" data-k="${k}">${t}</button>`).join('')}</div>`;
   const staffBox=`<section class="pane"><h2>내 견적서 담당자 문구 <small>견적서 맨 아래 · 나에게만 적용</small></h2><textarea class="in" rows="2" data-set="qtStaff">${esc(S.settings.qtStaff||qtStaffDefault())}</textarea>${!S.settings.qtStaff&&(S.settings.name||'')!=='김병로'?'<p class="qt-hint" style="margin:6px 0 0">휴대폰 번호(HP.)를 넣고 칸 밖을 누르면 저장돼요.</p>':''}</section>`;
   return staffBox+`<section class="pane"><h2>수강료표 <small>${P.length}개 · ${edited?'수정본 사용 중':'2026.10.01 게시 기준'}${S.mode==='gas'?' · 팀이 같이 써요':''}</small></h2>
     <div class="qt-ptools"><input class="in" id="qtFindIn" value="${esc(S.qtFind||'')}" placeholder="과목 · 과정 검색"><button class="btn sm" data-act="qtPAdd">${ic('plus')}과목 추가</button><button class="btn sm" data-act="qtPExp">${ic('dl')}JSON 받기</button><label class="btn sm">${ic('up')}JSON 올리기<input type="file" id="qtPImp" accept=".json,application/json" hidden></label>${edited?'<button class="btn sm ghost danger" data-act="qtPReset">기본값으로</button>':''}</div>
-    <p class="qt-hint">"사진에 없음"은 마스터본 엑셀에만 있고 10/1 게시 사진에는 없는 과목이에요. 바뀐 수강료는 여기서 고치면 바로 견적에 반영돼요.</p>
+    ${sortBar}<p class="qt-hint">"사진에 없음"은 마스터본 엑셀에만 있고 10/1 게시 사진에는 없는 과목이에요. 바뀐 수강료는 여기서 고치면 바로 견적에 반영돼요.</p>
     <div class="qt-ptable"><table><thead><tr><th>과목명</th><th>교습비</th><th>분/월</th><th>구분</th><th>과정</th><th>시간</th><th>횟수</th><th>양식</th><th></th></tr></thead><tbody>
     ${shown.slice(0,250).map(({p,i})=>`<tr data-pi="${i}"><td><input class="in" data-pf="n" value="${esc(p.n)}">${p.src==='master'?'<span class="chip">사진에 없음</span>':''}</td><td><input class="in num" data-pf="p" type="number" step="10000" value="${p.p}"></td><td><input class="in num" data-pf="m" type="number" value="${p.m||''}"></td><td>${p.g||qtTypeOf(p.n)}</td>
       <td><input class="in" data-pf="cat" value="${esc(p.cat||'')}" list="qtCats2" placeholder="${esc(qtCatGuess(p.n))}"></td><td><input class="in" data-pf="t" value="${esc(p.t||'')}"></td><td><input class="in num" data-pf="c" type="number" value="${p.c||''}"></td>
@@ -2473,6 +2479,7 @@ Object.assign(WACT,{
   qtOpen:el=>{ const x=D().quotes[el.dataset.id]; if(!x) return; S.qt=clone(x.q); qtKeep(); S.qtTab='make'; render(); },
   qtXlsxSaved:async el=>{ const x=D().quotes[el.dataset.id]; if(!x) return; try{ await saveFile(qtFile(x.q,'xlsx'),await qtXlsxBlob(x.q,qtCalc(x.q))); }catch(e){ toast('엑셀을 만들지 못했어요',''); } },
   qtDel:async el=>{ if(!await confirmBox('이 견적을 지울까요?','저장한 견적 목록에서만 지워져요. 학생 기록은 남아요.','지우기',true)) return; store.del('quotes',el.dataset.id); render(); },
+  qtSort:el=>{ S.qtSort=el.dataset.k; lsSet('md.qtSort',S.qtSort); render(); },
   qtPAdd:()=>{ const P=clone(qtPrices()); P.unshift({n:'새 과목',p:500000,m:1800,cat:'',t:'',c:null,tpl:'',src:'edit'}); S.qtFind=''; qtPriceSave(P); render(); const x=document.querySelector('[data-pi="0"] [data-pf="n"]'); x&&(x.focus(),x.select()); },
   qtPDel:async el=>{ const P=clone(qtPrices()); const p=P[+el.dataset.k]; if(!p||!await confirmBox(`"${p.n}"을(를) 지울까요?`,'수강료표에서 빠지고, 새 견적에서 고를 수 없어요.','지우기',true)) return; P.splice(+el.dataset.k,1); qtPriceSave(P); render(); },
   qtPReset:async()=>{ if(!await confirmBox('수강료표를 기본값으로 되돌릴까요?','2026.10.01 게시 사진 기준으로 돌아가요. 고친 내용은 사라져요.','되돌리기',true)) return; S.settings.prices=null; store.saveSettings(); render(); },
@@ -2561,9 +2568,19 @@ Object.assign(WACT,{
   qpPrice:el=>{ if(!S._qp) return; S._qp.p=el.dataset.k; const p=$('#qpP'); if(p) p.value=el.dataset.k; qpGoState(); },
   qpSave:()=>{ const x=S._qp; if(!x||!x.name||!(+x.p>0)) return; const name=x.name.trim();
     const row={n:name,p:+x.p,m:+x.m||0,cat:x.cat||'',t:(x.time||'').replace(/\s/g,''),c:+x.cnt||null,tpl:x.tpl||'',src:'edit'};
-    const P=clone(qtPrices()); const i=P.findIndex(p=>p.n===name); if(i>=0) P[i]={...P[i],...row}; else P.unshift(row);
+    const P=clone(qtPrices()); const i=P.findIndex(p=>p.n===name); if(i>=0) P[i]={...P[i],...row}; else qpPlace(P,row);
     qtPriceSave(P); closeModal(); S.qtFind=name; render(); toast(i>=0?'수강료표를 바꿨어요':'수강료표에 추가했어요',`${name} · ${Number(row.p).toLocaleString('ko-KR')}원 — 이제 견적서에서 고를 수 있어요.`); },
 });
+
+/* 새 과목은 맨 위가 아니라 비슷한 과목(같은 이름 · 같은 과정) 바로 뒤에 넣어요 */
+function qpPlace(P,row){ const base=row.n.replace(/\/(주말방특|주말|주|특)$/,'').replace(/\d+$/,''); let at=-1;
+  P.forEach((p,k)=>{ if(base.length>=2&&p.n.startsWith(base)&&/^(\d|\/|$)/.test(p.n.slice(base.length))) at=k; });
+  if(at<0) P.forEach((p,k)=>{ if((p.cat||qtCatGuess(p.n))===(row.cat||qtCatGuess(row.n))) at=k; });
+  if(at<0) P.push(row); else P.splice(at+1,0,row); }
+/* 예전 방식으로 맨 위에 추가됐던 과목을 한 번만 제자리로 옮겨요 */
+function qpTidy(){ try{ if(lsGet('md.qpTidy')||!Array.isArray(S.settings.prices)||!S.settings.prices.length) return; lsSet('md.qpTidy','1');
+  const P=clone(S.settings.prices), top=[]; while(P.length&&P[0].src==='edit'&&P[0].n!=='새 과목'&&P[0].cat) top.push(P.shift());
+  if(!top.length) return; top.reverse().forEach(r=>qpPlace(P,r)); qtPriceSave(P); }catch(e){} }
 /* ===== 견적서 → 요청메모 (수납 · 할인) =====
    견적(작성 중 · 저장한 견적 · 견적서 엑셀 파일)을 불러오면 과목 · 원 수강료 · 기간이 자동으로 들어가고,
    손으로 넣는 건 납부금액 · 할인 종류 · 과목할인 금액(필요할 때) · COD 금액과 납부 예정일뿐이에요.
