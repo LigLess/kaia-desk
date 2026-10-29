@@ -1629,6 +1629,7 @@ body.dark .cal-day .t1{color:#fff}body.dark .cal-day .t2{color:rgba(255,255,255,
 .mb-ck{flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:transparent}.mb-ck svg{width:14px;height:14px}
 .mb-p.on .mb-ck{background:var(--accent);border-color:var(--accent);color:#fff}
 .mb-pi{display:flex;flex-direction:column;gap:2px;min-width:0}.mb-pi b{font-size:15px}.mb-pi small{font-size:12px;color:var(--muted)}.mb-pi .mb-sh{color:var(--faint);font-size:11.5px}
+.qs-row .qs-who{font-size:12px;color:var(--muted);font-weight:500;margin-left:6px}.qs-row.qs-new{border-left:3px solid var(--warn);padding-left:10px}
 /* ===== 요청메모 ===== */
 .rm-form{grid-template-columns:repeat(2,minmax(0,1fr))}
 .rm-step{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:50%;background:var(--accent);color:#fff;font-style:normal;font-size:12px;font-weight:700;vertical-align:1px}
@@ -2307,9 +2308,10 @@ const DEFAULT_SETTINGS={zoomsV2:true,rooms:{B:'4층 B강의장'},theme:'aurora',
 const DEFAULT_SERVER='https://script.google.com/macros/s/AKfycbyEKOo2BCCLq4WhcI6a_ZQQ5n_4cx09EqKmw2CaLI9-JjZJ3Tv7R07llaHHd5MSfMZ-CQ/exec';
 /* 팀 동기화 때도 기기·사람마다 따로 유지되는 설정 */
 const PERSONAL_KEYS=['theme','fx','sfx','name','role','mentor','pin','acks','offsets','icsTime','calOn','calKey','calTime'];
+const LOC_TEXT='학원 위치 안내드립니다.\n· 학원: 코리아AI아카데미 부산점\n· 주소: 부산 부산진구 중앙대로 668 4층\n· 대중교통: 부산 1호선 범내골역 8번 출구\n· 주차: 1시간 무료, 이후 30분당 1,500원\n· 상세정보: https://map.naver.com/p/entry/place/1728207405';
 const DEFAULT_SNIPPETS=[
 {title:'국비 상담 준비물',text:'국비 상담 오실 때 준비해 주세요.\n· 신분증\n· 국민내일배움카드(없으시면 발급 절차 함께 안내드려요)\n· 최종학력 확인 가능한 서류(필요 시)'},
-{title:'학원 위치 안내',text:'학원 위치 안내드립니다.\n· 주소: (주소를 입력해 주세요)\n· 대중교통: (가까운 역 · 출구)\n· 주차: (주차 안내)'},
+{title:'학원 위치 안내',text:LOC_TEXT},
 {title:'수업 결석 연락 받았을 때',text:'연락 주셔서 감사합니다. 결석 처리해 둘게요.\n빠진 수업 내용은 강사님께 자료 요청해 두고, 다음 수업 전에 따로 공유드리겠습니다.'}];
 
 /* ---------- state ---------- */
@@ -2731,6 +2733,7 @@ let renderPending=false,renderDirty=false;
 function scheduleRender(){ if(renderPending) return; renderPending=true; requestAnimationFrame(()=>{ renderPending=false; const a=document.activeElement; if(a&&a.closest&&a.closest('#view')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){ renderDirty=true; renderSide(); return; } render(); }); }
 function render(){
   renderDirty=false;
+  if(S.mode!=='loading'&&!S.gate){ try{ list('snippets').forEach(n=>{ if(n.title==='학원 위치 안내'&&/\((주소를 입력|가까운 역|주차 안내)/.test(n.text||'')) store.put('snippets',{...n,text:LOC_TEXT}); }); }catch(e){} }
   if(S.mode!=='loading'&&!S.gate){ try{ list('courses').forEach(c=>{ const f=fixLunchTime(c); if(f) store.put('courses',{...c,time:f}); }); }catch(e){} }
   document.body.classList.toggle('gate',!!S.gate);
   renderSide();
@@ -6825,8 +6828,8 @@ CPK.qtAddC={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=box.
 CPK.qtCourse={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=box.querySelector('input'); i.value=v; i.dispatchEvent(new Event('change',{bubbles:true})); }};
 function vQuote(){
   const tab=S.qtTab||'make'; if(tab==='make') setTimeout(qtPreview,0);
-  const tabs=`<div class="seg qt-tabs"><button class="${tab==='make'?'on':''}" data-act="qtTab" data-k="make">견적 작성</button><button class="${tab==='saved'?'on':''}" data-act="qtTab" data-k="saved">저장한 견적 ${list('quotes').length||''}</button><button class="${tab==='memo'?'on':''}" data-act="qtTab" data-k="memo">요청메모</button><button class="${tab==='price'?'on':''}" data-act="qtTab" data-k="price">수강료표</button></div>`;
-  return `<div class="view">${vh('견적서','과목만 고르면 정가 · 순차 할인 · 과목별 금액이 계산되고, 원본 엑셀 양식 그대로 받을 수 있어요',`<button class="btn" data-act="qtMasterPick" title="예전 마스터본 엑셀로 만든 견적서를 KAIA 견적서로 바꿔요">${ic('up')}마스터본 가져오기</button><input id="qtMasterFile" type="file" accept=".xlsx,.xlsm" hidden><button class="btn" data-act="qtNew">${ic('plus')}새 견적</button>`)}${tabs}${tab==='price'?qtPriceView():tab==='saved'?qtSavedView():tab==='memo'?rmView():qtMakeView()}</div>`;
+  const tabs=`<div class="seg qt-tabs"><button class="${tab==='make'?'on':''}" data-act="qtTab" data-k="make">견적 작성</button><button class="${tab==='saved'?'on':''}" data-act="qtTab" data-k="saved">저장한 견적 ${list('quotes').length||''}</button>${typeof qsTabs==='function'?qsTabs(tab):''}<button class="${tab==='memo'?'on':''}" data-act="qtTab" data-k="memo">요청메모</button><button class="${tab==='price'?'on':''}" data-act="qtTab" data-k="price">수강료표</button></div>`;
+  return `<div class="view">${vh('견적서','과목만 고르면 정가 · 순차 할인 · 과목별 금액이 계산되고, 원본 엑셀 양식 그대로 받을 수 있어요',`<button class="btn" data-act="qtMasterPick" title="예전 마스터본 엑셀로 만든 견적서를 KAIA 견적서로 바꿔요">${ic('up')}마스터본 가져오기</button><input id="qtMasterFile" type="file" accept=".xlsx,.xlsm" hidden><button class="btn" data-act="qtNew">${ic('plus')}새 견적</button>`)}${tabs}${tab==='price'?qtPriceView():tab==='saved'?qtSavedView():tab==='memo'?rmView():tab==='recv'&&typeof qsRecvView==='function'?qsRecvView():tab==='staffq'&&typeof qsStaffView==='function'?qsStaffView():qtMakeView()}</div>`;
 }
 function qtMakeView(){
   const q=qtDraft(); const c=qtCalc(q); const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
@@ -6897,7 +6900,7 @@ function qtSumHTML(q,c){
       ${c.onList?`<div><span>온라인 수강료 (${esc(q.online)})</span><b>${qtWon(c.onReal)}</b></div>`:''}
     </div>
     ${c.warn.length?`<ul class="qt-warn">${c.warn.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}
-    <div class="btns qt-acts"><button class="btn pri" data-act="qtXlsx" ${c.paid?'':'disabled'}>${ic('dl')}엑셀 받기</button><button class="btn" data-act="qtPrint" ${c.paid?'':'disabled'}>인쇄 · PDF</button><button class="btn" data-act="qtSave" ${c.paid?'':'disabled'}>저장</button><button class="btn" data-act="qtToMemo" ${c.paid?'':'disabled'}>요청메모</button></div>`;
+    <div class="btns qt-acts"><button class="btn pri" data-act="qtXlsx" ${c.paid?'':'disabled'}>${ic('dl')}엑셀 받기</button><button class="btn" data-act="qtPrint" ${c.paid?'':'disabled'}>인쇄 · PDF</button><button class="btn" data-act="qtSave" ${c.paid?'':'disabled'}>저장</button><button class="btn" data-act="qtToMemo" ${c.paid?'':'disabled'}>요청메모</button>${typeof qsSendBtn==='function'&&c.paid?qsSendBtn('').replace('btn sm','btn'):''}</div>`;
 }
 /* 입력할 때마다 숫자 · 미리보기만 다시 그림 (입력칸은 그대로 → 커서가 튀지 않음) */
 function qtRefresh(){
@@ -6917,8 +6920,8 @@ addEventListener('resize',()=>{ if(S.view==='quote') qtFit(); });
 
 function qtSavedView(){
   const L=list('quotes').sort((a,b)=>(b.at||0)-(a.at||0));
-  return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
-    <button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm" data-act="rmOpenQuote" data-id="${x.id}">요청메모</button><button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
+  return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${x.from?`<span class="chip cyan">${esc(x.from)}님이 보냄</span> `:''}${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
+    <button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm" data-act="rmOpenQuote" data-id="${x.id}">요청메모</button>${typeof qsSendBtn==='function'?qsSendBtn(x.id):''}<button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
     :'<div class="empty"><b>저장한 견적이 없어요</b>견적 작성 화면에서 "저장"을 누르면 여기에 모여요.</div>'}</section>`;
 }
 function qtPriceView(){
@@ -7362,6 +7365,94 @@ document.addEventListener('change',e=>{ const el=e.target;
   if(el.classList&&el.classList.contains('mb-who-in')){ MB.sel=+el.value; mbDraw(); return; }
   if(el.classList&&el.classList.contains('mb-pick')){ const p=MB.pick[MB.sel]=MB.pick[MB.sel]||{}; p[+el.dataset.i]=el.value; mbDraw(); }
 });
+/* ===== 견적서 공유 (팀 서버 v9) =====
+   - 팀원끼리: 견적서를 골라 "보내기" → 받은 사람 화면에 알림 + 견적서 → 받은 견적에 쌓여요 (열기 · 내 견적으로 저장 · 요청메모)
+   - 팀장: 팀원이 저장한 견적서 전부 보기(팀원 견적) + 팀 안에서 오간 견적 공유 내역 전부 보기 */
+TEAM_COLS.push('qshare');
+const qsAll=()=>Object.values(teamData().qshare||{});
+const qsMine=()=>{ const u=me().user; return qsAll().filter(x=>x.to===u).sort((a,b)=>(b.at||0)-(a.at||0)); };
+const qsSent=()=>{ const u=me().user; return qsAll().filter(x=>x.from===u).sort((a,b)=>(b.at||0)-(a.at||0)); };
+const qsUnseen=()=>qsMine().filter(x=>!x.seen).length;
+const qsSum=q=>{ try{ const c=qtCalc(q); return {n:c.paid,total:c.total,names:c.rows.filter(r=>r.n&&!r.free).map(r=>r.n)}; }catch(e){ return {n:0,total:0,names:[]}; } };
+const qsOn=()=>S.mode==='gas'&&!S.demo;
+
+/* 받은 견적 알림 */
+const _qsApply=teamApply;
+teamApply=function(d){ const was=d.col==='qshare'?(teamData().qshare||{})[d.id]:null; _qsApply(d);
+  if(d.col==='qshare'&&!d.del){ const x=teamData().qshare[d.id]; if(x&&x.to===me().user&&!x.seen&&!was&&(x.at||0)>Date.now()-3*864e5) gas._newQs=(gas._newQs||[]).concat(x); } };
+const _qsNotify=teamNotify;
+teamNotify=function(){ _qsNotify(); let noted=[]; try{ noted=JSON.parse(lsGet('md.qsNoti')||'[]'); }catch(e){}
+  const fresh=(gas._newQs||[]).filter(x=>!noted.includes(x.id)); gas._newQs=[]; if(!fresh.length) return;
+  lsSet('md.qsNoti',JSON.stringify(noted.concat(fresh.map(x=>x.id)).slice(-300)));
+  setTimeout(()=>{ fresh.slice(0,3).forEach(x=>{ const s=qsSum(x.q); alertShow({title:`견적서 도착 · ${x.fromName||memberName(x.from)}`,body:`${x.q.name||'이름 없음'} · ${s.n}과목 · ${qtWon(s.total)}원${x.note?' · '+x.note:''}`,cls:'lead-t',tag:'qs-'+x.id,go:'quote',tab:'recv'}); }); alertSound('견적서 도착'); },600); };
+const _qsOpen=openFromNotice;
+openFromNotice=function(d){ if(d&&d.go==='quote'&&d.tab) S.qtTab=d.tab; _qsOpen(d&&d.go==='quote'?{go:'quote'}:d); };
+
+/* 견적서 탭 버튼 */
+function qsTabs(tab){ if(!qsOn()) return ''; if(!S.members) loadMembers().then(()=>{ if(S.view==='quote') scheduleRender(); });
+  const n=qsUnseen(); return `<button class="${tab==='recv'?'on':''}" data-act="qtTab" data-k="recv">받은 견적${n?` <b class="tm-n">${n}</b>`:''}</button>${S.myRole==='lead'?`<button class="${tab==='staffq'?'on':''}" data-act="qtTab" data-k="staffq">팀원 견적</button>`:''}`; }
+function qsSendBtn(id){ return qsOn()?`<button class="btn sm" data-act="qsSend" data-id="${esc(id||'')}">${ic('send')}보내기</button>`:''; }
+
+function qsRow(x,kind){ const s=qsSum(x.q); const who=kind==='in'?(x.fromName||memberName(x.from)):kind==='out'?(x.toName||memberName(x.to)):`${x.fromName||memberName(x.from)} → ${x.toName||memberName(x.to)}`;
+  return `<div class="row qs-row ${kind==='in'&&!x.seen?'qs-new':''}"><div class="grow"><div class="t1">${kind==='in'&&!x.seen?'<span class="chip warn">새로 옴</span> ':''}${esc(x.q.name||'이름 없음')} · ${qtWon(s.total)}원 <span class="qs-who">${kind==='in'?'보낸 사람':kind==='out'?'받는 사람':'공유'} ${esc(who)}</span></div>
+    <div class="t2">${esc(s.names.slice(0,3).join(', '))}${s.n>3?' 외':''} · ${agoTxt(x.at)}${x.note?` · "${esc(x.note)}"`:''}${kind==='out'?` · ${x.seen?`<b style="color:var(--ok)">읽음</b>`:'아직 안 읽음'}`:''}</div></div>
+    <button class="btn sm" data-act="qsOpen" data-id="${x.id}">열기</button>${kind!=='all'?`<button class="btn sm" data-act="qsSave" data-id="${x.id}">내 견적으로 저장</button>`:''}<button class="btn sm" data-act="qsMemo" data-id="${x.id}">요청메모</button>${kind!=='all'?`<button class="btn sm ghost" data-act="qsDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button>`:''}</div>`; }
+function qsRecvView(){
+  if(!qsOn()) return `<section class="pane"><div class="empty"><b>팀 서버에 로그인하면 쓸 수 있어요</b></div></section>`;
+  const inn=qsMine(), out=qsSent(); const u=me().user;
+  /* 받은 견적을 열어 본 순간 읽음 표시 (보낸 사람 화면에 '읽음') */
+  setTimeout(()=>{ inn.filter(x=>!x.seen).forEach(x=>teamPut('qshare',{...x,seen:true,seenAt:Date.now()})); renderSide(); },1200);
+  const all=S.myRole==='lead'?qsAll().filter(x=>x.from!==u&&x.to!==u).sort((a,b)=>(b.at||0)-(a.at||0)):[];
+  return `${S.qsOld?'<div class="banner"><p><b>팀 서버 업데이트가 필요해요 (v9).</b> 견적서 보내기는 새 팀 서버 코드에서 동작해요. 팀 서버를 만든 사람이 Code.gs를 새 버전으로 바꾸고 다시 배포해 주세요.</p></div>':''}
+   <section class="pane"><h2>받은 견적 <small>${inn.length}개 · 팀원이 보낸 견적서</small></h2>${inn.length?`<div class="list">${inn.map(x=>qsRow(x,'in')).join('')}</div>`:'<div class="empty"><b>받은 견적서가 없어요</b>팀원이 견적서를 "보내기" 하면 여기에 오고 알림이 떠요.</div>'}</section>
+   <section class="pane"><h2>보낸 견적 <small>${out.length}개</small></h2>${out.length?`<div class="list">${out.map(x=>qsRow(x,'out')).join('')}</div>`:'<div class="empty">저장한 견적 · 견적 작성 화면의 "보내기"로 팀원에게 견적서를 보낼 수 있어요.</div>'}</section>
+   ${S.myRole==='lead'?`<section class="pane"><h2>팀원끼리 오간 견적 <small>팀장 전용 · ${all.length}개</small></h2>${all.length?`<div class="list">${all.map(x=>qsRow(x,'all')).join('')}</div>`:'<div class="empty">아직 팀원끼리 주고받은 견적서가 없어요.</div>'}</section>`:''}`;
+}
+/* 팀장: 팀원이 저장한 견적서 */
+function qsStaffView(){
+  if(!qsOn()||S.myRole!=='lead') return `<section class="pane"><div class="empty"><b>팀장만 볼 수 있어요</b></div></section>`;
+  const staff=S.staff||[]; const sel=S.qsStaffSel;
+  const chips=staff.length?`<div class="seg" style="flex-wrap:wrap;margin-bottom:12px">${staff.map(m=>`<button class="${m.user===sel?'on':''}" data-act="qsStaff" data-k="${esc(m.user)}">${esc(m.name)}</button>`).join('')}</div>`:'<div class="empty"><b>볼 수 있는 팀원이 없어요</b>팀 서버 시트 kaia_users의 I열(manager)에 팀장 아이디를 적은 팀원, 또는 I열이 빈 팀원이 여기에 나와요.</div>';
+  const d=sel&&(S.qsStaffData||{})[sel]; let body='';
+  if(sel&&!d) body='<div class="empty"><b>불러오는 중…</b></div>';
+  else if(d&&d.err) body=`<div class="empty"><b>볼 수 없어요</b>${esc(d.err)}</div>`;
+  else if(d){ const L=d.quotes.slice().sort((a,b)=>(b.at||0)-(a.at||0));
+    body=L.length?`<div class="list">${L.map((x,i)=>{ const s=qsSum(x.q); return `<div class="row"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(s.total)}원</div><div class="t2">${esc(x.q.date||'')} · ${s.n}과목 · ${esc(s.names.slice(0,3).join(', '))}${s.n>3?' 외':''} · ${x.q.tpl==='ai'?'AI':'IT'} 견적서</div></div>
+      <button class="btn sm" data-act="qsStaffOpen" data-i="${i}">열기</button><button class="btn sm" data-act="qsStaffXlsx" data-i="${i}">${ic('dl')}엑셀</button><button class="btn sm" data-act="qsStaffMemo" data-i="${i}">요청메모</button></div>`; }).join('')}</div>`:'<div class="empty"><b>저장한 견적서가 없어요</b>팀원이 견적 작성 화면에서 "저장"을 눌러야 여기에 보여요.</div>';
+    if(d.list!==L) d.list=L; }
+  return `<section class="pane"><h2>팀원 견적 <small>팀장 전용 · 팀원이 저장한 견적서 · 보기만 가능 · 조회 기록이 남아요</small>${sel?`<button class="btn sm ghost r" data-act="qsStaff" data-k="${esc(sel)}" data-r="1">새로고침</button>`:''}</h2>${chips}${body}</section>`;
+}
+/* 보내기 창 */
+let QS=null;
+function qsSendModal(q){ const u=me().user; const ms=(S.members||[]).filter(m=>m.user!==u);
+  QS={q:clone(q),to:{}}; const s=qsSum(q);
+  openModal(`${mHead('견적서 보내기')}<div class="body">
+    <div class="rm-src">${ic('receipt')} <b>${esc(q.name||'이름 없음')}</b> · ${s.n}과목 · ${qtWon(s.total)}원<small>${esc(s.names.join(', '))}</small></div>
+    <div class="field" style="margin-top:14px"><span>누구에게 보낼까요? <small>(여러 명 골라도 돼요)</small></span><div class="mb-who">${ms.length?ms.map(m=>`<label class="mb-p qs-p"><input type="checkbox" class="qs-to" value="${esc(m.user)}"><span class="mb-ck">${ic('check')}</span><span class="mb-pi"><b>${esc(m.name)}</b><small>${esc(m.user)}</small></span></label>`).join(''):'<div class="empty">팀원 목록을 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</div>'}</div></div>
+    <label class="field" style="margin-top:12px"><span>한마디 (선택)</span><input class="in" id="qsNote" placeholder="예: 내일 상담 오시는 분이에요, 확인 부탁드려요" maxlength="120"></label></div>
+    <footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="qsSendGo" id="qsGo" disabled>${ic('send')}보내기</button></footer>`,'narrow'); }
+async function qsCheckServer(){ try{ const j=await gas.call('GET',{a:'ping'}); S.qsOld=!(j&&+j.v>=9); }catch(e){} return !S.qsOld; }
+Object.assign(WACT,{
+  qsSend:async el=>{ if(!qsOn()){ toast('팀 서버에 로그인하면 보낼 수 있어요',''); return; } const id=el.dataset.id; let q;
+    if(id){ const x=D().quotes[id]; if(!x) return; q=x.q; } else { q=qtDraft(); if(!qtCalc(q).paid){ toast('과목을 먼저 넣어 주세요',''); return; } }
+    await loadMembers(); qsSendModal(q); },
+  qsSendGo:async()=>{ const to=$$('.qs-to').filter(x=>x.checked).map(x=>x.value); if(!to.length) return; const note=($('#qsNote')||{}).value||'';
+    if(!await qsCheckServer()){ closeModal(); toast('팀 서버 업데이트가 필요해요','견적서 보내기는 팀 서버 v9에서 동작해요. 팀 서버 만든 사람이 Code.gs를 새 버전으로 다시 배포해 주세요.','alarm-t'); return; }
+    const m=me(); to.forEach(u=>teamPut('qshare',{id:uid('qs'),from:m.user,fromName:m.name,to:u,toName:memberName(u),q:clone(QS.q),note:note.trim(),at:Date.now(),seen:false}));
+    closeModal(); toast('견적서를 보냈어요',`${to.map(memberName).join(', ')}님 화면에 알림이 가요.`); render(); },
+  qsOpen:el=>{ const x=teamData().qshare[el.dataset.id]; if(!x) return; S.qt={...clone(x.q),id:''}; qtKeep(); S.qtTab='make'; render(); toast('견적 작성 화면으로 열었어요','고친 뒤 "저장"을 누르면 내 저장한 견적에 들어가요.'); },
+  qsSave:el=>{ const x=teamData().qshare[el.dataset.id]; if(!x) return; const id=uid('q'); store.put('quotes',{id,q:{...clone(x.q),id},at:Date.now(),from:x.fromName||memberName(x.from)}); toast('내 저장한 견적에 넣었어요',x.q.name||''); },
+  qsMemo:el=>{ const x=teamData().qshare[el.dataset.id]; if(!x) return; S.rm=rmSync(rmFromQuote(x.q,`${x.fromName||memberName(x.from)}님이 보낸 견적`)); rmKeep(); S.rmEdited=false; S.qtTab='memo'; render(); },
+  qsDel:async el=>{ if(!await confirmBox('목록에서 지울까요?','주고받은 견적서 기록이 양쪽 모두에서 지워져요.','지우기',true)) return; teamDel('qshare',el.dataset.id); render(); },
+  qsStaff:async el=>{ const u=el.dataset.k; S.qsStaffSel=u; S.qsStaffData=S.qsStaffData||{}; if(!S.qsStaffData[u]||el.dataset.r){ delete S.qsStaffData[u]; render();
+      try{ const j=await gas.call('GET',{a:'staffQuotes',of:u}); if(!Array.isArray(j.quotes)) throw new Error('old'); S.qsStaffData[u]={at:Date.now(),quotes:j.quotes}; }
+      catch(e){ S.qsStaffData[u]={err:e.message==='forbidden'?'팀장 권한이 없거나 이 팀원을 볼 수 없어요.':(e.message==='old'||e.message==='bad'||/unknown|action/i.test(e.message))?'팀 서버 업데이트가 필요해요 (v9). Code.gs를 새 버전으로 다시 배포해 주세요.':`팀 서버에서 불러오지 못했어요. (${e.msg||e.message})`}; } }
+    render(); },
+  qsStaffOpen:el=>{ const d=S.qsStaffData[S.qsStaffSel]; const x=d&&d.list&&d.list[+el.dataset.i]; if(!x) return; S.qt={...clone(x.q),id:''}; qtKeep(); S.qtTab='make'; render(); toast(`${memberName(S.qsStaffSel)}님 견적을 열었어요`,'내 화면에서 고쳐도 팀원 원본은 바뀌지 않아요.'); },
+  qsStaffXlsx:async el=>{ const d=S.qsStaffData[S.qsStaffSel]; const x=d&&d.list&&d.list[+el.dataset.i]; if(!x) return; try{ await saveFile(qtFile(x.q,'xlsx'),await qtXlsxBlob(x.q,qtCalc(x.q))); }catch(e){ toast('엑셀을 만들지 못했어요',''); } },
+  qsStaffMemo:el=>{ const d=S.qsStaffData[S.qsStaffSel]; const x=d&&d.list&&d.list[+el.dataset.i]; if(!x) return; S.rm=rmSync(rmFromQuote(x.q,`${memberName(S.qsStaffSel)}님 견적`)); rmKeep(); S.rmEdited=false; S.qtTab='memo'; render(); },
+});
+document.addEventListener('change',e=>{ if(e.target.classList&&e.target.classList.contains('qs-to')){ e.target.closest('.qs-p').classList.toggle('on',e.target.checked); const b=$('#qsGo'); if(b) b.disabled=!$$('.qs-to').some(x=>x.checked); } });
 /* ===== EVENTS ===== */
 function ackToggle(key){
   const acks={...(S.settings.acks||{})}; if(acks[key]) delete acks[key]; else acks[key]=todayStr();
@@ -7571,6 +7662,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261028-1628';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261029-0938';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

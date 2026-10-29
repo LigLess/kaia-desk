@@ -20,7 +20,7 @@ const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
 const DATA = 'kaia_data';
 const USERS = 'kaia_users';
 const TEAM_OWNER = '_team';
-const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
+const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true, qshare: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
 const MAX_FILE = 31 * 1024 * 1024;   // 게시판 첨부 한 파일 30MB (구글 앱스 스크립트 요청 한도 약 50MB 안쪽)
 
 function ss_() { return SpreadsheetApp.getActive(); }
@@ -112,14 +112,30 @@ function doGet_(e) {
     if (uid) { const it = tmpFolder_().getFilesByName('cal_' + uid + '.ics'); if (it.hasNext()) txt = it.next().getBlob().getDataAsString('UTF-8'); }
     return ContentService.createTextOutput(txt).setMimeType(ContentService.MimeType.ICAL);
   }
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 8 });
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 9 });
   const uid = auth_(p.token); if (!uid) return out_({ error: 'auth' });
   if (p.a === 'members') {
     const v = userSheet_().getDataRange().getValues().slice(1);
     const me = v.find(r => norm_(r[0]) === uid);
     const lead = !!(me && isLead_(me));
-    return out_({ v: 8, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
+    return out_({ v: 9, members: v.map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })), email: me ? String(me[6] || '') : '',
       role: lead ? 'lead' : '', staff: lead ? staffOf_(uid, v).map(r => ({ user: norm_(r[0]), name: String(r[1] || r[0]) })) : [] });
+  }
+  if (p.a === 'staffQuotes') {   // 팀장 전용 · 팀원이 저장한 견적서 보기 (보기 전용 · 조회 기록 남김)
+    const v = userSheet_().getDataRange().getValues().slice(1);
+    const me = v.find(r => norm_(r[0]) === uid);
+    if (!me || !isLead_(me)) return out_({ error: 'forbidden' });
+    const allowed = staffOf_(uid, v).map(r => norm_(r[0]));
+    const of = norm_(p.of);
+    if (allowed.indexOf(of) < 0) return out_({ error: 'forbidden' });
+    const quotes = [];
+    dataSheet_().getDataRange().getValues().slice(1).forEach(r => {
+      if (norm_(r[0]) !== of || r[1] !== 'quotes' || r[5]) return;
+      let d = null; try { d = JSON.parse(r[3] || 'null'); } catch (err) {}
+      if (d && d.q) quotes.push({ id: String(r[2]), q: d.q, at: d.at || 0 });
+    });
+    log_(uid, 'staffQuotes', of);
+    return out_({ v: 9, quotes: quotes });
   }
   if (p.a === 'staffStudents') {   // 팀장 전용 · 보기 전용 · 서버에서 권한 확인
     const v = userSheet_().getDataRange().getValues().slice(1);
@@ -266,9 +282,12 @@ function doPost_(e) {
       const owner = (SHARED[w.col] || (w.col === 'meta' && w.id === 'team')) ? TEAM_OWNER : uid;
       const k = owner + '/' + w.col + '/' + w.id;
       // 게시판 · DB 배정: 글쓴이 / 보낸 사람 · 받은 사람만 고칠 수 있어요
-      if (w.col === 'posts' || w.col === 'comments' || w.col === 'leads') {
+      if (w.col === 'posts' || w.col === 'comments' || w.col === 'leads' || w.col === 'qshare') {
         let old = null; if (idx[k]) { try { old = JSON.parse(vals[idx[k] - 1][3] || 'null'); } catch (err) {} }
-        if (w.col === 'leads') {
+        if (w.col === 'qshare') {   // 견적서 보내기: 보낸 사람 · 받은 사람만 고칠 수 있어요 (메일은 안 보냄)
+          if (old && old.from !== uid && old.to !== uid) return;
+          if (!w.del && w.data && !old) w.data.from = uid;
+        } else if (w.col === 'leads') {
           if (old && old.from !== uid && old.to !== uid) return;
           if (!w.del && w.data) { if (!old) w.data.from = uid; if (w.data.to && (!old || old.to !== w.data.to)) mails.push(w.data); }
         } else {

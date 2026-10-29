@@ -1622,6 +1622,7 @@ body.dark .cal-day .t1{color:#fff}body.dark .cal-day .t2{color:rgba(255,255,255,
 .mb-ck{flex:0 0 auto;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;color:transparent}.mb-ck svg{width:14px;height:14px}
 .mb-p.on .mb-ck{background:var(--accent);border-color:var(--accent);color:#fff}
 .mb-pi{display:flex;flex-direction:column;gap:2px;min-width:0}.mb-pi b{font-size:15px}.mb-pi small{font-size:12px;color:var(--muted)}.mb-pi .mb-sh{color:var(--faint);font-size:11.5px}
+.qs-row .qs-who{font-size:12px;color:var(--muted);font-weight:500;margin-left:6px}.qs-row.qs-new{border-left:3px solid var(--warn);padding-left:10px}
 /* ===== 요청메모 ===== */
 .rm-form{grid-template-columns:repeat(2,minmax(0,1fr))}
 .rm-step{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:50%;background:var(--accent);color:#fff;font-style:normal;font-size:12px;font-weight:700;vertical-align:1px}
@@ -2157,8 +2158,8 @@ CPK.qtAddC={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=box.
 CPK.qtCourse={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=box.querySelector('input'); i.value=v; i.dispatchEvent(new Event('change',{bubbles:true})); }};
 function vQuote(){
   const tab=S.qtTab||'make'; if(tab==='make') setTimeout(qtPreview,0);
-  const tabs=`<div class="seg qt-tabs"><button class="${tab==='make'?'on':''}" data-act="qtTab" data-k="make">견적 작성</button><button class="${tab==='saved'?'on':''}" data-act="qtTab" data-k="saved">저장한 견적 ${list('quotes').length||''}</button><button class="${tab==='memo'?'on':''}" data-act="qtTab" data-k="memo">요청메모</button><button class="${tab==='price'?'on':''}" data-act="qtTab" data-k="price">수강료표</button></div>`;
-  return `<div class="view">${vh('견적서','과목만 고르면 정가 · 순차 할인 · 과목별 금액이 계산되고, 원본 엑셀 양식 그대로 받을 수 있어요',`<button class="btn" data-act="qtMasterPick" title="예전 마스터본 엑셀로 만든 견적서를 KAIA 견적서로 바꿔요">${ic('up')}마스터본 가져오기</button><input id="qtMasterFile" type="file" accept=".xlsx,.xlsm" hidden><button class="btn" data-act="qtNew">${ic('plus')}새 견적</button>`)}${tabs}${tab==='price'?qtPriceView():tab==='saved'?qtSavedView():tab==='memo'?rmView():qtMakeView()}</div>`;
+  const tabs=`<div class="seg qt-tabs"><button class="${tab==='make'?'on':''}" data-act="qtTab" data-k="make">견적 작성</button><button class="${tab==='saved'?'on':''}" data-act="qtTab" data-k="saved">저장한 견적 ${list('quotes').length||''}</button>${typeof qsTabs==='function'?qsTabs(tab):''}<button class="${tab==='memo'?'on':''}" data-act="qtTab" data-k="memo">요청메모</button><button class="${tab==='price'?'on':''}" data-act="qtTab" data-k="price">수강료표</button></div>`;
+  return `<div class="view">${vh('견적서','과목만 고르면 정가 · 순차 할인 · 과목별 금액이 계산되고, 원본 엑셀 양식 그대로 받을 수 있어요',`<button class="btn" data-act="qtMasterPick" title="예전 마스터본 엑셀로 만든 견적서를 KAIA 견적서로 바꿔요">${ic('up')}마스터본 가져오기</button><input id="qtMasterFile" type="file" accept=".xlsx,.xlsm" hidden><button class="btn" data-act="qtNew">${ic('plus')}새 견적</button>`)}${tabs}${tab==='price'?qtPriceView():tab==='saved'?qtSavedView():tab==='memo'?rmView():tab==='recv'&&typeof qsRecvView==='function'?qsRecvView():tab==='staffq'&&typeof qsStaffView==='function'?qsStaffView():qtMakeView()}</div>`;
 }
 function qtMakeView(){
   const q=qtDraft(); const c=qtCalc(q); const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
@@ -2229,7 +2230,7 @@ function qtSumHTML(q,c){
       ${c.onList?`<div><span>온라인 수강료 (${esc(q.online)})</span><b>${qtWon(c.onReal)}</b></div>`:''}
     </div>
     ${c.warn.length?`<ul class="qt-warn">${c.warn.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}
-    <div class="btns qt-acts"><button class="btn pri" data-act="qtXlsx" ${c.paid?'':'disabled'}>${ic('dl')}엑셀 받기</button><button class="btn" data-act="qtPrint" ${c.paid?'':'disabled'}>인쇄 · PDF</button><button class="btn" data-act="qtSave" ${c.paid?'':'disabled'}>저장</button><button class="btn" data-act="qtToMemo" ${c.paid?'':'disabled'}>요청메모</button></div>`;
+    <div class="btns qt-acts"><button class="btn pri" data-act="qtXlsx" ${c.paid?'':'disabled'}>${ic('dl')}엑셀 받기</button><button class="btn" data-act="qtPrint" ${c.paid?'':'disabled'}>인쇄 · PDF</button><button class="btn" data-act="qtSave" ${c.paid?'':'disabled'}>저장</button><button class="btn" data-act="qtToMemo" ${c.paid?'':'disabled'}>요청메모</button>${typeof qsSendBtn==='function'&&c.paid?qsSendBtn('').replace('btn sm','btn'):''}</div>`;
 }
 /* 입력할 때마다 숫자 · 미리보기만 다시 그림 (입력칸은 그대로 → 커서가 튀지 않음) */
 function qtRefresh(){
@@ -2249,8 +2250,8 @@ addEventListener('resize',()=>{ if(S.view==='quote') qtFit(); });
 
 function qtSavedView(){
   const L=list('quotes').sort((a,b)=>(b.at||0)-(a.at||0));
-  return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
-    <button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm" data-act="rmOpenQuote" data-id="${x.id}">요청메모</button><button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
+  return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${x.from?`<span class="chip cyan">${esc(x.from)}님이 보냄</span> `:''}${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
+    <button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm" data-act="rmOpenQuote" data-id="${x.id}">요청메모</button>${typeof qsSendBtn==='function'?qsSendBtn(x.id):''}<button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
     :'<div class="empty"><b>저장한 견적이 없어요</b>견적 작성 화면에서 "저장"을 누르면 여기에 모여요.</div>'}</section>`;
 }
 function qtPriceView(){
