@@ -6150,8 +6150,8 @@ function vTeam(){
   if(!S.members) loadMembers().then(()=>{ if(S.view==='team') scheduleRender(); });
   const old=S.teamOld?`<div class="banner"><p><b>팀 서버 업데이트가 필요해요.</b> 커뮤니티 기능은 새 팀 서버 코드에서 동작해요. 팀 서버를 만든 사람이 Code.gs를 새 버전으로 바꾸고 <b>배포 관리 → 수정 → 새 버전</b>으로 다시 배포해 주세요.</p></div>`:'';
   const tab=S.teamTab||'db'; const nL=unseenLeads().length, nP=newPosts();
-  const tabs=`<div class="seg tm-tabs"><button class="${tab==='db'?'on':''}" data-act="tmTab" data-k="db">DB 배정${nL?` <b class="tm-n">${nL}</b>`:''}</button><button class="${tab==='board'?'on':''}" data-act="tmTab" data-k="board">게시판${nP?` <b class="tm-n">${nP}</b>`:''}</button><button class="${tab==='curri'?'on':''}" data-act="tmTab" data-k="curri">커리큘럼</button><button class="${tab==='sp'?'on':''}" data-act="tmTab" data-k="sp">특별처리</button>${S.myRole==='lead'?`<button class="${tab==='staff'?'on':''}" data-act="tmTab" data-k="staff">팀원 학생</button>`:''}</div>`;
-  return `<div class="view">${head}${old}${tabs}${tab==='db'?leadsPane():tab==='staff'&&S.myRole==='lead'?staffPane():tab==='curri'?curriPane():tab==='sp'?spPane():boardPane()}</div>`;
+  const tabs=`<div class="seg tm-tabs"><button class="${tab==='db'?'on':''}" data-act="tmTab" data-k="db">DB 배정${nL?` <b class="tm-n">${nL}</b>`:''}</button><button class="${tab==='board'?'on':''}" data-act="tmTab" data-k="board">게시판${nP?` <b class="tm-n">${nP}</b>`:''}</button><button class="${tab==='curri'?'on':''}" data-act="tmTab" data-k="curri">커리큘럼</button>${S.myRole==='lead'?`<button class="${tab==='staff'?'on':''}" data-act="tmTab" data-k="staff">팀원 학생</button>`:''}</div>`;
+  return `<div class="view">${head}${old}${tabs}${tab==='db'?leadsPane():tab==='staff'&&S.myRole==='lead'?staffPane():tab==='curri'?curriPane():boardPane()}</div>`;
 }
 function boardPane(){
   const cat=S.boardCat||'전체'; const u=me().user, seen=seenBoardAt();
@@ -6480,172 +6480,6 @@ Object.assign(WACT,{
   cuDel:async el=>{ const p=teamData().posts[el.dataset.id]; if(!p||!await confirmBox(`"${p.title}"을(를) 지울까요?`,'팀원 모두의 커리큘럼 목록에서 사라져요.','지우기',true)) return;
     (p.files||[]).forEach(f=>gas.call('POST',null,{a:'unfile',id:f.id}).catch(()=>{})); teamDel('posts',p.id); render(); },
 });
-/* ===== 특별처리신청서 안내 (팀 → 특별처리) =====
-   인트라넷으로 바로 처리할 수 없는 예외 상황을 결재받아 운영부에 처리 요청하는 서류.
-   상황별 설명 + 작성 도우미(칸에 그대로 붙여넣을 문구 만들기) + 지점 연락처(팀 서버에만 저장 · 코드에는 사람 이름 없음).
-   예시의 이름 · 전화 · 원서번호 · 계좌는 모두 가짜예요. 자료를 받는 대로 SP_TYPES에 상황을 더해요. */
-const SP_ROSTER_CAT='특처연락처';
-const SP_BRANCHES=['노원','신촌','강남','인천','대전','대구'];
-const spV=()=>{ S.spv=S.spv||{}; const t=S.spType||'move'; S.spv[t]=S.spv[t]||{}; return S.spv[t]; };
-const spWon=v=>{ const n=parseInt(String(v??'').replace(/[^\d]/g,''),10); return isNaN(n)?'':n.toLocaleString('ko-KR'); };
-const spYMD=v=>v?`${v.slice(2,4)}.${v.slice(5,7)}.${v.slice(8,10)}`:'';
-const spMD=v=>v?`${v.slice(5,7)}.${v.slice(8,10)}`:'';
-/* 지점 연락처: 팀 게시판(posts)에 분류 '특처연락처'로 한 장 저장 → 팀원만 보이고, 공개 코드에는 이름이 없어요 */
-function spRosterPost(){ return Object.values(teamData().posts||{}).filter(p=>p.cat===SP_ROSTER_CAT).sort((a,b)=>(b.at||0)-(a.at||0))[0]||null; }
-function spRoster(){ const p=spRosterPost(); return p&&p.roster||{}; }
-function spParseRoster(txt){ const R={}; let cur=null;
-  String(txt||'').split(/\n/).map(l=>l.trim()).forEach(l=>{ if(!l) return; const m=l.match(/^(운영부|원장님?|참조자)\s*[-:：]\s*(.*)$/);
-    if(m&&cur){ const k=m[1].startsWith('운영')?'ops':m[1].startsWith('원장')?'dir':'ref'; R[cur][k]=m[2].trim(); }
-    else if(!m&&!/특처|특별처리/.test(l)&&l.length<=8){ cur=l.replace(/지점$/,''); R[cur]=R[cur]||{ops:'',dir:'',ref:''}; } });
-  return R; }
-const spDest=(b)=>{ const r=spRoster()[b]||{}; return r.ref||r.dir||''; };   // 변경후 담당: 참조자가 있으면 참조자, 없으면 원장님 (예시 기준)
-
-/* ---------- 상황별 정보 ---------- */
-/* f: 도우미 입력칸 · gen(v): 신청서 칸에 들어갈 문구 */
-const SP_COMMON=[{k:'name',l:'수강생 이름',ph:'홍길동'},{k:'no',l:'원서번호',ph:'1234'}];
-const SP_TYPES=[
- {k:'move',t:'지점이동',ic:'right',sum:'부산에 그 과목이 안 열려서 다른 지점(대부분 비대면) 수업을 듣고 싶을 때',
-  when:['학생이 듣고 싶은 과목이 부산지점에 미개설(개설 예정 없음)일 때','다른 지점 수업(대면 · 비대면)으로 옮겨 듣기를 원할 때'],
-  approve:'기안부서 결재에 <b>받는 지점 원장님</b>을, 처리부서에 <b>받는 지점 운영부 담당자</b>를 꼭 추가해요. (아래 "지점 연락처" 참고)',
-  attach:'학생 <b>원서 PDF</b>를 첨부해요. (예: 홍길동_원서.pdf)',
-  warn:['변경전 · 변경후 줄 끝에는 항상 "매출이동금액없음"을 붙여요.','변경후 담당자는 받는 지점 <b>참조자</b>가 있으면 참조자, 없으면 <b>원장님</b> 이름을 써요. (게시판 예시 기준)','수업 날짜 · 시간 · 과목을 한 줄에 하나씩 적어 배정 요청해요.'],
-  f:[{k:'from',l:'지금 과목/반',ph:'씨스코1,2/주'},{k:'to',l:'옮길 과목/반 (같으면 비워 두기)',ph:'씨스코1,2/주'},{k:'branch',l:'받는 지점',type:'branch'},{k:'staff',l:'수당자(담당 멘토)',ph:'내 이름',def:()=>S.settings.name||''},
-     {k:'online',l:'수업 방식',type:'seg',opts:['비대면','대면'],def:()=>'비대면'},{k:'sched',l:'배정 요청 일정 (한 줄에 하나)',type:'area',ph:'10.26 09:00 씨스코1/주\n11.30 09:00 씨스코2/주'}],
-  gen:v=>{ const to=v.to||v.from, b=v.branch||'(지점)', who=spDest(v.branch)||'(담당자)';
-    const bef=`${v.from||'(과목)'}\nIT부산/${v.staff||'(수당자)'}/매출이동금액없음`, aft=`${to||'(과목)'}\nIT${b}/${who}/매출이동금액없음`;
-    return {type:'지점이동',chg:'지점이동',bef,aft,
-      reason:`부산지점 ${v.from||'(과목)'} 미개설로 인한 ${b}지점 ${v.online==='대면'?'':'비대면 '}수업 참여 희망하여 지점이동${v.sched?'\n'+v.sched.trim().split('\n').map(x=>x.trim()).filter(Boolean).join('\n')+' 배정요청 부탁드립니다.':''}`,
-      req:`변경전 : ${bef}\n변경후 : ${aft}`}; }},
- {k:'rate',t:'할인율 변경',ic:'quote',sum:'이미 등록한 학생의 할인율을 바꿔야 할 때 (원장님 승인 필요)',
-  when:['결산 마감 기준이 바뀌어 할인율을 다시 적용해야 할 때','원장님 승인으로 할인 폭이 바뀌었을 때'],
-  approve:'기안부서: 작성자 → 부장 → 원장님 / 처리부서: 운영부',attach:'보통 첨부 없음',
-  warn:['할인 금액 = 원수강료 × 할인율이에요. 도우미가 계산해 줘요.','"수변(원장님 승인)" 할인은 반드시 원장님 승인 후에 올려요.'],
-  f:[{k:'orig',l:'원수강료',ph:'1,900,000',type:'won'},{k:'kind',l:'할인 종류',ph:'수변(원장님 승인)',def:()=>'수변(원장님 승인)'},{k:'p1',l:'지금 할인율 %',ph:'40',type:'num'},{k:'p2',l:'바꿀 할인율 %',ph:'50',type:'num'},{k:'why',l:'사유',ph:'결산마감 적용으로 인한 할인율 변경',def:()=>'결산마감 적용으로 인한 할인율 변경'}],
-  gen:v=>{ const o=+String(v.orig||'').replace(/[^\d]/g,'')||0; const a=p=>`할인율 : ${v.kind||'수변(원장님 승인)'} ${p||'(%)'}% -> ${o&&p?spWon(Math.round(o*p/100)):'(금액)'}원 할인`;
-    const bef=a(v.p1), aft=a(v.p2); return {type:'할인율변경',chg:'할인율변경',bef,aft,reason:v.why||'결산마감 적용으로 인한 할인율 변경',req:`변경전 : ${bef}\n변경후 : ${aft}`}; }},
- {k:'refund',t:'긴급 환불처리',ic:'receipt',sum:'인트라넷 서버 오류로 환불 입력이 안 돼서 서류로 대신 환불할 때',
-  when:['환불을 바로 진행해야 하는데 인트라넷 환불 입력이 오류로 막혔을 때','(정상일 때는 인트라넷 환불 절차로 해요 — 이 서류는 대체용)'],
-  approve:'기안부서: 작성자 → (팀장) → 원장님 / 처리부서: 운영부',attach:'필요하면 결제 내역 캡처',
-  warn:['계좌번호 · 승인번호는 한 글자도 틀리면 안 돼요. 학생에게 받은 그대로 복사해서 넣으세요.','서버가 복구되면 기존 정상 절차도 진행한다는 문구를 꼭 넣어요.'],
-  f:[{k:'orig',l:'원수강료',ph:'550,000',type:'won'},{k:'paid',l:'낸 금액 (실 환불금)',ph:'385,000',type:'won'},{k:'ded',l:'공제금 (없으면 비워 두기)',ph:'-',type:'won'},{k:'subj',l:'환불 과목',ph:'챗GPT AI 활용'},
-     {k:'pdate',l:'결제한 날',type:'date'},{k:'pbank',l:'결제 은행 · 수단',ph:'기업 · 계좌이체'},{k:'rdate',l:'환불하는 날',type:'date'},
-     {k:'acct',l:'환불받을 계좌 (예금주 은행 : 계좌번호)',ph:'홍길동 부산은행 : 000-0000-0000-00'},{k:'appr',l:'승인번호',ph:'000000000'}],
-  gen:v=>{ const pb=String(v.pbank||'').split(/[·,]/).map(x=>x.trim()); const paid=spWon(v.paid)||'(금액)';
-    const bef=`${spYMD(v.pdate)||'(결제일)'} ${pb[0]||'(은행)'} ${paid}원 ${pb[1]||'계좌이체'} 완납`, aft=`${spYMD(v.rdate)||'(환불일)'} ${paid}원 환불처리\n*공제금 ${spWon(v.ded)?spWon(v.ded)+'원':'없음'}`;
-    return {type:'긴급 환불처리신청서',chg:'긴급 환불처리신청서',bef,aft,
-      reason:'일정불가의 사유로 인해 환불처리가 진행되어야 하는 상황이나\n인트라넷 서버오류로 환불처리 입력이 불가하여 특별처리신청서 출력 후 대체 환불처리요청\n*인트라넷 서버복구 후 기존 정상절차 진행예정',
-      req:`원수강료 : ${spWon(v.orig)||'(원수강료)'}원\n공제금 : ${spWon(v.ded)?spWon(v.ded)+'원':'-'}\n실 환불금 : ${paid}원\n환불과목 : ${v.subj||'(과목)'}\n\n>입금취소요청 : ${spYMD(v.pdate)||'(결제일)'} ${pb[0]||'(은행)'} ${paid}원 (${v.acct||'(예금주 은행 : 계좌)'})\n승인번호 : ${v.appr||'(승인번호)'}`}; }},
- {k:'support',t:'지원과목 생성',ic:'plus',sum:'재수강권 · 국비 일정 변경 등으로 0원짜리 지원과목을 새로 만들어야 할 때',
-  when:['재수강권(무료 재수강)으로 과목을 추가로 들어야 할 때','국비 일정이 바뀌어 지원과목이 새로 필요할 때'],
-  approve:'기안부서: 작성자 → 부장 → 원장님 / 처리부서: 운영부',attach:'보통 첨부 없음',
-  warn:['등록금이 0원인 학생도 이 서류로 지원과목을 만들 수 있어요.','"*과목 변경요청" 줄에는 지원과목으로 바꿔 넣을 실제 과목명을 적어요.'],
-  f:[{k:'n',l:'만들 지원과목 개수',ph:'1',type:'num',def:()=>'1'},{k:'subj',l:'지원과목으로 넣을 과목',ph:'웹개발4,5'},{k:'why',l:'사유',type:'seg',opts:['재수강권으로 인한 지원과목 생성요청','국비 일정 변경으로 인한 지원과목 생성'],def:()=>'재수강권으로 인한 지원과목 생성요청'}],
-  gen:v=>{ const aft=`지원과목${v.n||1} 생성요청\n*${v.subj||'(과목)'} 변경요청`; return {type:'지원과목생성',chg:'지원과목생성',bef:'지원과목없음',aft,reason:v.why,req:`변경전 : 지원과목없음\n변경후 : ${aft}`}; }},
- {k:'rereg',t:'원서 재등록',ic:'edit',sum:'과목 구성이 바뀌어 금액 · 할인을 다시 짜서 원서를 새로 등록할 때',
-  when:['학생이 과목을 바꾸거나 더해서 수강료 · 할인이 다시 계산될 때','공부 계획이 바뀌어 원서 내용을 통째로 다시 올려야 할 때'],
-  approve:'기안부서: 작성자 → 부장 → (원장님) / 처리부서: 운영부',attach:'보통 첨부 없음',
-  warn:['변경전 · 변경후 모두 [원수강료] → [할인] → 과목지원/과목할인 → 완납(COD) 순서로 적어요.','할인 줄은 <b>요청메모와 같은 모양</b>이에요. 견적서 → 요청메모 탭에서 만든 할인 부분을 복사해 오면 편해요.','완납 · COD 줄: "완납 : 금액 - 카드", 계좌이체면 "완납 : 금액 은행-이름(연락처)"'],
-  f:[{k:'b1',l:'변경전 과목(금액) 목록',ph:'웹프론트엔드1~5(4,400,000)'},{k:'b1t',l:'변경전 원수강료 합계',ph:'4,400,000',type:'won'},{k:'b2',l:'변경전 할인 · 지원 · 완납 (요청메모의 할인 부분 붙여넣기)',type:'area',ph:'수변 1,320,000원(원장님 승인) -> 1,320,000원 할인\n\n> 과목지원 = 웹프론트엔드5\n> 과목할인 = 웹프론트엔드4에서 320,000원 할인(수강생안내완료)\n\n완납 : 3,080,000 - 카드'},
-     {k:'a1',l:'변경후 과목(금액) 목록',ph:'웹프론트엔드1~2(1,700,000)'},{k:'a1t',l:'변경후 원수강료 합계',ph:'1,700,000',type:'won'},{k:'a2',l:'변경후 할인 · 지원 · 완납',type:'area',ph:'수변 1,700,000원(원장님 승인) -> 1,700,000원 할인\n\n> 과목지원 = 웹프론트엔드1~2(수강생안내완료)\n\n완납 : 3,080,000 - 카드'},
-     {k:'why',l:'사유',ph:'공부계획 변경으로 인한 원서재등록',def:()=>'공부계획 변경으로 인한 원서재등록'}],
-  gen:v=>{ const blk=(l,t,d)=>`[원수강료]\n${l||'(과목(금액))'} -> ${spWon(t)||'(합계)'}\n\n[할인]\n${(d||'(할인 줄)').trim()}`; const bef=blk(v.b1,v.b1t,v.b2), aft=blk(v.a1,v.a1t,v.a2);
-    return {type:'원서재등록',chg:'원서재등록',bef,aft,reason:v.why||'원서재등록',req:`변경전 :\n${bef}\n\n변경후 :\n${aft}`}; }},
- {k:'transfer',t:'양도 신청',ic:'users',sum:'등록한 학생이 수강을 포기하고 지인 등 다른 사람에게 수업을 넘길 때',
-  when:['등록한 학생이 못 듣게 되어 다른 사람(지인 · 가족)이 대신 듣기로 했을 때'],
-  approve:'기안부서: 작성자 → 부장 → 원장님 / 처리부서: 운영부',attach:'보통 첨부 없음',
-  warn:['변경내용의 체크칸(수강료 환불 · 재료비 환불 · 기타)은 체크하지 않아요. (게시판 예시 기준)','구분1의 변경신청 횟수는 0으로 적어요. (예시 기준)','요청내용 마지막 줄에 두 사람의 관계를 꼭 적어요.'],
-  f:[{k:'p1',l:'원래 학생 (이름)',ph:'홍길동'},{k:'t1',l:'원래 학생 연락처',ph:'010-0000-0000',type:'tel'},{k:'p2',l:'넘겨받는 사람 (이름)',ph:'김예시'},{k:'t2',l:'넘겨받는 사람 연락처',ph:'010-0000-0000',type:'tel'},
-     {k:'subj',l:'과목(금액) · 상태',ph:'챗GPT AI 활용(275,000원) 대기'},{k:'rel',l:'관계',ph:'지인',def:()=>'지인'}],
-  gen:v=>{ const bef=`수강생 : ${v.p1||'(이름)'}(${v.t1||'(연락처)'})\n${v.subj||'(과목(금액) 대기)'}`, aft=`수강생 : ${v.p2||'(이름)'}(${v.t2||'(연락처)'})\n${v.subj||'(과목(금액) 대기)'}`;
-    return {type:'양도신청',chg:'',noCheck:true,cnt0:true,bef,aft,reason:`${v.rel||'지인'}(${v.p1||'(원래 학생)'}) 수강포기로 인해 ${v.p2||'(넘겨받는 사람)'}님으로 수업 양도신청`,req:`변경전 : ${bef}\n변경후 : ${aft}\n관계 : ${v.rel||'지인'}`}; }},
- {k:'exclude',t:'배정 제외',ic:'x',sum:'수강 계획이 바뀌어 이미 배정된 수업에서 빼야 할 때',
-  when:['학생이 다음 수업(차수)을 지금은 안 듣기로 해서 배정에서 빼야 할 때'],
-  approve:'기안부서: 작성자 → 부장 → 원장님 / 처리부서: 운영부',attach:'요청 받은 시간이 보이는 캡처(문자 · 카톡) — 게시판 예시들은 첨부했어요',
-  warn:['괄호 안 공제금 문구가 중요해요. 게시판 예시를 보면 <b>수업 시작 전에 요청</b>하면 "환불시 공제금 없음", <b>수업이 이미 시작된 뒤</b>면 "환불시 공제금 1/3"으로 썼어요. 헷갈리면 운영부에 먼저 확인하세요.','학생이 처음 요청한 시간을 "*최초 요청일"로 남겨 두면 공제금 판단 근거가 돼요.'],
-  f:[{k:'date',l:'빠지는 수업 날짜',type:'date'},{k:'time',l:'시간',ph:'19:00'},{k:'subj',l:'과목',ph:'JAVA1'},{k:'ded',l:'공제금',type:'seg',opts:['환불시 공제금 없음','환불시 공제금 1/3'],def:()=>'환불시 공제금 없음'},
-     {k:'why',l:'사유',ph:'수강계획 변경으로 인한 배정제외',def:()=>'수강계획 변경으로 인한 배정제외'},{k:'first',l:'최초 요청 일시 (선택)',ph:'08.10 18:40'}],
-  gen:v=>{ const tag=`배정제외(${v.ded||'환불시 공제금 없음'})`; const bef=`${spMD(v.date)||'(날짜)'} ${v.time||'(시간)'} ${v.subj||'(과목)'} 수강`;
-    return {type:'배정제외',chg:tag,bef,aft:tag,reason:`${v.why||'수강계획 변경으로 인한 배정제외'}\n*${tag}${v.first?`\n*최초 요청일: ${v.first}`:''}`,req:`변경전 : ${bef}\n변경후 : ${tag}`}; }},
-];
-
-/* ---------- 화면 ---------- */
-function spPane(){
-  const t=S.spType||'move', T=SP_TYPES.find(x=>x.k===t)||SP_TYPES[0]; const v=spV();
-  SP_COMMON.concat(T.f).forEach(f=>{ if(v[f.k]==null&&f.def) v[f.k]=f.def(); });
-  const g=T.gen(v); const title=`원서번호 ${v.name||'(이름)'} (원서번호 ${v.no||'(번호)'})_${g.type}`;
-  const field=f=>{ const val=v[f.k]??''; const a=`data-sp="${f.k}"`;
-    if(f.type==='branch'){ const R=spRoster(); const bs=[...new Set([...Object.keys(R),...SP_BRANCHES])]; return `<div class="rm-chips">${bs.map(b=>`<button class="rm-chip ${val===b?'on':''}" data-act="spPick" data-k="${f.k}" data-v="${esc(b)}">${esc(b)}</button>`).join('')}</div>`; }
-    if(f.type==='seg') return `<div class="rm-chips">${f.opts.map(o=>`<button class="rm-chip ${val===o?'on':''}" data-act="spPick" data-k="${f.k}" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div>`;
-    if(f.type==='area') return `<textarea class="in" rows="4" ${a} placeholder="${esc(f.ph||'')}">${esc(val)}</textarea>`;
-    return `<input class="in ${f.type==='won'||f.type==='num'?'num':''}" ${a} ${f.type==='date'?'type="date"':''} ${f.type==='won'||f.type==='num'?'inputmode="numeric"':f.type==='tel'?'inputmode="tel"':''} value="${esc(val)}" placeholder="${esc(f.ph||'')}">`; };
-  const out=(lab,txt,hint)=>`<div class="sp-out"><div class="sp-oh"><b>${lab}</b>${hint?`<small>${hint}</small>`:''}<button class="btn sm" data-act="spCopy" data-t="${esc(txt)}">${ic('copy')}복사</button></div><pre>${esc(txt)}</pre></div>`;
-  const ck=(on,l)=>`<span class="sp-ck ${on?'on':''}">${on?ic('check'):''}${l}</span>`;
-  return `<section class="pane sp-intro"><h2>특별처리신청서 <small>인트라넷으로 바로 처리할 수 없는 예외 상황을 결재받아 운영부에 처리를 부탁하는 서류</small></h2>
-     <ol class="sp-steps"><li><b>상황 고르기</b><span>아래에서 지금 상황과 같은 카드를 눌러요</span></li><li><b>도우미 칸 채우기</b><span>이름 · 과목 · 날짜만 넣으면 문구가 만들어져요</span></li><li><b>칸마다 복사 → 붙여넣기</b><span>인트라넷 특별처리신청서의 같은 칸에 그대로</span></li><li><b>결재 · 첨부 확인</b><span>상황마다 추가할 결재자 · 첨부파일이 달라요</span></li></ol></section>
-   <section class="pane"><h2>어떤 상황인가요?</h2><div class="sp-types">${SP_TYPES.map(x=>`<button class="sp-type ${x.k===t?'on':''}" data-act="spType" data-k="${x.k}"><span class="sp-ti">${ic(x.ic)}</span><b>${esc(x.t)}</b><small>${esc(x.sum)}</small></button>`).join('')}</div></section>
-   <div class="qt-grid sp-grid"><div class="qt-form">
-    <section class="pane"><h2>${esc(T.t)} <small>이럴 때 써요</small></h2><ul class="sp-when">${T.when.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>
-      <h3 class="sp-h3">신청서에서 체크할 칸</h3>
-      <div class="sp-checks"><div><span>구분</span>${ck(true,'기타')}</div>
-        <div><span>변경내용</span>${g.noCheck?'<em>체크 안 함</em>':`${ck(true,'기타 (사유기재)')} <em>옆 칸에 "${esc(g.chg)}"</em>`}</div>
-        <div><span>변경사유 구분1</span>${ck(true,'일반')} <em>(재직자 · NCS · 사업주환급이면 그걸로) · 총 등록 과목수 · 변경신청 횟수(${g.cnt0?'0':'이 학생 몇 번째 특처인지, 보통 1'})</em></div>
-        <div><span>변경사유 구분2</span>${ck(true,'기타 사유')} <em>(멘토 실수로 생긴 일이면 멘토실수 칸)</em></div></div>
-      <h3 class="sp-h3">결재 · 첨부</h3><p class="sp-p">${T.approve}</p><p class="sp-p">${T.attach}</p>
-      <h3 class="sp-h3">꼭 지킬 것</h3><ul class="sp-warn">${T.warn.map(w=>`<li>${w}</li>`).join('')}</ul></section>
-    <section class="pane"><h2>작성 도우미 <small>칸을 채우면 오른쪽 문구가 바로 바뀌어요 · 이 기기에만 남아요</small></h2>
-      <div class="form rm-form">${SP_COMMON.concat(T.f).map(f=>`<label class="field ${f.type==='area'||f.type==='branch'||f.type==='seg'?'full':''}"><span>${esc(f.l)}</span>${field(f)}</label>`).join('')}</div>
-      ${t==='move'&&v.branch?`<p class="sp-p" style="margin-top:10px">${spRoster()[v.branch]?`${esc(v.branch)}: 원장님 <b>${esc(spRoster()[v.branch].dir||'-')}</b> · 운영부 <b>${esc(spRoster()[v.branch].ops||'-')}</b> · 참조자 <b>${esc(spRoster()[v.branch].ref||'-')}</b> → 결재에 원장님, 처리부서에 운영부 추가`:`${esc(v.branch)} 연락처가 아직 없어요. 아래 "지점 연락처"에 넣어 주세요.`}</p>`:''}
-      <div class="btns" style="margin-top:10px"><button class="btn sm ghost" data-act="spClear">이 상황 칸 비우기</button></div></section>
-   </div><div class="qt-side"><section class="pane sp-outs"><h2>신청서에 붙여넣을 문구 <small>칸 이름 그대로 옮기세요</small></h2>
-      ${out('수강생정보 제목줄',title,'나중에 원서번호로 검색해요')}${g.chg?out('변경내용 · 기타 옆 칸',g.chg):''}${out('변경전',g.bef)}${out('변경후',g.aft)}${out('변경사유 · 구분2 사유',g.reason)}${out('요청내용',g.req)}</section></div></div>
-   ${spFormGuide()}${spRosterPane()}`;
-}
-/* 양식 칸 설명 (가짜 예시로 칸 위치 보여 주기) */
-function spFormGuide(){
-  const n=k=>`<i class="sp-n">${k}</i>`;
-  return `<section class="pane"><details class="sp-det"${S.spGuideOpen?' open':''}><summary data-act="spGuideT"><b>신청서 칸마다 무엇을 쓰나요?</b> <small>처음이면 한 번 펼쳐 보세요</small></summary>
-   <div class="sp-form"><div class="sp-fh"><b>특별처리신청서</b><div class="sp-fsign">${n(2)}<span>기안부서 결재<br><small>작성자 → (팀장) → 부장 → 원장</small></span>${n(3)}<span>처리부서<br><small>운영부</small></span></div></div>
-    <table class="sp-ft"><tr><th>${n(1)} 작성일 · 소속 · 직급 · 작성자</th><td>작성한 날 · IT-부산|사업부 · 내 직급 · 내 이름</td></tr>
-     <tr><th>${n(4)} 구분</th><td>멘토 변경 / 수강차수 멘토 변경 / 수강료 변경 / 과목 변경 / 지점 변경 / <b>기타</b> — 게시판 예시는 전부 <b>기타</b>에 체크했어요</td></tr>
-     <tr><th>${n(5)} 수강생정보 제목줄</th><td><code>원서번호 홍길동 (원서번호 1234)_지점이동</code> — 나중에 <b>원서번호로 검색</b>하니까 꼭 넣어요</td></tr>
-     <tr><th>${n(6)} 수강생 표</th><td>수강생명 · 등록일 · 과정(학과) · 수당자(담당 멘토) · 전화번호 · 등록금</td></tr>
-     <tr><th>${n(7)} 변경내용</th><td>수강료 환불 / 재료비 환불 / <b>기타(사유기재)</b> 중 체크 + 옆 칸에 처리 이름(지점이동 · 배정제외(…) 등)</td></tr>
-     <tr><th>${n(8)} 변경전 · 변경후</th><td>지금 상태 → 바꿀 상태. 상황마다 모양이 정해져 있어요 (위 도우미가 만들어 줘요)</td></tr>
-     <tr><th>${n(9)} 변경사유 구분1</th><td>수강 유형(일반 / 재직자 20% / 재직자 0% / NCS / 사업주 환급) · 총 등록 과목수 · 변경신청 횟수 <small>* 사실과 다르면 행정처리 불가</small></td></tr>
-     <tr><th>${n(10)} 변경사유 구분2</th><td>멘토실수(배정미처리) / 멘토실수(공제금 미안내) / <b>기타 사유</b> + 아래 칸에 사유 문장</td></tr>
-     <tr><th>${n(11)} 요청내용</th><td>운영부가 이것만 보고 처리할 수 있게 <b>변경전 : … / 변경후 : …</b>를 다시 정리</td></tr>
-     <tr><th>${n(12)} 첨부파일</th><td>지점이동은 원서 PDF, 배정제외는 요청 캡처 등 — 상황별 안내 참고</td></tr></table></div>
-   <p class="sp-p" style="margin-top:10px">${n(2)} 결재는 지점이동처럼 다른 지점이 끼면 그 지점 원장님 · 운영부가 추가돼요. 서류 맨 아래 <b>문서번호</b>는 비워 두면 자동으로 붙어요.</p></details></section>`;
-}
-/* 지점 연락처 (지점이동용) — 팀 서버에만 저장 */
-function spRosterPane(){
-  const p=spRosterPost(), R=spRoster(), u=me().user; const can=!p||p.by===u||S.myRole==='lead';
-  const rows=Object.entries(R);
-  return `<section class="pane"><h2>지점 연락처 <small>지점이동 결재 · 변경후 담당자 확인용 · 팀원만 보여요</small>${can?`<button class="btn sm r" data-act="spRosterEdit">${ic('edit')}${p?'고치기':'붙여넣어 만들기'}</button>`:''}</h2>
-   ${rows.length?`<div class="tablewrap"><table class="t"><thead><tr><th>지점</th><th>원장님 (기안 결재 추가)</th><th>운영부 (처리부서 추가)</th><th>참조자</th><th>변경후에 쓸 담당</th></tr></thead><tbody>${rows.map(([b,r])=>`<tr><td><b>${esc(b)}</b></td><td>${esc(r.dir||'-')}</td><td>${esc(r.ops||'-')}</td><td>${esc(r.ref||'-')}</td><td><b>${esc(r.ref||r.dir||'-')}</b></td></tr>`).join('')}</tbody></table></div>
-     <p class="sp-p" style="margin-top:8px">${p?`${esc(p.byName||memberName(p.by)||'')} · ${agoTxt(p.up||p.at)} 고침`:''} · 변경후 담당은 참조자가 있으면 참조자, 없으면 원장님이에요 (게시판 예시 기준).</p>`
-    :'<div class="empty"><b>아직 연락처가 없어요</b>게시판의 "지점이동 특처" 글 내용을 그대로 붙여넣으면 표로 정리돼요. 사람 이름은 팀 서버에만 저장돼요.</div>'}</section>`;
-}
-Object.assign(WACT,{
-  spType:el=>{ S.spType=el.dataset.k; render(); },
-  spPick:el=>{ spV()[el.dataset.k]=el.dataset.v; spKeep(); render(); },
-  spCopy:el=>copyText(el.dataset.t),
-  spClear:()=>{ S.spv[S.spType||'move']={}; spKeep(); render(); },
-  spGuideT:(el,e)=>{ e&&e.preventDefault(); S.spGuideOpen=!S.spGuideOpen; render(); },
-  spRosterEdit:()=>{ const R=spRoster(); const txt=Object.entries(R).map(([b,r])=>`${b}\n운영부 - ${r.ops||''}\n원장님 - ${r.dir||''}\n참조자 - ${r.ref||''}`).join('\n\n');
-    openModal(`${mHead('지점 연락처')}<div class="body"><p class="sp-p" style="margin:0 0 10px">게시판 "지점이동 특처" 글처럼 <b>지점 이름 줄</b> 아래에 <b>운영부 - 이름 / 원장님 - 이름 / 참조자 - 이름</b>을 적어요. 비어 있으면 이름 없이 두면 돼요.</p>
-      <textarea class="in" id="spRosterTxt" rows="16" placeholder="강남\n운영부 - \n원장님 - \n참조자 - ">${esc(txt)}</textarea><div id="spRosterPv" class="sp-p" style="margin-top:8px"></div></div>
-      <footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="spRosterSave">저장</button></footer>`,'narrow'); },
-  spRosterSave:()=>{ const R=spParseRoster($('#spRosterTxt').value); if(!Object.keys(R).length){ toast('읽은 지점이 없어요','지점 이름 줄과 "운영부 - 이름" 줄 모양을 확인해 주세요.'); return; }
-    const old=spRosterPost(), m=me(); const p=old&&old.by===m.user?{...old,roster:R,up:Date.now()}:{id:uid('p'),cat:SP_ROSTER_CAT,title:'지점 연락처 (특별처리)',body:'',by:m.user,byName:m.name,byRole:S.myRole||'',at:Date.now(),roster:R};
-    teamPut('posts',p); closeModal(); toast('지점 연락처를 저장했어요',`${Object.keys(R).length}개 지점 · 팀원 모두 볼 수 있어요`); render(); },
-});
-function spKeep(){ try{ lsSet('md.spv',JSON.stringify(S.spv||{})); }catch(e){} }
-try{ S.spv=JSON.parse(lsGet('md.spv')||'null')||{}; }catch(e){}
-document.addEventListener('input',e=>{ const el=e.target;
-  if(el.id==='spRosterTxt'){ const R=spParseRoster(el.value); const pv=$('#spRosterPv'); if(pv) pv.innerHTML=Object.keys(R).length?`${Object.keys(R).length}개 지점 인식: `+Object.entries(R).map(([b,r])=>`<b>${esc(b)}</b>(${esc(r.ref||r.dir||'-')})`).join(' · '):''; return; }
-  const k=el.dataset&&el.dataset.sp; if(!k) return; const v=spV(); v[k]=el.type==='tel'||el.inputMode==='tel'?el.value:el.value; spKeep();
-  clearTimeout(S._spT); S._spT=setTimeout(()=>{ const a=document.activeElement, kk=a&&a.dataset&&a.dataset.sp, pos=a&&a.selectionStart; if(S.view!=='team'||S.teamTab!=='sp') return; render(); if(kk){ const n=document.querySelector(`[data-sp="${kk}"]`); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(_){} } } },350); });
 /* ===== 녹화본 전달 알림 =====
    수강중 학생 × 연결된 수업의 수업일 → 다음 날부터 "000학생 - 000과목 녹화본 제공 필요" (제공완료 누를 때까지)
    녹화본 유효기간이 1주일이라 1주일 지난 수업은 목록에서 빠짐. 완료 기록은 학생 데이터(rec)에 저장 → PC · 폰 같이 맞춰짐 */
@@ -7857,6 +7691,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261029-0950';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261029-0952';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
