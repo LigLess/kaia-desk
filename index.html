@@ -1824,6 +1824,9 @@ body.dark .bg-view,body.hud:not(.hlight):not(.exec) .bg-view{--bgp:#10131b;--bgp
 .stu-cl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:3px 0}.stu-cl+.stu-cl{border-top:1px dashed var(--line);margin-top:3px;padding-top:6px}
 .stu-cl b{font-weight:600;font-size:13px}.stu-cl .chip{font-size:11px;padding:1px 7px}
 .stu-cd{flex-basis:100%;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* 저장한 · 받은 견적: 폰에서는 이름 줄을 위에 한 줄 다 쓰고 버튼은 아래로 */
+@media (max-width:700px){.qt-sv{flex-wrap:wrap;row-gap:10px}.qt-sv>.grow{flex:1 1 100%}.qt-sv .t1{white-space:normal;font-size:15px}.qt-sv .t2{white-space:normal;line-height:1.5}.qt-sv>.btn{flex:none}}
 </style>
 </head>
 <body>
@@ -7035,7 +7038,7 @@ addEventListener('resize',()=>{ if(S.view==='quote') qtFit(); });
 
 function qtSavedView(){
   const L=list('quotes').sort((a,b)=>(b.at||0)-(a.at||0));
-  return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${x.from?`<span class="chip cyan">${esc(x.from)}님이 보냄</span> `:''}${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
+  return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row qt-sv"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${x.from?`<span class="chip cyan">${esc(x.from)}님이 보냄</span> `:''}${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
     <button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm" data-act="rmOpenQuote" data-id="${x.id}">요청메모</button>${typeof qsSendBtn==='function'?qsSendBtn(x.id):''}<button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
     :'<div class="empty"><b>저장한 견적이 없어요</b>견적 작성 화면에서 "저장"을 누르면 여기에 모여요.</div>'}</section>`;
 }
@@ -7537,7 +7540,7 @@ function qsStaffView(){
   if(sel&&!d) body='<div class="empty"><b>불러오는 중…</b></div>';
   else if(d&&d.err) body=`<div class="empty"><b>볼 수 없어요</b>${esc(d.err)}</div>`;
   else if(d){ const L=d.quotes.slice().sort((a,b)=>(b.at||0)-(a.at||0));
-    body=L.length?`<div class="list">${L.map((x,i)=>{ const s=qsSum(x.q); return `<div class="row"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(s.total)}원</div><div class="t2">${esc(x.q.date||'')} · ${s.n}과목 · ${esc(s.names.slice(0,3).join(', '))}${s.n>3?' 외':''} · ${x.q.tpl==='ai'?'AI':'IT'} 견적서</div></div>
+    body=L.length?`<div class="list">${L.map((x,i)=>{ const s=qsSum(x.q); return `<div class="row qt-sv"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(s.total)}원</div><div class="t2">${esc(x.q.date||'')} · ${s.n}과목 · ${esc(s.names.slice(0,3).join(', '))}${s.n>3?' 외':''} · ${x.q.tpl==='ai'?'AI':'IT'} 견적서</div></div>
       <button class="btn sm" data-act="qsStaffOpen" data-i="${i}">열기</button><button class="btn sm" data-act="qsStaffXlsx" data-i="${i}">${ic('dl')}엑셀</button><button class="btn sm" data-act="qsStaffMemo" data-i="${i}">요청메모</button></div>`; }).join('')}</div>`:'<div class="empty"><b>저장한 견적서가 없어요</b>팀원이 견적 작성 화면에서 "저장"을 눌러야 여기에 보여요.</div>';
     if(d.list!==L) d.list=L; }
   return `<section class="pane"><h2>팀원 견적 <small>팀장 전용 · 팀원이 저장한 견적서 · 보기만 가능 · 조회 기록이 남아요</small>${sel?`<button class="btn sm ghost r" data-act="qsStaff" data-k="${esc(sel)}" data-r="1">새로고침</button>`:''}</h2>${chips}${body}</section>`;
@@ -7986,6 +7989,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261029-1404';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261029-2120';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
