@@ -7304,7 +7304,7 @@ function rmView(){
        <label class="field"><span>이름</span><input class="in" data-rm="name" value="${esc(R.name)}"></label>
        <label class="field"><span>학과</span><select class="in" data-rm="dept"><option value="">고르세요</option>${RM_DEPTS.map(d=>`<option ${R.dept===d?'selected':''}>${d}</option>`).join('')}</select></label>
        <label class="field"><span>기간</span><input class="in" data-rm="period" value="${esc(R.period)}" placeholder="26.06~26.12"></label>
-       <div class="field"><span>결제내용 모양</span>${rmChips('space',[['','정예진/Python'],['1','정예진 / Python']],R.space?'1':'')}</div>
+       <div class="field"><span>결제내용 모양</span>${rmChips('space',[['','홍길동/Python'],['1','홍길동 / Python']],R.space?'1':'')}</div>
      </div></section>
   </div>
   <div class="qt-side"><section class="pane rm-out"><h2>요청메모 <small>그대로 복사해서 붙여넣으세요</small></h2>
@@ -7986,6 +7986,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261029-1252';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261029-1404';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
