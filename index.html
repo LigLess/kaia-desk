@@ -1799,6 +1799,20 @@ body.dark .bg-view,body.hud:not(.hlight):not(.exec) .bg-view{--bgp:#10131b;--bgp
 .bg-view .bg-from{display:inline-block;align-self:flex-start;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--bgp) 94%,transparent);box-shadow:inset 0 0 0 1px var(--bgl)}
 .bg-view>.vh h1,.bg-view>.vh .sub{text-shadow:0 1px 10px color-mix(in srgb,var(--bg) 70%,transparent)}
 @media (max-width:640px){.bg-view .bg-tb tr{background:var(--bgp);box-shadow:inset 0 0 0 1px var(--bgl)}.bg-view .bg-tw{box-shadow:none}.bg-view .bg-tb td::before{color:var(--bgm)}}
+
+/* 수강료표 쉽게 추가 */
+.qp-body{display:flex;flex-direction:column;gap:10px}
+.qp-way{display:flex;flex-direction:column;gap:2px}.qp-way b{font-size:13.5px}.qp-way span{font-size:12.5px;color:var(--muted)}
+#qpText{font-size:13px;line-height:1.6;resize:vertical}
+.qp-cs{display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow:auto}.qp-cs .chip{cursor:pointer;border:0}.qp-cs .chip.on{background:var(--accent);color:#fff}.qp-cs small{opacity:.7}
+.qp-card{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:16px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.qp-card .field small{font-weight:500;color:var(--muted);margin-left:4px}
+.qp-need{margin-left:6px;font-size:11px;padding:2px 8px;border-radius:99px;background:var(--accent);color:#fff;font-weight:700}
+.qp-price #qpP{font-size:18px;font-weight:700;box-shadow:inset 0 0 0 2px var(--accent)}
+.qp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.qp-chips .chip{cursor:pointer;border:0}
+.qp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qp-sum{margin:0;font-size:13px;font-weight:600;color:var(--fg-2)}
+@media (max-width:640px){.qp-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -6727,7 +6741,7 @@ const qtStaff=q=>(q&&q.staff)||S.settings.qtStaff||qtStaffDefault();
 function qtRowFrom(name){
   const p=qtFind(name); const t=qtTypeOf(name); const sp=/\/특$/.test(name);
   const per=sp?150:t==='평일'?180:240; const cnt=p&&p.m&&p.m%per===0?p.m/per:'';
-  return {id:qtRid(),n:name,type:t,cat:qtCatGuess(name),s:'',e:'',pat:'',time:t==='평일'&&!sp?'19:00~22:00':'',cnt,free:false};
+  return {id:qtRid(),n:name,type:t,cat:(p&&p.cat)||qtCatGuess(name),s:'',e:'',pat:'',time:(p&&p.t)||(t==='평일'&&!sp?'19:00~22:00':''),cnt:(p&&+p.c)||cnt,free:false};
 }
 
 /* 요일 패턴(월수금월수 · 토일 · 화목화목금)과 횟수로 종강일 계산 — 주가 바뀌는 지점에서 다음 주 패턴으로 */
@@ -7586,6 +7600,92 @@ Object.assign(WACT,{
   qsStaffMemo:el=>{ const d=S.qsStaffData[S.qsStaffSel]; const x=d&&d.list&&d.list[+el.dataset.i]; if(!x) return; S.rm=rmSync(rmFromQuote(x.q,`${memberName(S.qsStaffSel)}님 견적`)); rmKeep(); S.rmEdited=false; S.qtTab='memo'; render(); },
 });
 document.addEventListener('change',e=>{ if(e.target.classList&&e.target.classList.contains('qs-to')){ e.target.closest('.qs-p').classList.toggle('on',e.target.checked); const b=$('#qsGo'); if(b) b.disabled=!$$('.qs-to').some(x=>x.checked); } });
+/* ===== 수강료표 쉽게 추가 =====
+   인트라넷 강의 카드를 그대로 복사해 붙여넣거나, 시간표에 있는 과정을 고르면
+   과목명 · 시간 · 횟수 · 분/월 · 구분을 알아서 채워요. 사람은 수강료만 넣으면 돼요. */
+const QP_DOW='일월화수목금토';
+function qpMin(t){ const m=String(t||'').match(/(\d{1,2}):(\d{2})\s*[~∼\-]\s*(\d{1,2}):(\d{2})/); if(!m) return 0; let a=+m[1]*60+ +m[2], b=+m[3]*60+ +m[4]; if(b<=a) b+=12*60; return b-a; }
+function qpCat(n){ if(/인스타|마케팅|SNS|블로그|유튜브|숏폼|쇼츠|광고|브랜딩|수익화/i.test(n)) return 'AI마케팅'; if(/영상|이미지|콘텐츠|디자인|3D|미드저니|캔바/i.test(n)) return 'AI콘텐츠'; if(/업무|자동화|엑셀|노션|생산성|문서/i.test(n)) return 'AI생산성'; return qtCatGuess(n); }
+function qpYmd(v){ const m=String(v||'').match(/(\d{4})[-./년\s]+(\d{1,2})[-./월\s]+(\d{1,2})/); return m?`${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`:''; }
+/* 붙여넣은 글 → 과목 정보 */
+function qpParse(txt){
+  const raw=String(txt||'').replace(/\r/g,''); const lines=raw.split('\n').map(x=>x.trim()).filter(Boolean); if(!lines.length) return null;
+  const get=k=>{ const m=raw.match(new RegExp('(?:^|\\n)\\s*'+k+'\\s*[:：]\\s*([^\\n]*)')); return m?m[1].trim():''; };
+  let name=lines.find(l=>!/[:：]/.test(l)&&!/^(메모|강사|정원)/.test(l))||''; name=name.replace(/\s*개강일정\s*복사.*$/,'').replace(/\s+/g,' ').trim();
+  const start=qpYmd(get('개강(?:일)?')), end=qpYmd(get('종강(?:일)?'));
+  const dayTxt=get('요일'); const days=[...new Set([...dayTxt].map(c=>QP_DOW.indexOf(c)).filter(i=>i>=0))];
+  const time=(get('(?:수업)?시간').match(/\d{1,2}:\d{2}\s*[~∼\-]\s*\d{1,2}:\d{2}/)||[''])[0].replace(/\s/g,'').replace(/[∼\-]/,'~');
+  let per=qpMin(time), cnt=0, how='';
+  const hd=raw.match(/(\d+(?:\.\d+)?)\s*(?:H|시간)\s*[*xX×]\s*(\d+)\s*(?:D|일|회)/i);
+  if(hd){ cnt=+hd[2]; if(!per) per=Math.round(+hd[1]*60); how='메모'; }
+  if(!cnt){ const dl=lines.find(l=>/^[\d,，\s/]+(수업|강의)?$/.test(l)&&/\d+\s*[,，]\s*\d+/.test(l)); if(dl){ cnt=dl.replace(/(수업|강의)$/,'').split(/[,，]/).filter(x=>x.trim()).length; how='수업 날짜'; } }
+  if(!cnt&&start&&end&&days.length&&typeof sessionsOf==='function'){ cnt=sessionsOf({start,end,days,skipHol:true}).length; how='개강~종강'; }
+  return qpFill({name,start,end,days,time,per,cnt,how});
+}
+function qpFill(x){
+  const wk=x.days.length&&x.days.every(d=>d===0||d===6);
+  if(wk&&!/\/(주말방특|주말|주|특)$/.test(x.name)) x.name+='/주';
+  if(!x.per) x.per=wk?240:180;
+  x.m=x.per&&x.cnt?x.per*x.cnt:0; x.cat=qpCat(x.name); x.tpl=/AI|에이아이|인공지능|챗GPT|ChatGPT|Claude|Gemini|인스타/i.test(x.name)?'ai':'it';
+  x.dayTxt=x.days.map(d=>QP_DOW[d]).join(''); x.p=''; return x;
+}
+function qpFromCourse(c){
+  return qpFill({name:String(c.name||'').trim(),start:c.start||'',end:c.end||'',days:(c.days||[]).slice(),time:c.time||'',per:qpMin(c.time),cnt:(typeof sessionsOf==='function'?sessionsOf(c).length:0)||c.total||0,how:'시간표'});
+}
+function qpCourses(){ if(typeof list!=='function') return []; const have=new Set(qtPrices().map(p=>p.n)); const seen=new Set();
+  return list('courses').filter(c=>c.name&&!have.has(c.name)&&!have.has(c.name+'/주')&&!seen.has(c.name)&&seen.add(c.name)&&(!c.end||c.end>=todayStr())).sort((a,b)=>(a.start||'').localeCompare(b.start||'')).slice(0,40); }
+
+function qpModal(){
+  S._qp=null; const cs=qpCourses();
+  openModal(`${mHead('수강료표에 과목 추가')}<div class="body qp-body">
+    <div class="qp-way"><b>1. 인트라넷에서 복사해 붙여넣기</b><span>강의 카드(과목명 · 개강 · 종강 · 요일 · 시간 · 메모)를 드래그해서 복사 → 아래에 붙여넣기</span></div>
+    <textarea id="qpText" class="in" rows="5" placeholder="AI로 한 달 만에 수익화 가능한 인스타그램 채널 만들기&#10;개강 : 2026-11-18&#10;종강 : 2026-12-14&#10;요일 : 월, 수&#10;시간 : 19:00 ~ 22:00&#10;메모: 3H*8D"></textarea>
+    ${cs.length?`<div class="qp-way"><b>2. 또는 시간표에 있는 과정에서 고르기</b><span>시간표에는 있는데 수강료표에 없는 과정이에요</span></div>
+    <div class="qp-cs">${cs.map((c,i)=>`<button class="chip" data-act="qpPick" data-k="${i}">${esc(c.name)} <small>${esc((c.start||'').slice(5).replace('-','/'))}</small></button>`).join('')}</div>`:''}
+    <div id="qpForm"></div>
+    <button class="btn sm ghost" data-act="qpBlank" style="align-self:flex-start">빈 칸으로 직접 추가할게요</button>
+  </div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="qpSave" id="qpGo" disabled>수강료표에 추가</button></footer>`,'');
+  modalEl._kind='qpadd'; S._qpCs=cs;
+  $('#qpText').addEventListener('input',e=>{ clearTimeout(S._qpT); S._qpT=setTimeout(()=>{ const x=qpParse(e.target.value); S._qp=x&&x.name?x:null; qpDraw(); },200); });
+  setTimeout(()=>$('#qpText')&&$('#qpText').focus(),50);
+}
+function qpDraw(){
+  const el=$('#qpForm'); if(!el) return; const x=S._qp; const go=$('#qpGo');
+  if(!x){ el.innerHTML=''; go&&(go.disabled=true); return; }
+  const dup=qtFind(x.name);
+  el.innerHTML=`<div class="qp-card">
+    <label class="field"><span>과목명 <small>견적서에 이 이름으로 나와요</small></span><input class="in" data-qp="name" value="${esc(x.name)}"></label>
+    <div class="qp-price"><label class="field"><span>수강료 (원) <b class="qp-need">이것만 넣으면 돼요</b></span><input class="in num" id="qpP" data-qp="p" type="number" step="10000" value="${esc(x.p)}" placeholder="예: 450000"></label>
+      <div class="qp-chips">${[300000,350000,400000,450000,500000,550000,600000].map(v=>`<button class="chip" data-act="qpPrice" data-k="${v}">${v/10000}만</button>`).join('')}</div></div>
+    <div class="qp-grid">
+      <label class="field"><span>시간</span><input class="in" data-qp="time" value="${esc(x.time)}" placeholder="19:00~22:00"></label>
+      <label class="field"><span>횟수 ${x.how?`<small>${esc(x.how)}에서</small>`:''}</span><input class="in num" data-qp="cnt" type="number" value="${x.cnt||''}"></label>
+      <label class="field"><span>분/월 <small>자동</small></span><input class="in num" data-qp="m" type="number" value="${x.m||''}"></label>
+      <label class="field"><span>과정</span><select class="in" data-qp="cat">${QT_CATS.map(c=>`<option ${c===x.cat?'selected':''}>${c}</option>`).join('')}</select></label>
+      <label class="field"><span>견적서 양식</span><select class="in" data-qp="tpl"><option value="it" ${x.tpl==='it'?'selected':''}>IT</option><option value="ai" ${x.tpl==='ai'?'selected':''}>AI</option></select></label>
+      <label class="field"><span>구분</span><input class="in" value="${qtTypeOf(x.name)}${x.dayTxt?` (${x.dayTxt})`:''}" disabled></label>
+    </div>
+    <p class="qp-sum">${x.start?`${esc(x.start)} ~ ${esc(x.end||'?')} · `:''}${x.per?`1회 ${x.per/60}시간`:''}${x.cnt?` × ${x.cnt}회`:''}${x.m?` = 한 달 ${x.m}분`:''}</p>
+    ${dup?`<div class="bg-warn"><b>이미 같은 이름이 있어요</b><ul><li>추가하면 지금 수강료표의 "${esc(x.name)}" 줄을 이 내용으로 바꿔요.</li></ul></div>`:''}
+    ${!x.cnt?'<div class="bg-warn"><b>횟수를 못 찾았어요</b><ul><li>메모의 3H*8D나 수업 날짜가 없으면 횟수를 직접 적어 주세요.</li></ul></div>':''}
+  </div>`;
+  qpGoState();
+}
+function qpGoState(){ const go=$('#qpGo'), x=S._qp; if(go) go.disabled=!(x&&x.name&&+x.p>0); if(go&&x) go.textContent=qtFind(x.name)?'수강료표 바꾸기':'수강료표에 추가'; }
+document.addEventListener('input',e=>{ const k=e.target.dataset&&e.target.dataset.qp; if(!k||!S._qp) return; const x=S._qp; x[k]=e.target.value;
+  if(k==='time'||k==='cnt'){ const per=qpMin(x.time)||x.per; x.per=per; x.m=per&&+x.cnt?per*+x.cnt:x.m; const mi=document.querySelector('[data-qp="m"]'); if(mi) mi.value=x.m||''; }
+  qpGoState(); });
+document.addEventListener('change',e=>{ const k=e.target.dataset&&e.target.dataset.qp; if(k&&S._qp) S._qp[k]=e.target.value; });
+Object.assign(WACT,{
+  qtPAdd:()=>qpModal(),
+  qpBlank:()=>{ closeModal(); const P=clone(qtPrices()); P.unshift({n:'새 과목',p:500000,m:1800,cat:'',t:'',c:null,tpl:'',src:'edit'}); S.qtFind=''; qtPriceSave(P); render(); const x=document.querySelector('[data-pi="0"] [data-pf="n"]'); x&&(x.focus(),x.select()); },
+  qpPick:el=>{ const c=(S._qpCs||[])[+el.dataset.k]; if(!c) return; S._qp=qpFromCourse(c); $$('.qp-cs .chip').forEach(b=>b.classList.toggle('on',b===el)); qpDraw(); const p=$('#qpP'); p&&p.focus(); },
+  qpPrice:el=>{ if(!S._qp) return; S._qp.p=el.dataset.k; const p=$('#qpP'); if(p) p.value=el.dataset.k; qpGoState(); },
+  qpSave:()=>{ const x=S._qp; if(!x||!x.name||!(+x.p>0)) return; const name=x.name.trim();
+    const row={n:name,p:+x.p,m:+x.m||0,cat:x.cat||'',t:(x.time||'').replace(/\s/g,''),c:+x.cnt||null,tpl:x.tpl||'',src:'edit'};
+    const P=clone(qtPrices()); const i=P.findIndex(p=>p.n===name); if(i>=0) P[i]={...P[i],...row}; else P.unshift(row);
+    qtPriceSave(P); closeModal(); S.qtFind=name; render(); toast(i>=0?'수강료표를 바꿨어요':'수강료표에 추가했어요',`${name} · ${Number(row.p).toLocaleString('ko-KR')}원 — 이제 견적서에서 고를 수 있어요.`); },
+});
 /* ===== 사업부 업무 가이드 (신입용) =====
    내용(보고양식 · 규정)은 회사 내부 자료라 이 코드에 넣지 않아요.
    가이드 파일(.json)을 팀 서버에 한 번 올리면 → 팀 게시판(posts)에 숨김 분류 '사업부가이드'로 저장되고
@@ -7895,6 +7995,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261029-1048';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261029-1142';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

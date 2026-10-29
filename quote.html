@@ -1623,6 +1623,34 @@ body.dark .cal-day .t1{color:#fff}body.dark .cal-day .t2{color:rgba(255,255,255,
 .mb-p.on .mb-ck{background:var(--accent);border-color:var(--accent);color:#fff}
 .mb-pi{display:flex;flex-direction:column;gap:2px;min-width:0}.mb-pi b{font-size:15px}.mb-pi small{font-size:12px;color:var(--muted)}.mb-pi .mb-sh{color:var(--faint);font-size:11.5px}
 .qs-row .qs-who{font-size:12px;color:var(--muted);font-weight:500;margin-left:6px}.qs-row.qs-new{border-left:3px solid var(--warn);padding-left:10px}
+
+/* ===== 특별처리신청서 ===== */
+.sp-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:4px 0 0;padding:0;list-style:none;counter-reset:sp}
+.sp-steps li{counter-increment:sp;position:relative;padding:12px 12px 12px 44px;border-radius:14px;background:var(--surface-2);display:flex;flex-direction:column;gap:2px}
+.sp-steps li::before{content:counter(sp);position:absolute;left:12px;top:12px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+.sp-steps b{font-size:13.5px}.sp-steps span{font-size:12px;color:var(--muted);line-height:1.5}
+.sp-types{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.sp-type{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);font:inherit;text-align:left;cursor:pointer;color:var(--fg);transition:border-color .2s,background .2s}
+.sp-type:hover{border-color:var(--accent)}.sp-type.on{border-color:var(--accent);background:var(--accent-soft)}
+.sp-type b{font-size:14.5px}.sp-type small{font-size:12px;color:var(--muted);line-height:1.5}.sp-ti{width:28px;height:28px;border-radius:9px;background:var(--surface-2);display:grid;place-items:center;color:var(--accent)}.sp-ti svg{width:16px;height:16px}
+.sp-when,.sp-warn{margin:0;padding-left:18px;font-size:13px;line-height:1.75}.sp-warn li{color:var(--fg-2)}.sp-warn li::marker{color:var(--warn)}
+.sp-h3{margin:16px 0 8px;font-size:13px;font-weight:700;color:var(--muted)}
+.sp-p{margin:4px 0;font-size:13px;line-height:1.7;color:var(--fg-2)}
+.sp-checks{display:flex;flex-direction:column;gap:6px;font-size:13px}.sp-checks>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.sp-checks>div>span:first-child{min-width:104px;color:var(--muted)}
+.sp-checks em{font-style:normal;font-size:12px;color:var(--faint)}
+.sp-ck{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:8px;border:1px solid var(--line);font-weight:600}.sp-ck.on{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}.sp-ck svg{width:12px;height:12px}
+.sp-outs{position:sticky;top:84px}
+.sp-out{margin-bottom:10px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.sp-oh{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface-2)}.sp-oh b{font-size:12.5px}.sp-oh small{font-size:11.5px;color:var(--faint)}.sp-oh .btn{margin-left:auto}
+.sp-out pre{margin:0;padding:10px 12px;font-family:var(--mono),ui-monospace,monospace;font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:keep-all;color:var(--fg)}
+.sp-det summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:8px}.sp-det summary small{color:var(--faint);font-size:12px}
+.sp-form{margin-top:12px;border:1.5px solid var(--fg);border-radius:6px;padding:14px;background:var(--surface)}
+.sp-fh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.sp-fh>b{font-size:20px;letter-spacing:.1em}
+.sp-fsign{display:flex;align-items:center;gap:6px;font-size:12px}.sp-fsign span{padding:4px 8px;border:1px solid var(--line);border-radius:6px;line-height:1.4}.sp-fsign small{color:var(--muted)}
+.sp-ft{width:100%;border-collapse:collapse;font-size:12.5px}.sp-ft th,.sp-ft td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;line-height:1.6}.sp-ft th{width:200px;background:var(--surface-2);font-weight:600;white-space:nowrap}
+.sp-ft code{font-size:12px;padding:1px 5px;border-radius:5px;background:var(--surface-2)}
+.sp-n{display:inline-grid;place-items:center;width:18px;height:18px;margin-right:4px;border-radius:50%;background:var(--warn);color:#fff;font-style:normal;font-size:10.5px;font-weight:700;vertical-align:1px}
+@media (max-width:900px){.sp-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.sp-outs{position:static}.sp-ft th{width:auto;white-space:normal}}
 /* ===== 요청메모 ===== */
 .rm-form{grid-template-columns:repeat(2,minmax(0,1fr))}
 .rm-step{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:50%;background:var(--accent);color:#fff;font-style:normal;font-size:12px;font-weight:700;vertical-align:1px}
@@ -1660,6 +1688,124 @@ body.dark .cal-day .t1{color:#fff}body.dark .cal-day .t2{color:rgba(255,255,255,
 .rm-text{width:100%;min-height:520px;font-size:13px;line-height:1.55;font-family:var(--mono),ui-monospace,monospace;white-space:pre;resize:vertical}
 @media (max-width:760px){.rm-sub{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px}.rm-sub-n{grid-column:1/-1}.rm-sub-s{grid-column:1/3;height:auto}.rm-cats{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:640px){.rm-form{grid-template-columns:minmax(0,1fr)}.rm-text{min-height:420px;font-size:12px}}
+
+/* ===== 사업부 업무 가이드 ===== */
+.bg-top{display:flex;flex-direction:column;gap:12px}
+.bg-intro{margin:0;font-size:14.5px;line-height:1.75;color:var(--fg-2)}
+.bg-prog{display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--muted);font-weight:600}
+.bg-bar{flex:1;height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.bg-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--ok));transition:width .5s var(--ease)}
+.bg-q .in{font-size:15px}
+.bg-meta{font-size:11.5px;color:var(--faint)}
+.bg-grid{display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;align-items:start;margin-top:16px}
+.bg-nav{position:sticky;top:84px;display:flex;flex-direction:column;gap:6px}
+.bg-nav button{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:14px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);color:var(--fg);cursor:pointer;font:inherit;transition:background .2s,box-shadow .2s}
+.bg-nav button:hover{background:var(--surface-2)}
+.bg-nav button.on{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.bg-nav i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;background:var(--surface-3);color:var(--fg-2)}
+.bg-nav i svg{width:14px;height:14px}
+.bg-nav button.done i{background:var(--ok);color:#fff}
+.bg-nav span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bg-nav b{font-size:13.5px;font-weight:700}
+.bg-nav small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bg-nav em{font-style:normal;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.bg-main{display:flex;flex-direction:column;gap:10px;min-width:0;scroll-margin-top:80px}
+.bg-chh{padding:4px 2px 6px}.bg-chh small{font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.04em}
+.bg-chh h2{margin:2px 0 4px;font-size:24px;letter-spacing:-.02em}.bg-chh p{margin:0;color:var(--muted);font-size:13.5px}
+.bg-sec{border-radius:18px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line),var(--shadow-sm);overflow:hidden}
+.bg-sec.open{box-shadow:inset 0 0 0 1.5px var(--line-2),var(--shadow-md)}
+.bg-sh{width:100%;display:flex;align-items:center;gap:12px;padding:15px 16px;border:0;background:none;color:var(--fg);cursor:pointer;text-align:left;font:inherit}
+.bg-ck{flex:none;width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line-2);display:grid;place-items:center}
+.bg-sec.done .bg-ck{background:var(--ok);box-shadow:none;color:#fff}.bg-ck svg{width:14px;height:14px}
+.bg-st{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.bg-st b{font-size:15.5px;font-weight:750}.bg-st small{font-size:12.5px;color:var(--muted);line-height:1.5}
+.bg-cv{flex:none;color:var(--muted);transition:transform .25s var(--ease)}.bg-sec.open .bg-cv{transform:rotate(180deg)}
+.bg-sb{padding:2px 18px 18px 52px;display:flex;flex-direction:column;gap:14px;font-size:14px;line-height:1.75;color:var(--fg)}
+.bg-p{margin:0}
+.bg-steps{margin:0;padding:0;list-style:none;counter-reset:bs;display:flex;flex-direction:column;gap:8px}
+.bg-steps li{counter-increment:bs;display:flex;gap:10px;align-items:flex-start}
+.bg-steps li::before{content:counter(bs);flex:none;width:24px;height:24px;margin-top:2px;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--ink);color:var(--ink-fg)}
+.bg-tw{overflow-x:auto;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line)}
+.bg-tb{width:100%;border-collapse:collapse;font-size:13px;line-height:1.6}
+.bg-tb th{text-align:left;padding:9px 12px;background:var(--surface-2);font-weight:700;color:var(--fg-2);white-space:nowrap;border-bottom:1px solid var(--line)}
+.bg-tb td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.bg-tb tr:last-child td{border-bottom:0}.bg-tb td:first-child{font-weight:650;white-space:nowrap}
+.bg-faint{color:var(--faint)}.bg-note{margin:-6px 0 0;font-size:12.5px;color:var(--muted)}
+.bg-kv{margin:0;display:flex;flex-direction:column;gap:0;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.bg-kv div{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:9px 12px;border-bottom:1px solid var(--line)}.bg-kv div:last-child{border-bottom:0}
+.bg-kv dt{font-weight:700;color:var(--fg-2);font-size:13px}.bg-kv dd{margin:0;font-size:13.5px}
+.bg-tpl,.bg-ex{border-radius:14px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.bg-tpl-h{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:9px 10px 9px 14px;border-bottom:1px solid var(--line)}
+.bg-tpl-h b{display:flex;align-items:center;gap:7px;font-size:13px}.bg-tpl-h b svg{width:14px;height:14px;color:var(--accent)}
+.bg-tpl pre,.bg-ex pre{margin:0;padding:12px 14px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;font:inherit;font-size:13px;line-height:1.7;max-height:420px;overflow:auto}
+.bg-tpl .bg-note{margin:0;padding:0 14px 11px}
+.bg-ex-h{padding:8px 14px;font-size:12px;font-weight:700;color:var(--muted);border-bottom:1px dashed var(--line-2)}
+.bg-warn{border-radius:14px;padding:12px 14px;background:var(--bad-soft);box-shadow:inset 3px 0 0 var(--bad)}
+.bg-warn b{display:block;font-size:13px;color:var(--bad);margin-bottom:4px}.bg-warn ul{margin:0;padding-left:18px;font-size:13.5px}
+.bg-tip{border-radius:14px;padding:12px 14px;background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.bg-tip b{display:block;font-size:13px;color:var(--accent);margin-bottom:2px}.bg-tip p{margin:0;font-size:13.5px}
+.bg-sf{display:flex;justify-content:flex-end;padding-top:2px}
+.bg-pn{display:flex;justify-content:space-between;gap:10px;margin-top:8px;flex-wrap:wrap}
+.bg-qh{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted)}.bg-qh b{color:var(--fg)}.bg-qh .btn{margin-left:auto}
+.bg-from{font-size:11.5px;font-weight:800;color:var(--accent);margin:6px 0 -4px 4px}
+.bg-view mark{background:var(--warn-soft);color:inherit;border-radius:4px;padding:0 2px;box-shadow:inset 0 -2px 0 var(--warn)}
+@media (max-width:900px){
+ .bg-grid{grid-template-columns:1fr}
+ .bg-nav{position:static;flex-direction:row;overflow-x:auto;gap:8px;padding-bottom:4px;scrollbar-width:none}
+ .bg-nav button{flex:none;max-width:220px}.bg-nav small{display:none}
+}
+@media (max-width:640px){
+ .bg-sb{padding:2px 14px 16px}
+ .bg-kv div{grid-template-columns:1fr;gap:2px}
+ .bg-tw{box-shadow:none;overflow:visible}
+ .bg-tb thead{display:none}.bg-tb,.bg-tb tbody,.bg-tb tr,.bg-tb td{display:block;width:100%}
+ .bg-tb tr{border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);margin-bottom:8px;padding:6px 0;background:var(--surface)}
+ .bg-tb td{border:0;padding:4px 12px;white-space:normal!important}
+ .bg-tb td::before{content:attr(data-h);display:block;font-size:11px;font-weight:700;color:var(--muted)}
+ .bg-tb td:first-child::before{display:none}.bg-tb td:first-child{font-size:14px}
+ .bg-chh h2{font-size:21px}
+}
+
+/* 가이드 가독성: 배경(풍경 · 무늬)이 비치지 않게 읽기용 판을 깔아요 */
+.bg-view{--bgp:#ffffff;--bgp2:color-mix(in srgb,var(--bg) 14%,#ffffff);--bgl:rgba(15,23,42,.1);--bgt:#141821;--bgt2:#3b4352;--bgm:#5d6675}
+body.dark .bg-view,body.hud:not(.hlight):not(.exec) .bg-view{--bgp:#10131b;--bgp2:color-mix(in srgb,var(--bg) 30%,#141823);--bgl:rgba(255,255,255,.12);--bgt:#f3f5fa;--bgt2:#d4d9e3;--bgm:#a3abba}
+.bg-view .bg-top,.bg-view .bg-chh,.bg-view .bg-sec,.bg-view .bg-nav button,.bg-view .bg-qh,.bg-view>.pane{background:color-mix(in srgb,var(--bgp) 94%,transparent);color:var(--bgt);box-shadow:inset 0 0 0 1px var(--bgl),0 8px 24px -14px rgba(0,0,0,.35);-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2)}
+.bg-view .bg-chh{padding:14px 18px;border-radius:18px}
+.bg-view .bg-qh{padding:10px 14px;border-radius:14px}
+.bg-view .bg-nav button:hover{background:var(--bgp2)}
+.bg-view .bg-nav button.on{background:color-mix(in srgb,var(--accent) 14%,var(--bgp));box-shadow:inset 0 0 0 2px var(--accent),0 8px 24px -14px rgba(0,0,0,.35)}
+.bg-view .bg-sec.open{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 40%,var(--bgl)),0 14px 34px -18px rgba(0,0,0,.45)}
+.bg-view .bg-intro,.bg-view .bg-sb,.bg-view .bg-st b,.bg-view .bg-nav b,.bg-view .bg-chh h2,.bg-view .bg-kv dd,.bg-view .bg-tb td,.bg-view pre{color:var(--bgt)}
+.bg-view .bg-st small,.bg-view .bg-nav small,.bg-view .bg-chh p,.bg-view .bg-note,.bg-view .bg-prog,.bg-view .bg-qh,.bg-view .bg-ex-h,.bg-view .bg-meta,.bg-view .bg-nav em,.bg-view .bg-cv{color:var(--bgm)}
+.bg-view .bg-tb th,.bg-view .bg-kv dt{color:var(--bgt2)}
+.bg-view .bg-tb th{background:var(--bgp2);border-color:var(--bgl)}.bg-view .bg-tb td{border-color:var(--bgl)}
+.bg-view .bg-tw,.bg-view .bg-kv{box-shadow:inset 0 0 0 1px var(--bgl)}.bg-view .bg-kv div{border-color:var(--bgl)}
+.bg-view .bg-tpl,.bg-view .bg-ex{background:var(--bgp2);box-shadow:inset 0 0 0 1px var(--bgl)}
+.bg-view .bg-tpl-h,.bg-view .bg-ex-h{border-color:var(--bgl)}
+.bg-view .bg-nav i{background:var(--bgp2);color:var(--bgt2);box-shadow:inset 0 0 0 1px var(--bgl)}
+.bg-view .bg-ck{box-shadow:inset 0 0 0 2px var(--bgm)}
+.bg-view .bg-bar{background:var(--bgp2);box-shadow:inset 0 0 0 1px var(--bgl)}
+.bg-view .bg-q .in{background:var(--bgp2);color:var(--bgt);box-shadow:inset 0 0 0 1px var(--bgl)}
+.bg-view .bg-q .in::placeholder{color:var(--bgm)}
+.bg-view .bg-warn{background:color-mix(in srgb,var(--bad) 11%,var(--bgp))}.bg-view .bg-warn ul{color:var(--bgt)}
+.bg-view .bg-tip{background:color-mix(in srgb,var(--accent) 10%,var(--bgp))}.bg-view .bg-tip p{color:var(--bgt)}
+.bg-view .bg-chh small,.bg-view .bg-from{color:var(--accent)}
+.bg-view .bg-from{display:inline-block;align-self:flex-start;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--bgp) 94%,transparent);box-shadow:inset 0 0 0 1px var(--bgl)}
+.bg-view>.vh h1,.bg-view>.vh .sub{text-shadow:0 1px 10px color-mix(in srgb,var(--bg) 70%,transparent)}
+@media (max-width:640px){.bg-view .bg-tb tr{background:var(--bgp);box-shadow:inset 0 0 0 1px var(--bgl)}.bg-view .bg-tw{box-shadow:none}.bg-view .bg-tb td::before{color:var(--bgm)}}
+
+/* 수강료표 쉽게 추가 */
+.qp-body{display:flex;flex-direction:column;gap:10px}
+.qp-way{display:flex;flex-direction:column;gap:2px}.qp-way b{font-size:13.5px}.qp-way span{font-size:12.5px;color:var(--muted)}
+#qpText{font-size:13px;line-height:1.6;resize:vertical}
+.qp-cs{display:flex;flex-wrap:wrap;gap:6px;max-height:120px;overflow:auto}.qp-cs .chip{cursor:pointer;border:0}.qp-cs .chip.on{background:var(--accent);color:#fff}.qp-cs small{opacity:.7}
+.qp-card{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:16px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.qp-card .field small{font-weight:500;color:var(--muted);margin-left:4px}
+.qp-need{margin-left:6px;font-size:11px;padding:2px 8px;border-radius:99px;background:var(--accent);color:#fff;font-weight:700}
+.qp-price #qpP{font-size:18px;font-weight:700;box-shadow:inset 0 0 0 2px var(--accent)}
+.qp-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.qp-chips .chip{cursor:pointer;border:0}
+.qp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qp-sum{margin:0;font-size:13px;font-weight:600;color:var(--fg-2)}
+@media (max-width:640px){.qp-grid{grid-template-columns:1fr 1fr}}
 </style>
 <style>
 html{height:auto!important;overflow-y:auto!important}
@@ -1924,7 +2070,7 @@ const qtStaff=q=>(q&&q.staff)||S.settings.qtStaff||qtStaffDefault();
 function qtRowFrom(name){
   const p=qtFind(name); const t=qtTypeOf(name); const sp=/\/특$/.test(name);
   const per=sp?150:t==='평일'?180:240; const cnt=p&&p.m&&p.m%per===0?p.m/per:'';
-  return {id:qtRid(),n:name,type:t,cat:qtCatGuess(name),s:'',e:'',pat:'',time:t==='평일'&&!sp?'19:00~22:00':'',cnt,free:false};
+  return {id:qtRid(),n:name,type:t,cat:(p&&p.cat)||qtCatGuess(name),s:'',e:'',pat:'',time:(p&&p.t)||(t==='평일'&&!sp?'19:00~22:00':''),cnt:(p&&+p.c)||cnt,free:false};
 }
 
 /* 요일 패턴(월수금월수 · 토일 · 화목화목금)과 횟수로 종강일 계산 — 주가 바뀌는 지점에서 다음 주 패턴으로 */
@@ -2331,6 +2477,92 @@ Object.assign(WACT,{
   qtPDel:async el=>{ const P=clone(qtPrices()); const p=P[+el.dataset.k]; if(!p||!await confirmBox(`"${p.n}"을(를) 지울까요?`,'수강료표에서 빠지고, 새 견적에서 고를 수 없어요.','지우기',true)) return; P.splice(+el.dataset.k,1); qtPriceSave(P); render(); },
   qtPReset:async()=>{ if(!await confirmBox('수강료표를 기본값으로 되돌릴까요?','2026.10.01 게시 사진 기준으로 돌아가요. 고친 내용은 사라져요.','되돌리기',true)) return; S.settings.prices=null; store.saveSettings(); render(); },
   qtPExp:()=>saveFile(`수강료표_${todayStr().replace(/-/g,'')}.json`,new Blob([JSON.stringify(qtPrices(),null,1)],{type:'application/json'})),
+});
+/* ===== 수강료표 쉽게 추가 =====
+   인트라넷 강의 카드를 그대로 복사해 붙여넣거나, 시간표에 있는 과정을 고르면
+   과목명 · 시간 · 횟수 · 분/월 · 구분을 알아서 채워요. 사람은 수강료만 넣으면 돼요. */
+const QP_DOW='일월화수목금토';
+function qpMin(t){ const m=String(t||'').match(/(\d{1,2}):(\d{2})\s*[~∼\-]\s*(\d{1,2}):(\d{2})/); if(!m) return 0; let a=+m[1]*60+ +m[2], b=+m[3]*60+ +m[4]; if(b<=a) b+=12*60; return b-a; }
+function qpCat(n){ if(/인스타|마케팅|SNS|블로그|유튜브|숏폼|쇼츠|광고|브랜딩|수익화/i.test(n)) return 'AI마케팅'; if(/영상|이미지|콘텐츠|디자인|3D|미드저니|캔바/i.test(n)) return 'AI콘텐츠'; if(/업무|자동화|엑셀|노션|생산성|문서/i.test(n)) return 'AI생산성'; return qtCatGuess(n); }
+function qpYmd(v){ const m=String(v||'').match(/(\d{4})[-./년\s]+(\d{1,2})[-./월\s]+(\d{1,2})/); return m?`${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`:''; }
+/* 붙여넣은 글 → 과목 정보 */
+function qpParse(txt){
+  const raw=String(txt||'').replace(/\r/g,''); const lines=raw.split('\n').map(x=>x.trim()).filter(Boolean); if(!lines.length) return null;
+  const get=k=>{ const m=raw.match(new RegExp('(?:^|\\n)\\s*'+k+'\\s*[:：]\\s*([^\\n]*)')); return m?m[1].trim():''; };
+  let name=lines.find(l=>!/[:：]/.test(l)&&!/^(메모|강사|정원)/.test(l))||''; name=name.replace(/\s*개강일정\s*복사.*$/,'').replace(/\s+/g,' ').trim();
+  const start=qpYmd(get('개강(?:일)?')), end=qpYmd(get('종강(?:일)?'));
+  const dayTxt=get('요일'); const days=[...new Set([...dayTxt].map(c=>QP_DOW.indexOf(c)).filter(i=>i>=0))];
+  const time=(get('(?:수업)?시간').match(/\d{1,2}:\d{2}\s*[~∼\-]\s*\d{1,2}:\d{2}/)||[''])[0].replace(/\s/g,'').replace(/[∼\-]/,'~');
+  let per=qpMin(time), cnt=0, how='';
+  const hd=raw.match(/(\d+(?:\.\d+)?)\s*(?:H|시간)\s*[*xX×]\s*(\d+)\s*(?:D|일|회)/i);
+  if(hd){ cnt=+hd[2]; if(!per) per=Math.round(+hd[1]*60); how='메모'; }
+  if(!cnt){ const dl=lines.find(l=>/^[\d,，\s/]+(수업|강의)?$/.test(l)&&/\d+\s*[,，]\s*\d+/.test(l)); if(dl){ cnt=dl.replace(/(수업|강의)$/,'').split(/[,，]/).filter(x=>x.trim()).length; how='수업 날짜'; } }
+  if(!cnt&&start&&end&&days.length&&typeof sessionsOf==='function'){ cnt=sessionsOf({start,end,days,skipHol:true}).length; how='개강~종강'; }
+  return qpFill({name,start,end,days,time,per,cnt,how});
+}
+function qpFill(x){
+  const wk=x.days.length&&x.days.every(d=>d===0||d===6);
+  if(wk&&!/\/(주말방특|주말|주|특)$/.test(x.name)) x.name+='/주';
+  if(!x.per) x.per=wk?240:180;
+  x.m=x.per&&x.cnt?x.per*x.cnt:0; x.cat=qpCat(x.name); x.tpl=/AI|에이아이|인공지능|챗GPT|ChatGPT|Claude|Gemini|인스타/i.test(x.name)?'ai':'it';
+  x.dayTxt=x.days.map(d=>QP_DOW[d]).join(''); x.p=''; return x;
+}
+function qpFromCourse(c){
+  return qpFill({name:String(c.name||'').trim(),start:c.start||'',end:c.end||'',days:(c.days||[]).slice(),time:c.time||'',per:qpMin(c.time),cnt:(typeof sessionsOf==='function'?sessionsOf(c).length:0)||c.total||0,how:'시간표'});
+}
+function qpCourses(){ if(typeof list!=='function') return []; const have=new Set(qtPrices().map(p=>p.n)); const seen=new Set();
+  return list('courses').filter(c=>c.name&&!have.has(c.name)&&!have.has(c.name+'/주')&&!seen.has(c.name)&&seen.add(c.name)&&(!c.end||c.end>=todayStr())).sort((a,b)=>(a.start||'').localeCompare(b.start||'')).slice(0,40); }
+
+function qpModal(){
+  S._qp=null; const cs=qpCourses();
+  openModal(`${mHead('수강료표에 과목 추가')}<div class="body qp-body">
+    <div class="qp-way"><b>1. 인트라넷에서 복사해 붙여넣기</b><span>강의 카드(과목명 · 개강 · 종강 · 요일 · 시간 · 메모)를 드래그해서 복사 → 아래에 붙여넣기</span></div>
+    <textarea id="qpText" class="in" rows="5" placeholder="AI로 한 달 만에 수익화 가능한 인스타그램 채널 만들기&#10;개강 : 2026-11-18&#10;종강 : 2026-12-14&#10;요일 : 월, 수&#10;시간 : 19:00 ~ 22:00&#10;메모: 3H*8D"></textarea>
+    ${cs.length?`<div class="qp-way"><b>2. 또는 시간표에 있는 과정에서 고르기</b><span>시간표에는 있는데 수강료표에 없는 과정이에요</span></div>
+    <div class="qp-cs">${cs.map((c,i)=>`<button class="chip" data-act="qpPick" data-k="${i}">${esc(c.name)} <small>${esc((c.start||'').slice(5).replace('-','/'))}</small></button>`).join('')}</div>`:''}
+    <div id="qpForm"></div>
+    <button class="btn sm ghost" data-act="qpBlank" style="align-self:flex-start">빈 칸으로 직접 추가할게요</button>
+  </div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="qpSave" id="qpGo" disabled>수강료표에 추가</button></footer>`,'');
+  modalEl._kind='qpadd'; S._qpCs=cs;
+  $('#qpText').addEventListener('input',e=>{ clearTimeout(S._qpT); S._qpT=setTimeout(()=>{ const x=qpParse(e.target.value); S._qp=x&&x.name?x:null; qpDraw(); },200); });
+  setTimeout(()=>$('#qpText')&&$('#qpText').focus(),50);
+}
+function qpDraw(){
+  const el=$('#qpForm'); if(!el) return; const x=S._qp; const go=$('#qpGo');
+  if(!x){ el.innerHTML=''; go&&(go.disabled=true); return; }
+  const dup=qtFind(x.name);
+  el.innerHTML=`<div class="qp-card">
+    <label class="field"><span>과목명 <small>견적서에 이 이름으로 나와요</small></span><input class="in" data-qp="name" value="${esc(x.name)}"></label>
+    <div class="qp-price"><label class="field"><span>수강료 (원) <b class="qp-need">이것만 넣으면 돼요</b></span><input class="in num" id="qpP" data-qp="p" type="number" step="10000" value="${esc(x.p)}" placeholder="예: 450000"></label>
+      <div class="qp-chips">${[300000,350000,400000,450000,500000,550000,600000].map(v=>`<button class="chip" data-act="qpPrice" data-k="${v}">${v/10000}만</button>`).join('')}</div></div>
+    <div class="qp-grid">
+      <label class="field"><span>시간</span><input class="in" data-qp="time" value="${esc(x.time)}" placeholder="19:00~22:00"></label>
+      <label class="field"><span>횟수 ${x.how?`<small>${esc(x.how)}에서</small>`:''}</span><input class="in num" data-qp="cnt" type="number" value="${x.cnt||''}"></label>
+      <label class="field"><span>분/월 <small>자동</small></span><input class="in num" data-qp="m" type="number" value="${x.m||''}"></label>
+      <label class="field"><span>과정</span><select class="in" data-qp="cat">${QT_CATS.map(c=>`<option ${c===x.cat?'selected':''}>${c}</option>`).join('')}</select></label>
+      <label class="field"><span>견적서 양식</span><select class="in" data-qp="tpl"><option value="it" ${x.tpl==='it'?'selected':''}>IT</option><option value="ai" ${x.tpl==='ai'?'selected':''}>AI</option></select></label>
+      <label class="field"><span>구분</span><input class="in" value="${qtTypeOf(x.name)}${x.dayTxt?` (${x.dayTxt})`:''}" disabled></label>
+    </div>
+    <p class="qp-sum">${x.start?`${esc(x.start)} ~ ${esc(x.end||'?')} · `:''}${x.per?`1회 ${x.per/60}시간`:''}${x.cnt?` × ${x.cnt}회`:''}${x.m?` = 한 달 ${x.m}분`:''}</p>
+    ${dup?`<div class="bg-warn"><b>이미 같은 이름이 있어요</b><ul><li>추가하면 지금 수강료표의 "${esc(x.name)}" 줄을 이 내용으로 바꿔요.</li></ul></div>`:''}
+    ${!x.cnt?'<div class="bg-warn"><b>횟수를 못 찾았어요</b><ul><li>메모의 3H*8D나 수업 날짜가 없으면 횟수를 직접 적어 주세요.</li></ul></div>':''}
+  </div>`;
+  qpGoState();
+}
+function qpGoState(){ const go=$('#qpGo'), x=S._qp; if(go) go.disabled=!(x&&x.name&&+x.p>0); if(go&&x) go.textContent=qtFind(x.name)?'수강료표 바꾸기':'수강료표에 추가'; }
+document.addEventListener('input',e=>{ const k=e.target.dataset&&e.target.dataset.qp; if(!k||!S._qp) return; const x=S._qp; x[k]=e.target.value;
+  if(k==='time'||k==='cnt'){ const per=qpMin(x.time)||x.per; x.per=per; x.m=per&&+x.cnt?per*+x.cnt:x.m; const mi=document.querySelector('[data-qp="m"]'); if(mi) mi.value=x.m||''; }
+  qpGoState(); });
+document.addEventListener('change',e=>{ const k=e.target.dataset&&e.target.dataset.qp; if(k&&S._qp) S._qp[k]=e.target.value; });
+Object.assign(WACT,{
+  qtPAdd:()=>qpModal(),
+  qpBlank:()=>{ closeModal(); const P=clone(qtPrices()); P.unshift({n:'새 과목',p:500000,m:1800,cat:'',t:'',c:null,tpl:'',src:'edit'}); S.qtFind=''; qtPriceSave(P); render(); const x=document.querySelector('[data-pi="0"] [data-pf="n"]'); x&&(x.focus(),x.select()); },
+  qpPick:el=>{ const c=(S._qpCs||[])[+el.dataset.k]; if(!c) return; S._qp=qpFromCourse(c); $$('.qp-cs .chip').forEach(b=>b.classList.toggle('on',b===el)); qpDraw(); const p=$('#qpP'); p&&p.focus(); },
+  qpPrice:el=>{ if(!S._qp) return; S._qp.p=el.dataset.k; const p=$('#qpP'); if(p) p.value=el.dataset.k; qpGoState(); },
+  qpSave:()=>{ const x=S._qp; if(!x||!x.name||!(+x.p>0)) return; const name=x.name.trim();
+    const row={n:name,p:+x.p,m:+x.m||0,cat:x.cat||'',t:(x.time||'').replace(/\s/g,''),c:+x.cnt||null,tpl:x.tpl||'',src:'edit'};
+    const P=clone(qtPrices()); const i=P.findIndex(p=>p.n===name); if(i>=0) P[i]={...P[i],...row}; else P.unshift(row);
+    qtPriceSave(P); closeModal(); S.qtFind=name; render(); toast(i>=0?'수강료표를 바꿨어요':'수강료표에 추가했어요',`${name} · ${Number(row.p).toLocaleString('ko-KR')}원 — 이제 견적서에서 고를 수 있어요.`); },
 });
 /* ===== 견적서 → 요청메모 (수납 · 할인) =====
    견적(작성 중 · 저장한 견적 · 견적서 엑셀 파일)을 불러오면 과목 · 원 수강료 · 기간이 자동으로 들어가고,
