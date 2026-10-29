@@ -1771,6 +1771,34 @@ body.dark .cal-day .t1{color:#fff}body.dark .cal-day .t2{color:rgba(255,255,255,
  .bg-tb td:first-child::before{display:none}.bg-tb td:first-child{font-size:14px}
  .bg-chh h2{font-size:21px}
 }
+
+/* 가이드 가독성: 배경(풍경 · 무늬)이 비치지 않게 읽기용 판을 깔아요 */
+.bg-view{--bgp:#ffffff;--bgp2:color-mix(in srgb,var(--bg) 14%,#ffffff);--bgl:rgba(15,23,42,.1);--bgt:#141821;--bgt2:#3b4352;--bgm:#5d6675}
+body.dark .bg-view,body.hud:not(.hlight):not(.exec) .bg-view{--bgp:#10131b;--bgp2:color-mix(in srgb,var(--bg) 30%,#141823);--bgl:rgba(255,255,255,.12);--bgt:#f3f5fa;--bgt2:#d4d9e3;--bgm:#a3abba}
+.bg-view .bg-top,.bg-view .bg-chh,.bg-view .bg-sec,.bg-view .bg-nav button,.bg-view .bg-qh,.bg-view>.pane{background:color-mix(in srgb,var(--bgp) 94%,transparent);color:var(--bgt);box-shadow:inset 0 0 0 1px var(--bgl),0 8px 24px -14px rgba(0,0,0,.35);-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2)}
+.bg-view .bg-chh{padding:14px 18px;border-radius:18px}
+.bg-view .bg-qh{padding:10px 14px;border-radius:14px}
+.bg-view .bg-nav button:hover{background:var(--bgp2)}
+.bg-view .bg-nav button.on{background:color-mix(in srgb,var(--accent) 14%,var(--bgp));box-shadow:inset 0 0 0 2px var(--accent),0 8px 24px -14px rgba(0,0,0,.35)}
+.bg-view .bg-sec.open{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 40%,var(--bgl)),0 14px 34px -18px rgba(0,0,0,.45)}
+.bg-view .bg-intro,.bg-view .bg-sb,.bg-view .bg-st b,.bg-view .bg-nav b,.bg-view .bg-chh h2,.bg-view .bg-kv dd,.bg-view .bg-tb td,.bg-view pre{color:var(--bgt)}
+.bg-view .bg-st small,.bg-view .bg-nav small,.bg-view .bg-chh p,.bg-view .bg-note,.bg-view .bg-prog,.bg-view .bg-qh,.bg-view .bg-ex-h,.bg-view .bg-meta,.bg-view .bg-nav em,.bg-view .bg-cv{color:var(--bgm)}
+.bg-view .bg-tb th,.bg-view .bg-kv dt{color:var(--bgt2)}
+.bg-view .bg-tb th{background:var(--bgp2);border-color:var(--bgl)}.bg-view .bg-tb td{border-color:var(--bgl)}
+.bg-view .bg-tw,.bg-view .bg-kv{box-shadow:inset 0 0 0 1px var(--bgl)}.bg-view .bg-kv div{border-color:var(--bgl)}
+.bg-view .bg-tpl,.bg-view .bg-ex{background:var(--bgp2);box-shadow:inset 0 0 0 1px var(--bgl)}
+.bg-view .bg-tpl-h,.bg-view .bg-ex-h{border-color:var(--bgl)}
+.bg-view .bg-nav i{background:var(--bgp2);color:var(--bgt2);box-shadow:inset 0 0 0 1px var(--bgl)}
+.bg-view .bg-ck{box-shadow:inset 0 0 0 2px var(--bgm)}
+.bg-view .bg-bar{background:var(--bgp2);box-shadow:inset 0 0 0 1px var(--bgl)}
+.bg-view .bg-q .in{background:var(--bgp2);color:var(--bgt);box-shadow:inset 0 0 0 1px var(--bgl)}
+.bg-view .bg-q .in::placeholder{color:var(--bgm)}
+.bg-view .bg-warn{background:color-mix(in srgb,var(--bad) 11%,var(--bgp))}.bg-view .bg-warn ul{color:var(--bgt)}
+.bg-view .bg-tip{background:color-mix(in srgb,var(--accent) 10%,var(--bgp))}.bg-view .bg-tip p{color:var(--bgt)}
+.bg-view .bg-chh small,.bg-view .bg-from{color:var(--accent)}
+.bg-view .bg-from{display:inline-block;align-self:flex-start;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--bgp) 94%,transparent);box-shadow:inset 0 0 0 1px var(--bgl)}
+.bg-view>.vh h1,.bg-view>.vh .sub{text-shadow:0 1px 10px color-mix(in srgb,var(--bg) 70%,transparent)}
+@media (max-width:640px){.bg-view .bg-tb tr{background:var(--bgp);box-shadow:inset 0 0 0 1px var(--bgl)}.bg-view .bg-tw{box-shadow:none}.bg-view .bg-tb td::before{color:var(--bgm)}}
 </style>
 </head>
 <body>
@@ -7867,6 +7895,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261029-1041';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261029-1048';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
