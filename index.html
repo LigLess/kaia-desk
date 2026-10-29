@@ -1820,6 +1820,10 @@ body.dark .bg-view,body.hud:not(.hlight):not(.exec) .bg-view{--bgp:#10131b;--bgp
 .im-mode button{height:28px;padding:0 12px}.im-pick{height:32px;font-size:12.5px;padding:0 8px;max-width:260px}
 .im-from{font-size:11.5px;color:var(--muted)}.im-df{display:flex;flex-wrap:wrap;gap:4px}
 .im-bulk{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;font-weight:700;color:var(--muted)}.im-bulk span{margin-right:4px}
+
+.stu-cl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:3px 0}.stu-cl+.stu-cl{border-top:1px dashed var(--line);margin-top:3px;padding-top:6px}
+.stu-cl b{font-weight:600;font-size:13px}.stu-cl .chip{font-size:11px;padding:1px 7px}
+.stu-cd{flex-basis:100%;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -3089,6 +3093,15 @@ function vNotice(){
      <div class="list subjlist">${left}</div></section><section class="pane">${right}</section></div></div>`;
 }
 
+/* 학생 목록: 과목마다 수업 날짜 (개강~종강 · 요일 · 시간) + 지금 상태 → 잘못 넣은 정보를 바로 확인 */
+function stuCourseLine(c){
+  const t=todayStr(), e=courseEnd(c); let st,cls;
+  if(!c.start){ st='개강일 없음'; cls='bad'; }
+  else if(c.start>t){ const d=diffDays(t,c.start); st=d===0?'오늘 개강':`개강 D-${d}`; cls=d<=7?'warn':'cyan'; }
+  else if(e&&e<t){ st='종강'; cls=''; }
+  else { st=c.start===t?'오늘 개강':'수강 중'; cls='ok'; }
+  return `<div class="stu-cl"><b>${esc(c.name)}</b><span class="chip ${cls}">${st}</span><div class="stu-cd">${c.start?`${fmtMD(c.start)} ~ ${e?fmtMD(e):'?'}`:''}${c.days&&c.days.length?` · ${esc(daysLabel(c.days,c.daysB))}`:''}${c.time?` · ${esc(c.time)}`:''}</div></div>`;
+}
 function vStudents(){
   const q=S.stuQ.trim(); const cs=list('courses').sort((a,b)=>(b.start||'').localeCompare(a.start||''));
   let st=list('students');
@@ -3108,7 +3121,7 @@ function vStudents(){
       return n?`<div class="stu-bulk"><b>${n}명 선택</b><button class="btn sm danger" data-act="stuBulkDel">${ic('trash')}선택 삭제</button><button class="btn sm ghost" data-act="stuSelNone">선택 해제</button></div>`:''; })()}
     ${st.length?`<div class="tablewrap"><table class="t"><thead><tr><th class="stu-ck"><input type="checkbox" data-act="stuSelAll" aria-label="보이는 학생 모두 선택" ${st.length&&st.every(s=>S.stuSel&&S.stuSel[s.id])?'checked':''}></th><th>이름</th><th>상태</th><th class="hide-m">연락처</th><th>수강 과목</th><th class="hide-m">최근 상담</th></tr></thead><tbody>
     ${st.map(s=>{ const last=(s.logs||[]).slice().sort((a,b)=>a.d<b.d?1:-1)[0]; const cn=(s.courses||[]).map(id=>D().courses[id]).filter(Boolean);
-      return `<tr class="click ${S.stuSel&&S.stuSel[s.id]?'sel':''}" data-act="openStudent" data-id="${s.id}"><td class="stu-ck"><input type="checkbox" data-act="stuSel" data-id="${s.id}" aria-label="${esc(s.name)} 선택" ${S.stuSel&&S.stuSel[s.id]?'checked':''}></td><td><b style="font-weight:500">${esc(s.name)}</b>${s.goal?`<div style="font-size:11.5px;color:var(--faint)">${esc(s.goal)}</div>`:''}</td><td><span class="chip ${STATUS_CHIP[s.status]||''}">${esc(s.status)}</span>${s.type||s.funding?`<div style="font-size:11px;color:var(--faint);margin-top:3px">${esc([s.type,s.funding].filter(Boolean).join(' · '))}</div>`:''}</td><td class="hide-m num">${esc(s.phone||'')}</td><td class="wrap">${cn.length?cn.map(c=>`<span class="chip" style="margin:2px 4px 2px 0">${esc(c.name)}</span>`).join(''):'<span style="color:var(--faint)">없음</span>'}</td><td class="hide-m wrap" style="color:var(--muted)">${last?`${fmtMD(last.d)} ${esc(last.t)}`:''}</td></tr>`}).join('')}
+      return `<tr class="click ${S.stuSel&&S.stuSel[s.id]?'sel':''}" data-act="openStudent" data-id="${s.id}"><td class="stu-ck"><input type="checkbox" data-act="stuSel" data-id="${s.id}" aria-label="${esc(s.name)} 선택" ${S.stuSel&&S.stuSel[s.id]?'checked':''}></td><td><b style="font-weight:500">${esc(s.name)}</b>${s.goal?`<div style="font-size:11.5px;color:var(--faint)">${esc(s.goal)}</div>`:''}</td><td><span class="chip ${STATUS_CHIP[s.status]||''}">${esc(s.status)}</span>${s.type||s.funding?`<div style="font-size:11px;color:var(--faint);margin-top:3px">${esc([s.type,s.funding].filter(Boolean).join(' · '))}</div>`:''}</td><td class="hide-m num">${esc(s.phone||'')}</td><td class="wrap">${cn.length?cn.slice().sort((a,b)=>(a.start||'').localeCompare(b.start||'')).map(stuCourseLine).join(''):'<span style="color:var(--faint)">없음</span>'}</td><td class="hide-m wrap" style="color:var(--muted)">${last?`${fmtMD(last.d)} ${esc(last.t)}`:''}</td></tr>`}).join('')}
     </tbody></table></div>`:`<div class="empty"><b>${q||S.stuStatus!=='all'||S.stuCourse!=='all'?'조건에 맞는 학생이 없어요':'아직 등록한 학생이 없어요'}</b>상담한 학생을 추가하고 수강 과정을 연결하면 개강안내 대상에 자동으로 들어가요. 이전 프로그램에서 내보낸 .json 파일을 이 화면에 끌어다 놓아도 돼요.</div>`}
   </section></div>`;
 }
@@ -7973,6 +7986,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261029-1250';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261029-1252';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
