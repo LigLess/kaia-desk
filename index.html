@@ -1695,6 +1695,82 @@ body.dark .cal-day .t1{color:#fff}body.dark .cal-day .t2{color:rgba(255,255,255,
 .rm-text{width:100%;min-height:520px;font-size:13px;line-height:1.55;font-family:var(--mono),ui-monospace,monospace;white-space:pre;resize:vertical}
 @media (max-width:760px){.rm-sub{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 34px}.rm-sub-n{grid-column:1/-1}.rm-sub-s{grid-column:1/3;height:auto}.rm-cats{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:640px){.rm-form{grid-template-columns:minmax(0,1fr)}.rm-text{min-height:420px;font-size:12px}}
+
+/* ===== 사업부 업무 가이드 ===== */
+.bg-top{display:flex;flex-direction:column;gap:12px}
+.bg-intro{margin:0;font-size:14.5px;line-height:1.75;color:var(--fg-2)}
+.bg-prog{display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--muted);font-weight:600}
+.bg-bar{flex:1;height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.bg-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--accent),var(--ok));transition:width .5s var(--ease)}
+.bg-q .in{font-size:15px}
+.bg-meta{font-size:11.5px;color:var(--faint)}
+.bg-grid{display:grid;grid-template-columns:270px minmax(0,1fr);gap:18px;align-items:start;margin-top:16px}
+.bg-nav{position:sticky;top:84px;display:flex;flex-direction:column;gap:6px}
+.bg-nav button{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:14px;border:0;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);color:var(--fg);cursor:pointer;font:inherit;transition:background .2s,box-shadow .2s}
+.bg-nav button:hover{background:var(--surface-2)}
+.bg-nav button.on{background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.bg-nav i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;background:var(--surface-3);color:var(--fg-2)}
+.bg-nav i svg{width:14px;height:14px}
+.bg-nav button.done i{background:var(--ok);color:#fff}
+.bg-nav span{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bg-nav b{font-size:13.5px;font-weight:700}
+.bg-nav small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bg-nav em{font-style:normal;font-size:11px;color:var(--faint);font-variant-numeric:tabular-nums}
+.bg-main{display:flex;flex-direction:column;gap:10px;min-width:0;scroll-margin-top:80px}
+.bg-chh{padding:4px 2px 6px}.bg-chh small{font-size:12px;font-weight:800;color:var(--accent);letter-spacing:.04em}
+.bg-chh h2{margin:2px 0 4px;font-size:24px;letter-spacing:-.02em}.bg-chh p{margin:0;color:var(--muted);font-size:13.5px}
+.bg-sec{border-radius:18px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line),var(--shadow-sm);overflow:hidden}
+.bg-sec.open{box-shadow:inset 0 0 0 1.5px var(--line-2),var(--shadow-md)}
+.bg-sh{width:100%;display:flex;align-items:center;gap:12px;padding:15px 16px;border:0;background:none;color:var(--fg);cursor:pointer;text-align:left;font:inherit}
+.bg-ck{flex:none;width:24px;height:24px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--line-2);display:grid;place-items:center}
+.bg-sec.done .bg-ck{background:var(--ok);box-shadow:none;color:#fff}.bg-ck svg{width:14px;height:14px}
+.bg-st{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.bg-st b{font-size:15.5px;font-weight:750}.bg-st small{font-size:12.5px;color:var(--muted);line-height:1.5}
+.bg-cv{flex:none;color:var(--muted);transition:transform .25s var(--ease)}.bg-sec.open .bg-cv{transform:rotate(180deg)}
+.bg-sb{padding:2px 18px 18px 52px;display:flex;flex-direction:column;gap:14px;font-size:14px;line-height:1.75;color:var(--fg)}
+.bg-p{margin:0}
+.bg-steps{margin:0;padding:0;list-style:none;counter-reset:bs;display:flex;flex-direction:column;gap:8px}
+.bg-steps li{counter-increment:bs;display:flex;gap:10px;align-items:flex-start}
+.bg-steps li::before{content:counter(bs);flex:none;width:24px;height:24px;margin-top:2px;border-radius:8px;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--ink);color:var(--ink-fg)}
+.bg-tw{overflow-x:auto;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line)}
+.bg-tb{width:100%;border-collapse:collapse;font-size:13px;line-height:1.6}
+.bg-tb th{text-align:left;padding:9px 12px;background:var(--surface-2);font-weight:700;color:var(--fg-2);white-space:nowrap;border-bottom:1px solid var(--line)}
+.bg-tb td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.bg-tb tr:last-child td{border-bottom:0}.bg-tb td:first-child{font-weight:650;white-space:nowrap}
+.bg-faint{color:var(--faint)}.bg-note{margin:-6px 0 0;font-size:12.5px;color:var(--muted)}
+.bg-kv{margin:0;display:flex;flex-direction:column;gap:0;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.bg-kv div{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:9px 12px;border-bottom:1px solid var(--line)}.bg-kv div:last-child{border-bottom:0}
+.bg-kv dt{font-weight:700;color:var(--fg-2);font-size:13px}.bg-kv dd{margin:0;font-size:13.5px}
+.bg-tpl,.bg-ex{border-radius:14px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden}
+.bg-tpl-h{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:9px 10px 9px 14px;border-bottom:1px solid var(--line)}
+.bg-tpl-h b{display:flex;align-items:center;gap:7px;font-size:13px}.bg-tpl-h b svg{width:14px;height:14px;color:var(--accent)}
+.bg-tpl pre,.bg-ex pre{margin:0;padding:12px 14px;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;font:inherit;font-size:13px;line-height:1.7;max-height:420px;overflow:auto}
+.bg-tpl .bg-note{margin:0;padding:0 14px 11px}
+.bg-ex-h{padding:8px 14px;font-size:12px;font-weight:700;color:var(--muted);border-bottom:1px dashed var(--line-2)}
+.bg-warn{border-radius:14px;padding:12px 14px;background:var(--bad-soft);box-shadow:inset 3px 0 0 var(--bad)}
+.bg-warn b{display:block;font-size:13px;color:var(--bad);margin-bottom:4px}.bg-warn ul{margin:0;padding-left:18px;font-size:13.5px}
+.bg-tip{border-radius:14px;padding:12px 14px;background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.bg-tip b{display:block;font-size:13px;color:var(--accent);margin-bottom:2px}.bg-tip p{margin:0;font-size:13.5px}
+.bg-sf{display:flex;justify-content:flex-end;padding-top:2px}
+.bg-pn{display:flex;justify-content:space-between;gap:10px;margin-top:8px;flex-wrap:wrap}
+.bg-qh{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted)}.bg-qh b{color:var(--fg)}.bg-qh .btn{margin-left:auto}
+.bg-from{font-size:11.5px;font-weight:800;color:var(--accent);margin:6px 0 -4px 4px}
+.bg-view mark{background:var(--warn-soft);color:inherit;border-radius:4px;padding:0 2px;box-shadow:inset 0 -2px 0 var(--warn)}
+@media (max-width:900px){
+ .bg-grid{grid-template-columns:1fr}
+ .bg-nav{position:static;flex-direction:row;overflow-x:auto;gap:8px;padding-bottom:4px;scrollbar-width:none}
+ .bg-nav button{flex:none;max-width:220px}.bg-nav small{display:none}
+}
+@media (max-width:640px){
+ .bg-sb{padding:2px 14px 16px}
+ .bg-kv div{grid-template-columns:1fr;gap:2px}
+ .bg-tw{box-shadow:none;overflow:visible}
+ .bg-tb thead{display:none}.bg-tb,.bg-tb tbody,.bg-tb tr,.bg-tb td{display:block;width:100%}
+ .bg-tb tr{border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);margin-bottom:8px;padding:6px 0;background:var(--surface)}
+ .bg-tb td{border:0;padding:4px 12px;white-space:normal!important}
+ .bg-tb td::before{content:attr(data-h);display:block;font-size:11px;font-weight:700;color:var(--muted)}
+ .bg-tb td:first-child::before{display:none}.bg-tb td:first-child{font-size:14px}
+ .bg-chh h2{font-size:21px}
+}
 </style>
 </head>
 <body>
@@ -2336,7 +2412,7 @@ const DEFAULT_SETTINGS={zoomsV2:true,rooms:{B:'4층 B강의장'},theme:'aurora',
 const DEFAULT_SERVER='https://script.google.com/macros/s/AKfycbyEKOo2BCCLq4WhcI6a_ZQQ5n_4cx09EqKmw2CaLI9-JjZJ3Tv7R07llaHHd5MSfMZ-CQ/exec';
 /* 팀 동기화 때도 기기·사람마다 따로 유지되는 설정 */
 const PERSONAL_KEYS=['theme','fx','sfx','name','role','mentor','pin','acks','offsets','icsTime','calOn','calKey','calTime'];
-const LOC_TEXT='학원 위치 안내드립니다.\n· 학원: 코리아AI아카데미 부산점\n· 주소: 부산 부산진구 중앙대로 668 4층\n· 대중교통: 부산 1호선 범내골역 8번 출구\n· 주차: 1시간 무료, 이후 30분당 1,500원\n· 상세정보: https://map.naver.com/p/entry/place/1728207405';
+const LOC_TEXT='학원 위치 안내드립니다.\n· 학원: 코리아AI아카데미 부산점\n· 주소: 부산 부산진구 중앙대로 668 에이원플라자 4층\n· 오시는 길: 서면역 2번 출구 직진 도보 7분(삼정타워 옆 건물) / 범내골역 8번 출구 직진 도보 7분\n· 주차: 1시간 무료, 이후 30분당 1,500원\n· 상세정보: https://map.naver.com/p/entry/place/1728207405';
 const DEFAULT_SNIPPETS=[
 {title:'국비 상담 준비물',text:'국비 상담 오실 때 준비해 주세요.\n· 신분증\n· 국민내일배움카드(없으시면 발급 절차 함께 안내드려요)\n· 최종학력 확인 가능한 서류(필요 시)'},
 {title:'학원 위치 안내',text:LOC_TEXT},
@@ -2704,8 +2780,8 @@ function permHint(){
 const NAV=[
  {v:'home',t:'홈',i:'home'},{v:'timetable',t:'시간표',i:'cal'},{v:'notice',t:'개강안내',i:'mail'},{v:'students',t:'학생',i:'users'},{v:'alarms',t:'알림',i:'bell',badge:true},{v:'team',t:'팀',i:'team',tb:true},
  {sep:1},
- {v:'tasks',t:'업무',i:'task',sec:1},{v:'quote',t:'견적서',i:'receipt',sec:1},{v:'snippets',t:'문구함',i:'quote',sec:1},{v:'guide',t:'가이드',i:'book',sec:1},{v:'settings',t:'설정',i:'gear',sec:1}];
-const TITLES={home:'홈',timetable:'시간표',notice:'개강안내',students:'학생',alarms:'알림',team:'팀',tasks:'업무',quote:'견적서',snippets:'문구함',guide:'사용 가이드',settings:'설정'};
+ {v:'tasks',t:'업무',i:'task',sec:1},{v:'quote',t:'견적서',i:'receipt',sec:1},{v:'biz',t:'업무 매뉴얼',i:'flag',sec:1},{v:'snippets',t:'문구함',i:'quote',sec:1},{v:'guide',t:'가이드',i:'book',sec:1},{v:'settings',t:'설정',i:'gear',sec:1}];
+const TITLES={home:'홈',timetable:'시간표',notice:'개강안내',students:'학생',alarms:'알림',team:'팀',tasks:'업무',quote:'견적서',snippets:'문구함',biz:'사업부 업무 가이드',guide:'사용 가이드',settings:'설정'};
 const DOCK=[['home','홈','home'],['timetable','시간표','cal'],['notice','안내','mail'],['students','학생','users'],['team','팀','team'],['tasks','업무','task']];
 let navBound=false;
 /* 메뉴가 오른쪽 버튼과 겹치지 않게: 넘치면 보조 메뉴 글자 → 전체 글자 순서로 숨김 */
@@ -2761,11 +2837,11 @@ let renderPending=false,renderDirty=false;
 function scheduleRender(){ if(renderPending) return; renderPending=true; requestAnimationFrame(()=>{ renderPending=false; const a=document.activeElement; if(a&&a.closest&&a.closest('#view')&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)){ renderDirty=true; renderSide(); return; } render(); }); }
 function render(){
   renderDirty=false;
-  if(S.mode!=='loading'&&!S.gate){ try{ list('snippets').forEach(n=>{ if(n.title==='학원 위치 안내'&&/\((주소를 입력|가까운 역|주차 안내)/.test(n.text||'')) store.put('snippets',{...n,text:LOC_TEXT}); }); }catch(e){} }
+  if(S.mode!=='loading'&&!S.gate){ try{ list('snippets').forEach(n=>{ if(n.title==='학원 위치 안내'&&(/\((주소를 입력|가까운 역|주차 안내)/.test(n.text||'')||/대중교통: 부산 1호선 범내골역 8번 출구\n/.test(n.text||''))) store.put('snippets',{...n,text:LOC_TEXT}); }); }catch(e){} }
   if(S.mode!=='loading'&&!S.gate){ try{ list('courses').forEach(c=>{ const f=fixLunchTime(c); if(f) store.put('courses',{...c,time:f}); }); }catch(e){} }
   document.body.classList.toggle('gate',!!S.gate);
   renderSide();
-  const V={home:vHome,timetable:vTimetable,notice:vNotice,students:vStudents,alarms:vAlarms,team:vTeam,progress:vHome,tasks:vTasks,quote:vQuote,snippets:vSnippets,guide:vGuide,settings:vSettings}[S.view]||vHome;
+  const V={home:vHome,timetable:vTimetable,notice:vNotice,students:vStudents,alarms:vAlarms,team:vTeam,progress:vHome,tasks:vTasks,quote:vQuote,snippets:vSnippets,biz:vBiz,guide:vGuide,settings:vSettings}[S.view]||vHome;
   if(S.view==='guide'&&!S.gate&&$('#view').dataset.v==='guide'&&$('#guideFrame')){ afterRender(); return; }   // 가이드는 다시 그리지 않음 (보던 위치 유지)
   const html=S.gate?vLogin():(S.demo?demoBanner():'')+V();
   const view=$('#view'); const same=view.dataset.v===S.view; view.dataset.v=S.view; const quiet=same&&!S._anim; S._quiet=false; S._anim=false; /* 같은 화면 안에서 다시 그릴 때(검색 · 탭 · 동기화)는 움직임 없이 — 화면을 바꿀 때만 한 번 */ view.classList.toggle('quiet',quiet); S._q=quiet;
@@ -7482,6 +7558,106 @@ Object.assign(WACT,{
   qsStaffMemo:el=>{ const d=S.qsStaffData[S.qsStaffSel]; const x=d&&d.list&&d.list[+el.dataset.i]; if(!x) return; S.rm=rmSync(rmFromQuote(x.q,`${memberName(S.qsStaffSel)}님 견적`)); rmKeep(); S.rmEdited=false; S.qtTab='memo'; render(); },
 });
 document.addEventListener('change',e=>{ if(e.target.classList&&e.target.classList.contains('qs-to')){ e.target.closest('.qs-p').classList.toggle('on',e.target.checked); const b=$('#qsGo'); if(b) b.disabled=!$$('.qs-to').some(x=>x.checked); } });
+/* ===== 사업부 업무 가이드 (신입용) =====
+   내용(보고양식 · 규정)은 회사 내부 자료라 이 코드에 넣지 않아요.
+   가이드 파일(.json)을 팀 서버에 한 번 올리면 → 팀 게시판(posts)에 숨김 분류 '사업부가이드'로 저장되고
+   팀원 모두가 같은 내용을 봐요. 한 번 받은 파일은 이 기기에 저장돼 다음부터 바로 열려요. */
+const BIZ_CAT='사업부가이드';
+if(typeof HIDDEN_CATS!=='undefined'&&!HIDDEN_CATS.includes(BIZ_CAT)) HIDDEN_CATS.push(BIZ_CAT);
+const BG={data:null,fid:'',loading:false,err:''};
+function bgPost(){ return Object.values(teamData().posts||{}).filter(p=>p.cat===BIZ_CAT&&(p.files||[])[0]).sort((a,b)=>(b.edited||b.at||0)-(a.edited||a.at||0))[0]||null; }
+function bgRead(){ try{ return JSON.parse(lsGet('md.bgRead')||'{}')||{}; }catch(e){ return {}; } }
+function bgValid(g){ return g&&Array.isArray(g.chapters)&&g.chapters.length&&g.chapters.every(c=>c&&c.id&&Array.isArray(c.sections)); }
+async function bgLoad(p){
+  const f=p.files[0]; if(BG.loading||(BG.fid===f.id&&(BG.data||BG.err))) return;
+  BG.loading=true; BG.err=''; BG.fid=f.id;
+  try{ const r=await teamFileBlob(f.id,f.name); const g=JSON.parse(await r.blob.text()); if(!bgValid(g)) throw new Error('form'); BG.data=g; }
+  catch(e){ BG.data=null; BG.err=e.message==='form'?'가이드 파일 모양이 맞지 않아요.':'팀 서버에서 가이드를 받지 못했어요.'; }
+  BG.loading=false; if(S.view==='biz') scheduleRender();
+}
+
+/* 글자 → 화면 (검색어는 형광펜) */
+function bgHl(t){ let h=esc(String(t==null?'':t)); const q=(S.bgQ||'').trim(); if(q){ q.split(/\s+/).filter(w=>w.length>=1).forEach(w=>{ const e=esc(w).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); h=h.replace(new RegExp(`(${e})(?![^<]*>)`,'gi'),'<mark>$1</mark>'); }); } return h.replace(/\n/g,'<br>'); }
+function bgBlock(b){
+  const T=S._bgTpl;
+  switch(b.t){
+    case 'p': return `<p class="bg-p">${bgHl(b.x)}</p>`;
+    case 'steps': return `<ol class="bg-steps">${b.items.map(x=>`<li><span>${bgHl(x)}</span></li>`).join('')}</ol>`;
+    case 'table': return `<div class="bg-tw"><table class="bg-tb"><thead><tr>${b.head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${b.rows.map(r=>`<tr>${r.map((c,i)=>`<td data-h="${esc(b.head[i]||'')}">${c===''?'<span class="bg-faint">—</span>':bgHl(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${b.note?`<p class="bg-note">${bgHl(b.note)}</p>`:''}`;
+    case 'kv': return `<dl class="bg-kv">${b.items.map(([k,v])=>`<div><dt>${bgHl(k)}</dt><dd>${bgHl(v)}</dd></div>`).join('')}</dl>`;
+    case 'tpl': { T.push(b.x); return `<div class="bg-tpl"><div class="bg-tpl-h"><b>${ic('copy')}${bgHl(b.label)}</b><button class="btn sm pri" data-act="bgCopy" data-k="${T.length-1}">${ic('copy')}복사</button></div><pre>${bgHl(b.x)}</pre>${b.note?`<p class="bg-note">${bgHl(b.note)}</p>`:''}</div>`; }
+    case 'ex': return `<div class="bg-ex"><div class="bg-ex-h">예시 · ${bgHl(b.label)}</div><pre>${bgHl(b.x)}</pre></div>`;
+    case 'warn': return `<div class="bg-warn"><b>꼭 주의</b><ul>${b.items.map(x=>`<li>${bgHl(x)}</li>`).join('')}</ul></div>`;
+    case 'tip': return `<div class="bg-tip"><b>알아 두면 편해요</b><p>${bgHl(b.x)}</p></div>`;
+  }
+  return '';
+}
+const bgText=s=>[s.title,s.sum,...(s.blocks||[]).map(b=>[b.x,b.label,b.note,...(b.items||[]).flat(),...(b.head||[]),...(b.rows||[]).flat()].join(' '))].join(' ');
+function bgSection(c,s,read,forceOpen){
+  const key=`${c.id}.${s.id}`, open=forceOpen||(S.bgOpen||{})[key], done=!!read[key];
+  return `<article class="bg-sec ${open?'open':''} ${done?'done':''}" id="bg-${key.replace('.','-')}">
+    <button class="bg-sh" data-act="bgTog" data-k="${key}"><span class="bg-ck">${done?ic('check'):''}</span><span class="bg-st"><b>${bgHl(s.title)}</b><small>${bgHl(s.sum||'')}</small></span><span class="bg-cv">${ic('down')}</span></button>
+    ${open?`<div class="bg-sb">${(s.blocks||[]).map(bgBlock).join('')}
+      <div class="bg-sf"><button class="btn sm ${done?'':'pri'}" data-act="bgDone" data-k="${key}">${done?'다시 안 읽음으로':`${ic('check')}다 읽었어요`}</button></div></div>`:''}
+  </article>`;
+}
+function vBiz(){
+  const p=S.mode==='gas'?bgPost():null, lead=S.myRole==='lead', u=me().user;
+  const canUp=S.mode==='gas'&&(!p||lead||p.by===u);
+  const head=vh('사업부 업무 가이드','처음 온 사람도 위에서부터 순서대로 읽으면 돼요',canUp?`<button class="btn" data-act="bgUp">${ic('up')}${p?'새 버전 올리기':'가이드 파일 올리기'}</button>`:'');
+  if(S.mode!=='gas') return `<div class="view">${head}<section class="pane"><div class="empty"><b>팀 서버에 로그인하면 볼 수 있어요</b>보고양식 · 규정은 회사 내부 자료라 팀 서버에만 두고, 팀원끼리만 봐요.${S.demo?'':'<div class="btns" style="justify-content:center;margin-top:14px"><button class="btn pri" data-act="openLogin">로그인 · 가입</button></div>'}</div></section></div>`;
+  if(!S.members) loadMembers().then(()=>{ if(S.view==='biz') scheduleRender(); });
+  if(!p) return `<div class="view">${head}<section class="pane"><div class="empty"><b>아직 가이드가 올라오지 않았어요</b>팀장님이 <b>사업부가이드.json</b> 파일을 오른쪽 위 <b>가이드 파일 올리기</b>로 한 번만 올리면, 팀원 모두가 여기서 볼 수 있어요.</div></section></div>`;
+  bgLoad(p);
+  if(!BG.data) return `<div class="view">${head}<section class="pane"><div class="empty">${BG.err?`<b>${esc(BG.err)}</b>인터넷 연결을 확인하고 다시 눌러 주세요.<div class="btns" style="justify-content:center;margin-top:14px"><button class="btn pri" data-act="bgRetry">다시 불러오기</button></div>`:'<b>가이드를 불러오는 중이에요</b>처음 한 번만 조금 걸려요.'}</div></section></div>`;
+  const g=BG.data, read=bgRead(); S._bgTpl=[];
+  const all=g.chapters.flatMap(c=>c.sections.map(s=>[c,s])), nRead=all.filter(([c,s])=>read[`${c.id}.${s.id}`]).length;
+  const seenAt=+(lsGet('md.bgSeenAt')||0), fresh=seenAt&&(p.edited||p.at)>seenAt; if(!seenAt||fresh) setTimeout(()=>lsSet('md.bgSeenAt',String(Date.now())),3000);
+  const q=(S.bgQ||'').trim(); const ch=g.chapters.find(c=>c.id===S.bgCh)||g.chapters[0]; const ci=g.chapters.indexOf(ch);
+  const pct=Math.round(nRead/all.length*100);
+  const nav=`<nav class="bg-nav">${g.chapters.map((c,i)=>{ const n=c.sections.filter(s=>read[`${c.id}.${s.id}`]).length; return `<button class="${!q&&c===ch?'on':''} ${n===c.sections.length?'done':''}" data-act="bgCh" data-k="${c.id}"><i>${n===c.sections.length?ic('check'):i+1}</i><span><b>${esc(c.title)}</b><small>${esc(c.sum||'')}</small></span><em>${n}/${c.sections.length}</em></button>`; }).join('')}</nav>`;
+  let main;
+  if(q){ const hits=all.filter(([c,s])=>q.split(/\s+/).every(w=>sMatch(w,bgText(s))));
+    main=`<div class="bg-qh">"${esc(q)}" 찾은 결과 <b>${hits.length}</b>개 <button class="btn sm ghost" data-act="bgQx">${ic('x')}지우기</button></div>${hits.length?hits.map(([c,s])=>`<div class="bg-from">${esc(c.title)}</div>${bgSection(c,s,read,true)}`).join(''):'<div class="empty"><b>찾는 내용이 없어요</b>다른 말로 찾아보세요. 예: 환불, 재배정, 권한, 지각, COD</div>'}`; }
+  else main=`<div class="bg-chh"><small>${ci+1}장</small><h2>${esc(ch.title)}</h2><p>${esc(ch.sum||'')}</p></div>${ch.sections.map(s=>bgSection(ch,s,read,false)).join('')}
+    <div class="bg-pn">${ci>0?`<button class="btn" data-act="bgCh" data-k="${g.chapters[ci-1].id}">← ${esc(g.chapters[ci-1].title)}</button>`:'<span></span>'}${ci<g.chapters.length-1?`<button class="btn pri" data-act="bgCh" data-k="${g.chapters[ci+1].id}">다음: ${esc(g.chapters[ci+1].title)} →</button>`:''}</div>`;
+  return `<div class="view bg-view">${head}
+    ${fresh?`<div class="banner"><p><b>가이드가 새로 바뀌었어요.</b> ${esc(p.byName||memberName(p.by))} · ${agoTxt(p.edited||p.at)}</p></div>`:''}
+    <section class="pane bg-top"><p class="bg-intro">${esc(g.intro||'')}</p>
+      <div class="bg-prog"><div class="bg-bar"><i style="width:${pct}%"></i></div><span>${nRead}/${all.length} 읽음 · ${pct}%</span></div>
+      <div class="cp bg-q"><span class="cp-ic">${ic('search')}</span><input id="bgQ" class="in" value="${esc(S.bgQ||'')}" placeholder="궁금한 말로 찾기 — 예: 환불, 재배정, 지각, 권한, 요청메모" autocomplete="off"></div>
+      <div class="bg-meta">기준: ${(g.src||[]).map(esc).join(' · ')} · 올린 사람 ${esc(p.byName||memberName(p.by))}</div></section>
+    <div class="bg-grid">${nav}<div class="bg-main">${main}</div></div></div>`;
+}
+document.addEventListener('input',e=>{ if(e.target.id==='bgQ'){ S.bgQ=e.target.value; clearTimeout(S._bgT); S._bgT=setTimeout(()=>{ const pos=e.target.selectionStart; render(); const x=$('#bgQ'); if(x){ x.focus(); try{ x.setSelectionRange(pos,pos); }catch(err){} } },250); } });
+
+function bgUpModal(){
+  S._bgNew=null;
+  openModal(`${mHead('사업부 가이드 올리기')}<div class="body">
+    <p class="cu-lead"><b>사업부가이드.json</b> 파일을 골라 주세요. 팀 서버에만 저장되고 팀원끼리만 봐요. 새 버전을 올리면 모두의 화면이 새 내용으로 바뀌어요.</p>
+    <label class="btn pri" style="align-self:flex-start">${ic('clip')}파일 고르기<input type="file" id="bgFile" accept=".json,application/json" hidden></label>
+    <div id="bgNewInfo"></div></div>
+    <footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="bgUpGo" id="bgGo" disabled>올리기</button></footer>`,'narrow');
+  $('#bgFile').addEventListener('change',async e=>{ const f=e.target.files[0]; e.target.value=''; if(!f) return; const el=$('#bgNewInfo');
+    try{ const g=JSON.parse(await f.text()); if(!bgValid(g)) throw 0; S._bgNew=f;
+      el.innerHTML=`<div class="bg-tip"><b>${esc(g.title||'가이드')}</b><p>${g.chapters.length}개 장 · ${g.chapters.reduce((a,c)=>a+c.sections.length,0)}개 항목${g.updated?` · ${esc(g.updated)} 정리`:''}</p></div>`; $('#bgGo').disabled=false; }
+    catch(err){ S._bgNew=null; el.innerHTML='<div class="bg-warn"><b>이 파일은 가이드 파일이 아니에요</b><ul><li>사업부가이드.json 파일을 골라 주세요.</li></ul></div>'; $('#bgGo').disabled=true; } });
+}
+Object.assign(WACT,{
+  bgCh:el=>{ S.bgCh=el.dataset.k; S.bgQ=''; render(); const v=$('.bg-main'); if(v&&innerWidth<=900) v.scrollIntoView({behavior:'smooth',block:'start'}); else { $('#main').scrollTop=0; window.scrollTo&&window.scrollTo(0,0); } },
+  bgTog:el=>{ const k=el.dataset.k; S.bgOpen=S.bgOpen||{}; S.bgOpen[k]=!S.bgOpen[k]; render(); },
+  bgDone:el=>{ const k=el.dataset.k, r=bgRead(); if(r[k]) delete r[k]; else { r[k]=Date.now(); S.bgOpen&&(S.bgOpen[k]=false); } lsSet('md.bgRead',JSON.stringify(r)); render(); },
+  bgCopy:el=>{ const t=(S._bgTpl||[])[+el.dataset.k]; if(t!=null) copyText(t); },
+  bgQx:()=>{ S.bgQ=''; render(); },
+  bgRetry:()=>{ BG.fid=''; BG.err=''; render(); },
+  bgUp:()=>bgUpModal(),
+  bgUpGo:async el=>{ const f=S._bgNew; if(!f||el.disabled) return; el.disabled=true; el.textContent='올리는 중…'; const m=me(), old=bgPost();
+    try{ const j=await upFile(f,pct=>{ el.textContent=`올리는 중 ${pct}%`; });
+      teamPut('posts',{id:old&&old.by===m.user?old.id:uid('p'),cat:BIZ_CAT,title:'사업부 업무 가이드',body:'',files:[{id:j.id,name:j.name,size:j.size,type:'application/json'}],by:m.user,byName:m.name,at:(old&&old.at)||Date.now(),edited:Date.now()});
+      if(old&&old.by===m.user) (old.files||[]).forEach(x=>gas.call('POST',null,{a:'unfile',id:x.id}).catch(()=>{}));
+      BG.data=null; BG.fid=''; closeModal(); toast('가이드를 올렸어요','팀원 모두가 메뉴 → 업무 매뉴얼에서 볼 수 있어요.'); render(); }
+    catch(e){ el.disabled=false; el.textContent='다시 올리기'; toast('올리지 못했어요',e.msg||e.message||'','alarm-t'); } },
+});
 /* ===== EVENTS ===== */
 function ackToggle(key){
   const acks={...(S.settings.acks||{})}; if(acks[key]) delete acks[key]; else acks[key]=todayStr();
@@ -7691,6 +7867,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261029-0952';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261029-1041';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
