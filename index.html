@@ -2457,7 +2457,7 @@ e7:'안녕하세요 {이름}님, {지점} {멘토}입니다.\n수강 중이신 �
 e1:'안녕하세요 {이름}님, {지점} {멘토}입니다.\n내일 {종강일}이 「{과정}」 과정 마지막 수업입니다.\n그동안 정말 수고 많으셨어요. 수료 후 다음 단계도 함께 챙겨드릴게요.'};
 const OLD_S7='안녕하세요 {이름}님, {지점} {멘토}입니다.\n신청하신 「{과정}」 과정 개강 일정 안내드립니다.\n\n· 개강일: {개강일}\n· 수업 요일·시간: {요일} {시간}\n· 수업 기간: {개강일} ~ {종강일} (총 {회차}회)\n· 강의실: {강의실}\n\n개강 전 궁금하신 점은 언제든 편하게 연락 주세요.';
 const TPL_LABEL={s7:'개강안내',s7z:'개강안내 (비대면)',s1:'개강 전날',e7:'종강 안내',e1:'종강 전날'};
-const DEFAULT_SETTINGS={zoomsV2:true,rooms:{B:'4층 B강의장'},theme:'aurora',fx:'shard',themeV2:true,themeV3:true,themeV4:true,sfx:true,zooms:[],name:'김병로',role:'코리아AI아카데미 · 멘토',mentor:'김병로 멘토',branch:'코리아AI아카데미',offsets:[7,1],icsTime:'09:30',pin:'',tpl:clone(TPL_DEFAULT),acks:{},started:false};
+const DEFAULT_SETTINGS={zoomsV2:true,rooms:{B:'4층 B강의장'},theme:'aurora',fx:'rise',themeV2:true,themeV3:true,themeV4:true,sfx:true,zooms:[],name:'김병로',role:'코리아AI아카데미 · 멘토',mentor:'김병로 멘토',branch:'코리아AI아카데미',offsets:[7,1],icsTime:'09:30',pin:'',tpl:clone(TPL_DEFAULT),acks:{},started:false};
 const DEFAULT_SERVER='https://script.google.com/macros/s/AKfycbyEKOo2BCCLq4WhcI6a_ZQQ5n_4cx09EqKmw2CaLI9-JjZJ3Tv7R07llaHHd5MSfMZ-CQ/exec';
 /* 팀 동기화 때도 기기·사람마다 따로 유지되는 설정 */
 const PERSONAL_KEYS=['theme','fx','sfx','name','role','mentor','pin','acks','offsets','icsTime','calOn','calKey','calTime'];
@@ -3231,7 +3231,7 @@ function vSettings(){
     <label class="field"><span>안내 문구 {지점}</span><input class="in" data-set="branch" value="${esc(s.branch)}"></label>
     <label class="field"><span>안내 문구 {멘토}</span><input class="in" data-set="mentor" value="${esc(s.mentor)}"></label></div></section>
   <section class="pane"><h2>배경 <small>움직이는 배경 테마 · PC와 휴대폰에 함께 적용돼요</small></h2>${themes}<div class="btns" style="margin-top:16px"><label class="check"><input type="checkbox" data-act="sfxToggle" ${s.sfx?'checked':''}>효과음</label><button class="btn sm" data-act="bootPreview">${ic('right')}로딩 화면 · 소리 미리 보기</button><button class="btn sm" data-act="brief">${ic('send')}음성 브리핑 미리 듣기</button><button class="btn sm" data-act="replayBoot">로딩 화면 다시 보기</button></div>
-    <div class="field" style="margin-top:18px"><span>화면 전환 효과</span><div class="seg">${[['shard','파편 조립'],['stack','차곡차곡'],['rise','스르륵'],['off','끄기']].map(([k,l])=>`<button class="${(s.fx||'rise')===k?'on':''}" data-act="fxMode" data-k="${k}">${l}</button>`).join('')}</div><span style="font-size:12px;color:var(--faint);font-weight:400">파편 조립: 메뉴를 옮기면 창이 유리 파편으로 흩어졌다가, 새 창의 파편들이 하나씩 날아와 맞춰져요. 차곡차곡: 각 창이 아래에서 하나씩 올라와 제자리에 딱 맞물려요. 효과음을 켜 두면 조립 소리도 나요.</span></div></section>
+    <div class="field" style="margin-top:18px"><span>화면 전환 효과</span><div class="seg">${[['rise','스르륵'],['off','끄기']].map(([k,l])=>`<button class="${(s.fx==='off'?'off':'rise')===k?'on':''}" data-act="fxMode" data-k="${k}">${l}</button>`).join('')}</div><span style="font-size:12px;color:var(--faint);font-weight:400">파편 조립: 메뉴를 옮기면 창이 유리 파편으로 흩어졌다가, 새 창의 파편들이 하나씩 날아와 맞춰져요. 차곡차곡: 각 창이 아래에서 하나씩 올라와 제자리에 딱 맞물려요. 효과음을 켜 두면 조립 소리도 나요.</span></div></section>
   <section class="pane"><h2>알림</h2><div class="form">
     <div class="field full"><span>개강·종강 며칠 전에 알릴까요</span><div class="btns">${[14,7,3,1].map(o=>`<label class="check"><input type="checkbox" data-act="offToggle" data-o="${o}" ${offs.includes(o)?'checked':''}>${o}일 전</label>`).join('')}</div></div>
     <label class="field"><span>휴대폰 달력 알림 시각</span><input class="in" type="time" data-set="icsTime" value="${esc(s.icsTime)}"></label>
@@ -4942,109 +4942,15 @@ function openCmd(){
 }
 function closeCmd(){ if(!CMD) return; CMD.el.remove(); CMD=null; sfx('close'); }
 document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&(e.key==='k'||e.key==='K')){ e.preventDefault(); CMD?closeCmd():openCmd(); } else if(e.key==='/'&&!CMD&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'')){ e.preventDefault(); openCmd(); } });
-/* ===== 화면 전환 효과: 파편 조립 — 유리 파편이 날아와 창의 윤곽을 맞추고, 내용이 켜짐 ===== */
+/* ===== 화면 전환 효과: 스르륵(기본) · 끄기 =====
+   예전 '파편 조립' · '차곡차곡'은 없앴어요 → 그 값으로 저장돼 있던 사람은 자동으로 스르륵 */
 const FX={
-  mode(){ return S.settings.fx||'rise'; },
-  reduced(){ try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; } },
-  on(){ return (this.mode()==='shard'||this.mode()==='stack')&&!this.reduced()&&typeof Element.prototype.animate==='function'; },
-  SEL:'.hero,.hpanel,.core-wrap,.pane,.banner,.stat,.pcard,.snip,.vh',
-  visible(el){ const r=el.getBoundingClientRect(); return r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight; },
-  targets(root){
-    const all=[...root.querySelectorAll(this.SEL)].filter(e=>this.visible(e));
-    return all.filter(e=>!all.some(o=>o!==e&&o.contains(e))).sort((a,b)=>{ const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect(); return (ra.top-rb.top)||(ra.left-rb.left); }).slice(0,9);
-  },
-  grid(r){ return [Math.max(2,Math.min(5,Math.round(r.width/190))),Math.max(2,Math.min(4,Math.round(r.height/150)))]; },
-  pieces(cols,rows){
-    const P=[]; for(let j=0;j<=rows;j++){ P[j]=[]; for(let i=0;i<=cols;i++){ const ji=(i>0&&i<cols)?(Math.random()-.5)*0.75:0, jj=(j>0&&j<rows)?(Math.random()-.5)*0.75:0; P[j][i]=[(i+ji)/cols*100,(j+jj)/rows*100]; } }
-    const out=[]; for(let j=0;j<rows;j++) for(let i=0;i<cols;i++){ const a=P[j][i],b=P[j][i+1],c=P[j+1][i+1],d=P[j+1][i]; if(Math.random()<.5) out.push([a,b,c],[a,c,d]); else out.push([a,b,d],[b,c,d]); }
-    return out.map(t=>({t,cx:(t[0][0]+t[1][0]+t[2][0])/3,cy:(t[0][1]+t[1][1]+t[2][1])/3}));
-  },
-  poly(t){ return `polygon(${t.map(p=>p[0].toFixed(2)+'% '+p[1].toFixed(2)+'%').join(',')})`; },
-  skin(el){
-    const cs=getComputedStyle(el); const acc=getComputedStyle(document.body).getPropertyValue('--accent').trim()||'#2f5bff';
-    const dark=document.body.classList.contains('dark')||(document.body.classList.contains('hud')&&!document.body.classList.contains('hlight')&&!document.body.classList.contains('exec'));
-    let bg=[cs.backgroundImage!=='none'?cs.backgroundImage:'',cs.backgroundColor&&cs.backgroundColor!=='rgba(0, 0, 0, 0)'?`linear-gradient(${cs.backgroundColor},${cs.backgroundColor})`:''].filter(Boolean).join(',');
-    if(!bg) bg=dark?'linear-gradient(rgba(120,200,255,.12),rgba(120,200,255,.06))':'linear-gradient(rgba(255,255,255,.85),rgba(245,247,250,.85))';
-    const sheen=dark?'linear-gradient(135deg,rgba(255,255,255,.28),rgba(255,255,255,0) 45%)':'linear-gradient(135deg,rgba(255,255,255,.9),rgba(255,255,255,0) 50%)';
-    const tint=`linear-gradient(315deg,color-mix(in srgb,${acc} 30%,transparent),transparent 55%)`;
-    return {bg:`${sheen},${tint},${bg}`,radius:cs.borderRadius};
-  },
-  shard(el,r,p,skin){
-    const d=document.createElement('div'); d.className='shard';
-    Object.assign(d.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',clipPath:this.poly(p.t),transformOrigin:`${p.cx}% ${p.cy}%`,background:skin.bg,borderRadius:skin.radius});
-    document.body.appendChild(d); return d;
-  },
-  /* new screen: shards fly in one by one, lock into the panel outline, then the panel lights up */
-  assemble(els,opt={}){
-    if(!this.on()) return Promise.resolve();
-    if(this.mode()==='stack') return this.stack(els,opt);
-    const list=(opt.raw?els:this.targets(els[0]&&els[0].closest?document.querySelector('#view'):document)).filter(e=>this.visible(e));
-    if(!list.length) return Promise.resolve();
-    sfx('roll');
-    const stagger=opt.stagger??50, gap=opt.gap??9, dur=opt.dur||330;
-    return Promise.all(list.map((el,k)=>{
-      const r=el.getBoundingClientRect(); const skin=this.skin(el);
-      const bare=el.classList.contains('vh')||el.classList.contains('core-wrap');
-      el.style.opacity='0';
-      if(bare){ const a=el.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:300,delay:(opt.base||0)+k*stagger+60,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}); el.style.opacity=''; return a.finished.catch(()=>{}); }
-      const [cols,rows]=this.grid(r); const pcs=this.pieces(cols,rows); const dir=Math.random()<.5?1:-1;
-      pcs.sort((a,b)=>(a.cx*dir+a.cy*0.6)-(b.cx*dir+b.cy*0.6)+(Math.random()-.5)*26);
-      const anims=pcs.map((p,n)=>{
-        const d=this.shard(el,r,p,skin);
-        const ang=Math.atan2(p.cy-50,p.cx-50)+(Math.random()-.5)*1.5, dist=(opt.dist||180)+Math.random()*(opt.spread||300);
-        const dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist-40, rot=(Math.random()-.5)*190, s0=.35+Math.random()*.5;
-        const delay=(opt.base||0)+k*stagger+n*gap;
-        if(n%2===0) setTimeout(()=>sfx('shard'),delay+dur*0.82);
-        return {d,a:d.animate([
-          {transform:`translate(${dx}px,${dy}px) rotate(${rot}deg) scale(${s0})`,opacity:0},
-          {offset:.45,opacity:1},
-          {offset:.8,transform:`translate(${-dx*0.025}px,${-dy*0.025}px) rotate(${-rot*0.02}deg) scale(1.02)`},
-          {transform:'none',opacity:1}],{duration:dur,delay,easing:'cubic-bezier(.16,.84,.3,1)',fill:'both'})};
-      });
-      return Promise.all(anims.map(x=>x.a.finished.catch(()=>{}))).then(()=>{
-        el.style.opacity='';
-        el.animate([{opacity:0,filter:'brightness(1.6)'},{opacity:1,filter:'brightness(1)'}],{duration:200,easing:'ease-out'});
-        anims.forEach(x=>{ x.d.animate([{opacity:1},{opacity:0}],{duration:170,easing:'ease-out',fill:'forwards'}).finished.then(()=>x.d.remove(),()=>x.d.remove()); });
-      });
-    }));
-  },
-  /* leaving screen: panels burst into shards */
-  /* 차곡차곡: 각 창이 화면 아래에서 하나씩 올라와 제자리에 딱 맞물림 */
-  stack(els,opt={}){
-    const list=(opt.raw?els:this.targets(document.querySelector('#view')||document)).filter(e=>this.visible(e));
-    if(!list.length) return Promise.resolve();
-    const stagger=opt.raw?0:85, dur=opt.raw?380:440;
-    return Promise.all(list.map((el,k)=>{
-      const r=el.getBoundingClientRect(); const dy=Math.max(140,innerHeight-r.top+40)*(opt.raw?.45:1);
-      const delay=k*stagger;
-      if(!opt.raw) setTimeout(()=>sfx('shard'),delay+dur*0.78);
-      const a=el.animate([
-        {transform:`translateY(${dy}px) scale(.97)`,opacity:0},
-        {offset:.5,opacity:1},
-        {offset:.8,transform:'translateY(-7px) scale(1.004)'},
-        {transform:'none',opacity:1}],{duration:dur,delay,easing:'cubic-bezier(.22,.9,.28,1)',fill:'backwards'});
-      return a.finished.then(()=>{ el.animate([{filter:'brightness(1.12)'},{filter:'brightness(1)'}],{duration:180,easing:'ease-out'}); },()=>{});
-    }));
-  },
-  shatter(){
-    if(!this.on()) return;
-    if(this.mode()==='stack'){ this.targets(document.querySelector('#view')||document).forEach(el=>el.animate([{opacity:1},{opacity:0,transform:'translateY(-14px)'}],{duration:110,fill:'forwards'})); return; }
-    const list=this.targets(document.querySelector('#view')||document);
-    list.forEach((el,k)=>{
-      const r=el.getBoundingClientRect();
-      if(el.classList.contains('vh')||el.classList.contains('core-wrap')){ el.animate([{opacity:1},{opacity:0,transform:'translateY(-8px)'}],{duration:120,fill:'forwards'}); return; }
-      const skin=this.skin(el); const [cols,rows]=this.grid(r);
-      this.pieces(cols,rows).forEach(p=>{
-        const d=this.shard(el,r,p,skin);
-        const ang=Math.atan2(p.cy-50,p.cx-50)+(Math.random()-.5)*1.2, dist=120+Math.random()*300;
-        d.animate([{transform:'none',opacity:1},{transform:`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist+70}px) rotate(${(Math.random()-.5)*240}deg) scale(${.3+Math.random()*.4})`,opacity:0}],{duration:260+Math.random()*110,delay:k*12+Math.random()*30,easing:'cubic-bezier(.45,0,.8,.55)',fill:'both'}).finished.then(()=>d.remove(),()=>d.remove());
-      });
-      el.style.opacity='0';
-    });
-    sfx('burst');
-  }
+  mode(){ const m=S.settings.fx; return m==='off'?'off':'rise'; },
+  on(){ return false; },
+  assemble(){ return Promise.resolve(); },
+  shatter(){},
 };
-function applyFx(){ document.body.classList.toggle('fx-shard',FX.mode()==='shard'||FX.mode()==='stack'); document.body.classList.toggle('fx-off',FX.mode()==='off'); }
+function applyFx(){ if(S.settings.fx==='shard'||S.settings.fx==='stack'){ S.settings.fx='rise'; try{ store.saveSettings(); }catch(e){} } document.body.classList.remove('fx-shard'); document.body.classList.toggle('fx-off',FX.mode()==='off'); }
 /* ===== 학생 업무: 기록 타임라인 · 콜백 · 과제 · 첨삭 · Claude 요청문 · 진단 수신함 ===== */
 const LOG_KINDS={memo:['상담','blue'],call:['통화','ok'],msg:['문자','cyan'],note:['메모',''],diag:['진단','warn'],task:['과제','violet'],review:['첨삭','violet'],cb:['콜백','warn']};
 const DOC_KINDS=['자기소개서','학업계획서','면접 답변','기타'];
@@ -7932,7 +7838,7 @@ const ACT={
     drawImport(); },
   imDo:()=>doImport(),
   cmd:()=>openCmd(),
-  fxMode:el=>{ S.settings.fx=el.dataset.k; store.saveSettings(); applyFx(); if(el.dataset.k==='shard'||el.dataset.k==='stack'){ S._fxAssemble=true; } S._anim=true; render(); },
+  fxMode:el=>{ S.settings.fx=el.dataset.k; store.saveSettings(); applyFx(); S._anim=true; render(); },
   brief:()=>{ sfx('ok'); speak(briefingText()); },
   bootPreview:()=>{ if(!S.settings.sfx) toast('효과음이 꺼져 있어요','아래 효과음을 켜면 소리도 같이 나와요.'); bootPreview(); },
   replayBoot:()=>{ try{ sessionStorage.removeItem('md.booted'); }catch(e){} sfx('boot'); const L=bootLines(); L.ready=true; bootSequence(L); },
@@ -8067,6 +7973,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261029-1247';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261029-1250';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
