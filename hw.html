@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>과제 제출 · 코리아AI아카데미</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="과제 내용을 확인하고 결과물 링크를 제출하세요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="과제 제출 · 코리아AI아카데미">
+<meta property="og:description" content="과제 내용을 확인하고 결과물 링크로 제출해 주세요.">
+<meta property="og:image" content="https://ligless.github.io/kaia-desk/icons/og-notice.png">
+<meta name="theme-color" content="#16110d">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="preload" as="image" href="icons/bg-lounge.jpg">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --room:#16110d;
+  --glass:rgba(26,20,16,.5); --glass-2:rgba(255,255,255,.06); --glass-3:rgba(255,255,255,.1);
+  --edge:rgba(255,255,255,.09); --edge-hi:rgba(255,255,255,.16);
+  --ink:#fbf6f0; --ink-2:rgba(251,246,240,.84); --sub:rgba(251,246,240,.62); --faint:rgba(251,246,240,.4);
+  --amber:#ff9d4d; --amber-ink:#2a1606; --amber-glass:rgba(255,157,77,.22); --amber-edge:rgba(255,190,130,.38);
+  --ok:#7ee0a5; --bad:#ff8a7a;
+  --blur:blur(24px) saturate(140%); --r:22px;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --f:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--room)}
+body{margin:0;color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere;-webkit-font-smoothing:antialiased;min-height:100vh}
+::selection{background:var(--amber);color:var(--amber-ink)}
+a{color:var(--amber);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:8px}
+h1,h2{margin:0;text-wrap:balance}
+.num{font-variant-numeric:tabular-nums}
+.scene{position:fixed;inset:0;z-index:-1;background:var(--room) url(icons/bg-lounge.jpg) center/cover no-repeat}
+.scene::after{content:"";position:absolute;inset:0;background:rgba(10,7,5,.34)}
+.glass{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:inset 0 0 0 1px var(--edge),inset 0 1px 0 var(--edge-hi);border-radius:var(--r)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:rgba(26,20,16,.92)}}
+
+.wrap{max-width:640px;margin:0 auto;padding:max(28px,env(safe-area-inset-top)) 16px max(40px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+.top{display:flex;align-items:center;gap:10px;color:var(--sub);font-size:14px;font-weight:600}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--amber);color:var(--amber-ink);display:grid;place-items:center}
+.mark svg{width:19px;height:19px}
+
+.hero{padding:26px 24px 22px}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--amber);letter-spacing:.02em}
+.hero h1{font-size:clamp(24px,6vw,32px);line-height:1.3;letter-spacing:-.02em;margin:8px 0 4px}
+.hero .who{color:var(--ink-2);font-size:15px}
+.due{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;margin-top:20px;padding:16px 18px;border-radius:16px;background:var(--glass-2);box-shadow:inset 0 0 0 1px var(--edge)}
+.dd{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.dd.soon{color:var(--amber)}.dd.over{color:var(--bad)}
+.due b{display:block;font-size:15px}.due span{color:var(--sub);font-size:14px}
+.bar{height:6px;border-radius:9px;background:rgba(255,255,255,.08);margin-top:10px;overflow:hidden;grid-column:1/-1}
+.bar i{display:block;height:100%;border-radius:9px;background:var(--amber);width:var(--w,0%);transition:width 900ms var(--ease-out)}
+
+.card{padding:20px 22px}
+.card h2{font-size:15px;color:var(--sub);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card h2 svg{width:17px;height:17px;color:var(--amber)}
+.desc{white-space:pre-wrap;color:var(--ink-2)}
+.desc a{word-break:break-all}
+
+label.f{display:block;margin-top:14px}
+label.f>span{display:block;font-size:14px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+label.f small{color:var(--faint);font-weight:500}
+.in{width:100%;font:inherit;font-size:16px;color:var(--ink);background:rgba(0,0,0,.22);border:0;box-shadow:inset 0 0 0 1px var(--edge-hi);border-radius:14px;padding:13px 14px;transition:box-shadow 160ms}
+.in:focus{outline:0;box-shadow:inset 0 0 0 2px var(--amber)}
+.in::placeholder{color:var(--faint)}
+textarea.in{resize:vertical;min-height:88px}
+.err{color:var(--bad);font-size:13px;margin-top:6px;display:none}.err.on{display:block}
+.chk{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chk label{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:var(--glass-2);box-shadow:inset 0 0 0 1px var(--edge);font-size:14px;cursor:pointer;user-select:none}
+.chk input{accent-color:var(--amber);width:16px;height:16px;margin:0}
+
+.btn{appearance:none;border:0;font:inherit;font-weight:700;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;padding:14px 18px;cursor:pointer;color:var(--ink);background:var(--glass-3);box-shadow:inset 0 0 0 1px var(--edge-hi);text-decoration:none;transition:transform 140ms var(--ease-out),background 160ms}
+.btn:active{transform:scale(.97)}
+.btn svg{width:18px;height:18px}
+.btn.pri{background:var(--amber);color:var(--amber-ink);box-shadow:none}
+.btn.wide{width:100%;margin-top:18px}
+.row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}
+.row .btn{padding:13px 8px;font-size:15px}
+
+.done{display:none}.done.on{display:block}
+.okc{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.okc i{width:40px;height:40px;border-radius:50%;background:rgba(126,224,165,.18);color:var(--ok);display:grid;place-items:center;flex:none}
+.okc i svg{width:22px;height:22px}
+.okc b{font-size:18px}
+.msg{white-space:pre-wrap;font-size:13px;line-height:1.55;color:var(--ink-2);background:rgba(0,0,0,.26);border-radius:12px;padding:12px 14px;margin-top:12px;max-height:180px;overflow:auto;word-break:break-all}
+.steps{margin:10px 0 0;padding-left:20px;color:var(--sub);font-size:14px}
+.toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:rgba(20,15,12,.94);color:var(--ink);padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;transition:all 260ms var(--ease-out);pointer-events:none;z-index:9}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+.mentor{display:flex;align-items:center;gap:14px;padding:16px 20px}
+.av{width:44px;height:44px;border-radius:50%;background:var(--amber-glass);box-shadow:inset 0 0 0 1px var(--amber-edge);display:grid;place-items:center;font-weight:800;color:var(--amber);flex:none}
+.mentor .g{flex:1;min-width:0}.mentor b{display:block}.mentor span{color:var(--sub);font-size:14px}
+.mentor a{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--glass-3);box-shadow:inset 0 0 0 1px var(--edge-hi);color:var(--ink)}
+.mentor a svg{width:19px;height:19px}
+.pfoot{text-align:center;color:var(--faint);font-size:12px;margin-top:6px}
+.fail{padding:28px 24px;text-align:center}.fail b{display:block;font-size:19px;margin-bottom:6px}.fail p{color:var(--sub);margin:0}
+
+.in-1{animation:up 600ms var(--ease-out) both}.in-2{animation:up 600ms 80ms var(--ease-out) both}.in-3{animation:up 600ms 160ms var(--ease-out) both}.in-4{animation:up 600ms 240ms var(--ease-out) both}
+@keyframes up{from{opacity:0;transform:translateY(14px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:420px){.hero{padding:22px 18px 18px}.card{padding:18px}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="scene" aria-hidden="true"></div>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+var P=function(d){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };
+var IC={
+  logo:P('<path d="M4 19V5l8 7 8-7v14"/>'),
+  doc:P('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'),
+  send:P('<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>'),
+  ok:P('<path d="M20 6 9 17l-5-5"/>'),
+  copy:P('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
+  share:P('<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>'),
+  sms:P('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'),
+  tel:P('<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>'),
+  link:P('<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>')
+};
+function h(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function linkify(t){ return h(t).replace(/https?:\/\/[^\s<]+/g,function(u){ return '<a href="'+u+'" target="_blank" rel="noopener">'+u+'</a>'; }); }
+function b64d(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; var bin=atob(s), u=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; }
+function b64e(u){ var b=''; for(var i=0;i<u.length;i+=0x8000) b+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function decode(){ var m=location.hash.slice(1).match(/^([01])\.(.+)$/); if(!m) return Promise.reject(0);
+  var bytes=b64d(m[2]);
+  if(m[1]==='0') return Promise.resolve(JSON.parse(new TextDecoder().decode(bytes)));
+  if(typeof DecompressionStream==='undefined') return Promise.reject(1);
+  var ds=new DecompressionStream('deflate-raw'); var w=ds.writable.getWriter(); w.write(bytes); w.close();
+  return new Response(ds.readable).text().then(JSON.parse); }
+function encode(o){ var raw=new TextEncoder().encode(JSON.stringify(o));
+  if(typeof CompressionStream==='undefined') return Promise.resolve('0.'+b64e(raw));
+  var cs=new CompressionStream('deflate-raw'); var w=cs.writable.getWriter(); w.write(raw); w.close();
+  return new Response(cs.readable).arrayBuffer().then(function(b){ return '1.'+b64e(new Uint8Array(b)); }); }
+var DOW='일월화수목금토';
+function ymd(s){ var p=String(s).split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+function md(s){ var d=ymd(s); return (d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DOW[d.getDay()]+')'; }
+var toastT=0; function toast(t){ var e=document.getElementById('toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(function(){ e.classList.remove('on'); },2200); }
+function copy(t){ if(navigator.clipboard&&window.isSecureContext){ navigator.clipboard.writeText(t).then(function(){ toast('복사했어요'); },fb); } else fb(); function fb(){ var a=document.createElement('textarea'); a.value=t; a.setAttribute('readonly',''); a.style.position='fixed'; a.style.opacity='0'; document.body.appendChild(a); a.select(); try{ document.execCommand('copy'); toast('복사했어요'); }catch(e){ toast('길게 눌러 직접 복사해 주세요'); } a.remove(); } }
+var KEY='kaiahw.'; function saved(id){ try{ return JSON.parse(localStorage.getItem(KEY+id)||'null'); }catch(e){ return null; } }
+function save(id,v){ try{ localStorage.setItem(KEY+id,JSON.stringify(v)); }catch(e){} }
+
+var D=null, MSG='';
+function render(d){ D=d;
+  var due=ymd(d.due), end=new Date(due); var tm=String(d.dt||'23:59').split(':'); end.setHours(+tm[0]||23,+tm[1]||59,59);
+  var now=new Date(); var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var left=Math.round((due-today)/864e5), over=now>end;
+  var ddTxt=over?'마감':left===0?'오늘':'D-'+left, ddCls=over?'over':left<=1?'soon':'';
+  var span=d.at?Math.max(1,(end-new Date(d.at))):7*864e5; var pct=over?100:Math.min(100,Math.max(4,100-(end-now)/span*100));
+  var prev=saved(d.h)||{};
+  var mi=(d.mn||'멘토').replace(/\s*멘토$/,'').slice(-2);
+  document.title=d.t+' · 과제 제출';
+  document.getElementById('app').innerHTML=
+   '<div class="top in-1"><span class="mark">'+IC.logo+'</span>'+h(d.br||'코리아AI아카데미')+'</div>'+
+   '<section class="glass hero in-1"><span class="eyebrow">'+IC.doc.replace('aria-hidden','style="width:15px;height:15px" aria-hidden')+(d.cn?h(d.cn):'과제')+'</span>'+
+     '<h1>'+h(d.t)+'</h1><div class="who">'+(d.n?h(d.n)+'님의 과제예요':'')+'</div>'+
+     '<div class="due"><div class="dd num '+ddCls+'">'+ddTxt+'</div><div><b>'+md(d.due)+' '+h(d.dt||'23:59')+'까지</b><span>'+(over?'마감이 지났어요. 그래도 제출하면 지각으로 기록돼요.':left===0?'오늘 마감이에요':left+'일 남았어요')+'</span></div><div class="bar"><i id="bar"></i></div></div></section>'+
+   (d.ds?'<section class="glass card in-2"><h2>'+IC.doc+'과제 내용</h2><div class="desc">'+linkify(d.ds)+'</div></section>':'')+
+   '<section class="glass card in-3" id="form"><h2>'+IC.send+'제출하기</h2>'+
+     '<label class="f"><span>결과물 링크 <small>깃허브 · 구글 드라이브 · 노션 · 코랩 등 공유 링크</small></span><input class="in" id="u" type="url" inputmode="url" autocomplete="off" placeholder="https://" value="'+h(prev.u||'')+'"></label><div class="err" id="ue">https:// 로 시작하는 링크를 넣어 주세요</div>'+
+     '<label class="f"><span>멘토님께 한마디 <small>선택</small></span><textarea class="in" id="cm" rows="3" maxlength="500" placeholder="예: 3번 문제가 어려웠어요. 반복문 조건을 다시 봐 주세요.">'+h(prev.cm||'')+'</textarea></label>'+
+     '<label class="f"><span>제출 전 확인</span></label><div class="chk"><label><input type="checkbox" class="ck">링크가 열리는지 확인했어요</label><label><input type="checkbox" class="ck">공유 권한을 \'링크가 있는 모든 사용자\'로 열었어요</label></div>'+
+     '<button class="btn pri wide" id="go">'+IC.send+'제출하기</button></section>'+
+   '<section class="glass card done in-1" id="done"><div class="okc"><i>'+IC.ok+'</i><div><b>제출 준비가 됐어요</b><div style="color:var(--sub);font-size:14px">아래 버튼으로 이 메시지를 멘토님께 보내면 제출이 끝나요.</div></div></div>'+
+     '<div class="row"><button class="btn pri" id="sms">'+IC.sms+'문자로 보내기</button><button class="btn" id="sh">'+IC.share+'공유</button><button class="btn" id="cp">'+IC.copy+'복사</button></div>'+
+     '<div class="msg" id="msg"></div><ol class="steps"><li>메시지 맨 아래 <b>제출 확인 코드</b>까지 꼭 같이 보내 주세요.</li><li>링크를 바꿨다면 다시 제출하면 돼요.</li></ol>'+
+     '<button class="btn wide" id="again" style="margin-top:12px">다시 고쳐서 제출</button></section>'+
+   ((d.mn||d.hp||d.tel)?'<section class="glass mentor in-4"><span class="av">'+h(mi)+'</span><div class="g"><b>'+h(d.mn||'담당 멘토')+'</b><span>궁금한 점은 편하게 물어보세요</span></div>'+
+     (d.hp?'<a href="sms:'+h(d.hp)+'" aria-label="문자">'+IC.sms+'</a>':'')+((d.hp||d.tel)?'<a href="tel:'+h(d.hp||d.tel)+'" aria-label="전화">'+IC.tel+'</a>':'')+'</section>':'')+
+   '<div class="pfoot">이 페이지는 받은 링크 안의 정보로만 보여요 · 서버에 저장되지 않아요</div>';
+  requestAnimationFrame(function(){ setTimeout(function(){ var b=document.getElementById('bar'); if(b) b.style.setProperty('--w',pct+'%'); },120); });
+  document.getElementById('go').onclick=submit;
+  document.getElementById('again').onclick=function(){ document.getElementById('done').classList.remove('on'); document.getElementById('form').style.display=''; document.getElementById('u').focus(); };
+  document.getElementById('cp').onclick=function(){ copy(MSG); };
+  document.getElementById('sh').onclick=function(){ if(navigator.share) navigator.share({text:MSG}).catch(function(){}); else copy(MSG); };
+  document.getElementById('sms').onclick=function(){ if(!d.hp){ copy(MSG); toast('멘토 번호가 없어 복사했어요 · 카톡 등에 붙여 넣어 주세요'); return; }
+    var ios=/iP(hone|ad|od)/.test(navigator.userAgent); location.href='sms:'+d.hp.replace(/[^0-9+]/g,'')+(ios?'&':'?')+'body='+encodeURIComponent(MSG); };
+  if(prev.at&&prev.code){ showDone(prev); }
+}
+function submit(){ var u=document.getElementById('u').value.trim(), cm=document.getElementById('cm').value.trim().slice(0,500);
+  var ok=/^https?:\/\/[^\s]+\.[^\s]+/.test(u); document.getElementById('ue').classList.toggle('on',!ok); if(!ok){ document.getElementById('u').focus(); return; }
+  var at=new Date().toISOString();
+  encode({h:D.h,sid:D.sid,n:D.n,t:D.t,u:u,cm:cm,at:at}).then(function(code){ var v={u:u,cm:cm,at:at,code:code}; save(D.h,v); showDone(v); });
+}
+function showDone(v){
+  var d=new Date(v.at); var when=(d.getMonth()+1)+'/'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+  MSG='[과제 제출] '+(D.n||'')+' · '+D.t+'\n링크: '+v.u+(v.cm?'\n한마디: '+v.cm:'')+'\n제출 시각: '+when+'\n\n제출 확인 코드: KAIAHW1.'+v.code;
+  document.getElementById('msg').textContent=MSG;
+  document.getElementById('form').style.display='none'; document.getElementById('done').classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function fail(){ document.getElementById('app').innerHTML='<section class="glass fail"><b>과제 정보를 열 수 없어요</b><p>링크가 잘렸을 수 있어요. 받은 링크 전체를 다시 눌러 주세요.</p></section>'; }
+decode().then(function(d){ if(!d||!d.h||!d.t||!d.due) throw 0; render(d); }).catch(fail);
+</script>
+</body>
+</html>
