@@ -1920,22 +1920,13 @@ function parseDays(str){
   return a.length?{a:a.sort(),b:null}:null;
 }
 function daysLabel(days,daysB){
-  const lab=d=>{
-    if(!d||!d.length) return '';
-    const s=[...d].sort((x,y)=>((x+6)%7)-((y+6)%7));
-    const key=s.join(',');
-    if(key==='1,2,3,4,5') return '월~금';
-    if(key==='1,2,3,4,5,6') return '월~토';
-    if(key==='6,0') return '토·일';
-    return s.map(x=>DOW[x]).join('·');
-  };
-  const pl=d=>[...d].sort((x,y)=>((x+6)%7)-((y+6)%7)).map(x=>DOW[x]).join('');
-  return daysB&&daysB.length&&pl(days)!==pl(daysB)? `1주 ${pl(days)} / 2주 ${pl(daysB)}` : lab(days);
+  /* 엑셀 표기 그대로: 화목 · 월수금 · 2주 반복이면 화목화목금 · 월수금월수 */
+  const pl=d=>[...(d||[])].sort((x,y)=>((x+6)%7)-((y+6)%7)).map(x=>DOW[x]).join('');
+  const one=d=>{ const k=pl(d); return k==='월화수목금'?'월~금':k==='월화수목금토'?'월~토':k; };
+  if(!days||!days.length) return '';
+  return daysB&&daysB.length&&pl(days)!==pl(daysB)? pl(days)+pl(daysB) : one(days);
 }
-/* 2주 반복(화목화목금 · 월수금월수) 요일을 한눈에: 1주차 · 2주차를 나눠서 칩으로 */
-function daysHtml(c){ const ord=d=>[...(d||[])].sort((x,y)=>((x+6)%7)-((y+6)%7)).map(x=>DOW[x]).join('');
-  if(c&&c.daysB&&c.daysB.length&&ord(c.days)!==ord(c.daysB)) return `<span class="wkp" title="${ord(c.days)}${ord(c.daysB)} (2주 반복)"><span><b>1주</b>${ord(c.days)}</span><span><b>2주</b>${ord(c.daysB)}</span></span>`;
-  return `<span class="wkd">${esc(daysLabel(c&&c.days&&c.days.length?c.days:defaultDays(c||{}),null))}</span>`; }
+function daysHtml(c){ return `<span class="wkd">${esc(daysLabel(c&&c.days&&c.days.length?c.days:defaultDays(c||{}),c&&c.daysB))}</span>`; }
 /* 수업 날짜를 주(월~일)마다 묶기 → 어느 주가 1주 · 2주 패턴인지 확인 */
 function sessionWeeks(c){ const ss=sessionsOf(c); if(!ss.length) return []; const s0=parseYmd(c.start); const w0=new Date(s0); w0.setDate(w0.getDate()-s0.getDay());
   const out=[]; let cur=null; ss.forEach(d=>{ const dt=parseYmd(d); const wi=Math.floor(Math.round((dt-w0)/864e5)/7); if(!cur||cur.wi!==wi){ cur={wi,b:!!(c.daysB&&c.daysB.length&&wi%2),days:[]}; out.push(cur); } cur.days.push(d); }); return out; }
@@ -3319,7 +3310,6 @@ function drawCourse(){
           <div class="wkrow b"><b>2주차<small>다음 주</small></b><div class="dowpick">${[1,2,3,4,5,6,0].map(d=>`<button type="button" data-act="cDayB" data-d="${d}" class="${(c.daysB||[]).includes(d)?'on':''}">${DOW[d]}</button>`).join('')}</div></div>`
           :`<div class="dowpick" id="cfDays">${[1,2,3,4,5,6,0].map(d=>`<button type="button" data-act="cDay" data-d="${d}" class="${(c.days||[]).includes(d)?'on':''}">${DOW[d]}</button>`).join('')}</div>`}
           <label class="check wkt"><input type="checkbox" data-act="cWk" ${c.daysB?'checked':''}>2주마다 요일이 바뀌어요 <small>(예: 화목화목금 · 월수금월수)</small></label></div></div>
-      ${(()=>{ const W=sessionWeeks(c); if(!W.length) return ''; return `<div class="field full"><span>수업 날짜 확인 <small style="color:var(--faint)">주마다 · ${W.reduce((a,w)=>a+w.days.length,0)}회</small></span><div class="wklist">${W.map((w,i)=>`<div class="wkl ${w.b?'b':''}"><b>${i+1}주${c.daysB?` <small>${w.b?'2주 패턴':'1주 패턴'}</small>`:''}</b><span>${w.days.map(d=>fmtMD(d)).join('<i>·</i>')}</span></div>`).join('')}</div></div>`; })()}
       <label class="field"><span>개강일</span><input id="cfStart" class="in" type="date" value="${c.start||''}"></label>
       <label class="field"><span>종강일 <small style="color:var(--faint)">(비우면 회차로 계산)</small></span><input id="cfEnd" class="in" type="date" value="${c.end||''}"></label>
       <label class="field"><span>총 회차</span><input id="cfTotal" class="in" type="number" min="1" value="${c.total||''}" placeholder="예: 20"></label>
@@ -8038,6 +8028,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261031-1826';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261031-1907';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
