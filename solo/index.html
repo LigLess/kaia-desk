@@ -2073,6 +2073,22 @@ body.dark[data-bg="lounge"] .hw-av,body.dark[data-bg="emerald"] .hw-av{color:#1a
 .wd-i:hover span,.wd-i:focus-visible span{opacity:1;transform:none}
 .wd-all{border:0;background:transparent;color:var(--muted);font:inherit;font-size:11px;font-weight:700;cursor:pointer;padding:4px 0}.wd-all:hover{color:var(--fg)}
 @media (max-width:760px){.wdock{top:auto;bottom:calc(84px + env(safe-area-inset-bottom));right:12px;transform:none;flex-direction:row;padding:6px 8px}.wdock .wd-h{writing-mode:horizontal-tb;padding:0 4px}@keyframes wdIn{from{opacity:0;transform:translateY(10px)}}.wd-i{width:38px;height:38px}.wd-i span{display:none}.wbtn-t{display:none}}
+.hw-who .chip.on{background:var(--accent);color:#fff;border-color:transparent}.hw-who .chip.on small{color:inherit;opacity:.8}
+.hw-mode{margin-bottom:12px;max-width:320px}.hw-mode button{flex:1}
+.hw-lanes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}
+@media(max-width:1100px){.hw-lanes{grid-template-columns:1fr}}
+.hw-lane h2 small{font-variant-numeric:tabular-nums}.hw-lane h2 em{font-style:normal;font-size:12px;color:var(--muted);font-weight:500}
+.hw-lane.bad h2::before,.hw-lane.ok h2::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--bad);flex:none}.hw-lane.ok h2::before{background:var(--ok)}
+.hw-cards{display:flex;flex-direction:column;gap:6px;max-height:460px;overflow:auto;margin:0 -4px;padding:0 4px}
+.hw-card{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;align-items:baseline;padding:10px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);transition:border-color .15s,transform .15s}
+.hw-card:hover{border-color:var(--accent)}.hw-card:active{transform:scale(.99)}.hw-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hw-card .hc-n{font-weight:700;font-size:13px;grid-row:1/3}.hw-card b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hw-card small{grid-column:2;color:var(--muted);font-size:12px}.hw-card small b{font-size:12px;color:var(--fg)}
+.hw-none{color:var(--muted);font-size:13px;padding:6px 0}
+.hw-mhead{display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px;margin-bottom:14px}.hw-mhead>div:first-child{display:flex;flex-direction:column;min-width:160px}.hw-mhead>div:first-child b{font-size:20px}.hw-mhead>div:first-child span{color:var(--muted);font-size:13px}
+.hw-mstat{display:flex;gap:8px;flex-wrap:wrap}.hw-mstat span{display:flex;flex-direction:column;align-items:center;min-width:64px;padding:6px 10px;border-radius:10px;background:var(--surface-2);font-size:12px;color:var(--muted)}.hw-mstat b{font-size:18px;color:var(--fg)}.hw-mstat .warn b{color:var(--warn)}
+.hw-mhead .btns{margin-left:auto}
+.hw-view>.pane+.pane{margin-top:14px}
+.hw-as>.body{padding:0;max-height:none;overflow:visible}
 .hw-grade{margin-bottom:14px;border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
 .hw-gl{display:flex;flex-direction:column;gap:6px}.hw-g{display:grid;grid-template-columns:110px minmax(0,1fr) auto 84px auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--panel-2,rgba(127,127,127,.06))}
 .hw-g>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hw-g small{display:block;color:var(--muted);font-size:12px}.hw-g .in{height:34px;padding:0 8px}
@@ -3460,7 +3476,7 @@ function vTasks(){
   const g={over:open.filter(k=>k.due&&k.due<t),today:open.filter(k=>k.due===t),later:open.filter(k=>k.due&&k.due>t),none:open.filter(k=>!k.due)};
   const sec=(title,arr)=>arr.length?`<h2 style="margin-top:14px">${title} <small>${arr.length}</small></h2><div class="list">${arr.map(taskRow).join('')}</div>`:'';
   const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-  return `<div class="view">${vh('업무','콜백 약속 · 개강 준비 · 서류 같은 할 일을 날짜와 시간으로 관리해요',`<button class="btn" data-act="qzOpenFree">${ic('task')}과제 제작</button><button class="btn pri" data-act="wLead">${ic('plus')}빠른 상담 등록</button>`)}${workHub()}
+  return `<div class="view">${vh('업무','콜백 약속 · 개강 준비 · 서류 같은 할 일을 날짜와 시간으로 관리해요',`<button class="btn pri" data-act="wLead">${ic('plus')}빠른 상담 등록</button>`)}${workHub()}
   <section class="pane"><form id="taskForm" class="form" style="grid-template-columns:minmax(0,2.2fr) repeat(4,minmax(0,1fr)) auto;align-items:end">
     <label class="field"><span>할 일</span><input id="tkText" class="in" placeholder="예: 한도윤 학생 3시 콜백" required></label>
     <label class="field"><span>날짜</span><input id="tkDue" class="in" type="date" value="${t}"></label>
@@ -3632,7 +3648,7 @@ function drawStudent(){
   const s=SM; const cs=list('courses').sort((a,b)=>(b.start||'').localeCompare(a.start||'')); const t=todayStr();
   const relevant=cs.filter(c=>s.courses.includes(c.id)||courseEnd(c)>=addDays(t,-30));
   const tab=s._tab||'info';
-  const html=`${mHead(s.id?esc(s.name):'학생 추가')}${stuTabs(s)}${tab!=='info'?(tab==='log'?stuLogTab(s):tab==='as'?stuAssignTab(s):stuDocTab(s)):`<div class="body"><div class="form">
+  const html=`${mHead(s.id?esc(s.name):'학생 추가')}${stuTabs(s)}${tab!=='info'?(tab==='log'?stuLogTab(s):tab==='doc'?stuDocTab(s):stuLogTab(s)):`<div class="body"><div class="form">
     <label class="field"><span>이름</span><input id="sfName" class="in" value="${esc(s.name)}"></label>
     <label class="field"><span>연락처</span><input id="sfPhone" class="in" inputmode="tel" value="${esc(s.phone)}" placeholder="010-0000-0000"></label>
     <label class="field"><span>상태</span><select id="sfStatus" class="in">${STATUSES.map(x=>`<option ${s.status===x?'selected':''}>${x}</option>`).join('')}</select></label>
@@ -3642,7 +3658,7 @@ function drawStudent(){
     <div class="field full"><span>수강 과목</span>${relevant.length>6?`<div class="cp sf-q"><span class="cp-ic">${ic('search')}</span><input id="sfSubjQ" class="in cp-in-plain" placeholder="과목 검색 — 이름 일부나 초성(ㅍㅇㅆ)" autocomplete="off"></div>`:''}<div class="sf-subj">${(()=>{ const g=courseGroups(relevant).sort((a,b)=>(b.ids.some(id=>s.courses.includes(id))-a.ids.some(id=>s.courses.includes(id)))||a.name.localeCompare(b.name,'ko')); return g.length?g.map(x=>`<label class="check"><input type="checkbox" class="sfN" data-ids="${x.ids.join(',')}" ${x.ids.some(id=>s.courses.includes(id))?'checked':''}>${esc(x.name)}</label>`).join(''):'<span style="color:var(--faint);font-size:13px">등록된 과정이 없어요. 시간표를 먼저 올려 주세요.</span>'; })()}<span id="sfSubjNone" hidden style="color:var(--faint);font-size:13px">찾는 과목이 없어요</span></div></div>
     ${(s.prevCourses||[]).length?`<div class="field full"><span>시간표에 없는 수강 이력 <small style="color:var(--faint)">(이전 프로그램 · 같은 날짜 수업이 시간표에 올라오면 자동 연결)</small></span><div class="btns">${s.prevCourses.map(p=>typeof p==='string'?{name:p}:p).map(p=>`<span class="chip">${esc(p.name)}${p.start?` ${yyDot(p.start)}~${yyDot(p.end)}`:''}${p.att?` · 출석 ${p.att}회`:''}</span>`).join('')}</div></div>`:''}
     <label class="field full"><span>메모</span><textarea id="sfMemo" class="in" rows="5">${esc(s.memo||'')}</textarea></label>
-    <div class="field full wk-hint">상담 · 통화 · 진단 기록과 콜백은 <b>기록</b> 탭, 과제는 <b>과제</b> 탭, 자소서 · 면접 첨삭은 <b>첨삭</b> 탭에서 관리해요.</div>
+    <div class="field full wk-hint">상담 · 통화 · 진단 기록과 콜백은 <b>기록</b> 탭, 과제 제작 · 제출 · 채점은 왼쪽 메뉴 <b>과제</b> 화면, 자소서 · 면접 첨삭은 <b>첨삭</b> 탭에서 관리해요.</div>
   </div></div>`}<footer>${s.id?`<button class="btn danger" data-act="delStudent" style="margin-right:auto">${ic('trash')}삭제</button>`:''}<button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="saveStudent">${s.id?'저장':'추가'}</button></footer>`;
   if(modalEl&&modalEl._kind==='student'){ modalEl.querySelector('.sheet').innerHTML=html; } else { openModal(html); modalEl._kind='student'; }
 }
@@ -5351,7 +5367,7 @@ function stuCallbacks(sid){ return list('tasks').filter(k=>k.sid===sid&&k.cat===
 function stuTabs(s){
   const tab=s._tab||'info';
   const n={log:(s.logs||[]).length,as:(s.assigns||[]).length,doc:(s.docs||[]).length};
-  return `<div class="tabs wk-tabs">${[['info','정보'],['log','기록',n.log],['as','과제',n.as],['doc','첨삭',n.doc]].map(([k,l,c])=>`<button class="${tab===k?'on':''}" data-act="wTab" data-k="${k}">${l}${c?` <small>${c}</small>`:''}</button>`).join('')}</div>`;
+  return `<div class="tabs wk-tabs">${[['info','정보'],['log','기록',n.log],['doc','첨삭',n.doc]].map(([k,l,c])=>`<button class="${tab===k?'on':''}" data-act="wTab" data-k="${k}">${l}${c?` <small>${c}</small>`:''}</button>`).join('')}</div>`;
 }
 
 /* ---------- 기록 탭 ---------- */
@@ -5534,11 +5550,9 @@ function workHub(){
   const inbox=S.mode==='gas'?inboxList().length:0;
   const g=k=>rows.filter(r=>r.g===k);
   const card=(title,n,body,cls='')=>`<div class="wk-hub-c ${cls}"><div class="wk-hub-n">${n}</div><div class="wk-hub-t">${title}</div>${body}</div>`;
-  const lst=arr=>arr.length?`<div class="wk-hub-l">${arr.slice(0,4).map(r=>`<button data-act="wOpen" data-id="${r.s.id}" data-tab="${r.tab||'as'}">${esc(r.s.name)} · ${esc(r.txt)}</button>`).join('')}</div>`:'';
-  if(!rows.length&&!recentDocs.length&&!inbox) return '';
-  return `<section class="pane"><h2>학생 업무 <small>과제 · 첨삭 · 진단 결과</small><button class="btn sm r" data-act="wLead">${ic('plus')}빠른 상담 등록</button></h2><div class="wk-hub">
-    ${card('채점 대기',g('grade').length,lst(g('grade')),g('grade').length?'warn':'')}
-    ${card('마감 지난 과제',g('late').length,lst(g('late')),g('late').length?'bad':'')}
+  const lst=arr=>arr.length?`<div class="wk-hub-l">${arr.slice(0,4).map(r=>`<button data-act="wOpen" data-id="${r.s.id}" data-tab="${r.tab||'info'}">${esc(r.s.name)} · ${esc(r.txt)}</button>`).join('')}</div>`:'';
+  if(!recentDocs.length&&!inbox) return '';
+  return `<section class="pane"><h2>학생 업무 <small>첨삭 · 진단 결과 · 과제는 과제 탭</small><button class="btn sm r" data-act="wLead">${ic('plus')}빠른 상담 등록</button></h2><div class="wk-hub">
     ${card('첨삭 진행 중',recentDocs.length,lst(recentDocs.map(x=>({s:x.s,tab:'doc',txt:`${x.v.kind} · ${x.v.label}`}))))}
     ${S.mode==='gas'?card('새 진단 결과',inbox,inbox?'<div class="wk-hub-l"><button data-go="alarms">수신함 열기</button></div>':'',inbox?'warn':''):''}
   </div></section>`;
@@ -5546,9 +5560,11 @@ function workHub(){
 
 /* ---------- 동작 ---------- */
 function wSync(){ if($('#sfName')) readStudentForm(); }
-function wPersist(){ if(!SM||!SM.id||!D().students[SM.id]) return false; const o=clone(SM); ['_tab','_lk','_paste','_cb','_asNew','_dk'].forEach(k=>delete o[k]); store.put('students',o); return true; }
+function wPersist(){ if(!SM||!SM.id||!D().students[SM.id]) return false;
+  if(SM._page){ store.put('students',{...D().students[SM.id],assigns:clone(SM.assigns||[])}); return true; }   // 과제 탭에서: 과제만 저장
+  const o=clone(SM); ['_tab','_lk','_paste','_cb','_asNew','_dk'].forEach(k=>delete o[k]); store.put('students',o); return true; }
 const wSaved=()=>SM&&SM.id&&D().students[SM.id]?'자동으로 저장했어요.':'아래 추가 버튼을 누르면 학생과 함께 저장돼요.';
-function wRedraw(){ wPersist(); drawStudent(); }
+function wRedraw(){ wPersist(); if(SM&&SM._page){ S.hwAsNew=!!SM._asNew; render(); return; } drawStudent(); }
 Object.assign(WACT,{
   wTab:el=>{ wSync(); SM._tab=el.dataset.k; wRedraw(); },
   wLogKind:el=>{ SM._lk=el.dataset.k; const keep=$('#wlText')&&$('#wlText').value; wRedraw(); if(keep&&$('#wlText')) $('#wlText').value=keep; },
@@ -5581,7 +5597,7 @@ Object.assign(WACT,{
     store.put('students',s); const due=$('#qlDate').value, time=$('#qlTime').value;
     if(time) store.put('tasks',{id:uid('t'),text:`${name} 콜백${s.goal?' · '+s.goal:''}`,due:due||todayStr(),time,cat:'콜백',sid:s.id,done:false,at:Date.now()});
     closeModal(); toast('상담 학생을 등록했어요',time?`${dueLabel({due:due||todayStr(),time})} 콜백 알림을 잡았어요.`:''); render(); },
-  wOpen:el=>{ openStudent(el.dataset.id); SM._tab=el.dataset.tab||'info'; drawStudent(); },
+  wOpen:el=>{ if((el.dataset.tab||'')==='as'){ wGoAs(el.dataset.id); return; } openStudent(el.dataset.id); SM._tab=el.dataset.tab||'info'; drawStudent(); },
   wInAttach:el=>{ const sid=el.dataset.sid||($('#wis_'+el.dataset.id)||{}).value; if(!sid){ toast('붙일 학생을 골라 주세요',''); return; } inboxAttach(el.dataset.id,sid); },
   wInLead:el=>{ const r=S.inbox[el.dataset.id]; if(!r) return; const s={id:uid('s'),name:r.name||'이름 없음',phone:r.phone||'',status:'상담중',courses:[],goal:r.test?`${r.test} 응시`:'',memo:'',logs:[],sent:{},at:Date.now()}; store.put('students',s); inboxAttach(r.id,s.id); },
   wInHide:el=>{ inboxDone(el.dataset.id,''); render(); },
@@ -6444,7 +6460,7 @@ function quizReport(s,a,print){
 function openReport(sid,aid){
   const s=D().students[sid]; const a=s&&(s.assigns||[]).find(x=>x.id===aid); if(!a||!a.res) return;
   const weak=Object.entries(a.res.by).filter(([k,v])=>v.c/v.n<0.8).map(([k])=>+k);
-  openModal(`${mHead('수준 분석')}<div class="body">${quizReport(s,a,false)}</div><footer><button class="btn ghost" data-act="qzBackStu" data-id="${sid}">학생으로</button><button class="btn" data-act="qzRepPrompt" data-id="${sid}" data-aid="${aid}">${ic('send')}Claude 심층 분석 요청문</button><button class="btn" data-act="qzRepPrint" data-id="${sid}" data-aid="${aid}">인쇄</button><button class="btn pri" data-act="qzNext" data-id="${sid}" data-aid="${aid}" data-weak="${weak.join(',')}">보완 과제 만들기</button></footer>`,'wide');
+  openModal(`${mHead('수준 분석')}<div class="body">${quizReport(s,a,false)}</div><footer><button class="btn ghost" data-act="qzBackStu" data-id="${sid}">과제로 돌아가기</button><button class="btn" data-act="qzRepPrompt" data-id="${sid}" data-aid="${aid}">${ic('send')}Claude 심층 분석 요청문</button><button class="btn" data-act="qzRepPrint" data-id="${sid}" data-aid="${aid}">인쇄</button><button class="btn pri" data-act="qzNext" data-id="${sid}" data-aid="${aid}" data-weak="${weak.join(',')}">보완 과제 만들기</button></footer>`,'wide');
   modalEl._kind='report';
 }
 
@@ -6469,28 +6485,28 @@ Object.assign(WACT,{
   qzLv:el=>{ QW.topics=qzSelTopics(); QW.lv=+el.dataset.k; drawQuiz(); },
   qzPer:el=>{ QW.topics=qzSelTopics(); QW.per=+el.dataset.k; drawQuiz(); },
   qzPrev:()=>{ if(QW.step===3){ QW.step=2; } else { QW.step=1; } drawQuiz(); },
-  qzBack:()=>{ const sid=QW.back; closeModal(); if(sid){ openStudent(sid); SM._tab='as'; drawStudent(); } },
+  qzBack:()=>{ const sid=QW.back; closeModal(); if(sid) wGoAs(sid); },
   qzMake:()=>{ const tp=qzSelTopics(); if(!tp.length){ toast('영역을 하나 이상 골라 주세요',''); return; } QW.topics=tp; QW.qs=qzPick(QW.sub,QW.lv,tp,QW.per); QW.step=3; drawQuiz(); },
   qzShuffle:()=>{ QW.qs=qzPick(QW.sub,QW.lv,QW.topics,QW.per); drawQuiz(); },
   qzWord:()=>{ qzAutoReg(); const s=D().students[$('#qzSid').value]; const qz={sub:QW.sub,lv:QW.lv,qs:QW.qs,title:qzTitle(QW.sub,QW.lv)}; saveFile(qzFileName(qz,s&&s.name,'과제'),wordDoc(wsHTML(qz,{name:s?s.name:''}),qz.title)); },
   qzPrint:()=>{ qzAutoReg(); const s=D().students[$('#qzSid').value]; printHTML(wsHTML({sub:QW.sub,lv:QW.lv,qs:QW.qs,title:qzTitle(QW.sub,QW.lv)},{name:s?s.name:''})); },
-  qzSave:()=>{ const sid=$('#qzSid').value; if(!sid){ toast('학생을 골라 주세요','학생 없이 쓸 때는 Word나 인쇄만 하면 돼요.'); return; } if(QW._reg===sid+'|'+QW.qs.map(q=>q.q).join('|')){ closeModal(); openStudent(sid); SM._tab='as'; drawStudent(); toast('이미 등록했어요','학생 → 과제 탭에 있어요.'); return; }
+  qzSave:()=>{ const sid=$('#qzSid').value; if(!sid){ toast('학생을 골라 주세요','학생 없이 쓸 때는 Word나 인쇄만 하면 돼요.'); return; } if(QW._reg===sid+'|'+QW.qs.map(q=>q.q).join('|')){ wGoAs(sid); toast('이미 등록했어요','과제 화면에 있어요.'); return; }
     const s=wNorm(clone(D().students[sid])); const week=(s.assigns.reduce((m,a)=>Math.max(m,+a.week||0),0))+1;
     const a={id:wid('a'),week,kind:'quiz',title:qzTitle(QW.sub,QW.lv),body:'',due:$('#qzDue').value||'',st:'set',setAt:todayStr(),at:Date.now(),quiz:{sub:QW.sub,lv:QW.lv,qs:QW.qs}};
-    s.assigns.push(a); store.put('students',s); closeModal(); openStudent(sid); SM._tab='as'; drawStudent(); toast('과제를 등록했어요',`${week}주차 · Word 저장이나 인쇄로 학생에게 전달하세요.`); },
+    s.assigns.push(a); store.put('students',s); wGoAs(sid); toast('과제를 등록했어요',`${week}주차 · Word 저장이나 인쇄로 학생에게 전달하세요.`); },
   qzCardWord:el=>{ const a=qzFind(el.dataset.id); if(a) saveFile(qzFileName(a.quiz,SM.name,`${a.week}주차_과제`),wordDoc(wsHTML({...a.quiz,title:a.title},{name:SM.name}),a.title)); },
   qzCardPrint:el=>{ const a=qzFind(el.dataset.id); if(a) printHTML(wsHTML({...a.quiz,title:a.title},{name:SM.name})); },
   qzCardKey:el=>{ const a=qzFind(el.dataset.id); if(a) printHTML(wsHTML({...a.quiz,title:a.title},{name:SM.name,key:true})); },
   qzPick:el=>{ const a=qzFind(el.dataset.id); if(!a) return; const n=a.quiz.qs.length; a.qAns=a.qAns||Array(n).fill(0); const i=+el.dataset.i, v=+el.dataset.v; a.qAns[i]=a.qAns[i]===v?0:v;
     el.parentElement.querySelectorAll('button').forEach(b=>b.classList.toggle('on',+b.dataset.v===a.qAns[i])); const c=el.closest('.qz-grade').querySelector('.qz-cnt'); if(c) c.textContent=`${a.qAns.filter(Boolean).length}/${n} 입력`;
-    if(a.st==='set'){ a.st='sub'; a.subAt=todayStr(); } clearTimeout(window._qzp); window._qzp=setTimeout(wPersist,600); },
+    if(a.st==='set'){ a.st='sub'; a.subAt=todayStr(); } clearTimeout(window._qzp); if(SM._page) wPersist(); else window._qzp=setTimeout(wPersist,600); },
   qzPasteAns:el=>{ const a=qzFind(el.dataset.id); if(!a) return; const v=$('#qzPaste_'+a.id).value; a.qAns=parseAnswerText(v,a.quiz.qs.length); if(a.st==='set'){ a.st='sub'; a.subAt=todayStr(); } wRedraw(); toast('답안을 넣었어요',`${a.qAns.filter(Boolean).length}문항 인식`); },
   qzGrade:el=>{ const a=qzFind(el.dataset.id); if(!a) return; const n=a.quiz.qs.length; a.qAns=a.qAns||Array(n).fill(0); const filled=a.qAns.filter(Boolean).length;
     if(!filled){ toast('답안을 먼저 넣어 주세요',''); return; } gradeQuiz(a); wPersist(); const sid=SM.id; openReport(sid,a.id); },
   qzRegrade:el=>{ const a=qzFind(el.dataset.id); if(!a) return; delete a.res; a.st='sub'; a.doneAt=''; wRedraw(); },
   qzRoadCopy:el=>{ const st=D().students[el.dataset.id]; const x=st&&(st.assigns||[]).find(y=>y.id===el.dataset.aid); if(x&&x.res) copyText(qzRoad(st,x).msg); },
   qzOpenRep:el=>{ wSync(); wPersist(); openReport(SM.id,el.dataset.id); },
-  qzBackStu:el=>{ closeModal(); openStudent(el.dataset.id); SM._tab='as'; drawStudent(); },
+  qzBackStu:el=>wGoAs(el.dataset.id),
   qzRepPrint:el=>{ const s=D().students[el.dataset.id]; const a=s&&(s.assigns||[]).find(x=>x.id===el.dataset.aid); if(a) printHTML(`<div class="ws">${quizReport(s,a,true)}</div>`); },
   qzRepPrompt:el=>{ const s=D().students[el.dataset.id]; const a=s&&(s.assigns||[]).find(x=>x.id===el.dataset.aid); if(!a) return; const B=QBANK[a.quiz.sub];
     const lines=Object.entries(a.res.by).map(([k,v])=>`- ${B.topics[k].n}: ${v.c}/${v.n}${v.b?` (빈칸 ${v.b})`:''}`);
@@ -6509,7 +6525,7 @@ document.addEventListener('change',async e=>{ const el=e.target; if(!el.dataset|
 function qzAutoReg(){ const sid=$('#qzSid')&&$('#qzSid').value; if(!sid||!D().students[sid]||QW._reg===sid+'|'+QW.qs.map(q=>q.q).join('|')) return;
   const s=wNorm(clone(D().students[sid])); const week=(s.assigns.reduce((m,a)=>Math.max(m,+a.week||0),0))+1;
   s.assigns.push({id:wid('a'),week,kind:'quiz',title:qzTitle(QW.sub,QW.lv),body:'',due:($('#qzDue')&&$('#qzDue').value)||'',st:'set',setAt:todayStr(),at:Date.now(),quiz:{sub:QW.sub,lv:QW.lv,qs:QW.qs}});
-  store.put('students',s); QW._reg=sid+'|'+QW.qs.map(q=>q.q).join('|'); toast('학생 과제로도 등록했어요',`${s.name} · ${week}주차 — 답안이 오면 학생 → 과제 탭에서 채점하세요.`); }
+  store.put('students',s); QW._reg=sid+'|'+QW.qs.map(q=>q.q).join('|'); toast('학생 과제로도 등록했어요',`${s.name} · ${week}주차 — 답안이 오면 과제 화면에서 채점하세요.`); }
 /* ===== 예전에 Word로 뽑아 준 시험지(.doc) → 다시 과제로 등록 =====
    시험지의 문제 · 보기 순서를 문제은행과 맞춰서 정답 · 영역을 되찾아요. (등록을 안 누르고 Word만 받은 경우) */
 function qzFromSheet(html){
@@ -6536,7 +6552,7 @@ document.addEventListener('change',async e=>{
     if(!r.qs.length||!r.sub){ toast('시험지를 읽지 못했어요','KAIA DESK에서 Word로 받은 시험지(.doc) 파일인지 확인해 주세요.','alarm-t'); return; }
     wNorm(SM); const week=(SM.assigns.reduce((m,a)=>Math.max(m,+a.week||0),0))+1;
     SM.assigns.push({id:wid('a'),week,kind:'quiz',title:r.title,body:'',due:'',st:'sub',setAt:todayStr(),subAt:todayStr(),at:Date.now(),quiz:{sub:r.sub,lv:r.lv,qs:r.qs}});
-    SM._tab='as'; wRedraw(); toast('시험지를 다시 등록했어요',`${r.title} · ${r.qs.length}문항${r.miss?` (${r.miss}문항은 문제은행에서 못 찾아 빠졌어요)`:''} · 아래에 학생 답을 넣고 채점하세요.`,r.miss?'alarm-t':'');
+    wRedraw(); toast('시험지를 다시 등록했어요',`${r.title} · ${r.qs.length}문항${r.miss?` (${r.miss}문항은 문제은행에서 못 찾아 빠졌어요)`:''} · 아래에 학생 답을 넣고 채점하세요.`,r.miss?'alarm-t':'');
   }catch(err){ console.warn(err); toast('시험지를 읽지 못했어요','KAIA DESK에서 Word로 받은 시험지(.doc) 파일인지 확인해 주세요.','alarm-t'); }
 });
 /* ===== 팀 커뮤니티: 게시판 · 파일 · DB 배정 (팀 서버 로그인 시) ===== */
@@ -8128,12 +8144,12 @@ Object.assign(WACT,{
    점수 흐름 · 영역별 레이더 · 반 순위 · 점수 분포로 실력을 봐요.
    데이터는 학생 정보 안(s.hw)에 같이 저장돼요 → 따로 서버 설정 없이 동기화. */
 I.chart='<path d="M4 20V11M10 20V5M16 20v-6M3 20h18"/>';
-(function(){ const k=NAV.findIndex(x=>x.v==='quote'); if(k>=0&&!NAV.some(x=>x.v==='hw')) NAV.splice(k,0,{v:'hw',t:'과제 분석',i:'chart',sec:1}); TITLES.hw='과제 분석'; })();
+(function(){ const k=NAV.findIndex(x=>x.v==='quote'); if(k>=0&&!NAV.some(x=>x.v==='hw')) NAV.splice(k,0,{v:'hw',t:'과제',i:'chart',sec:1}); TITLES.hw='과제'; })();
 const HW_SKILLS=['개념 이해','코드 작성','문제 해결','완성도','성실도'];
 const HW_ST=['제출','지각','미제출','대기'];
 const hwSkills=()=>Array.isArray(S.settings.hwSkills)&&S.settings.hwSkills.length===5?S.settings.hwSkills:HW_SKILLS;
 const hwEff=h=>h.st==='대기'&&h.d&&h.d<todayStr()?{...h,st:'미제출',late:1}:h;   // 기한이 지난 대기 = 미제출
-const hwOf=s=>(Array.isArray(s.hw)?s.hw:[]).map(hwEff).sort((a,b)=>(a.d||'').localeCompare(b.d||'')||(a.at||0)-(b.at||0));
+const hwOf=s=>(Array.isArray(s.hw)?s.hw:[]).map(hwEff).concat(hwAsRecs(s)).sort((a,b)=>(a.d||'').localeCompare(b.d||'')||(a.at||0)-(b.at||0));
 const hwScored=L=>L.filter(h=>h.st!=='미제출'&&h.st!=='대기'&&h.sc!=null&&h.sc!=='');
 const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
 const r1=v=>v==null?'-':Math.round(v);
@@ -8144,7 +8160,12 @@ function hwStudentsOf(n){ const ids=hwIds(n); return list('students').filter(s=>
 function hwCidFor(s,n){ const ids=hwIds(n); const mine=(s.courses||[]).filter(id=>ids.includes(id)); return (typeof pickCourse==='function'?pickCourse(mine.length?mine:ids):(mine[0]||ids[0]))||''; }
 function hwGrpOf(cid){ const c=cid&&D().courses[cid]; return c?subjectOf(c):''; }
 function hwPool(){ const ids=hwIds(S.hwCourse); return list('students').filter(s=>(s.hw||[]).length||['수강중','등록대기','수료'].includes(s.status)).filter(s=>!S.hwCourse||(s.courses||[]).some(id=>ids.includes(id))); }
-function hwFilter(L){ if(!S.hwCourse) return L; const ids=hwIds(S.hwCourse); return L.filter(h=>ids.includes(h.cid)); }
+function hwFilter(L){ if(!S.hwCourse) return L; const ids=hwIds(S.hwCourse); return L.filter(h=>h.virt||ids.includes(h.cid)); }
+/* 문제은행 · 직접 입력 과제(s.assigns)도 분석에 같이 넣기: 퀴즈 채점 결과 → 100점 환산, "8/10" 같은 점수도 환산 */
+function hwAsScore(a){ if(a.res&&a.res.n) return Math.round(a.res.ok/a.res.n*100); const v=String(a.score||'').trim(); if(!v) return null;
+  const m=v.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/); if(m&&+m[2]) return Math.round(+m[1]/+m[2]*100); const n=v.match(/^(\d+(?:\.\d+)?)\s*점?$/); return n&&+n[1]<=100?+n[1]:null; }
+function hwAsRecs(s){ const t=todayStr(); return (Array.isArray(s.assigns)?s.assigns:[]).map(a=>{ const late=a.st==='set'&&a.due&&a.due<t; const sc=a.st==='set'?null:hwAsScore(a);
+  return {id:'as:'+a.id,virt:1,kind:a.kind==='quiz'?'문제은행':'직접',t:`${a.week?a.week+'주차 ':''}${a.title||'과제'}`,d:a.doneAt||a.subAt||a.due||a.setAt||'',cid:'',st:a.st==='set'?(late?'미제출':'대기'):'제출',late:late?1:0,sc,sk:null,memo:a.fb||'',url:'',at:a.at||0,due:a.due||''}; }); }
 /* 과목 검색 상자 (초성 가능) — k: f=위 거르기, a=과제 내기, b=점수 한꺼번에 */
 CPK.hwGrp={
   items:()=>{ const st=list('students'); return [...hwGroups()].map(([n,ids])=>{ const k=st.filter(s=>!['환불','보류'].includes(s.status)&&(s.courses||[]).some(id=>ids.includes(id))).length; return {v:n,t:n,s:`학생 ${k}명`,_n:k}; }).sort((a,b)=>(b._n>0)-(a._n>0)||a.t.localeCompare(b.t,'ko')); },
@@ -8186,11 +8207,12 @@ function vHw(){
   const pool=hwPool().sort((a,b)=>a.name.localeCompare(b.name,'ko')); const cs=list('courses').filter(c=>pool.some(s=>(s.courses||[]).includes(c.id))||list('students').some(s=>(s.hw||[]).some(h=>h.cid===c.id)));
   const q=(S.hwQ||'').trim(); const shown=q?pool.filter(s=>sMatch(q,s.name)):pool;
   const sel=S.hwSid&&D().students[S.hwSid];
-  const head=vh('과제 분석','과제 점수를 모아 학생 실력의 흐름과 강점 · 약점을 봐요',`<button class="btn" data-act="hwRecv">${ic('dl')}제출 받기</button><button class="btn" data-act="hwBulk">${ic('users')}점수 한꺼번에 입력</button><button class="btn" data-act="hwAdd">${ic('plus')}과제 등록</button><button class="btn pri" data-act="hwAssign">${ic('send')}과제 내기 · 제출 링크</button>`);
-  const bar=`<section class="pane hw-bar"><div class="hw-tools"><div class="cp hw-q"><span class="cp-ic">${ic('search')}</span><input id="hwQ" class="in" value="${esc(S.hwQ||'')}" placeholder="학생 이름" autocomplete="off"></div>
+  const mode=S.hwMode||'manage';
+  const head=vh('과제','과제를 만들고 · 내고 · 받고 · 채점하고, 쌓인 점수로 실력을 분석해요',`<button class="btn" data-act="hwRecv">${ic('dl')}제출 받기</button><button class="btn" data-act="${sel?'hwQz':'qzOpenFree'}" ${sel?`data-id="${sel.id}"`:''}>${ic('task')}문제은행 과제 만들기</button>${mode==='ana'?`<button class="btn" data-act="hwBulk">${ic('users')}점수 한꺼번에 입력</button><button class="btn" data-act="hwAdd">${ic('plus')}점수 기록</button>`:''}<button class="btn pri" data-act="hwAssign">${ic('send')}과제 내기 · 제출 링크</button>`);
+  const bar=`<section class="pane hw-bar"><div class="seg hw-mode">${[['manage','과제 관리'],['ana','실력 분석']].map(([k,l])=>`<button class="${mode===k?'on':''}" data-act="hwMode" data-k="${k}">${l}</button>`).join('')}</div><div class="hw-tools"><div class="cp hw-q"><span class="cp-ic">${ic('search')}</span><input id="hwQ" class="in" value="${esc(S.hwQ||'')}" placeholder="학생 이름" autocomplete="off"></div>
       <div class="hw-c">${hwGrpBox('f',S.hwCourse,'과목으로 거르기 (모든 과목) — 초성 가능')}</div></div>
-    <div class="hw-who"><button class="chip ${!sel?'on':''}" data-act="hwPick" data-id="">전체 보기</button>${shown.map(s=>{ const n=hwFilter(s.hw||[]).length; return `<button class="chip ${sel&&sel.id===s.id?'on':''}" data-act="hwPick" data-id="${s.id}">${esc(s.name.replace(/^예시\s/,''))}${n?` <small>${n}</small>`:''}</button>`; }).join('')}</div></section>`;
-  return `<div class="view hw-view">${head}${bar}${sel?hwStudent(sel,pool):hwOverview(pool)}</div>`;
+    <div class="hw-who"><button class="chip ${!sel?'on':''}" data-act="hwPick" data-id="">전체 보기</button>${shown.map(s=>{ const n=hwFilter(hwOf(s)).length; return `<button class="chip ${sel&&sel.id===s.id?'on':''}" data-act="hwPick" data-id="${s.id}">${esc(s.name.replace(/^예시\s/,''))}${n?` <small>${n}</small>`:''}</button>`; }).join('')}</div></section>`;
+  return `<div class="view hw-view">${head}${bar}${mode==='manage'?(sel?hwManStu(sel):hwManAll(shown)):sel?hwStudent(sel,pool):hwOverview(pool)}</div>`;
 }
 function hwStat(lab,val,sub,cls=''){ return `<div class="pane hw-st ${cls}"><span class="lab">${lab}</span><b class="val num">${val}</b><span class="sub">${sub}</span></div>`; }
 function hwOverview(pool){
@@ -8202,9 +8224,7 @@ function hwOverview(pool){
   const watch=sums.filter(x=>x.m.n&&((x.m.avg!=null&&x.m.avg<60)||(x.m.grow!=null&&x.m.grow<=-8)||x.m.L.filter(h=>h.st==='미제출').length>=2))
     .map(x=>({s:x.s,why:[x.m.avg!=null&&x.m.avg<60?`평균 ${r1(x.m.avg)}점`:'',x.m.grow!=null&&x.m.grow<=-8?`최근 ${r1(x.m.grow)}점 하락`:'',x.m.L.filter(h=>h.st==='미제출').length>=2?`미제출 ${x.m.L.filter(h=>h.st==='미제출').length}번`:''].filter(Boolean).join(' · ')}));
   if(!allL.length) return `<section class="pane"><div class="empty"><b>아직 기록한 과제가 없어요</b><b>과제 내기 · 제출 링크</b>로 학생에게 제출 링크를 보내거나, 오른쪽 위 <b>과제 등록</b>으로 학생 과제 점수를 넣거나, <b>수업 과제 한꺼번에 입력</b>으로 한 수업 학생들 점수를 한 번에 넣어 보세요. 쌓일수록 그래프가 그려져요.</div></section>`;
-  const grade=sums.flatMap(x=>x.m.L.filter(h=>h.st!=='미제출'&&h.st!=='대기'&&h.sc==null).map(h=>({s:x.s,h})));
-  const gradeBox=grade.length?`<section class="pane hw-grade"><h2>채점 대기 <small>${grade.length}개 · 학생이 링크로 낸 과제</small></h2><div class="hw-gl">${grade.map(({s,h})=>`<div class="hw-g"><b>${esc(s.name.replace(/^예시\s/,''))}</b><span>${esc(h.t)}<small>${h.sub?fmtMD(h.sub.slice(0,10))+' 제출':''}${h.st==='지각'?' · 지각':''}</small></span>${h.url?`<a class="btn sm" href="${esc(h.url)}" target="_blank" rel="noopener">${ic('right')}과제 열기</a>`:'<span></span>'}<input class="in num" type="number" min="0" max="100" placeholder="점수" data-gr="${s.id}|${h.id}"><button class="btn sm pri" data-act="hwGrade" data-k="${s.id}|${h.id}">저장</button></div>`).join('')}</div></section>`:'';
-  return gradeBox+`<div class="hw-stats">${hwStat('기록한 과제',allL.length,`학생 ${sums.filter(x=>x.m.n).length}명`,'hot')}${hwStat('전체 평균',r1(avg(allSc)),'100점 만점')}${hwStat('제출률',allD.length?Math.round(sub/allD.length*100)+'%':'-',`미제출 ${allD.length-sub}개${allL.length-allD.length?` · 대기 ${allL.length-allD.length}개`:''}`)}${hwStat('지각 제출',late,late?'제출 기한을 다시 안내해 보세요':'모두 기한 안에 냈어요',late?'warn':'')}</div>
+  return `<div class="hw-stats">${hwStat('기록한 과제',allL.length,`학생 ${sums.filter(x=>x.m.n).length}명`,'hot')}${hwStat('전체 평균',r1(avg(allSc)),'100점 만점')}${hwStat('제출률',allD.length?Math.round(sub/allD.length*100)+'%':'-',`미제출 ${allD.length-sub}개${allL.length-allD.length?` · 대기 ${allL.length-allD.length}개`:''}`)}${hwStat('지각 제출',late,late?'제출 기한을 다시 안내해 보세요':'모두 기한 안에 냈어요',late?'warn':'')}</div>
     <div class="hw-row"><section class="pane hw-span2"><h2>학생별 평균 <small>높은 순 · 누르면 그 학생 분석</small></h2>${hwBars(ranked)}</section>
       <section class="pane"><h2>점수 분포 <small>과제 ${allSc.length}개</small></h2>${hwHist(allSc)}</section></div>
     <div class="hw-row"><section class="pane hw-span2"><h2>주마다 반 평균 <small>최근 ${ws.length}주</small></h2>${hwLine([{v:ws.map(w=>avg(wk[w])),tips:ws.map(w=>fmtMD(w)+' 주')}],ws.map(w=>w.slice(5).replace('-','/')),{aria:'주마다 반 평균'})}</section>
@@ -8241,6 +8261,9 @@ function hwStudent(s,pool){
           <span class="chip ${h.st==='미제출'?'bad':h.st==='지각'?'warn':h.st==='대기'?'blue':h.sc==null?'warn':'ok'}">${h.st==='대기'?'제출 대기':h.st==='미제출'&&h.late?'기한 지남':h.sc==null&&h.st!=='미제출'?'채점 대기':h.st||'제출'}</span><b class="sc num">${h.sc==null?'-':r1(+h.sc)}</b><span class="mb"><i style="--w:${h.sc==null?0:+h.sc}%"></i></span></div>`).join('')}</div></section></div>`}`;
 }
 
+/* 채점 대기 줄 */
+function hwGradeBox(grade){ return grade.length?`<section class="pane hw-grade"><h2>채점 대기 <small>${grade.length}개 · 제출됐는데 점수가 없는 과제</small></h2><div class="hw-gl">${grade.map(({s,h})=>`<div class="hw-g"><b>${esc(s.name.replace(/^예시\s/,''))}</b><span>${esc(h.t)}<small>${h.sub?fmtMD(h.sub.slice(0,10))+' 제출':''}${h.st==='지각'?' · 지각':''}</small></span>${h.virt?`<span class="chip">${h.kind}</span><span></span><button class="btn sm pri" data-act="wOpen" data-tab="as" data-id="${s.id}">채점하러 가기</button>`:`${h.url?`<a class="btn sm" href="${esc(h.url)}" target="_blank" rel="noopener">${ic('right')}과제 열기</a>`:'<span></span>'}<input class="in num" type="number" min="0" max="100" placeholder="점수" data-gr="${s.id}|${h.id}"><button class="btn sm pri" data-act="hwGrade" data-k="${s.id}|${h.id}">저장</button>`}</div>`).join('')}</div></section>`:''; }
+
 /* ---------- 입력 ---------- */
 function hwModal(sid,hid){
   const s=sid&&D().students[sid]; const h=s&&hid?(s.hw||[]).find(x=>x.id===hid):null; const K=hwSkills();
@@ -8271,7 +8294,7 @@ function hwModal(sid,hid){
 }
 function hwBulkModal(){
   const cid=S._hwBulkC||S.hwCourse||''; S._hwBulkC=cid; const kT=$('#hbT')?$('#hbT').value:'', kD=$('#hbD')?$('#hbD').value:'';
-  const sts=cid?hwStudentsOf(cid).filter(s=>!['환불','보류'].includes(s.status)).sort((a,b)=>a.name.localeCompare(b.name,'ko')):[];
+  const only=S._haOnly&&D().students[S._haOnly]; const sts=(cid?hwStudentsOf(cid):[]).concat(only&&!(cid&&hwStudentsOf(cid).some(x=>x.id===only.id))?[only]:[]).filter(s=>!['환불','보류'].includes(s.status)).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   const html=`${mHead('수업 과제 한꺼번에 입력')}<div class="body hw-form">
     <div class="form"><div class="field"><span>과목</span>${hwGrpBox('b',cid)}</div>
       <label class="field"><span>과제 이름</span><input class="in" id="hbT" value="${esc(kT)}" placeholder="예: 2주차 조건문 과제"></label>
@@ -8288,9 +8311,9 @@ function hwPut(s,hw){ store.put('students',{...s,hw}); }
 Object.assign(WACT,{
   hwPick:el=>{ S.hwSid=el.dataset.id||''; render(); $('#main').scrollTop=0; },
   hwAdd:el=>hwModal(el.dataset.id||S.hwSid||'',''),
-  hwEdit:el=>hwModal(el.dataset.id,el.dataset.h),
+  hwEdit:el=>{ if(String(el.dataset.h).startsWith('as:')){ wGoAs(el.dataset.id); return; } hwModal(el.dataset.id,el.dataset.h); },
   hwSt:el=>{ S._hw.st=el.dataset.k; $$('#hwSt .rm-chip').forEach(b=>b.classList.toggle('on',b===el)); },
-  hwBulk:()=>{ S._hwBulkC=''; hwBulkModal(); },
+  hwBulk:()=>{ S._hwBulkC=''; S._haOnly=''; hwBulkModal(); },
   hwSave:()=>{ const H=S._hw; const sid=H.sid||($('#hwS')&&$('#hwS').value); const s=sid&&D().students[sid]; if(!s){ toast('학생을 골라 주세요',''); return; }
     const t=$('#hwT').value.trim(); if(!t){ toast('과제 이름을 적어 주세요',''); $('#hwT').focus(); return; }
     const sc=Math.max(0,Math.min(100,parseInt($('#hwN').value,10)||0)); const skOn=$('#hwSkOn').checked;
@@ -8327,7 +8350,7 @@ async function hwUnzip(t){ const m=String(t).match(/^([01])\.([A-Za-z0-9_-]+)$/)
 const HA={links:{},list:[]};   // 방금 낸 과제 (학생별 링크)
 function hwAssignModal(){
   const cid=S._haC||S.hwCourse||''; S._haC=cid;
-  const sts=cid?hwStudentsOf(cid).filter(s=>!['환불','보류'].includes(s.status)).sort((a,b)=>a.name.localeCompare(b.name,'ko')):[];
+  const only=S._haOnly&&D().students[S._haOnly]; const sts=(cid?hwStudentsOf(cid):[]).concat(only&&!(cid&&hwStudentsOf(cid).some(x=>x.id===only.id))?[only]:[]).filter(s=>!['환불','보류'].includes(s.status)).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   const keep=id=>{ const e=$(id); return e?e.value:null; };
   const T=keep('#haT'),Dd=keep('#haD'),Tm=keep('#haTm'),Ds=keep('#haDs');
   const html=`${mHead('과제 내기 · 제출 링크')}<div class="body hw-form">
@@ -8337,7 +8360,7 @@ function hwAssignModal(){
       <label class="field"><span>마감일</span><input class="in" type="date" id="haD" value="${esc(Dd||addDays(todayStr(),7))}"></label>
       <label class="field"><span>마감 시간</span><input class="in" type="time" id="haTm" value="${esc(Tm||'23:59')}"></label></div>
     <label class="field"><span>과제 설명 <small>선택 · 학생 페이지에 그대로 나와요</small></span><textarea class="in" id="haDs" rows="4" placeholder="예: 구구단을 출력하는 프로그램을 만들고 깃허브에 올린 뒤 저장소 링크를 제출하세요.">${esc(Ds||'')}</textarea></label>
-    ${sts.length?`<div class="field"><span>받을 학생 <small>${sts.length}명</small></span><div class="ha-sts">${sts.map(s=>`<label class="check"><input type="checkbox" data-ha="${s.id}" checked>${esc(s.name.replace(/^예시\s/,''))}</label>`).join('')}</div></div>`:(cid?'<div class="empty">이 과목에 연결된 학생이 없어요</div>':'<div class="empty">위에서 과목을 검색해 골라 주세요</div>')}
+    ${sts.length?`<div class="field"><span>받을 학생 <small>${sts.length}명</small></span><div class="ha-sts">${sts.map(s=>`<label class="check"><input type="checkbox" data-ha="${s.id}" ${!S._haOnly||S._haOnly===s.id?'checked':''}>${esc(s.name.replace(/^예시\s/,''))}</label>`).join('')}</div></div>`:(cid?'<div class="empty">이 과목에 연결된 학생이 없어요</div>':'<div class="empty">위에서 과목을 검색해 골라 주세요</div>')}
     <p class="rm-hint">파일은 서버 없이 받을 수 없어서, 학생이 깃허브 · 구글 드라이브 · 노션 같은 <b>공유 링크</b>로 제출해요.</p>
   </div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="haMake" ${sts.length?'':'disabled'}>${ic('send')}과제 내고 링크 만들기</button></footer>`;
   if(modalEl&&modalEl._kind==='ha') modalEl.querySelector('.sheet').innerHTML=html; else { openModal(html,'wide'); modalEl._kind='ha'; }
@@ -8380,7 +8403,7 @@ function hwRecvModal(){
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.gr){ const b=e.target.parentElement.querySelector('[data-act="hwGrade"]'); b&&b.click(); } });
 Object.assign(WACT,{
-  hwAssign:()=>{ S._haC=''; hwAssignModal(); },
+  hwAssign:()=>{ S._haC=''; S._haOnly=''; hwAssignModal(); },
   haMake:async()=>{ const t=$('#haT').value.trim(); if(!t){ toast('과제 이름을 적어 주세요',''); $('#haT').focus(); return; }
     const d=$('#haD').value||addDays(todayStr(),7), dt=$('#haTm').value||'23:59', desc=$('#haDs').value.trim().slice(0,1500), grp=S._haC;
     const ids=$$('[data-ha]').filter(x=>x.checked).map(x=>x.dataset.ha); if(!ids.length){ toast('학생을 한 명 이상 골라 주세요',''); return; }
@@ -8401,6 +8424,49 @@ Object.assign(WACT,{
   hwGrade:el=>{ const [sid,hid]=el.dataset.k.split('|'); const inp=document.querySelector(`[data-gr="${el.dataset.k}"]`); const v=inp&&inp.value;
     if(v===''||v==null){ toast('점수를 적어 주세요',''); inp&&inp.focus(); return; } const s=D().students[sid]; if(!s) return;
     hwPut(s,(s.hw||[]).map(h=>h.id===hid?{...h,sc:Math.max(0,Math.min(100,+v))}:h)); toast('점수를 저장했어요',`${s.name.replace(/^예시\s/,'')} · ${v}점`); render(); },
+});
+
+/* ===== 과제 관리: 만들기 · 내기 · 받기 · 채점을 이 화면에서 =====
+   - 전체: 채점할 것 / 제출 기다리는 중 / 마감 지남 / 최근 채점 을 한눈에
+   - 학생 한 명: 제출 링크 과제 + 문제은행 · 직접 입력 과제(시험지 Word · 답안 입력 · 자동 채점 · 수준 분석)
+   예전엔 학생 창 → 과제 탭에 있던 기능을 그대로 옮겨 왔어요. 데이터(s.assigns)는 같아요. */
+function wGoAs(sid){ if(modalEl) closeModal(); S.hwSid=sid||''; S.hwMode='manage'; S.hwAsNew=false; if(S.view!=='hw') go('hw'); else render(); const m=$('#main'); if(m) m.scrollTop=0; }
+function hwPageSM(sid){ const s=D().students[sid]; if(!s) return null; SM=wNorm(clone(s)); SM._page=true; SM._asNew=!!S.hwAsNew; return SM; }
+/* 과제 관리 칸 안에서 누르거나 입력하기 직전에 그 학생을 작업 대상으로 (학생 창 상태와 섞이지 않게) */
+['pointerdown','focusin','keydown'].forEach(ev=>document.addEventListener(ev,e=>{ const w=e.target.closest&&e.target.closest('.hw-as[data-sid]'); if(w&&!(SM&&SM._page&&SM.id===w.dataset.sid)) hwPageSM(w.dataset.sid); },true));
+function hwAllItems(pool){ const t=todayStr(); return pool.flatMap(s=>hwFilter(hwOf(s)).map(h=>({s,h}))); }
+function hwCard({s,h},extra=''){ const due=h.due||h.d; return `<button class="hw-card" data-act="hwEdit" data-id="${s.id}" data-h="${h.id}">
+  <span class="hc-n">${esc(s.name.replace(/^예시\s/,''))}</span><b>${esc(h.t||'과제')}</b><small>${h.virt?h.kind:h.aid?'제출 링크':'점수 기록'}${due?` · ${h.st==='대기'||h.late?'마감':''} ${fmtMD(due)}`:''}${extra}</small></button>`; }
+function hwManAll(pool){
+  const A=hwAllItems(pool); const t=todayStr();
+  const grade=A.filter(x=>(x.h.st==='제출'||x.h.st==='지각')&&x.h.sc==null);
+  const wait=A.filter(x=>x.h.st==='대기').sort((a,b)=>(a.h.due||a.h.d||'').localeCompare(b.h.due||b.h.d||''));
+  const late=A.filter(x=>x.h.st==='미제출'&&x.h.late).sort((a,b)=>(b.h.d||'').localeCompare(a.h.d||''));
+  const done=A.filter(x=>x.h.sc!=null&&x.h.d&&diffDays(x.h.d,t)<=14).sort((a,b)=>(b.h.d||'').localeCompare(a.h.d||''));
+  const lane=(title,arr,cls,empty,ex)=>`<section class="pane hw-lane ${cls}"><h2>${title} <small>${arr.length}</small></h2>${arr.length?`<div class="hw-cards">${arr.slice(0,30).map(x=>hwCard(x,ex?ex(x):'')).join('')}</div>${arr.length>30?`<p class="rm-hint">${arr.length-30}개 더 있어요 · 위에서 학생이나 과목으로 거르세요</p>`:''}`:`<div class="hw-none">${empty}</div>`}</section>`;
+  if(!A.length) return `<section class="pane"><div class="empty"><b>아직 낸 과제가 없어요</b>오른쪽 위 <b>과제 내기 · 제출 링크</b>로 학생에게 링크를 보내거나, <b>문제은행 과제 만들기</b>로 시험지를 만들어 Word · 인쇄로 주세요. 학생을 고르면 그 학생 과제만 모아서 관리할 수 있어요.</div></section>`;
+  return `${hwGradeBox(grade)}${grade.length?'':`<section class="pane hw-lane ok"><h2>채점할 것 <small>0</small></h2><div class="hw-none">채점이 밀린 과제가 없어요</div></section>`}
+    <div class="hw-lanes">${lane('제출 기다리는 중',wait,'',`제출을 기다리는 과제가 없어요`,x=>{ const d=x.h.due||x.h.d; const k=d?diffDays(t,d):null; return k!=null?` · ${k===0?'오늘 마감':'D-'+k}`:''; })}
+      ${lane('마감 지남 · 미제출',late,'bad','마감이 지났는데 안 낸 과제가 없어요')}
+      ${lane('최근 채점 <em>2주</em>',done,'ok','최근 2주 안에 채점한 과제가 없어요',x=>` · <b class="num">${r1(x.h.sc)}점</b>`)}</div>`;
+}
+function hwManStu(s){
+  const L=hwOf(s); const link=(Array.isArray(s.hw)?s.hw:[]).map(hwEff).sort((a,b)=>(b.d||'').localeCompare(a.d||'')||(b.at||0)-(a.at||0));
+  const m=hwSum(s); const nm=s.name.replace(/^예시\s/,'');
+  const pend=L.filter(h=>h.st==='대기').length, gr=L.filter(h=>(h.st==='제출'||h.st==='지각')&&h.sc==null).length;
+  const top=`<section class="pane hw-mhead"><div><b>${esc(nm)}</b><span>${esc(s.status||'')}${(s.courses||[]).length?' · '+(s.courses||[]).map(id=>D().courses[id]).filter(Boolean).map(c=>esc(subjectOf(c))).filter((x,i,A)=>A.indexOf(x)===i).join(', '):''}</span></div>
+    <div class="hw-mstat"><span><b class="num">${L.length}</b>전체</span><span><b class="num">${pend}</b>제출 대기</span><span class="${gr?'warn':''}"><b class="num">${gr}</b>채점 대기</span><span><b class="num">${m.avg!=null?r1(m.avg):'-'}</b>평균</span></div>
+    <div class="btns"><button class="btn sm" data-act="hwMode" data-k="ana">${ic('chart')}실력 분석 보기</button><button class="btn sm" data-act="hwQz" data-id="${s.id}">${ic('task')}문제은행 과제</button><button class="btn sm pri" data-act="hwAssignOne" data-id="${s.id}">${ic('send')}제출 링크 과제</button></div></section>`;
+  const linkBox=`<section class="pane"><h2>제출 링크 · 점수 기록 <small>${link.length}개 · 누르면 점수 고치기 · 링크 다시 보내기</small></h2>${link.length?`<div class="hw-list">${link.map(h=>`<div class="hw-it" data-act="hwEdit" data-id="${s.id}" data-h="${h.id}">
+      <span class="d num">${fmtMD(h.d)}</span><span class="t">${esc(h.t||'과제')}<small>${h.url?'결과물 링크 있음':''}${h.stm?' · 한마디: '+esc(h.stm.slice(0,40)):''}</small></span>
+      <span class="chip ${h.st==='미제출'?'bad':h.st==='지각'?'warn':h.st==='대기'?'blue':h.sc==null?'warn':'ok'}">${h.st==='대기'?'제출 대기':h.st==='미제출'&&h.late?'기한 지남':h.sc==null&&h.st!=='미제출'?'채점 대기':h.st}</span><b class="sc num">${h.sc==null?'-':r1(+h.sc)}</b><span class="mb"><i style="--w:${h.sc==null?0:+h.sc}%"></i></span></div>`).join('')}</div>`:`<div class="hw-none">아직 없어요 · 위 <b>제출 링크 과제</b>로 내면 학생이 링크에서 제출해요</div>`}</section>`;
+  const asBox=`<section class="pane hw-as" data-sid="${s.id}"><h2>문제은행 · 직접 입력 과제 <small>시험지 Word · 인쇄 → 답안 입력 → 자동 채점 · 수준 분석</small></h2>${stuAssignTab({...wNorm(clone(s)),_asNew:!!S.hwAsNew})}</section>`;
+  return top+linkBox+asBox;
+}
+Object.assign(WACT,{
+  hwMode:el=>{ S.hwMode=el.dataset.k; render(); const m=$('#main'); if(m) m.scrollTop=0; },
+  hwQz:el=>{ const sid=el.dataset.id; if(!D().students[sid]){ openQuiz({}); return; } openQuiz({sid,back:sid}); },
+  hwAssignOne:el=>{ const s=D().students[el.dataset.id]; if(!s) return; const g=(s.courses||[]).map(id=>D().courses[id]).filter(Boolean).map(subjectOf); S._haC=g[0]||''; S._haOnly=s.id; hwAssignModal(); },
 });
 /* ===== 학생용 개강 안내 페이지 링크 =====
    수업 정보를 링크 주소(# 뒤)에 압축해서 넣어요 → 서버에 아무것도 저장하지 않고, 받은 사람만 그 내용을 봐요.
@@ -8890,6 +8956,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261031-2310';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261031-2317';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
