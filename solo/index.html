@@ -1888,6 +1888,86 @@ body[data-bg="lounge"] .core-next,body[data-bg="lounge"] .core-label{background:
 @media (max-width:760px){.sch-week{grid-template-columns:1fr}.sch-day{min-height:0}.sch-day h3 b{font-size:16px}}
 
 body.dark[data-bg="lounge"] .sheet header,body.dark[data-bg="lounge"] .sheet footer,body.dark[data-bg="lounge"] .tabs{background:rgba(34,26,20,.97);border-color:rgba(255,255,255,.08)}
+
+/* ===== 화면 배치: 대시보드 ===== */
+.rail{display:none}
+.m-only-f{display:none}
+@media (min-width:901px){
+ body.dash .shell{display:grid;grid-template-columns:76px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:18px;row-gap:12px;padding-bottom:16px}
+ body.dash .rail{grid-row:1/3;grid-column:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 0;border-radius:26px;background:var(--bar);border:1px solid var(--bar-line);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:var(--shadow-md);min-height:0;z-index:25}
+ body.dark.dash .rail{box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 24px 50px -24px rgba(0,0,0,.65)}
+ body.dash .topnav{grid-column:2;max-width:none;margin:0;padding:0 12px 0 14px}
+ body.dash .main{grid-column:2;padding:6px 4px 40px}
+ .rl-logo{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:var(--accent);margin-bottom:8px;flex:none;transition:transform .16s cubic-bezier(.23,1,.32,1)}
+ .rl-logo img{width:24px;filter:brightness(0) invert(1)}
+ body:not(.dark) .rl-logo{background:var(--ink)}body:not(.dark) .rl-logo img{filter:brightness(0) invert(1)}
+ .rl-logo:active{transform:scale(.94)}
+ .rl-nav{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-height:0}
+ .rl-sep{width:26px;height:1px;background:var(--line-2);margin:6px 0;flex:none}
+ .rail a,.rl-lock{position:relative;width:46px;height:46px;flex:none;border-radius:50%;display:grid;place-items:center;color:var(--muted);text-decoration:none;transition:background .2s,color .2s,transform .16s cubic-bezier(.23,1,.32,1)}
+ .rail a svg,.rl-lock svg{width:20px;height:20px}
+ .rail a.on{background:var(--pill-bg);color:var(--pill-fg);box-shadow:0 6px 18px -8px rgba(0,0,0,.45)}
+ .rail a:active,.rl-lock:active{transform:scale(.92)}
+ .rail .rb{position:absolute;top:3px;right:2px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:var(--accent);color:#fff;font-size:10px;font-weight:800;display:grid;place-items:center;line-height:1}
+ body.dark[data-bg="lounge"] .rail .rb{color:#2a1606}
+ .rail a span,.rl-lock span{position:absolute;left:58px;top:50%;transform:translate(-4px,-50%);white-space:nowrap;font-size:12.5px;font-weight:650;color:#fff;background:rgba(20,18,24,.92);padding:5px 10px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s}
+ @media (hover:hover){.rail a:hover,.rl-lock:hover{color:var(--fg);background:var(--surface-2)}.rail a.on:hover{background:var(--pill-bg);color:var(--pill-fg)}.rail a:hover span,.rl-lock:hover span{opacity:1;transform:translate(0,-50%)}}
+ @media (max-height:860px){.rail a,.rl-lock{width:40px;height:40px}.rl-logo{width:40px;height:40px;margin-bottom:4px}.rl-nav{gap:2px}}
+ .dt-crumb{display:flex;align-items:center;gap:8px;height:42px;padding:0 16px 0 6px;border-radius:999px;background:var(--surface-2);font-size:13.5px;color:var(--muted);white-space:nowrap}
+ .dt-crumb .dt-ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff}.dt-crumb .dt-ic svg{width:16px;height:16px}
+ body.dark[data-bg="lounge"] .dt-crumb .dt-ic{color:#2a1606}
+ .dt-crumb i{font-style:normal;opacity:.5}.dt-crumb b{color:var(--fg);font-weight:700}
+ body.dash .tn-left{flex:0 0 auto}
+ body.dash .tn-left .tn-title{display:none}
+ .dt-search{flex:1;max-width:520px;margin:0 auto;height:42px;display:flex;align-items:center;gap:10px;padding:0 8px 0 16px;border-radius:999px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);color:var(--muted);font:inherit;font-size:13.5px;cursor:text;text-align:left}
+ .dt-search svg{width:17px;height:17px;flex:none}.dt-search span{flex:1}
+ .dt-search kbd{font:inherit;font-size:11px;padding:3px 8px;border-radius:8px;background:var(--surface-3);color:var(--muted)}
+ .dt-clock{display:flex;flex-direction:column;align-items:center;justify-content:center;height:42px;padding:0 14px;border-radius:999px;background:var(--surface-2);font-size:14px;font-weight:700;line-height:1.1;color:var(--fg)}
+ .dt-clock small{font-size:10.5px;font-weight:500;color:var(--muted)}
+ .dt-new{height:42px;border-radius:999px;padding:0 18px}
+ .dt-me{position:relative;width:42px;height:42px;border-radius:50%;background:var(--accent);color:#fff;font:inherit;font-size:12.5px;font-weight:800;display:grid;place-items:center;border:0;cursor:pointer;margin-left:2px}
+ body.dark[data-bg="lounge"] .dt-me{color:#2a1606}
+ .dt-me i{position:absolute;right:0;bottom:0;width:11px;height:11px;border-radius:50%;background:#34c77b;box-shadow:0 0 0 2px var(--bg)}
+ body.dash .tn-right{gap:8px}
+}
+@media (max-width:900px){ body.dash .dt-crumb,body.dash .dt-search,body.dash .dt-clock,body.dash .dt-new,body.dash .dt-me{display:none!important} body.dash .m-only-f{display:grid} body.dash .wordmark.m-only-f img{width:26px} }
+
+/* 대시보드 홈 */
+.dashhome{display:flex;flex-direction:column;gap:16px}
+.dh-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:8px 0 2px}
+.dh-head h1{margin:0;font-size:clamp(26px,3vw,36px);letter-spacing:-.03em;line-height:1.2}
+.dh-head p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.dh-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.dh-stat{position:relative;display:flex;flex-direction:column;gap:6px;min-height:148px;padding:20px 22px;cursor:pointer;transition:transform .16s cubic-bezier(.23,1,.32,1)}
+.dh-stat:active{transform:scale(.985)}
+.dh-stat .lab{font-size:14px;font-weight:650;color:var(--fg-2)}
+.dh-stat .val{font-size:clamp(36px,3.6vw,48px);font-weight:800;letter-spacing:-.04em;line-height:1;margin-top:auto}
+.dh-stat .sub{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-stat .go{position:absolute;right:16px;top:16px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--surface-3);color:var(--fg)}
+.dh-stat .go svg{width:15px;height:15px}
+.dh-stat.hot{background:var(--accent-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent)}
+.dh-stat.hot .go{background:var(--accent);color:#fff}
+body.dark[data-bg="lounge"] .dh-stat.hot{background:rgba(255,157,77,.24);box-shadow:inset 0 0 0 1px rgba(255,190,130,.38),inset 0 1px 0 rgba(255,220,180,.35)}
+body.dark[data-bg="lounge"] .dh-stat.hot .go{background:#fbf6f0;color:#1a120c}
+.dh-stat.warn .val{color:var(--warn)}
+.dh-main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px;align-items:stretch}
+.dh-core{display:flex;flex-direction:column}
+.dh-core .core-wrap{max-width:420px;width:100%;margin:26px auto 64px}
+.dh-side{display:flex;flex-direction:column;gap:14px}
+.dn-d{font-size:56px;font-weight:800;letter-spacing:-.05em;line-height:1;color:var(--accent);margin-top:8px}
+.dn-n{font-size:19px;font-weight:750;margin-top:12px}
+.dn-s{font-size:13px;color:var(--muted);margin-top:4px}
+.dh-next .btns{margin-top:16px}
+.dh-al{display:flex;flex-direction:column;gap:6px}
+.dh-a{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--surface-2);cursor:pointer}
+.dh-a b{grid-row:1/3;font-size:11.5px;font-weight:800;padding:4px 9px;border-radius:99px;background:var(--accent);color:#fff;white-space:nowrap}
+body.dark[data-bg="lounge"] .dh-a b{color:#2a1606}
+.dh-a.e b{background:var(--surface-3);color:var(--fg)}
+.dh-a span{font-size:13.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dh-a small{font-size:12px;color:var(--muted)}
+.dh-a.ack{opacity:.5}
+@media (max-width:1100px){.dh-main{grid-template-columns:1fr}}
+@media (max-width:900px){.dh-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.dh-stat{min-height:124px;padding:16px}.dh-head .btns{width:100%}.dh-head .btns .btn{flex:1 1 auto}}
 </style>
 </head>
 <body><script>
@@ -2938,7 +3018,9 @@ function renderSide(){
     return `<a data-go="${x.v}" class="${S.view===x.v?'on':''} ${x.sec?'sec':''}" title="${x.t}"><span class="ic">${ic(x.i)}${x.badge||x.tb?`<i class="dot ${bn?'has':''}"></i>`:''}</span><span class="tx">${x.t}</span>${bn?`<span class="badge num">${bn}</span>`:''}</a>`;
   }).join('');
   const top=$('#topnav'); top.classList.toggle('mini',S.collapsed);
-  const topHtml=`<div class="tn-left"><div class="lights"><i></i><i></i><i></i></div><button class="wordmark" data-go="home" aria-label="홈"><img src="${LOGO}" alt=""><b class="full">KAIA DESK</b></button><span class="tn-title">${TITLES[S.view]||''}</span></div>
+  const dash=typeof isDash==='function'&&isDash(); if(typeof applyLayout==='function') applyLayout();
+  if(dash){ const rl=$('#rail'); const rh=dashRail(n,tn); if(rl&&rl._h!==rh){ rl._h=rh; rl.innerHTML=rh; } }
+  const topHtml=dash?dashTop(n,tn):`<div class="tn-left"><div class="lights"><i></i><i></i><i></i></div><button class="wordmark" data-go="home" aria-label="홈"><img src="${LOGO}" alt=""><b class="full">KAIA DESK</b></button><span class="tn-title">${TITLES[S.view]||''}</span></div>
    <nav class="tn-nav" id="nav" aria-label="메뉴"><i class="pill" id="pill"></i>${items}</nav>
    <div class="tn-right">${syncChip()}
      <button class="tn-btn m-only" data-go="alarms" aria-label="알림">${ic('bell')}${n?'<i class="dot"></i>':''}</button>
@@ -2951,6 +3033,7 @@ function renderSide(){
   /* 메뉴가 그대로면 다시 만들지 않음 (매번 다시 그리면 화면이 잠깐씩 버벅여요) */
   if(renderSide._t===topHtml&&top.firstChild){ renderSideRest(n,tn); return; }
   renderSide._t=topHtml; top.innerHTML=topHtml;
+  if(dash){ if(typeof dashTick==='function') dashTick(); renderSideRest(n,tn); return; }
   const navEl=$('#nav');
   navEl.addEventListener('mouseover',e=>{const a=e.target.closest('a');if(a)movePill(a)});
   navEl.addEventListener('mouseleave',()=>movePill($('#nav a.on')));
@@ -3334,6 +3417,7 @@ function vSettings(){
     <label class="field"><span>안내 문구 {지점}</span><input class="in" data-set="branch" value="${esc(s.branch)}"></label>
     <label class="field"><span>안내 문구 {멘토}</span><input class="in" data-set="mentor" value="${esc(s.mentor)}"></label></div></section>
   <section class="pane"><h2>배경 <small>움직이는 배경 테마 · PC와 휴대폰에 함께 적용돼요</small></h2>${themes}<div class="btns" style="margin-top:16px"><label class="check"><input type="checkbox" data-act="sfxToggle" ${s.sfx?'checked':''}>효과음</label><button class="btn sm" data-act="bootPreview">${ic('right')}로딩 화면 · 소리 미리 보기</button><button class="btn sm" data-act="brief">${ic('send')}음성 브리핑 미리 듣기</button><button class="btn sm" data-act="replayBoot">로딩 화면 다시 보기</button></div>
+    <div class="field" style="margin-top:18px"><span>화면 배치</span><div class="seg">${[['base','기본'],['dash','대시보드']].map(([k,l])=>`<button class="${(typeof isDash==='function'&&isDash()?'dash':'base')===k?'on':''}" data-act="layoutMode" data-k="${k}">${l}</button>`).join('')}</div><span style="font-size:12px;color:var(--faint);font-weight:400">대시보드: 왼쪽 아이콘 메뉴 · 위쪽 검색 줄 · 홈은 숫자 카드 + 학생 스케줄 원. PC 화면에서 달라져요.</span></div>
     <div class="field" style="margin-top:18px"><span>화면 전환 효과</span><div class="seg">${[['rise','스르륵'],['off','끄기']].map(([k,l])=>`<button class="${(s.fx==='off'?'off':'rise')===k?'on':''}" data-act="fxMode" data-k="${k}">${l}</button>`).join('')}</div><span style="font-size:12px;color:var(--faint);font-weight:400">파편 조립: 메뉴를 옮기면 창이 유리 파편으로 흩어졌다가, 새 창의 파편들이 하나씩 날아와 맞춰져요. 차곡차곡: 각 창이 아래에서 하나씩 올라와 제자리에 딱 맞물려요. 효과음을 켜 두면 조립 소리도 나요.</span></div></section>
   <section class="pane"><h2>알림</h2><div class="form">
     <div class="field full"><span>개강·종강 며칠 전에 알릴까요</span><div class="btns">${[14,7,3,1].map(o=>`<label class="check"><input type="checkbox" data-act="offToggle" data-o="${o}" ${offs.includes(o)?'checked':''}>${o}일 전</label>`).join('')}</div></div>
@@ -7772,6 +7856,79 @@ Object.assign(WACT,{
   schOpen:()=>schOpen(),
   schWk:el=>{ const k=+el.dataset.k; S.schWs=k?addDays(S.schWs,k):weekStart(todayStr()); schDraw(); },
 });
+/* ===== 화면 배치: 대시보드 (Glassy Dashboard 형태) =====
+   PC: 왼쪽 아이콘 세로 메뉴 + 위쪽 줄(지금 화면 · 검색 · 시계 · 알림 · 학생 추가 · 프로필)
+   홈: 인사 + 스탯 카드 4개 + 학생 스케줄 원 + 다음 개강 · 알림
+   폰은 지금과 같은 위쪽 줄 + 아래 메뉴를 그대로 써요. 설정 → 화면 배치에서 고르고, ?layout=dash 링크로 미리 볼 수 있어요. */
+(function(){ try{ const q=new URLSearchParams(location.search).get('layout'); if(q==='dash'||q==='base') sessionStorage.setItem('ks.layoutPv',q); }catch(e){} })();
+function isDash(){ let pv=''; try{ pv=sessionStorage.getItem('ks.layoutPv')||''; }catch(e){} return (pv||S.settings.layout||'base')==='dash'; }
+if(typeof PERSONAL_KEYS!=='undefined') PERSONAL_KEYS.push('layout');
+function applyLayout(){ const on=isDash(); document.body.classList.toggle('dash',on);
+  let r=document.getElementById('rail'); if(on&&!r){ r=document.createElement('nav'); r.id='rail'; r.className='rail'; r.setAttribute('aria-label','메뉴'); document.querySelector('.shell').prepend(r); }
+  if(!on&&r) r.remove(); }
+
+function dashTop(n,tn){
+  const now=new Date();
+  return `<div class="tn-left"><button class="wordmark m-only-f" data-go="home" aria-label="홈"><img src="${LOGO}" alt=""></button>
+      <div class="dt-crumb d-only"><span class="dt-ic">${ic(((NAV.find(x=>x.v===S.view)||{}).i)||'home')}</span><span>KAIA DESK</span><i>›</i><b>${esc(TITLES[S.view]||'')}</b></div><span class="tn-title">${TITLES[S.view]||''}</span></div>
+    <button class="dt-search d-only" data-act="cmd" aria-label="검색 · 명령">${ic('search')}<span>학생 · 과정 · 메뉴 찾기</span><kbd>Ctrl K</kbd></button>
+    <div class="tn-right">${syncChip()}
+      <span class="dt-clock d-only num" id="dashClock">${pad(now.getHours())}:${pad(now.getMinutes())}<small>${now.getMonth()+1}/${now.getDate()} (${DOW[now.getDay()]})</small></span>
+      <button class="tn-btn" data-go="alarms" aria-label="알림">${ic('bell')}${n?`<i class="dot"></i>`:''}</button>
+      <button class="btn pri d-only dt-new" data-act="newStudent">${ic('plus')}학생 추가</button>
+      <button class="tn-btn m-only" data-act="cmd" aria-label="검색">${ic('search')}</button>
+      <button class="dt-me d-only" data-go="settings" aria-label="설정 · 내 정보">${esc((S.settings.name||'K').slice(-2))}<i></i></button>
+      <button class="tn-btn m-only" data-act="sheetToggle" aria-label="전체 메뉴">${ic($('#sheetnav').classList.contains('open')?'x':'menu')}</button>
+    </div>`;
+}
+function dashRail(n,tn){
+  const items=NAV.filter(x=>!x.sep).map(x=>{ const bn=x.tb?tn:x.badge?n:0;
+    return `<a data-go="${x.v}" class="${S.view===x.v?'on':''}" aria-label="${x.t}">${ic(x.i)}${bn?`<b class="rb">${bn>9?'9+':bn}</b>`:''}<span>${x.t}</span></a>`; });
+  const k=NAV.findIndex(x=>x.sep);
+  return `<button class="rl-logo" data-go="home" aria-label="홈"><img src="${LOGO}" alt=""></button>
+    <div class="rl-nav">${items.slice(0,k).join('')}<i class="rl-sep"></i>${items.slice(k).join('')}</div>
+    <button class="rl-lock" data-act="lockNow" aria-label="화면 잠금">${ic('power')}<span>화면 잠금</span></button>`;
+}
+let _dashClk=null;
+function dashTick(){ clearInterval(_dashClk); _dashClk=setInterval(()=>{ const el=document.getElementById('dashClock'); if(!el){ clearInterval(_dashClk); return; } const d=new Date(); el.innerHTML=`${pad(d.getHours())}:${pad(d.getMinutes())}<small>${d.getMonth()+1}/${d.getDate()} (${DOW[d.getDay()]})</small>`; },20000); }
+
+/* 홈 */
+function vHomeDash(){
+  const t=todayStr(); const cs=list('courses'); const act=activeAlarms(); const un=act.filter(a=>!a.ack);
+  const running=cs.filter(c=>courseStatus(c).k==='run');
+  const tasks=list('tasks').filter(k=>!k.done&&k.due&&k.due<=t);
+  const today=typeof schDay==='function'?schDay(t):[]; const todaySt=today.reduce((a,x)=>a+x.sts.length,0);
+  const h=new Date().getHours(); const hi=h<12?'좋은 아침이에요':h<18?'좋은 오후예요':'좋은 저녁이에요';
+  const up=cs.filter(c=>c.start&&c.start>=t).sort((a,b)=>a.start<b.start?-1:1)[0];
+  const sc=typeof schCoreText==='function'?schCoreText():null;
+  const stat=(cls,go,lab,val,sub,attr='')=>`<div class="pane dh-stat ${cls}" ${go} role="button" tabindex="0" ${attr}><span class="lab">${lab}</span><b class="val num" data-count="${val}">${val}</b><span class="sub">${sub}</span><i class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></i></div>`;
+  return `<div class="view dashhome">
+    <div class="dh-head"><div><h1>${hi}, ${esc(S.settings.name||'')}님</h1><p>오늘 수업 학생 ${todaySt}명 · 확인할 알림 ${un.length}건 · 오늘까지 할 일 ${tasks.length}개</p></div>
+      <div class="btns"><button class="btn" data-act="schOpen">${ic('cal')}이번 주 학생 스케줄</button><button class="btn" data-act="brief">${ic('send')}브리핑 듣기</button><button class="btn pri" data-act="newStudent">${ic('plus')}학생 추가</button></div></div>
+    <div class="dh-stats">
+      ${stat('hot','data-go="alarms"','확인할 알림',un.length,un.length?`가장 가까운 ${un[0].type==='start'?'개강':'종강'} ${fmtMD(un[0].date)}`:'모두 확인했어요')}
+      ${stat('','data-act="schOpen"','오늘 수업 학생',todaySt,today.length?`수업 ${today.length}개 · ${esc((today[0].c.time||'').split(/[~–-]/)[0])}부터`:'오늘은 수업이 없어요')}
+      ${stat('','data-go="timetable"','진행 중 과정',running.length,`전체 과정 ${cs.length}개`)}
+      ${stat(tasks.length?'warn':'','data-go="tasks"','오늘까지 할 일',tasks.length,tasks.length?esc(tasks[0].text).slice(0,24):'밀린 일이 없어요')}
+    </div>
+    <div class="dh-main">
+      <section class="pane dh-core"><h2>학생 스케줄 <small>이번 주 · 원을 누르면 요일별로 보여요</small><button class="btn sm ghost r" data-act="schOpen">${ic('right')}자세히</button></h2>
+        ${sc?`<div class="core-wrap sch-core" data-act="schOpen" role="button" tabindex="0" aria-label="학생 스케줄 열기"><canvas id="corefx" aria-label="이번 주 학생 수업 스케줄"></canvas>
+          <div class="core-label t">${esc(sc.top)}</div><div class="core-next"><b>${esc(sc.b)}</b><span>${esc(sc.s)}</span></div><div class="core-label b">${esc(sc.bot)}</div></div>`:''}
+      </section>
+      <div class="dh-side">
+        <section class="pane dh-next"><h2>다음 개강</h2>${up?`<div class="dn-d num">D-${diffDays(t,up.start)}</div><div class="dn-n">${esc(subjectOf(up))}</div><div class="dn-s">${fmtMD(up.start)} · ${esc(daysLabel(up.days,up.daysB))} ${esc(up.time||'')} · 학생 ${studentsIn(up.id).length}명</div>
+          <div class="btns"><button class="btn sm pri" data-act="toNotice" data-id="${up.id}">${ic('send')}개강안내</button><button class="btn sm" data-act="openCourse" data-id="${up.id}">과정 정보</button></div>`:'<div class="empty" style="padding:18px 0">예정된 개강이 없어요</div>'}</section>
+        <section class="pane dh-alerts"><h2>알림 <small>${un.length}건</small><button class="btn sm ghost r" data-go="alarms">전체</button></h2>
+          ${act.length?`<div class="dh-al">${act.slice(0,5).map(a=>`<div class="dh-a ${a.type==='end'?'e':''} ${a.ack?'ack':''}" data-act="toNotice" data-id="${a.c.id}" data-key="${a.key}"><b>${a.type==='start'?'개강':'종강'} D-${diffDays(t,a.date)}</b><span>${esc(a.c.name)}</span><small>${fmtMD(a.date)} · ${esc(a.c.time||'')}</small></div>`).join('')}</div>`:'<div class="empty" style="padding:14px 0">새 알림이 없어요</div>'}</section>
+      </div>
+    </div>
+    ${typeof recSection==='function'?recSection():''}
+    ${vHomeBody()}
+  </div>`;
+}
+const _vHome=vHome; vHome=function(){ return isDash()?vHomeDash():_vHome(); };
+Object.assign(WACT,{ layoutMode:el=>{ try{ sessionStorage.removeItem('ks.layoutPv'); }catch(e){} S.settings.layout=el.dataset.k; store.saveSettings(); applyLayout(); renderSide._t=''; render(); } });
 /* ===== 학생용 개강 안내 페이지 링크 =====
    수업 정보를 링크 주소(# 뒤)에 압축해서 넣어요 → 서버에 아무것도 저장하지 않고, 받은 사람만 그 내용을 봐요.
    보는 화면: c.html (GitHub Pages). ZOOM 링크 · 캠퍼스 강의 안내는 과정마다 직접 적어 두면 다음에도 그대로 써요. */
@@ -8260,6 +8417,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261031-2218';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261031-2226';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
