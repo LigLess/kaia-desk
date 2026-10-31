@@ -11,174 +11,217 @@
 <meta property="og:description" content="수업 일정 · 시간 · 참여 방법을 확인해 주세요.">
 <meta property="og:image" content="https://ligless.github.io/kaia-desk/icons/og-notice.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#16110d">
 <link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="preload" as="image" href="icons/bg-lounge.jpg">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
-/* 갤러리형: 흰 면 ↔ 옅은 회색 면 ↔ 검정 타일 · 강조색은 파랑 하나 */
+/* 라운지 글래스: 따뜻한 실내 사진 위에 연기 낀 유리판 · 강조색은 앰버 하나 */
 :root{
-  --bg:#ffffff; --bg-2:#f5f5f7; --ink:#1d1d1f; --ink-2:#424245; --sub:#6e6e73; --line:#d2d2d7;
-  --accent:#0066cc; --accent-ink:#ffffff;
-  --tile:#000000; --tile-2:#1d1d1f; --tile-ink:#f5f5f7; --tile-sub:#a1a1a6; --tile-line:#3a3a3c; --tile-accent:#2997ff;
+  --room:#16110d;
+  --glass:rgba(26,20,16,.46); --glass-2:rgba(255,255,255,.06); --glass-3:rgba(255,255,255,.1);
+  --edge:rgba(255,255,255,.09); --edge-hi:rgba(255,255,255,.16);
+  --ink:#fbf6f0; --ink-2:rgba(251,246,240,.82); --sub:rgba(251,246,240,.6); --faint:rgba(251,246,240,.38);
+  --amber:#ff9d4d; --amber-ink:#2a1606; --amber-glass:rgba(255,157,77,.24); --amber-edge:rgba(255,190,130,.38);
+  --ok:#7ee0a5; --bad:#ff8a7a;
+  --blur:blur(24px) saturate(140%);
+  --r:22px;
   --ease-out:cubic-bezier(.23,1,.32,1); --ease-move:cubic-bezier(.77,0,.175,1);
   --f:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;
 }
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:17px;line-height:1.7;word-break:keep-all;overflow-wrap:anywhere;-webkit-font-smoothing:antialiased}
-::selection{background:var(--accent);color:#fff}
-a{color:var(--accent);text-underline-offset:3px}
-:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
-.wrap{max-width:980px;margin:0 auto;padding:0 24px}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;background:var(--room)}
+body{margin:0;color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.65;word-break:keep-all;overflow-wrap:anywhere;-webkit-font-smoothing:antialiased;min-height:100vh}
+::selection{background:var(--amber);color:var(--amber-ink)}
+a{color:var(--amber);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:8px}
 h1,h2,h3{margin:0;text-wrap:balance}
 .num{font-variant-numeric:tabular-nums}
 
-/* 상단 바 */
-.bar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.96);border-bottom:1px solid var(--bg-2)}
-.bar .wrap{display:flex;align-items:center;justify-content:space-between;height:56px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.01em;color:var(--ink);text-decoration:none}
-.brand svg{width:22px;height:22px}
-.bar-r{font-size:14px;color:var(--sub)}
+/* 배경: 흐린 실내 + 스탠드 조명이 천천히 숨 쉬듯 */
+.scene{position:fixed;inset:0;z-index:-1;background:var(--room) url(icons/bg-lounge.jpg) center/cover no-repeat}
+.scene::after{content:"";position:absolute;inset:0;background:rgba(10,7,5,.28)}
+.lamp{position:absolute;right:12%;top:26%;width:46vmax;height:46vmax;transform:translate(50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(255,168,92,.30),rgba(255,168,92,0));opacity:.7}
 
-/* 첫 화면 */
-.hero{padding:72px 0 88px}
-.hello{font-size:19px;color:var(--ink-2);margin:0 0 14px}
-.hero h1{font-size:clamp(34px,6.4vw,64px);line-height:1.16;letter-spacing:-.035em;font-weight:800;max-width:15em}
-.lead{margin:22px 0 0;font-size:clamp(18px,2.2vw,22px);color:var(--ink-2);line-height:1.6}
-.lead b{color:var(--ink);font-weight:700}
-.dday{display:flex;align-items:flex-end;gap:18px;margin-top:48px;flex-wrap:wrap}
-.dday-n{font-size:clamp(84px,15vw,148px);line-height:.86;font-weight:800;letter-spacing:-.05em}
-.dday-t{padding-bottom:8px}
-.dday-t b{display:block;font-size:20px;font-weight:700}
-.dday-t span{font-size:15px;color:var(--sub)}
+.glass{background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:inset 0 0 0 1px var(--edge),inset 0 1px 0 var(--edge-hi);border-radius:var(--r)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.glass{background:rgba(26,20,16,.9)}}
 
-/* 한눈에: 표 */
-.sec{padding:96px 0}
-.sec.gray{background:var(--bg-2)}
-.sec h2{font-size:clamp(28px,4.2vw,40px);letter-spacing:-.03em;line-height:1.2;font-weight:800}
-.sec .sub{margin:12px 0 0;color:var(--ink-2);font-size:17px}
-.facts{margin:40px 0 0;border-top:1px solid var(--line)}
-.facts div{display:grid;grid-template-columns:160px 1fr;gap:20px;padding:20px 0;border-bottom:1px solid var(--line)}
-.facts dt{font-size:15px;color:var(--sub);padding-top:3px}
-.facts dd{margin:0;font-size:20px;font-weight:650;letter-spacing:-.01em}
-.facts dd small{display:block;font-size:15px;font-weight:400;color:var(--ink-2);margin-top:2px}
+/* 왼쪽 레일 (PC) · 아래 독 (폰) */
+.rail{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:20;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border-radius:999px}
+.mark{width:40px;height:40px;border-radius:12px;background:var(--amber);color:var(--amber-ink);display:grid;place-items:center;margin-bottom:10px}
+.mark svg{width:22px;height:22px}
+.nav{position:relative;display:flex;flex-direction:column;gap:6px}
+.nav a{text-decoration:none;position:relative;z-index:1;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--sub);transition:color 200ms var(--ease-out),transform 160ms var(--ease-out)}
+.nav a svg{width:20px;height:20px}
+.nav a.on{color:#1a120c}
+.nav a:active{transform:scale(.92)}
+.nav .pill{position:absolute;left:0;top:0;width:44px;height:44px;border-radius:50%;background:#fbf6f0;transition:transform 380ms var(--ease-move);z-index:0}
+.nav a span{position:absolute;left:58px;white-space:nowrap;font-size:13px;font-weight:600;color:var(--ink);background:rgba(20,15,12,.9);padding:5px 10px;border-radius:8px;opacity:0;transform:translateX(-4px);pointer-events:none;transition:opacity 160ms var(--ease-out),transform 160ms var(--ease-out)}
+@media (hover:hover) and (pointer:fine){.nav a:hover{color:var(--ink)}.nav a.on:hover{color:#1a120c}.nav a:hover span{opacity:1;transform:none}}
 
-/* 수업 달력 (설명 모션: 수업 날짜가 순서대로 찍힘) */
-.cal-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
-.months{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px 40px;margin-top:40px}
-.month h3{font-size:19px;font-weight:750;margin:0 0 12px;letter-spacing:-.01em}
-.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}.months>*{min-width:0}
-.grid .w{font-size:13px;color:var(--sub);text-align:center;padding:4px 0 8px}
-.grid .w.sun{color:#c9342a}
-.d{aspect-ratio:1;display:grid;place-items:center;font-size:15px;color:var(--ink-2);border-radius:50%;position:relative;border:0;background:none;font-family:inherit;padding:0}
+.page{max-width:1200px;margin:0 auto;padding:22px 28px 80px 108px}
+.top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:600;color:var(--ink-2)}
+.chip svg{width:18px;height:18px}
+.chip .dot{width:26px;height:26px;border-radius:50%;background:var(--amber);color:var(--amber-ink);display:grid;place-items:center}
+.chip .dot svg{width:15px;height:15px}
+.top .sp{flex:1}
+.who{width:44px;height:44px;border-radius:50%;background:var(--amber);color:var(--amber-ink);display:grid;place-items:center;font-weight:800;font-size:13px;position:relative}
+.who::after{content:"";position:absolute;right:1px;bottom:1px;width:11px;height:11px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 2px #1d1510}
+
+.hello{margin:46px 0 26px}
+.hello h1{font-size:clamp(28px,4.4vw,44px);letter-spacing:-.03em;line-height:1.2;font-weight:800}
+.hello p{margin:8px 0 0;color:var(--sub);font-size:16px}
+
+/* 대시보드 격자 */
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.card{padding:22px;position:relative;min-width:0}
+.card h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.card .cap{font-size:13px;color:var(--sub);margin-top:2px}
+.span2{grid-column:span 2}.span3{grid-column:span 3}.span4{grid-column:span 4}
+.stat{display:flex;flex-direction:column;justify-content:space-between;min-height:150px}
+.stat .lab{font-size:14px;color:var(--ink-2);font-weight:600}
+.stat .val{font-size:clamp(24px,2.6vw,32px);font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:18px}
+.stat .val.big{font-size:clamp(40px,4.6vw,56px);letter-spacing:-.04em}
+.stat .foot{font-size:13px;color:var(--sub);margin-top:6px}
+.stat.hot{background:var(--amber-glass);box-shadow:inset 0 0 0 1px var(--amber-edge),inset 0 1px 0 rgba(255,220,180,.35)}
+.go{text-decoration:none;position:absolute;right:16px;top:16px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--glass-3);color:var(--ink);transition:transform 160ms var(--ease-out),background 160ms}
+.go svg{width:15px;height:15px}
+.stat.hot .go{background:#fbf6f0;color:#1a120c}
+.go:active{transform:scale(.92)}
+
+/* 회차 막대 (설명 모션: 지난 수업 · 다음 수업 · 남은 수업이 자라남) */
+.bars{display:flex;align-items:flex-end;justify-content:space-around;gap:10px;height:200px;margin-top:22px;padding-top:34px;position:relative}
+.bar{flex:1;min-width:10px;max-width:64px;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer}
+.bar i{display:block;width:100%;border-radius:999px;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transform-origin:bottom;transition:background 160ms}
+.bar.past i{background:rgba(251,246,240,.78)}
+.bar.next i{background:var(--amber)}
+.bar small{font-size:11px;color:var(--faint);white-space:nowrap}
+.bar.next small{color:var(--amber);font-weight:700}
+.bar.sel i{box-shadow:0 0 0 2px var(--ink)}
+.tip{position:absolute;top:0;transform:translateX(-50%);background:#fbf6f0;color:#1a120c;font-size:13px;font-weight:700;padding:5px 11px;border-radius:999px;white-space:nowrap;transition:left 300ms var(--ease-move);pointer-events:none}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--sub);margin-top:14px}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.js .bar i{transform:scaleY(.02)}
+.js .bar.on i{transform:none;transition:transform 700ms var(--ease-out),background 160ms}
+
+/* 달력 */
+.months{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,360px));gap:22px 30px;margin-top:18px}
+.months>*{min-width:0}
+.month h3{font-size:15px;font-weight:700;margin:0 0 8px;color:var(--ink-2)}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .w{font-size:12px;color:var(--faint);text-align:center;padding:2px 0 6px}
+.cal .w.sun{color:#ff9a8a}
+.d{aspect-ratio:1;display:grid;place-items:center;font-size:14px;color:var(--sub);border-radius:50%;position:relative;border:0;background:none;font-family:inherit;padding:0}
 .d.out{visibility:hidden}
-.d.cls{background:var(--accent);color:var(--accent-ink);font-weight:700;cursor:pointer;transition:transform 160ms var(--ease-out)}
-.d.cls:active{transform:scale(.94)}
-.d.today:not(.cls){box-shadow:inset 0 0 0 1.5px var(--ink)}
-.d.cls.sel{background:var(--ink)}
-.d i{position:absolute;bottom:-15px;left:50%;transform:translateX(-50%);font-style:normal;font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap}
+.d.cls{background:var(--amber);color:var(--amber-ink);font-weight:800;cursor:pointer;transition:transform 160ms var(--ease-out)}
+.d.cls.past{background:rgba(251,246,240,.78);color:#1a120c}
+.d.cls:active{transform:scale(.92)}
+.d.today:not(.cls){box-shadow:inset 0 0 0 1.5px var(--ink);color:var(--ink)}
+.d.cls.sel{box-shadow:0 0 0 2px var(--ink)}
 .js .d.cls{opacity:0;transform:scale(.95)}
-.js .d.cls.on{opacity:1;transform:none;transition:opacity 260ms var(--ease-out),transform 260ms var(--ease-out),background 160ms}
-.pick{margin-top:36px;min-height:64px;display:flex;align-items:center;gap:16px;padding:18px 22px;background:var(--bg);border-radius:999px;font-size:17px}
-.sec.gray .pick{background:#fff}
-.pick b{font-size:15px;font-weight:700;color:var(--accent);flex:none}
-.pick span{color:var(--ink)}
-.pat{display:inline-flex;align-items:center;gap:8px;font-size:15px;color:var(--ink-2)}
+.js .d.cls.on{opacity:1;transform:none;transition:opacity 260ms var(--ease-out),transform 260ms var(--ease-out)}
+
+/* 다음 수업 · 선택한 회차 */
+.next .no{display:inline-flex;height:28px;align-items:center;padding:0 12px;border-radius:999px;background:var(--amber);color:var(--amber-ink);font-size:13px;font-weight:800}
+.next .when{font-size:clamp(26px,3vw,34px);font-weight:800;letter-spacing:-.025em;line-height:1.2;margin-top:16px}
+.next .tm{font-size:17px;color:var(--ink-2);margin-top:6px;font-weight:600}
+.next .st{font-size:13px;color:var(--sub);margin-top:4px}
 
 /* 버튼 */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 24px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-size:16px;font-weight:650;text-decoration:none;cursor:pointer;transition:transform 160ms var(--ease-out),background 160ms}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 20px;border-radius:999px;border:0;background:var(--amber);color:var(--amber-ink);font:inherit;font-size:15px;font-weight:700;text-decoration:none;cursor:pointer;transition:transform 160ms var(--ease-out),background 160ms}
 .btn:active{transform:scale(.97)}
-.btn.ghost{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1.5px currentColor}
+.btn.ghost{background:var(--glass-3);color:var(--ink);box-shadow:inset 0 0 0 1px var(--edge)}
 .btn svg{width:18px;height:18px;flex:none}
-@media (hover:hover) and (pointer:fine){.btn:hover{background:#0071e3}.btn.ghost:hover{background:rgba(0,102,204,.06)}}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+@media (hover:hover) and (pointer:fine){.btn:hover{background:#ffad66}.btn.ghost:hover{background:rgba(255,255,255,.16)}.go:hover{background:rgba(255,255,255,.2)}}
 
-/* 참여 방법: 검정 타일 */
-.tile{background:var(--tile);color:var(--tile-ink)}
-.tile h2{color:var(--tile-ink)}
-.tile .sub{color:var(--tile-sub)}
-.tile a{color:var(--tile-accent)}
-.join{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;margin-top:48px;align-items:start}
-.join h3{font-size:22px;font-weight:750;letter-spacing:-.01em;margin:0 0 8px}
-.join p{margin:0;color:var(--tile-sub)}
-.join .blk+.blk{margin-top:44px}
-.tile .btn{background:var(--tile-accent);color:#000}
-.tile .btn.ghost{background:transparent;color:var(--tile-accent)}
-.kv{margin:18px 0 0;display:grid;gap:10px}
-.kv div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;background:var(--tile-2);border-radius:14px}
-.kv dt{font-size:14px;color:var(--tile-sub)}
-.kv dd{margin:0;font-size:20px;font-weight:700;letter-spacing:.02em;display:flex;align-items:center;gap:12px}
-.copy{border:0;background:none;color:var(--tile-accent);font:inherit;font-size:14px;font-weight:650;cursor:pointer;padding:6px 2px;transition:transform 160ms var(--ease-out)}
+/* 참여 방법 */
+.route{margin:16px 0 0;padding:0;list-style:none}
+.route li{display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--edge)}
+.route li:last-child{border-bottom:1px solid var(--edge)}
+.route .ic{width:36px;height:36px;border-radius:50%;background:var(--glass-3);display:grid;place-items:center}
+.route .ic svg{width:18px;height:18px}
+.route b{display:block;font-weight:700;font-size:15px}
+.route span{color:var(--sub);font-size:14px}
+.kv{margin:16px 0 0;display:grid;gap:8px}
+.kv div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:var(--glass-2);border-radius:14px;box-shadow:inset 0 0 0 1px var(--edge)}
+.kv dt{font-size:13px;color:var(--sub)}
+.kv dd{margin:0;font-size:19px;font-weight:800;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+.copy{border:0;background:var(--glass-3);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 12px;border-radius:999px;transition:transform 160ms var(--ease-out)}
 .copy:active{transform:scale(.95)}
-.route{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:0}
-.route li{display:grid;grid-template-columns:28px 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--tile-line)}
-.route li:last-child{border-bottom:1px solid var(--tile-line)}
-.route li svg{width:24px;height:24px;margin-top:3px}
-.route b{display:block;color:var(--tile-ink);font-weight:650}
-.route span{color:var(--tile-sub);font-size:15px}
-.mapfig{margin:0;border-radius:20px;background:var(--tile-2);padding:22px}
-.mapfig svg{width:100%;height:auto;display:block}
-.mapfig figcaption{font-size:14px;color:var(--tile-sub);margin-top:12px}
-.memo{white-space:pre-wrap;margin-top:14px;padding:16px 18px;background:var(--tile-2);border-radius:14px;color:var(--tile-ink);font-size:16px}
-.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.memo{white-space:pre-wrap;margin-top:14px;padding:14px 16px;background:var(--glass-2);box-shadow:inset 0 0 0 1px var(--edge);border-radius:14px;color:var(--ink);font-size:15px}
+.blk+.blk{margin-top:28px;padding-top:24px;border-top:1px solid var(--edge)}
+.blk h3{font-size:17px;font-weight:700}
+.blk p{margin:4px 0 0;color:var(--sub);font-size:14px}
+.fig svg{width:100%;height:auto;display:block;margin-top:14px}
+.fig p{font-size:13px;color:var(--sub);margin:10px 0 0}
 
-/* 안내사항 */
-.rules{margin:40px 0 0;padding:0;list-style:none;counter-reset:r;max-width:760px}
-.rules li{counter-increment:r;display:grid;grid-template-columns:44px 1fr;gap:8px;padding:22px 0;border-top:1px solid var(--line);font-size:17px}
-.rules li::before{content:counter(r);font-size:15px;font-weight:700;color:var(--accent);padding-top:2px}
-.rules li b{font-weight:700}
+/* 안내사항 · 멘토 */
+.rules{margin:14px 0 0;padding:0;list-style:none;counter-reset:r}
+.rules li{counter-increment:r;display:grid;grid-template-columns:32px 1fr;gap:10px;padding:14px 0;border-top:1px solid var(--edge);font-size:15px;color:var(--ink-2)}
+.rules li::before{content:counter(r);width:24px;height:24px;border-radius:50%;background:var(--glass-3);display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--ink);margin-top:1px}
+.rules li b{color:var(--ink);font-weight:700}
+.mentor .av{width:64px;height:64px;flex:none;border-radius:50%;background:var(--amber);color:var(--amber-ink);display:grid;place-items:center;font-size:20px;font-weight:800}
+.mentor .nm{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:16px}
+.mentor .role{font-size:13px;color:var(--sub)}
+.mentor .tel{font-size:15px;color:var(--ink-2);margin-top:10px;line-height:1.8}
+.mentor .btn{flex:1 1 auto}
+.pfoot{margin-top:28px;font-size:13px;color:var(--faint);text-align:center}
 
-/* 담당 멘토 */
-.mentor{display:flex;justify-content:space-between;align-items:flex-end;gap:28px;flex-wrap:wrap;margin-top:28px}
-.mentor .who{font-size:clamp(26px,4vw,36px);font-weight:800;letter-spacing:-.025em}
-.mentor .tel{font-size:17px;color:var(--ink-2);margin-top:6px}
-footer{padding:40px 0 56px;color:var(--sub);font-size:14px;border-top:1px solid var(--bg-2)}
-
-.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,12px);opacity:0;background:var(--ink);color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;pointer-events:none;transition:opacity 200ms var(--ease-out),transform 200ms var(--ease-out);z-index:10}
+.toast{position:fixed;left:50%;bottom:100px;transform:translate(-50%,12px);opacity:0;background:#fbf6f0;color:#1a120c;font-weight:700;padding:11px 18px;border-radius:999px;font-size:14px;pointer-events:none;transition:opacity 200ms var(--ease-out),transform 200ms var(--ease-out);z-index:30}
 .toast.on{opacity:1;transform:translate(-50%,0)}
-.err{min-height:70vh;display:grid;place-items:center;text-align:center;padding:40px 24px}
-.err h1{font-size:28px}.err p{color:var(--ink-2)}
+.err{min-height:80vh;display:grid;place-items:center;text-align:center;padding:40px 24px}
+.err .glass{padding:36px 28px;max-width:480px}
+.err h1{font-size:24px}.err p{color:var(--sub)}
 
-/* 등장 (스크립트가 있을 때만 숨겼다가 보여줌) */
-.js .rv{opacity:0;transform:translateY(24px)}
-.js .rv.in{opacity:1;transform:none;transition:opacity 560ms var(--ease-out),transform 560ms var(--ease-out)}
+/* 등장 */
+.js .rv{opacity:0;transform:translateY(18px) scale(.985)}
+.js .rv.in{opacity:1;transform:none;transition:opacity 520ms var(--ease-out),transform 520ms var(--ease-out)}
 
-@media (max-width:760px){
-  body{font-size:16px}
-  .wrap{padding:0 20px}
-  .hero{padding:44px 0 64px}
-  .sec{padding:72px 0}
-  .facts div{grid-template-columns:1fr;gap:2px;padding:16px 0}
-  .facts dd{font-size:19px}
-  .join{grid-template-columns:1fr;gap:40px}
-  .months{grid-template-columns:1fr}
-  .pick{border-radius:20px}
-  .btn{flex:1 1 auto}
-  .bar-r{display:none}
+@media (max-width:980px){
+  .page{padding:16px 16px 120px}
+  .rail{left:50%;right:auto;top:auto;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);flex-direction:row;padding:7px;gap:0}
+  .rail .mark{display:none}
+  .nav{flex-direction:row;gap:4px}
+  .nav a{width:54px;height:48px;border-radius:999px;display:flex;flex-direction:column;gap:1px;font-size:10.5px}
+  .nav a span{position:static;opacity:1;transform:none;background:none;padding:0;color:inherit;font-size:10.5px;font-weight:700}
+  .nav a svg{width:19px;height:19px}
+  .nav .pill{width:54px;height:48px;border-radius:999px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .span3,.span4{grid-column:span 2}
+  .span2.solo-m{grid-column:span 2}
+  .hello{margin:30px 0 18px}
+  .stat{min-height:132px;padding:18px}
+  .card{padding:18px}
+  .bars{gap:6px;height:170px}
+  .chip.course{display:none}
+  .m2{grid-column:span 2}
+  .top .chip.num{display:none}
 }
+@media (max-width:420px){.nav a{width:50px}.nav .pill{width:50px}}
+@media (pointer:fine) and (prefers-reduced-motion:no-preference){.lamp{animation:breathe 9s ease-in-out infinite alternate}}
+@keyframes breathe{from{opacity:.45}to{opacity:.85}}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .js .rv,.js .rv.in,.js .d.cls,.js .d.cls.on{transform:none!important;transition:opacity 300ms linear!important}
+  .js .rv,.js .rv.in,.js .d.cls,.js .d.cls.on,.js .bar i,.js .bar.on i{transform:none!important;transition:opacity 300ms linear!important}
+  .nav .pill{transition:none}
 }
-@media print{.bar,.btns,.btn,.copy,.toast{display:none!important}.tile{background:#fff;color:#000}.sec{padding:32px 0}}
+@media print{.rail,.btns,.btn,.copy,.toast,.scene,.go{display:none!important}body{color:#000;background:#fff}.glass{background:#fff;box-shadow:inset 0 0 0 1px #ddd;-webkit-backdrop-filter:none;backdrop-filter:none}}
 </style>
 </head>
 <body>
-<header class="bar"><div class="wrap">
-  <a class="brand" href="#" aria-label="코리아AI아카데미">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 20 12 4l9 16"/><path d="M7.5 13.5h9"/></svg>
-    <span id="brName">코리아AI아카데미</span></a>
-  <span class="bar-r">개강 안내</span>
-</div></header>
-<main id="app"></main>
+<div class="scene" aria-hidden="true"><div class="lamp"></div></div>
+<div id="root"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<noscript><div class="err"><div><h1>개강 안내</h1><p>이 페이지는 브라우저의 자바스크립트가 켜져 있어야 보여요.</p></div></div></noscript>
+<noscript><div class="err"><div class="glass"><h1>개강 안내</h1><p>이 페이지는 브라우저의 자바스크립트가 켜져 있어야 보여요.</p></div></div></noscript>
 <script>
 (function(){
 'use strict';
 document.documentElement.classList.add('js');
 var DOW='일월화수목금토';
 var BRANCH={name:'코리아AI아카데미 부산점',addr:'부산 부산진구 중앙대로 668 에이원플라자 4층',map:'https://map.naver.com/p/entry/place/1728207405',
-  routes:[['서면역 2번 출구','직진 도보 7분 · 삼정타워 옆 건물'],['범내골역 8번 출구','직진 도보 7분'],['주차','1시간 무료, 이후 30분당 1,500원']]};
+  routes:[['train','서면역 2번 출구','직진 도보 7분 · 삼정타워 옆 건물'],['train','범내골역 8번 출구','직진 도보 7분'],['car','주차','1시간 무료, 이후 30분당 1,500원']]};
 var $=function(s,r){return (r||document).querySelector(s)};
 function el(tag,attrs,kids){ var e=document.createElement(tag); if(attrs) for(var k in attrs){ if(k==='text') e.textContent=attrs[k]; else if(k==='html') e.innerHTML=attrs[k]; else if(k==='cls') e.className=attrs[k]; else e.setAttribute(k,attrs[k]); } (kids||[]).forEach(function(c){ if(c!=null) e.appendChild(typeof c==='string'?document.createTextNode(c):c); }); return e; }
 function safeUrl(u){ try{ var x=new URL(String(u||'').trim()); return /^https?:$/.test(x.protocol)?x.href:''; }catch(e){ return ''; } }
@@ -188,8 +231,8 @@ function ko(s){ var d=pd(s); return (d.getMonth()+1)+'월 '+d.getDate()+'일 '+D
 function md(s){ var d=pd(s); return (d.getMonth()+1)+'/'+d.getDate()+'('+DOW[d.getDay()]+')'; }
 function toast(t){ var x=$('#toast'); x.textContent=t; x.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(function(){ x.classList.remove('on'); },1800); }
 function copy(t,label){ var ok=function(){ toast((label||'')+' 복사했어요'); };
-  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok,fb); else fb();
-  function fb(){ var ta=el('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); ok(); }catch(e){ toast('길게 눌러 복사해 주세요'); } ta.remove(); } }
+  function fb(){ var ta=el('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); ok(); }catch(e){ toast('길게 눌러 복사해 주세요'); } ta.remove(); }
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok,fb); else fb(); }
 
 /* 링크 해석: #1.<deflate-raw → base64url> 또는 #0.<base64url JSON> */
 function b64d(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; var bin=atob(s), u=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; }
@@ -200,136 +243,179 @@ function decode(){ var h=location.hash.slice(1); var m=h.match(/^([01])\.(.+)$/)
   var ds=new DecompressionStream('deflate-raw'); var w=ds.writable.getWriter(); w.write(bytes); w.close();
   return new Response(ds.readable).text().then(JSON.parse); }
 
+var P=function(d){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };
 var ICON={
-  pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>',
-  train:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M9 21l2-4M15 21l-2-4"/><circle cx="9" cy="14" r=".6" fill="currentColor"/><circle cx="15" cy="14" r=".6" fill="currentColor"/></svg>',
-  car:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 16V11l2-5h10l2 5v5M5 16h14M5 16v2.5M19 16v2.5M4 11h16"/><circle cx="8" cy="13.5" r=".6" fill="currentColor"/><circle cx="16" cy="13.5" r=".6" fill="currentColor"/></svg>',
-  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/></svg>',
-  video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3"/></svg>',
-  phone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
-  msg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v11H9l-5 4z"/></svg>',
-  map:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>',
-  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>'};
+  mark:P('<path d="M4 20 12 4l8 16"/><path d="M8 13h8"/>'),
+  home:P('<path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-5h4v5"/>'),
+  cal:P('<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
+  calp:P('<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4M12 13v5M9.5 15.5h5"/>'),
+  pin:P('<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>'),
+  video:P('<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="m16 10.5 5-3v9l-5-3"/>'),
+  list:P('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>'),
+  phone:P('<path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>'),
+  msg:P('<path d="M4 5h16v11H9l-5 4z"/>'),
+  map:P('<path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>'),
+  link:P('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
+  train:P('<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M9 21l2-4M15 21l-2-4"/>'),
+  car:P('<path d="M5 16V11l2-5h10l2 5v5M5 16h14M5 16v2.5M19 16v2.5M4 11h16"/>'),
+  arrow:P('<path d="M7 17 17 7M9 7h8v8"/>'),
+  clock:P('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>')};
 function btn(href,label,icon,ghost,extra){ var a=el('a',{cls:'btn'+(ghost?' ghost':''),href:href,html:(icon?ICON[icon]:'')+'<span></span>'}); a.querySelector('span').textContent=label; if(extra) for(var k in extra) a.setAttribute(k,extra[k]); return a; }
 
-/* 길 안내 그림: 두 역에서 학원까지 걷는 길 (선이 그려지는 설명 모션) */
+/* 길 안내 그림 (선이 그려지는 설명 모션) */
 function mapSvg(){ return '<svg viewBox="0 0 360 220" fill="none" role="img" aria-label="서면역 2번 출구와 범내골역 8번 출구에서 학원까지 각각 도보 7분">'+
-  '<path d="M16 168H344" stroke="#3a3a3c" stroke-width="12" stroke-linecap="round"/>'+
-  '<g class="walk"><path d="M52 168V112H166V72" stroke="#2997ff" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round" stroke-linejoin="round"/>'+
-  '<path d="M308 168V112H194V72" stroke="#f5f5f7" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round" stroke-linejoin="round"/></g>'+
-  '<rect x="138" y="26" width="84" height="46" rx="6" fill="#2997ff"/><text x="180" y="54" text-anchor="middle" fill="#000" font-size="14" font-weight="800">학원 4층</text>'+
-  '<rect x="238" y="30" width="34" height="42" rx="3" fill="#1d1d1f" stroke="#48484a"/><text x="255" y="22" text-anchor="middle" fill="#a1a1a6" font-size="11">삼정타워</text>'+
-  '<text x="78" y="102" fill="#2997ff" font-size="12" font-weight="700">도보 7분</text><text x="282" y="102" text-anchor="end" fill="#f5f5f7" font-size="12" font-weight="700">도보 7분</text>'+
-  '<circle cx="52" cy="168" r="10" fill="#000" stroke="#2997ff" stroke-width="3"/><circle cx="308" cy="168" r="10" fill="#000" stroke="#f5f5f7" stroke-width="3"/>'+
-  '<text x="52" y="204" text-anchor="middle" fill="#f5f5f7" font-size="13" font-weight="700">서면역 2번</text><text x="308" y="204" text-anchor="middle" fill="#f5f5f7" font-size="13" font-weight="700">범내골역 8번</text></svg>'; }
+  '<path d="M16 168H344" stroke="rgba(255,255,255,.14)" stroke-width="12" stroke-linecap="round"/>'+
+  '<g class="walk"><path d="M52 168V112H166V72" stroke="#ff9d4d" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round" stroke-linejoin="round"/>'+
+  '<path d="M308 168V112H194V72" stroke="#fbf6f0" stroke-width="3" stroke-dasharray="6 7" stroke-linecap="round" stroke-linejoin="round"/></g>'+
+  '<rect x="138" y="26" width="84" height="46" rx="10" fill="#ff9d4d"/><text x="180" y="54" text-anchor="middle" fill="#2a1606" font-size="14" font-weight="800">학원 4층</text>'+
+  '<rect x="238" y="30" width="34" height="42" rx="4" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.2)"/><text x="255" y="22" text-anchor="middle" fill="rgba(251,246,240,.6)" font-size="11">삼정타워</text>'+
+  '<text x="78" y="102" fill="#ff9d4d" font-size="12" font-weight="700">도보 7분</text><text x="282" y="102" text-anchor="end" fill="#fbf6f0" font-size="12" font-weight="700">도보 7분</text>'+
+  '<circle cx="52" cy="168" r="10" fill="#1a120c" stroke="#ff9d4d" stroke-width="3"/><circle cx="308" cy="168" r="10" fill="#1a120c" stroke="#fbf6f0" stroke-width="3"/>'+
+  '<text x="52" y="204" text-anchor="middle" fill="#fbf6f0" font-size="13" font-weight="700">서면역 2번</text><text x="308" y="204" text-anchor="middle" fill="#fbf6f0" font-size="13" font-weight="700">범내골역 8번</text></svg>'; }
 
 function render(D){
-  var app=$('#app'); app.innerHTML='';
+  var root=$('#root'); root.innerHTML='';
   var dates=(D.dt||[]).map(function(o){ var d=pd(D.s); d.setDate(d.getDate()+o); return ymd(d); });
   var today=ymd(new Date()), start=D.s, end=dates.length?dates[dates.length-1]:(D.e||D.s);
   var left=Math.round((pd(start)-pd(today))/864e5);
   var done=dates.filter(function(d){ return d<today; }).length;
-  if(D.br) $('#brName').textContent=D.br;
+  var nextI=dates.findIndex(function(d){ return d>=today; });
   document.title=(D.t||'개강')+' · 개강 안내';
+  var mn=String(D.mn||'').replace(/\s*멘토\s*$/,'').trim(), initial=mn.length>=3?mn.slice(-2):(mn||'K');
 
-  /* 첫 화면 */
-  var hero=el('section',{cls:'hero'},[el('div',{cls:'wrap'})]); var hw=hero.firstChild;
-  if(D.n) hw.appendChild(el('p',{cls:'hello rv',text:D.n+'님, 등록해 주셔서 감사합니다.'}));
-  hw.appendChild(el('h1',{cls:'rv',text:D.t||'수업 안내'}));
-  var lead=el('p',{cls:'lead rv'}); lead.innerHTML='<b></b>에 시작해서 <b></b>까지, 총 <b></b> 수업이에요.';
-  var bs=lead.querySelectorAll('b'); bs[0].textContent=ko(start); bs[1].textContent=md(end); bs[2].textContent=(dates.length||D.c||'')+'회';
-  hw.appendChild(lead);
-  var dd=el('div',{cls:'dday rv'}), n=el('div',{cls:'dday-n num'}), dt=el('div',{cls:'dday-t'});
-  if(left>0){ n.textContent='D-'+left; n.dataset.to=left; dt.innerHTML='<b>개강까지 남은 날</b><span></span>'; dt.querySelector('span').textContent=ko(start)+' 첫 수업'; }
-  else if(left===0){ n.textContent='오늘'; dt.innerHTML='<b>첫 수업이 있는 날이에요</b><span></span>'; dt.querySelector('span').textContent=(D.tm||'')+' 시작'; }
-  else if(today<=end){ n.textContent=(done)+'/'+dates.length; dt.innerHTML='<b>회차 진행 중</b><span>지난 수업 수 / 전체 회차</span>'; }
-  else { n.textContent='종강'; dt.innerHTML='<b>수업이 모두 끝났어요</b><span>수고 많으셨어요</span>'; }
-  dd.appendChild(n); dd.appendChild(dt); hw.appendChild(dd);
-  app.appendChild(hero);
+  /* 레일 · 독 */
+  var rail=el('nav',{cls:'rail glass','aria-label':'바로가기'}); rail.appendChild(el('div',{cls:'mark',html:ICON.mark,title:D.br||BRANCH.name}));
+  var nav=el('div',{cls:'nav'}); nav.appendChild(el('i',{cls:'pill'}));
+  [['sum','home','요약'],['days','cal','일정'],['join',D.md==='zoom'?'video':D.md==='campus'?'link':'pin','참여'],['rules','list','안내'],['mentor','phone','문의']].forEach(function(n){
+    var a=el('a',{href:'#'+n[0],'data-k':n[0],html:ICON[n[1]]+'<span></span>'}); a.querySelector('span').textContent=n[2];
+    a.addEventListener('click',function(e){ e.preventDefault(); var t=document.getElementById('s-'+n[0]); if(t) t.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); setNav(n[0]); });
+    nav.appendChild(a); });
+  rail.appendChild(nav); root.appendChild(rail);
 
-  /* 한눈에 */
-  var place=D.md==='zoom'?'ZOOM 실시간 비대면':D.md==='campus'?'온라인 (캠퍼스 강의)':(D.r||'추후 안내');
-  var rows=[['수업 기간',md(start)+' ~ '+md(end),(dates.length?'총 '+dates.length+'회':'')],['요일',D.d||'',''],['시간',D.tm||'추후 안내',''],['장소',place,D.md==='off'?BRANCH.addr:'']];
-  var s1=el('section',{cls:'sec gray'},[el('div',{cls:'wrap'},[el('h2',{cls:'rv',text:'수업 정보'}),el('p',{cls:'sub rv',text:'수업 첫날 전에 한 번만 확인해 주세요.'})])]);
-  var dl=el('dl',{cls:'facts rv'}); rows.forEach(function(r){ if(!r[1]) return; var dd2=el('dd',{text:r[1]}); if(r[2]) dd2.appendChild(el('small',{text:r[2]})); dl.appendChild(el('div',null,[el('dt',{text:r[0]}),dd2])); });
-  s1.firstChild.appendChild(dl); app.appendChild(s1);
+  var page=el('main',{cls:'page'}); root.appendChild(page);
+  /* 상단 알약들 */
+  var top=el('div',{cls:'top',id:'s-sum'});
+  var c1=el('div',{cls:'chip glass',html:'<span class="dot">'+ICON.mark+'</span><span></span>'}); c1.lastChild.textContent=(D.br||BRANCH.name); top.appendChild(c1);
+  var c2=el('div',{cls:'chip glass course',html:ICON.cal+'<span></span>'}); c2.lastChild.textContent='개강 안내'; top.appendChild(c2);
+  top.appendChild(el('div',{cls:'sp'}));
+  var now=new Date(); var c3=el('div',{cls:'chip glass num',html:ICON.clock+'<span></span>'}); c3.lastChild.textContent=(now.getMonth()+1)+'/'+now.getDate()+' ('+DOW[now.getDay()]+')'; top.appendChild(c3);
+  if(mn) top.appendChild(el('div',{cls:'who',text:initial,title:'담당 '+D.mn}));
+  page.appendChild(top);
 
-  /* 수업 달력 */
-  var s2=el('section',{cls:'sec'},[el('div',{cls:'wrap'})]); var w2=s2.firstChild;
-  var top=el('div',{cls:'cal-top'},[el('div',null,[el('h2',{cls:'rv',text:'수업 날짜'}),el('p',{cls:'sub rv',text:'파란 날이 수업이 있는 날이에요. 날짜를 누르면 몇 회차인지 보여요.'})])]);
-  var icsBtn=btn('#','내 캘린더에 추가','cal',false); icsBtn.classList.add('rv'); icsBtn.addEventListener('click',function(e){ e.preventDefault(); ics(D,dates); });
-  top.appendChild(icsBtn); w2.appendChild(top);
+  var hello=el('div',{cls:'hello'});
+  hello.appendChild(el('h1',{cls:'rv',text:(D.n?D.n+'님, ':'')+(D.t||'수업 안내')}));
+  hello.appendChild(el('p',{cls:'rv',text:left>0?'곧 시작할 수업을 한눈에 정리했어요.':today<=end?'지금 듣고 있는 수업 일정이에요.':'수업이 모두 끝났어요. 수고 많으셨어요.'}));
+  page.appendChild(hello);
+
+  var grid=el('div',{cls:'grid'}); page.appendChild(grid);
+  function stat(lab,val,foot,opt){ opt=opt||{}; var c=el('section',{cls:'card stat glass rv'+(opt.hot?' hot':'')});
+    c.appendChild(el('div',{cls:'lab',text:lab})); var v=el('div',{cls:'val num'+(opt.big?' big':''),text:val}); if(opt.to!=null) v.dataset.to=opt.to; c.appendChild(v); c.appendChild(el('div',{cls:'foot',text:foot||''}));
+    if(opt.go){ var g=el('a',{cls:'go',href:'#'+opt.go,'aria-label':lab+' 자세히',html:ICON.arrow}); g.addEventListener('click',function(e){ e.preventDefault(); document.getElementById('s-'+opt.go).scrollIntoView({behavior:'smooth',block:'start'}); setNav(opt.go); }); c.appendChild(g); }
+    grid.appendChild(c); }
+  if(left>0) stat('개강까지','D-'+left,ko(start)+' 첫 수업',{hot:1,big:1,to:left,go:'days'});
+  else if(left===0) stat('오늘','첫 수업',(D.tm||'')+' 시작',{hot:1,big:1,go:'days'});
+  else if(today<=end) stat('진행','지난 '+done+'회',(dates.length-done)+'회 남았어요',{hot:1,go:'days'});
+  else stat('수업','종강',md(end)+' 마지막 수업',{hot:1,big:1});
+  stat('수업 기간',md(start)+' ~ '+md(end),'총 '+(dates.length||D.c||'')+'회');
+  stat('요일 · 시간',D.d||'',D.tm||'시간 추후 안내');
+  var place=D.md==='zoom'?'ZOOM 비대면':D.md==='campus'?'캠퍼스 강의':(D.r||'추후 안내');
+  stat('장소',place,D.md==='off'?'코리아AI아카데미 부산점':'온라인으로 참여',{go:'join'});
+
+  /* 회차 흐름 막대 */
+  var bc=el('section',{cls:'card glass span4 rv'}); bc.appendChild(el('h2',{text:'회차 흐름'})); bc.appendChild(el('div',{cls:'cap',text:'막대 하나가 수업 한 번이에요. 눌러 보면 날짜가 보여요.'}));
+  var bars=el('div',{cls:'bars'}); var tip=el('div',{cls:'tip num'}); bars.appendChild(tip);
+  dates.forEach(function(d,i){ var h=46+Math.round(54*(i+1)/dates.length); var b=el('button',{cls:'bar'+(d<today?' past':'')+(i===nextI?' next':''),type:'button','data-i':i,'aria-label':(i+1)+'회차 '+ko(d)});
+    var bi=el('i'); bi.style.height=h+'%'; b.appendChild(bi); b.appendChild(el('small',{cls:'num',text:(i+1)+'회'})); bars.appendChild(b); });
+  bc.appendChild(bars);
+  bc.appendChild(el('div',{cls:'legend',html:'<span><b style="background:rgba(251,246,240,.78)"></b>지난 수업</span><span><b style="background:#ff9d4d"></b>다음 수업</span><span><b style="background:rgba(255,255,255,.18)"></b>남은 수업</span>'}));
+  grid.appendChild(bc);
+
+  /* 수업 날짜 달력 + 선택한 회차 */
+  var cc=el('section',{cls:'card glass span3 rv',id:'s-days'}); cc.appendChild(el('h2',{text:'수업 날짜'})); cc.appendChild(el('div',{cls:'cap',text:'색칠된 날이 수업 날이에요. 날짜를 누르면 오른쪽에 회차가 보여요.'}));
   var months=el('div',{cls:'months'}); var ms=[]; dates.forEach(function(d){ var k=d.slice(0,7); if(ms.indexOf(k)<0) ms.push(k); });
   var set={}; dates.forEach(function(d,i){ set[d]=i+1; });
-  ms.forEach(function(k){ var y=+k.slice(0,4), m=+k.slice(5,7); var mo=el('div',{cls:'month rv'},[el('h3',{text:y+'년 '+m+'월'})]); var g=el('div',{cls:'grid'});
+  ms.forEach(function(k){ var y=+k.slice(0,4), m=+k.slice(5,7); var mo=el('div',{cls:'month'},[el('h3',{text:y+'년 '+m+'월'})]); var g=el('div',{cls:'cal'});
     for(var i=0;i<7;i++) g.appendChild(el('div',{cls:'w'+(i===0?' sun':''),text:DOW[i]}));
     var first=new Date(y,m-1,1), days=new Date(y,m,0).getDate();
     for(i=0;i<first.getDay();i++) g.appendChild(el('span',{cls:'d out'}));
-    for(var d=1;d<=days;d++){ var key=k+'-'+String(d).padStart(2,'0'); var no=set[key];
-      var c=el(no?'button':'span',{cls:'d num'+(no?' cls':'')+(key===today?' today':''),text:String(d)});
-      if(no){ c.type='button'; c.dataset.k=key; c.dataset.no=no; c.setAttribute('aria-label',ko(key)+' '+no+'회차'); if(no===1||no===dates.length) c.appendChild(el('i',{text:no===1?'개강':'종강'})); }
+    for(var dd=1;dd<=days;dd++){ var key=k+'-'+String(dd).padStart(2,'0'); var no=set[key];
+      var c=el(no?'button':'span',{cls:'d num'+(no?' cls':'')+(no&&key<today?' past':'')+(key===today?' today':''),text:String(dd)});
+      if(no){ c.type='button'; c.dataset.k=key; c.dataset.no=no; c.setAttribute('aria-label',ko(key)+' '+no+'회차'); }
       g.appendChild(c); }
     mo.appendChild(g); months.appendChild(mo); });
-  w2.appendChild(months);
-  var pick=el('div',{cls:'pick rv','aria-live':'polite'},[el('b',{text:'1회차'}),el('span',{text:ko(start)+(D.tm?' · '+D.tm:'')})]);
-  w2.appendChild(pick);
-  months.addEventListener('click',function(e){ var b=e.target.closest('.d.cls'); if(!b) return; months.querySelectorAll('.sel').forEach(function(x){ x.classList.remove('sel'); }); b.classList.add('sel');
-    pick.firstChild.textContent=b.dataset.no+'회차'; pick.lastChild.textContent=ko(b.dataset.k)+(D.tm?' · '+D.tm:'')+(b.dataset.k<today?' · 지난 수업':''); });
-  app.appendChild(s2);
+  cc.appendChild(months); grid.appendChild(cc);
+
+  var nc=el('section',{cls:'card glass next rv m2'}); var ni=nextI>=0?nextI:dates.length-1;
+  nc.appendChild(el('h2',{text:nextI>=0?(nextI===0?'첫 수업':'다음 수업'):'마지막 수업'}));
+  var no=el('div',{cls:'no num',text:(ni+1)+'회차'}), wh=el('div',{cls:'when',text:dates[ni]?md(dates[ni]):''}), tmx=el('div',{cls:'tm num',text:D.tm||''}), stx=el('div',{cls:'st',text:dates[ni]?ko(dates[ni]):''});
+  nc.appendChild(el('div',{style:'margin-top:16px'},[no])); nc.appendChild(wh); nc.appendChild(tmx); nc.appendChild(stx);
+  var ib=el('div',{cls:'btns'}); var icsBtn=btn('#','내 캘린더에 추가','calp',false); icsBtn.addEventListener('click',function(e){ e.preventDefault(); ics(D,dates); }); ib.appendChild(icsBtn); nc.appendChild(ib);
+  grid.appendChild(nc);
+  function pick(i){ if(!dates[i]) return; no.textContent=(i+1)+'회차'; wh.textContent=md(dates[i]); stx.textContent=ko(dates[i])+(dates[i]<today?' · 지난 수업':'');
+    months.querySelectorAll('.sel').forEach(function(x){ x.classList.remove('sel'); }); var m=months.querySelector('[data-no="'+(i+1)+'"]'); if(m) m.classList.add('sel');
+    bars.querySelectorAll('.bar.sel').forEach(function(x){ x.classList.remove('sel'); }); var b=bars.querySelector('[data-i="'+i+'"]'); if(b){ b.classList.add('sel'); placeTip(b,i); } }
+  function placeTip(b,i){ tip.textContent=md(dates[i]); var r=b.getBoundingClientRect(), R=bars.getBoundingClientRect(), hw=tip.offsetWidth/2; tip.style.left=Math.max(hw,Math.min(R.width-hw,r.left-R.left+r.width/2))+'px'; }
+  months.addEventListener('click',function(e){ var b=e.target.closest('.d.cls'); if(b) pick(+b.dataset.no-1); });
+  bars.addEventListener('click',function(e){ var b=e.target.closest('.bar'); if(b) pick(+b.dataset.i); });
+  addEventListener('resize',function(){ var s=bars.querySelector('.bar.sel')||bars.querySelector('.bar.next')||bars.querySelector('.bar'); if(s) placeTip(s,+s.dataset.i); });
 
   /* 참여 방법 */
-  var s3=el('section',{cls:'sec tile'},[el('div',{cls:'wrap'})]); var w3=s3.firstChild;
-  w3.appendChild(el('h2',{cls:'rv',text:D.md==='zoom'?'ZOOM으로 참여해요':D.md==='campus'?'온라인으로 참여해요':'학원으로 오시는 길'}));
-  w3.appendChild(el('p',{cls:'sub rv',text:D.md==='off'?'수업 10분 전쯤 도착하시면 자리 안내를 도와드려요.':D.md==='zoom'?'수업 시작 5분 전에 입장해 두면 편해요.':'아래 안내대로 접속해 주세요.'}));
-  var join=el('div',{cls:'join'}), L=el('div'), R=el('div');
   var zu=safeUrl(D.zu), cpu=safeUrl(D.cpu), hasZoom=zu||D.zid;
-  function zoomBlock(title,desc){ var b=el('div',{cls:'blk rv'},[el('h3',{text:title}),el('p',{text:desc})]);
+  var jc=el('section',{cls:'card glass span2 rv',id:'s-join'});
+  jc.appendChild(el('h2',{text:D.md==='zoom'?'ZOOM으로 참여해요':D.md==='campus'?'온라인으로 참여해요':'학원으로 오시는 길'}));
+  jc.appendChild(el('div',{cls:'cap',text:D.md==='off'?'수업 10분 전쯤 도착하시면 자리 안내를 도와드려요.':D.md==='zoom'?'수업 시작 5분 전에 입장해 두면 편해요.':'아래 안내대로 접속해 주세요.'}));
+  function zoomBlock(title,desc){ var b=el('div',{cls:'blk'},[el('h3',{text:title}),el('p',{text:desc})]);
     if(zu){ var bb=el('div',{cls:'btns'}); bb.appendChild(btn(zu,'ZOOM 입장하기','video',false,{target:'_blank',rel:'noopener'})); b.appendChild(bb); }
     if(D.zid||D.zpw){ var kv=el('dl',{cls:'kv'}); [['회의 ID',D.zid],['비밀번호',D.zpw]].forEach(function(p){ if(!p[1]) return; var cb=el('button',{cls:'copy',type:'button',text:'복사'}); cb.addEventListener('click',function(){ copy(String(p[1]).replace(/\s/g,''),p[0]); });
       kv.appendChild(el('div',null,[el('dt',{text:p[0]}),el('dd',{cls:'num'},[String(p[1]),cb])])); }); b.appendChild(kv); }
-    if(!zu&&!D.zid) b.appendChild(el('p',{cls:'memo',text:'ZOOM 링크는 개강 전에 따로 보내드려요. 수업 당일 오전까지 못 받으셨다면 담당 멘토에게 연락 주세요.'}));
+    if(!zu&&!D.zid) b.appendChild(el('div',{cls:'memo',text:'ZOOM 링크는 개강 전에 따로 보내드려요. 수업 당일 오전까지 못 받으셨다면 담당 멘토에게 연락 주세요.'}));
     return b; }
+  var side=null;
   if(D.md==='off'){
-    var a=el('div',{cls:'blk rv'},[el('h3',{text:BRANCH.name}),el('p',{text:BRANCH.addr})]);
-    var ol=el('ol',{cls:'route'}); BRANCH.routes.forEach(function(r,i){ ol.appendChild(el('li',{html:(i<2?ICON.train:ICON.car)+'<div><b></b><span></span></div>'})); var li=ol.lastChild; li.querySelector('b').textContent=r[0]; li.querySelector('span').textContent=r[1]; });
+    var a=el('div',{cls:'blk'},[el('h3',{text:BRANCH.name}),el('p',{text:BRANCH.addr})]);
+    var ol=el('ol',{cls:'route'}); BRANCH.routes.forEach(function(r){ var li=el('li',{html:'<span class="ic">'+ICON[r[0]]+'</span><div><b></b><span></span></div>'}); li.querySelector('b').textContent=r[1]; li.querySelector('div span').textContent=r[2]; ol.appendChild(li); });
     a.appendChild(ol); var bb=el('div',{cls:'btns'}); bb.appendChild(btn(BRANCH.map,'지도 열기','map',false,{target:'_blank',rel:'noopener'})); var cb=el('button',{cls:'btn ghost',type:'button',html:ICON.pin+'<span>주소 복사</span>'}); cb.addEventListener('click',function(){ copy(BRANCH.addr,'주소'); }); bb.appendChild(cb); a.appendChild(bb);
-    L.appendChild(a);
-    if(hasZoom) L.appendChild(zoomBlock('학원에 못 오는 날은 ZOOM으로','실시간 비대면으로 같은 수업에 참여할 수 있어요. 참여하기 전에 담당 멘토에게 꼭 미리 알려 주세요.'));
-    R.appendChild(el('figure',{cls:'mapfig rv',html:mapSvg()+'<figcaption>두 역 모두 출구에서 직진, 중앙대로를 따라 7분이에요.</figcaption>'}));
+    jc.appendChild(a);
+    if(hasZoom) jc.appendChild(zoomBlock('학원에 못 오는 날은 ZOOM으로','실시간 비대면으로 같은 수업에 참여할 수 있어요. 참여하기 전에 담당 멘토에게 꼭 미리 알려 주세요.'));
+    side=el('section',{cls:'card glass span2 rv fig'},[el('h2',{text:'역에서 7분'}),el('div',{cls:'cap',text:'두 역 모두 출구에서 직진, 중앙대로를 따라 와요.'})]); side.insertAdjacentHTML('beforeend',mapSvg());
   } else if(D.md==='zoom'){
-    L.appendChild(zoomBlock('ZOOM 실시간 수업','강의실과 같은 수업을 실시간으로 들어요. 녹화본은 1주일 동안 볼 수 있어요.'));
-    R.appendChild(el('figure',{cls:'mapfig rv',html:'<svg viewBox="0 0 360 200" fill="none" aria-hidden="true"><rect x="20" y="20" width="320" height="160" rx="14" stroke="#3a3a3c" stroke-width="2"/><rect x="40" y="40" width="180" height="120" rx="8" fill="#1d1d1f"/><circle cx="130" cy="88" r="20" stroke="#2997ff" stroke-width="3"/><path d="M95 140c8-20 62-20 70 0" stroke="#2997ff" stroke-width="3"/><rect x="236" y="40" width="84" height="56" rx="8" fill="#1d1d1f"/><rect x="236" y="104" width="84" height="56" rx="8" fill="#1d1d1f"/><circle class="live" cx="56" cy="56" r="5" fill="#2997ff"/></svg><figcaption>수업 시간에 링크를 누르면 바로 입장돼요.</figcaption>'}));
+    jc.appendChild(zoomBlock('ZOOM 실시간 수업','강의실과 같은 수업을 실시간으로 들어요. 녹화본은 1주일 동안 볼 수 있어요.'));
   } else {
-    var c2=el('div',{cls:'blk rv'},[el('h3',{text:'캠퍼스 강의'}),el('p',{text:'접속 방법은 아래 안내를 따라 주세요.'})]);
-    if(D.cp) c2.appendChild(el('div',{cls:'memo',text:D.cp})); else c2.appendChild(el('div',{cls:'memo',text:'접속 정보는 개강 전에 따로 보내드려요.'}));
-    if(cpu){ var bb2=el('div',{cls:'btns'}); bb2.appendChild(btn(cpu,'강의실 들어가기','link',false,{target:'_blank',rel:'noopener'})); c2.appendChild(bb2); }
-    L.appendChild(c2); if(hasZoom) L.appendChild(zoomBlock('실시간 ZOOM 수업','실시간 수업은 아래 ZOOM으로 참여해요.'));
+    var c2b=el('div',{cls:'blk'},[el('h3',{text:'캠퍼스 강의'}),el('p',{text:'접속 방법은 아래 안내를 따라 주세요.'})]);
+    c2b.appendChild(el('div',{cls:'memo',text:D.cp||'접속 정보는 개강 전에 따로 보내드려요.'}));
+    if(cpu){ var bb2=el('div',{cls:'btns'}); bb2.appendChild(btn(cpu,'강의실 들어가기','link',false,{target:'_blank',rel:'noopener'})); c2b.appendChild(bb2); }
+    jc.appendChild(c2b); if(hasZoom) jc.appendChild(zoomBlock('실시간 ZOOM 수업','실시간 수업은 아래 ZOOM으로 참여해요.'));
   }
-  if(D.nt){ L.appendChild(el('div',{cls:'blk rv'},[el('h3',{text:'추가 안내'}),el('div',{cls:'memo',text:D.nt})])); }
-  join.appendChild(L); if(R.childNodes.length) join.appendChild(R); else join.style.gridTemplateColumns='1fr';
-  w3.appendChild(join); app.appendChild(s3);
+  if(D.nt) jc.appendChild(el('div',{cls:'blk'},[el('h3',{text:'추가 안내'}),el('div',{cls:'memo',text:D.nt})]));
+  grid.appendChild(jc);
 
   /* 안내사항 */
-  var s4=el('section',{cls:'sec'},[el('div',{cls:'wrap'},[el('h2',{cls:'rv',text:'꼭 확인해 주세요'})])]);
+  var rc=el('section',{cls:'card glass rv '+(side?'span2':'span4'),id:'s-rules'}); rc.appendChild(el('h2',{text:'꼭 확인해 주세요'}));
   var rules=['등록한 수업의 <b>취소 · 연기 · 시간 및 과목 변경은 개강 3일 전까지만</b> 가능해요. 그 이후에는 변경할 수 없어요.',
     '수업 일정은 <b>코리아그룹-스마트러닝</b> 앱에서도 확인할 수 있어요.',
     '수업 일정을 확인하지 못해 생긴 결석은 수강생 본인 책임이에요.',
     (D.md==='off'?'결석하거나 비대면으로 참여할 때는':'결석할 때는')+' <b>담당 멘토에게 미리</b> 연락해 주세요.'];
   if(D.md!=='off') rules.push('녹화본은 <b>1주일 동안</b> 볼 수 있어요.');
-  var ol2=el('ol',{cls:'rules'}); rules.forEach(function(r){ ol2.appendChild(el('li',{cls:'rv',html:'<span>'+r+'</span>'})); }); s4.firstChild.appendChild(ol2); app.appendChild(s4);
+  var ol2=el('ol',{cls:'rules'}); rules.forEach(function(r){ ol2.appendChild(el('li',{html:'<span>'+r+'</span>'})); }); rc.appendChild(ol2);
+  if(side){ grid.appendChild(side); grid.appendChild(rc); }
 
   /* 담당 멘토 */
-  if(D.mn||D.tel||D.hp){
-    var s5=el('section',{cls:'sec gray'},[el('div',{cls:'wrap'},[el('h2',{cls:'rv',text:'궁금한 점은 담당 멘토에게'})])]);
-    var me=el('div',{cls:'mentor rv'},[el('div',null,[el('div',{cls:'who',text:'학사담당 '+(D.mn||'')}),el('div',{cls:'tel num',text:[D.tel,D.hp].filter(Boolean).join('  ·  ')})])]);
-    var bb3=el('div',{cls:'btns'}); var hp=String(D.hp||'').replace(/[^0-9]/g,''), tel=String(D.tel||'').replace(/[^0-9]/g,'');
-    if(hp){ bb3.appendChild(btn('tel:'+hp,'전화하기','phone',false)); bb3.appendChild(btn('sms:'+hp,'문자 보내기','msg',true)); }
-    else if(tel) bb3.appendChild(btn('tel:'+tel,'전화하기','phone',false));
-    me.appendChild(bb3); s5.firstChild.appendChild(me); app.appendChild(s5);
-  }
-  app.appendChild(el('footer',null,[el('div',{cls:'wrap',text:(D.br||BRANCH.name)+' · 이 페이지는 수강생 안내용이에요.'})]));
-  motion(months);
+  var mc=el('section',{cls:'card glass mentor rv '+(side?'span2':'span2'),id:'s-mentor'});
+  mc.appendChild(el('h2',{text:'궁금한 점은 담당 멘토에게'}));
+  mc.appendChild(el('div',{style:'display:flex;gap:16px;align-items:center;margin-top:18px'},[el('div',{cls:'av',text:initial}),el('div',null,[el('div',{cls:'nm',style:'margin-top:0',text:D.mn||'담당 멘토'}),el('div',{cls:'role',text:'학사담당 · '+(D.br||BRANCH.name)})])]));
+  if(D.tel||D.hp) mc.appendChild(el('div',{cls:'tel num',text:[D.tel?'학원 '+D.tel:'',D.hp?'휴대폰 '+D.hp:''].filter(Boolean).join('  ·  ')}));
+  var bb3=el('div',{cls:'btns'}); var hp=String(D.hp||'').replace(/[^0-9]/g,''), tel=String(D.tel||'').replace(/[^0-9]/g,'');
+  if(hp){ bb3.appendChild(btn('tel:'+hp,'전화하기','phone',false)); bb3.appendChild(btn('sms:'+hp,'문자 보내기','msg',true)); }
+  else if(tel) bb3.appendChild(btn('tel:'+tel,'전화하기','phone',false));
+  mc.appendChild(bb3); grid.appendChild(mc); if(!side) grid.appendChild(rc);
+  page.appendChild(el('div',{cls:'pfoot',text:(D.br||BRANCH.name)+' · 수강생 안내용 페이지'}));
+
+  motion(months,bars,nextI>=0?nextI:dates.length-1,placeTip);
 }
+
+/* 지금 보고 있는 칸을 레일 · 독에 표시 */
+function setNav(k){ var nav=$('.nav'); if(!nav) return; var a=nav.querySelector('[data-k="'+k+'"]'); if(!a) return;
+  nav.querySelectorAll('a').forEach(function(x){ x.classList.toggle('on',x===a); }); var p=nav.querySelector('.pill'); p.style.transform='translate('+a.offsetLeft+'px,'+a.offsetTop+'px)'; }
 
 /* 내 캘린더에 추가 (.ics) */
 function ics(D,dates){ var tm=String(D.tm||'').match(/(\d{1,2}):(\d{2})\s*[~\-–]\s*(\d{1,2}):(\d{2})/); var p=function(n){ return String(n).padStart(2,'0'); };
@@ -348,25 +434,35 @@ function ics(D,dates){ var tm=String(D.tm||'').match(/(\d{1,2}):(\d{2})\s*[~\-�
   toast('달력 파일을 열면 수업 '+dates.length+'회가 추가돼요'); }
 function hash(s){ var h=0; for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))|0; return h; }
 
-/* 움직임: 섹션 등장 + 수업 날짜가 회차 순서대로 찍힘 + D-day 숫자 */
-function motion(months){
+/* 움직임: 카드 등장 · D-day 숫자 · 회차 막대가 자라남 · 달력에 수업 날이 찍힘 · 길이 그려짐 */
+function motion(months,bars,ni,placeTip){
   var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(!e.isIntersecting) return; io.unobserve(e.target); var t=e.target;
-      var sib=[].slice.call(t.parentNode.children).filter(function(x){ return x.classList.contains('rv'); }); var i=Math.max(0,sib.indexOf(t));
-      setTimeout(function(){ t.classList.add('in'); },i*70); }); },{rootMargin:'0px 0px -8% 0px'});
-  document.querySelectorAll('.rv').forEach(function(x){ io.observe(x); });
-  var cls=[].slice.call(months.querySelectorAll('.d.cls')).sort(function(a,b){ return a.dataset.no-b.dataset.no; });
+  var cards=[].slice.call(document.querySelectorAll('.rv'));
+  var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(!e.isIntersecting) return; io.unobserve(e.target); var t=e.target; var i=Math.max(0,cards.indexOf(t));
+      setTimeout(function(){ t.classList.add('in'); },reduce?0:Math.min(i,6)*60); }); },{rootMargin:'0px 0px -6% 0px'});
+  cards.forEach(function(x){ io.observe(x); });
+  var bs=[].slice.call(bars.querySelectorAll('.bar'));
   var io2=new IntersectionObserver(function(es){ if(!es[0].isIntersecting) return; io2.disconnect();
+    bs.forEach(function(b,i){ setTimeout(function(){ b.classList.add('on'); },reduce?0:200+i*Math.min(70,1100/bs.length)); });
+    setTimeout(function(){ if(bs[ni]){ bs[ni].classList.add('sel'); placeTip(bs[ni],ni); } },reduce?0:200+bs.length*Math.min(70,1100/bs.length)+300); },{threshold:.3});
+  io2.observe(bars);
+  var cls=[].slice.call(months.querySelectorAll('.d.cls')).sort(function(a,b){ return a.dataset.no-b.dataset.no; });
+  var io3=new IntersectionObserver(function(es){ if(!es[0].isIntersecting) return; io3.disconnect();
     cls.forEach(function(b,i){ setTimeout(function(){ b.classList.add('on'); },reduce?0:180+i*Math.min(90,1400/cls.length)); }); },{threshold:.2});
-  io2.observe(months);
-  var n=document.querySelector('.dday-n[data-to]'); if(n&&!reduce){ var to=+n.dataset.to, st=performance.now(), from=Math.min(to+30,to*2+5);
+  io3.observe(months);
+  var n=document.querySelector('.val[data-to]'); if(n&&!reduce){ var to=+n.dataset.to, st=performance.now(), from=Math.min(to+30,to*2+5);
     (function f(now){ var k=Math.min(1,(now-st)/1100), e=1-Math.pow(1-k,4); n.textContent='D-'+Math.round(from-(from-to)*e); if(k<1) requestAnimationFrame(f); })(st); }
   var walk=document.querySelector('.walk'); if(walk&&!reduce){ walk.querySelectorAll('path').forEach(function(p){ var L=p.getTotalLength(); p.style.strokeDasharray=L; p.style.strokeDashoffset=L;
-      var io3=new IntersectionObserver(function(es){ if(!es[0].isIntersecting) return; io3.disconnect(); p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:1400,easing:'cubic-bezier(.77,0,.175,1)',fill:'forwards'}).onfinish=function(){ p.style.strokeDasharray='6 7'; p.style.strokeDashoffset=0; }; },{threshold:.4}); io3.observe(p); }); }
-  var live=document.querySelector('.live'); if(live&&!reduce) live.animate([{opacity:1},{opacity:.25},{opacity:1}],{duration:1600,iterations:Infinity});
+      var io4=new IntersectionObserver(function(es){ if(!es[0].isIntersecting) return; io4.disconnect(); p.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:1400,easing:'cubic-bezier(.77,0,.175,1)',fill:'forwards'}).onfinish=function(){ p.style.strokeDasharray='6 7'; p.style.strokeDashoffset=0; }; },{threshold:.4}); io4.observe(p); }); }
+  /* 스크롤 위치 → 레일 · 독 */
+  var secs=['sum','days','join','rules','mentor'].map(function(k){ return document.getElementById('s-'+k); }).filter(Boolean);
+  setNav('sum');
+  var io5=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting) setNav(e.target.id.slice(2)); }); },{rootMargin:'-40% 0px -55% 0px'});
+  secs.forEach(function(s){ io5.observe(s); });
+  addEventListener('resize',function(){ var a=document.querySelector('.nav a.on'); if(a) setNav(a.dataset.k); });
 }
 
-function fail(){ document.documentElement.classList.remove('js'); $('#app').innerHTML='<div class="err"><div><h1>안내 링크를 열 수 없어요</h1><p>링크가 잘렸거나 바뀌었을 수 있어요.<br>받은 메시지의 링크를 처음부터 끝까지 그대로 눌러 주시고, 그래도 안 되면 담당 멘토에게 알려 주세요.</p></div></div>'; }
+function fail(){ document.documentElement.classList.remove('js'); $('#root').innerHTML='<div class="err"><div class="glass"><h1>안내 링크를 열 수 없어요</h1><p>링크가 잘렸거나 바뀌었을 수 있어요.<br>받은 메시지의 링크를 처음부터 끝까지 그대로 눌러 주시고, 그래도 안 되면 담당 멘토에게 알려 주세요.</p></div></div>'; }
 decode().then(function(D){ if(!D||!D.s) throw 0; render(D); }).catch(fail);
 addEventListener('hashchange',function(){ location.reload(); });
 })();

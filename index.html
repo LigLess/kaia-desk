@@ -7623,11 +7623,14 @@ const nlBase=()=>/github\.io$/.test(location.hostname)||location.protocol==='fil
 const NL_MODES=[['off','지점 강의','학원에서 대면'],['zoom','ZOOM 비대면','실시간 온라인'],['campus','캠퍼스 강의','온라인 플랫폼']];
 function nlInfo(c){ const z=zoomOf(c)||{}; const n=c.nl||{};
   return {md:n.md||(isOnline(c)?'zoom':'off'),zu:n.zu||'',zid:n.zid!=null?n.zid:(z.id||''),zpw:n.zpw!=null?n.zpw:(z.pw||''),cp:n.cp||'',cpu:n.cpu||'',nt:n.nt||''}; }
-function nlMentorTel(){ const m=String((S.settings.tpl||{}).s7||'').match(/Tel\s*:\s*([0-9\-]+)\s*(?:\/\s*([0-9\-]+))?/);
-  return {tel:S.settings.nlTel!=null?S.settings.nlTel:(m?m[1]:''),hp:S.settings.nlHp!=null?S.settings.nlHp:(m&&m[2]?m[2]:'')}; }
+function nlMentorName(){ const m=(S.settings.mentor||'').trim(); if(m) return m; const n=(S.settings.name||'').trim()||(typeof me==='function'?me().name:''); return n?n+' 멘토':''; }
+/* 연락처: 내가 직접 적은 번호 → 없으면 개강안내 문자 양식의 번호 (단, 양식에 적힌 멘토가 '나'일 때만 휴대폰까지 · 다른 멘토면 학원 번호만) */
+function nlMentorTel(){ const t=String((S.settings.tpl||{}).s7||''); const m=t.match(/Tel\s*:\s*([0-9\-]+)\s*(?:\/\s*([0-9\-]+))?/); const who=(t.match(/학사담당\s*([^\s\n]+)\s*멘토/)||[])[1]||'';
+  const mine=!who||who==='{멘토}'||[S.settings.name,S.settings.mentor,typeof me==='function'?me().name:''].some(x=>x&&String(x).includes(who));
+  return {tel:S.settings.nlTel!=null?S.settings.nlTel:(m?m[1]:''),hp:S.settings.nlHp!=null?S.settings.nlHp:(mine&&m&&m[2]?m[2]:'')}; }
 function nlPayload(c,s){ const I=nlInfo(c), ss=sessionsOf(c), m=nlMentorTel(); const st=c.start;
   const o={v:1,t:subjectOf(c),s:st,e:courseEnd(c),d:daysLabel(c.days&&c.days.length?c.days:defaultDays(c),c.daysB),tm:noticeTime(c)==='(추후 안내)'?'':noticeTime(c),
-    r:roomLabel(c)||'',md:I.md,dt:ss.map(d=>diffDays(st,d)),mn:S.settings.mentor||'',tel:m.tel,hp:m.hp,br:(S.settings.branch||'코리아AI아카데미').replace(/\s*부산점$/,'')+' 부산점'};
+    r:roomLabel(c)||'',md:I.md,dt:ss.map(d=>diffDays(st,d)),mn:nlMentorName(),tel:m.tel,hp:m.hp,br:(S.settings.branch||'코리아AI아카데미').replace(/\s*부산점$/,'')+' 부산점'};
   if(s&&s.name) o.n=s.name.replace(/^예시\s/,'');
   ['zu','zid','zpw','cp','cpu','nt'].forEach(k=>{ const v=String(I[k]||'').trim(); if(v) o[k]=v; });
   return o; }
@@ -7657,7 +7660,7 @@ function nlDraw(){
       <div class="nl-2"><input class="in" data-nl="zid" value="${esc(I.zid)}" placeholder="회의 ID"><input class="in" data-nl="zpw" value="${esc(I.zpw)}" placeholder="비밀번호"></div>
       ${I.md==='zoom'&&!I.zu&&!I.zid?'<small class="rm-hint">비워 두면 "ZOOM 링크는 개강 전에 따로 보내드려요"라고 나와요.</small>':''}</div>
     <label class="field"><span>추가 안내 <small>선택 · 준비물, 첫날 안내 등</small></span><textarea class="in" rows="2" data-nl="nt" placeholder="예: 첫 수업은 노트북을 꼭 챙겨 주세요.">${esc(I.nt)}</textarea></label>
-    <div class="field"><span>담당 멘토 연락처 <small>${esc(S.settings.mentor||'')} · 페이지 맨 아래 전화 · 문자 버튼</small></span><div class="nl-2"><input class="in" data-nls="nlTel" value="${esc(m.tel)}" placeholder="학원 전화"><input class="in" data-nls="nlHp" value="${esc(m.hp)}" placeholder="휴대폰" inputmode="tel"></div></div>
+    <div class="field"><span>담당 멘토 연락처 <small>${esc(nlMentorName()||'이름은 설정 → 내 정보')} · 페이지 맨 아래 전화 · 문자 버튼</small></span><div class="nl-2"><input class="in" data-nls="nlTel" value="${esc(m.tel)}" placeholder="학원 전화"><input class="in" data-nls="nlHp" value="${esc(m.hp)}" placeholder="내 휴대폰 번호" inputmode="tel"></div>${!m.hp?'<small class="rm-hint" style="color:var(--warn)">내 휴대폰 번호를 넣어 두면 학생이 바로 전화 · 문자할 수 있어요. 한 번만 넣으면 계속 써요.</small>':''}</div>
     <div class="nl-go"><button class="btn pri" data-act="nlCopy" data-k="_">${ic('copy')}공통 링크 복사</button><button class="btn" data-act="nlCopyMsg" data-k="_">${ic('copy')}안내 문구 + 링크 복사</button><button class="btn ghost" data-act="nlPreview">${ic('right')}미리 보기</button><small id="nlLen" class="rm-hint"></small></div>
     ${sts.length?`<div class="field"><span>학생마다 이름이 들어간 링크 <small>${sts.length}명</small></span><div class="list nl-sts">${sts.map(s=>`<div class="row"><div class="grow"><div class="t1">${esc(s.name)}</div><div class="t2 num">${esc(s.phone||'')}</div></div>
       <button class="btn sm" data-act="nlCopyMsg" data-k="${s.id}">${ic('copy')}문구 + 링크</button><button class="btn sm ghost" data-act="nlCopy" data-k="${s.id}">링크만</button></div>`).join('')}</div></div>`:''}
@@ -8099,6 +8102,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261031-2149';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261031-2206';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
