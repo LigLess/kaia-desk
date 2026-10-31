@@ -2015,6 +2015,8 @@ body.dark[data-bg="emerald"] ::selection{background:#d6b678;color:#04110c}
 .ln-i svg{width:20px;height:20px}.ln-i:hover{background:var(--surface-2)}.ln-i:active{transform:scale(.92)}
 .ln-i.on{background:var(--accent);color:#fff}.ln-i.on::after{content:"";position:absolute;width:4px;height:16px;border-radius:4px;background:var(--accent);top:13px}
 .lnch.r .ln-i.on::after{right:-8px}.lnch.l .ln-i.on::after{left:-8px}
+.ln-sep{width:22px;height:1px;background:var(--line);margin:2px 0}.lnch .ln-pop.on{background:var(--ok,#22a06b)}.lnch .ln-pop.on::after{display:none}
+@media (max-width:760px){.ln-sep,.ln-pop{display:none!important}}
 .ln-logo img{width:26px;height:26px;border-radius:8px}
 .ln-n{position:absolute;top:3px;right:3px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--bad);color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;box-shadow:0 0 0 2px var(--surface)}
 .ln-tip{position:absolute;white-space:nowrap;font-size:12px;font-weight:600;color:var(--fg);background:var(--surface);box-shadow:0 0 0 1px var(--line),0 6px 18px rgba(0,0,0,.15);padding:5px 9px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .15s,transform .15s}
@@ -8691,6 +8693,7 @@ const LW={
   tk:{t:'오늘 할 일',i:'task'},
   hw:{t:'채점 대기',i:'chart'},
 };
+const LN_POP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="10" width="7" height="6" rx="1" fill="currentColor" stroke="none"/><path d="M8 21h8"/></svg>';
 const LN={st:null,el:null,wins:{},t:0};
 function lnSt(){ const d={side:'r',y:0.42,mini:false,open:{}}; const s=S.settings.lnch; LN.st=LN.st||{...d,...(s&&typeof s==='object'?clone(s):{})}; LN.st.open=LN.st.open||{}; return LN.st; }
 function lnSave(){ clearTimeout(LN.t); LN.t=setTimeout(()=>{ S.settings.lnch=clone(LN.st); store.saveSettings(); },350); }
@@ -8735,7 +8738,7 @@ function lnDraw(){
   el.className=`lnch ${st.side==='l'?'l':'r'} ${st.mini?'mini':''}`;
   el.innerHTML=`<div class="ln-grip" title="끌어서 옮기기 · 두 번 누르면 작게" aria-label="런처 옮기기"><i></i><i></i><i></i><i></i><i></i><i></i></div>
     ${st.mini?`<button class="ln-i ln-logo" data-ln="__open" aria-label="런처 펼치기"><img src="${LOGO}" alt=""></button>`
-    :Object.entries(LW).map(([k,w])=>{ const n=lnCount(k); return `<button class="ln-i ${st.open[k]?'on':''}" data-ln="${k}" aria-label="${w.t}" aria-pressed="${!!st.open[k]}">${ic(w.i)}${n&&k!=='sch'?`<b class="ln-n">${n>9?'9+':n}</b>`:''}<span class="ln-tip">${w.t}</span></button>`; }).join('')}`;
+    :Object.entries(LW).map(([k,w])=>{ const n=lnCount(k); return `<button class="ln-i ${st.open[k]?'on':''}" data-ln="${k}" aria-label="${w.t}" aria-pressed="${!!st.open[k]}">${ic(w.i)}${n&&k!=='sch'?`<b class="ln-n">${n>9?'9+':n}</b>`:''}<span class="ln-tip">${w.t}</span></button>`; }).join('')+`<i class="ln-sep"></i><button class="ln-i ln-pop ${LP.win&&!LP.win.closed?'on':''}" data-lnpop aria-label="바탕화면에 띄우기">${LN_POP}<span class="ln-tip">바탕화면에 띄우기 · 항상 위</span></button>`}`;
   lnPlace();
 }
 function lnPlace(){ const st=lnSt(), el=LN.el; if(!el||el.hidden) return; const h=el.offsetHeight||300;
@@ -8792,6 +8795,65 @@ addEventListener('resize',()=>{ lnPlace(); Object.entries(LN.wins).forEach(([k,w
 setInterval(()=>{ if(!document.hidden) lnRefresh(); },60000);
 /* 화면이 다시 그려질 때마다 위젯 숫자 · 내용도 같이 새로 */
 { const _r=render; render=function(){ const x=_r.apply(this,arguments); try{ if(S.mode==='loading') return x; if(!LN.el) lnDraw(); lnRefresh(); }catch(e){ console.warn(e); } return x; }; }
+
+/* ===== 바탕화면 위젯 (브라우저 밖 · 항상 위) =====
+   크롬 · 엣지의 "문서 PIP(Document Picture-in-Picture)" 창을 써요 → 브라우저를 내려도 바탕화면 · 다른 프로그램 위에 떠 있고,
+   창을 잡고 화면 아무 데나 옮기거나 크기를 바꿀 수 있어요. KAIA DESK 탭(또는 앱 창)이 열려 있는 동안만 살아 있어요.
+   지원 안 되는 브라우저에선 작은 팝업 창으로 대신 열어요(이 경우엔 항상 위는 아님). */
+const LP={win:null,pip:false,clk:0};
+const LP_CSS=`html,body.lpip{height:auto;min-height:100%}
+body.lpip{margin:0!important;padding:0!important;background:var(--bg)!important;overflow:auto!important;color:var(--fg)}
+body.lpip::before,body.lpip::after{display:none!important}
+.lp{display:flex;flex-direction:column;min-height:100vh}
+.lp-h{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;padding:10px 12px;background:color-mix(in srgb,var(--surface) 92%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.lp-h img{width:22px;height:22px;border-radius:7px}.lp-h b{font-size:13px;letter-spacing:.02em}
+.lp-clk{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:700;font-size:15px}.lp-clk small{font-weight:500;color:var(--muted);font-size:11px;margin-left:5px}
+.lp-tabs{display:flex;gap:4px;padding:8px 10px;border-bottom:1px solid var(--line);background:var(--surface)}
+.lp-tabs .ln-i{width:auto;flex:1;height:38px;border-radius:11px}.lp-tabs .ln-i svg{width:18px;height:18px}
+.lp-ws{display:flex;flex-direction:column;gap:10px;padding:10px}
+.lp-w{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.lp-w>h3{margin:0;display:flex;align-items:center;gap:8px;padding:9px 8px 9px 12px;font-size:13px;border-bottom:1px solid var(--line)}
+.lp-w>h3 .lw-ic{width:22px;height:22px}.lp-w>h3 span.t{flex:1}
+.lp-w>.lw-b{padding:8px 10px 10px}
+.lp-e{color:var(--muted);font-size:13px;text-align:center;padding:30px 16px}`;
+async function lnPop(){
+  if(LP.win&&!LP.win.closed){ try{ LP.win.focus(); }catch(e){} return; }
+  let w=null; LP.pip=false;
+  try{ if('documentPictureInPicture' in window){ w=await documentPictureInPicture.requestWindow({width:360,height:600}); LP.pip=true; } }catch(e){ console.warn(e); }
+  if(!w){ w=window.open('','kaiaWidget','popup,width=360,height=620'); if(!w){ toast('팝업이 막혔어요','주소창 오른쪽의 팝업 허용을 누른 뒤 다시 눌러 주세요.'); return; }
+    w.document.open(); w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body></body></html>'); w.document.close();
+    toast('작은 창으로 열었어요','이 브라우저는 "항상 위" 창을 지원하지 않아요. 크롬 · 엣지에서는 바탕화면 위에 계속 떠 있어요.'); }
+  LP.win=w; const d=w.document; d.title='KAIA DESK 위젯';
+  document.querySelectorAll('style,link[rel="stylesheet"]').forEach(n=>d.head.appendChild(n.cloneNode(true)));
+  const st=d.createElement('style'); st.textContent=LP_CSS; d.head.appendChild(st);
+  const ico=d.createElement('link'); ico.rel='icon'; ico.href=LOGO; d.head.appendChild(ico);
+  d.body.innerHTML='<div class="lp" id="lp"></div>';
+  d.addEventListener('click',lpClick); d.addEventListener('change',lpChange);
+  w.addEventListener('pagehide',()=>{ LP.win=null; clearInterval(LP.clk); lnDraw(); });
+  const s=lnSt(); if(!Array.isArray(s.pip)) s.pip=['sch','al','tk']; lnSave();
+  lpDraw(); clearInterval(LP.clk); LP.clk=setInterval(lpClock,15000); lnDraw();
+}
+function lpClock(){ const el=LP.win&&!LP.win.closed&&LP.win.document.getElementById('lpClk'); if(!el) return; const d=new Date(); el.innerHTML=`${pad(d.getHours())}:${pad(d.getMinutes())}<small>${d.getMonth()+1}/${d.getDate()} (${DOW[d.getDay()]})</small>`; }
+function lpDraw(){
+  const w=LP.win; if(!w||w.closed) return; const d=w.document, box=d.getElementById('lp'); if(!box) return;
+  d.documentElement.className=document.documentElement.className; [...document.documentElement.attributes].forEach(a=>{ if(a.name!=='class') d.documentElement.setAttribute(a.name,a.value); });
+  d.body.className=document.body.className+' lpip'; d.body.setAttribute('style',document.body.getAttribute('style')||'');
+  const s=lnSt(); const on=(s.pip||[]).filter(k=>LW[k]);
+  const top=d.querySelector('.lp-ws'); const sc=top?top.scrollTop:0;
+  box.innerHTML=`<header class="lp-h"><img src="${LOGO}" alt=""><b>KAIA DESK</b><span class="lp-clk" id="lpClk"></span></header>
+    <nav class="lp-tabs">${Object.entries(LW).map(([k,x])=>{ const n=lnCount(k); return `<button class="ln-i ${on.includes(k)?'on':''}" data-lp="${k}" title="${x.t}" aria-label="${x.t}" aria-pressed="${on.includes(k)}">${ic(x.i)}${n&&k!=='sch'?`<b class="ln-n">${n>9?'9+':n}</b>`:''}</button>`; }).join('')}</nav>
+    <div class="lp-ws">${on.length?on.map(k=>`<section class="lp-w"><h3><span class="lw-ic">${ic(LW[k].i)}</span><span class="t">${LW[k].t}</span><button class="lw-x" data-lp="${k}" aria-label="끄기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg></button></h3><div class="lw-b">${lnBody(k)}</div></section>`).join('')
+      :'<div class="lp-e">위 아이콘을 눌러 띄울 위젯을 골라 주세요</div>'}</div>`;
+  lpClock();
+}
+function lpMain(){ try{ window.focus(); }catch(e){} }
+function lpClick(e){ const t=e.target;
+  const p=t.closest('[data-lp]'); if(p){ e.preventDefault(); const s=lnSt(); const k=p.dataset.lp; s.pip=(s.pip||[]).includes(k)?s.pip.filter(x=>x!==k):(s.pip||[]).concat(k).sort((a,b)=>Object.keys(LW).indexOf(a)-Object.keys(LW).indexOf(b)); lnSave(); lpDraw(); return; }
+  const g=t.closest('[data-go]'); if(g){ e.preventDefault(); lpMain(); go(g.dataset.go); return; }
+  const a=t.closest('[data-act]'); if(a&&a.tagName!=='INPUT'){ const f=ACT[a.dataset.act]||WACT[a.dataset.act]; if(f){ e.preventDefault(); lpMain(); f(a,e); } } }
+function lpChange(e){ const el=e.target; if(el.dataset&&el.dataset.act==='taskDone'){ const k=D().tasks[el.dataset.id]; if(k){ store.put('tasks',{...k,done:el.checked,doneAt:el.checked?Date.now():null}); toast('할 일을 끝냈어요',k.text); setTimeout(render,250); } } }
+{ const _rf=lnRefresh; lnRefresh=function(){ _rf(); try{ lpDraw(); }catch(e){} }; }
+document.addEventListener('click',e=>{ if(e.target.closest&&e.target.closest('[data-lnpop]')){ e.preventDefault(); lnPop(); } });
 /* ===== EVENTS ===== */
 function ackToggle(key){
   const acks={...(S.settings.acks||{})}; if(acks[key]) delete acks[key]; else acks[key]=todayStr();
@@ -9012,6 +9074,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261031-2321';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261031-2324';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
