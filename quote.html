@@ -1844,6 +1844,23 @@ body.dark .bg-view,body.hud:not(.hlight):not(.exec) .bg-view{--bgp:#10131b;--bgp
 .nl-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .nl-go{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .nl-sts{max-height:260px;overflow:auto}.nl-sts .btn.done{box-shadow:inset 0 0 0 1.5px var(--ok);color:var(--ok)}
+
+/* ===== 라운지 글래스 ===== */
+body.dark[data-bg="lounge"]{--bg:#16110d;--bg-soft:#1c1611;--surface:rgba(26,20,16,.5);--surface-2:rgba(255,255,255,.065);--surface-3:rgba(255,255,255,.11);--fg:#fbf6f0;--fg-2:#efe5da;--muted:rgba(251,246,240,.64);--faint:rgba(251,246,240,.4);
+  --line:rgba(255,255,255,.1);--line-2:rgba(255,255,255,.18);--accent:#ff9d4d;--accent-2:#ffb877;--accent-soft:rgba(255,157,77,.18);--amber:#ffb877;--ok:#7ee0a5;--warn:#ffc46b;--bad:#ff8a7a;
+  --bar:rgba(26,20,16,.5);--bar-line:rgba(255,255,255,.12);--pill-bg:#fbf6f0;--pill-fg:#1a120c;--ink:#fbf6f0;--ink-fg:#1a120c;background:#16110d}
+body.dark[data-bg="lounge"] .pane,body.dark[data-bg="lounge"] .hpanel{background:rgba(26,20,16,.48);border-color:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.09),inset 0 1px 0 rgba(255,255,255,.16);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%)}
+body.dark[data-bg="lounge"] .topnav,body.dark[data-bg="lounge"] #dock{background:rgba(26,20,16,.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),inset 0 1px 0 rgba(255,255,255,.16)}
+body.dark[data-bg="lounge"] .btn.pri{background:#ff9d4d;border-color:transparent;color:#2a1606;font-weight:700}
+body.dark[data-bg="lounge"] .btn.pri:hover{background:#ffad66}
+body.dark[data-bg="lounge"] .btn:not(.pri):not(.ghost){background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);color:var(--fg)}
+body.dark[data-bg="lounge"] .seg{background:rgba(255,255,255,.06)}
+body.dark[data-bg="lounge"] .seg button.on{background:#fbf6f0;color:#1a120c}
+body.dark[data-bg="lounge"] .in{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.1);color:var(--fg)}
+body.dark[data-bg="lounge"] .chip{background:rgba(255,255,255,.08);color:var(--fg-2)}
+body.dark[data-bg="lounge"] .modal .sheet{background:rgba(30,23,18,.92);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 40px 80px -30px rgba(0,0,0,.8)}
+body.dark[data-bg="lounge"] ::selection{background:#ff9d4d;color:#2a1606}
+body[data-bg="lounge"] .core-next,body[data-bg="lounge"] .core-label{background:var(--surface);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:3px 12px;border-radius:999px;width:max-content;margin-left:auto;margin-right:auto}
 </style>
 <style>
 html{height:auto!important;overflow-y:auto!important}
