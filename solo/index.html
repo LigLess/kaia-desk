@@ -1868,6 +1868,26 @@ body.dark[data-bg="lounge"] .chip{background:rgba(255,255,255,.08);color:var(--f
 body.dark[data-bg="lounge"] .modal .sheet{background:rgba(30,23,18,.92);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),0 40px 80px -30px rgba(0,0,0,.8)}
 body.dark[data-bg="lounge"] ::selection{background:#ff9d4d;color:#2a1606}
 body[data-bg="lounge"] .core-next,body[data-bg="lounge"] .core-label{background:var(--surface);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:3px 12px;border-radius:999px;width:max-content;margin-left:auto;margin-right:auto}
+
+/* 홈 원 = 학생 스케줄 */
+.sch-core{cursor:pointer}.sch-core:focus-visible{outline:2px solid var(--accent);outline-offset:6px;border-radius:50%}
+.sch-core canvas{transition:transform 200ms cubic-bezier(.23,1,.32,1)}.sch-core:active canvas{transform:scale(.98)}
+.sch-body{display:flex;flex-direction:column;gap:14px}
+.sch-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.sch-top b{font-size:16px}
+.sch-top [data-k="-7"] svg{transform:rotate(90deg)}.sch-top [data-k="7"] svg{transform:rotate(-90deg)}
+.sch-sum{margin-left:auto;font-size:13px;color:var(--muted)}
+.sch-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.sch-day{border-radius:14px;background:var(--surface-2);padding:10px 8px;min-height:180px;display:flex;flex-direction:column;gap:6px;box-shadow:inset 0 0 0 1px var(--line)}
+.sch-day.today{box-shadow:inset 0 0 0 2px var(--accent)}.sch-day.past{opacity:.6}
+.sch-day h3{margin:0 0 4px;display:flex;align-items:baseline;gap:6px;font-size:13px}.sch-day h3 span{color:var(--muted);font-weight:600}.sch-day h3 b{font-size:18px}.sch-day h3 em{margin-left:auto;font-style:normal;font-size:11.5px;font-weight:700;color:var(--accent)}
+.sch-cls{border-radius:10px;background:var(--surface);padding:8px;cursor:pointer;box-shadow:inset 0 0 0 1px var(--line)}.sch-cls.empty{opacity:.55}
+.sch-t{font-size:11.5px;font-weight:700;color:var(--accent)}.sch-n{font-size:12.5px;font-weight:700;line-height:1.35;margin-top:2px}.sch-m{font-size:11px;color:var(--muted);margin-top:2px}
+.sch-sts{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.sch-sts small{font-size:11px;color:var(--faint)}
+.sch-st{border:0;border-radius:99px;padding:2px 8px;font:inherit;font-size:11.5px;font-weight:600;background:var(--accent-soft);color:var(--fg);cursor:pointer}.sch-st.wait{background:var(--surface-3);color:var(--muted)}
+.sch-none{font-size:12px;color:var(--faint);margin-top:6px}
+@media (max-width:760px){.sch-week{grid-template-columns:1fr}.sch-day{min-height:0}.sch-day h3 b{font-size:16px}}
+
+body.dark[data-bg="lounge"] .sheet header,body.dark[data-bg="lounge"] .sheet footer,body.dark[data-bg="lounge"] .tabs{background:rgba(34,26,20,.97);border-color:rgba(255,255,255,.08)}
 </style>
 </head>
 <body><script>
@@ -4067,7 +4087,23 @@ const bgfx={
     else if(P.tex==='strand'){ for(let i=0;i<5;i++){ const o=(i-2)/2*lw*0.45; x.beginPath(); for(let s2=0;s2<=180;s2++){ const a=s2/180*Math.PI*2, r=rR+o+Math.sin(a*3+t*0.5+i*0.9)*lw*0.18; s2?x.lineTo(Math.cos(a)*r,Math.sin(a)*r):x.moveTo(Math.cos(a)*r,Math.sin(a)*r); } x.strokeStyle=`rgba(${P.ln},${i===2?.14:.06})`; x.lineWidth=1*d; x.stroke(); } }
     else { x.strokeStyle=`rgba(${P.ln},${P.dark?.10:G?.09:.07})`; x.lineWidth=lw; x.beginPath(); x.arc(0,0,rR,0,Math.PI*2); x.stroke(); }
     if(P.dark){ x.shadowColor=hexA(P.w1,.7); x.shadowBlur=18*d; }
-    if(prog>0){
+    /* 학생 스케줄 링: 월~일 7칸 · 학생 수만큼 진하게 · 오늘 칸은 숨 쉬듯 */
+    if(D.week&&D.week.length===7){ x.shadowBlur=0; const mx=Math.max(1,...D.week.map(w=>w.n)), gap=0.07, seg=Math.PI*2/7;
+      D.week.forEach((w,i)=>{ const a0=-Math.PI/2+i*seg+gap/2, a1=a0+seg-gap, isT=i===D.today;
+        x.lineCap='round'; x.lineWidth=lw*(isT?1.0+0.12*Math.sin(t*2.4):0.82);
+        if(w.n||w.cls){ const k=w.n?0.35+0.65*(w.n/mx):0.18; const gr=x.createLinearGradient(Math.cos(a0)*rR,Math.sin(a0)*rR,Math.cos(a1)*rR,Math.sin(a1)*rR); gr.addColorStop(0,hexA(P.w1,k)); gr.addColorStop(1,hexA(isT?P.al:P.w2,k));
+          if(isT&&P.dark){ x.shadowColor=hexA(P.al,.8); x.shadowBlur=16*d; } x.strokeStyle=gr; }
+        else x.strokeStyle=isT?hexA(P.al,.38):`rgba(${P.ln},${P.dark?.13:.09})`;
+        x.beginPath(); x.arc(0,0,rR,a0,a1); x.stroke(); x.shadowBlur=0;
+        // 요일 글자 + 학생 수
+        const am=(a0+a1)/2, rl=rR-lw*1.9; x.textAlign='center'; x.textBaseline='middle';
+        x.fillStyle=isT?(P.dark?'#ffffff':`rgb(${P.ln})`):`rgba(${P.ln},${w.n?.75:.4})`; x.font=`${isT?800:600} ${Math.round(S*0.034)}px ${getComputedStyle(document.body).fontFamily}`;
+        x.fillText('월화수목금토일'[i],Math.cos(am)*rl,Math.sin(am)*rl-(w.n||isT?S*0.014:0));
+        if(w.n||isT){ x.font=`700 ${Math.round(S*0.024)}px ${getComputedStyle(document.body).fontFamily}`; x.fillStyle=isT?P.al:`rgba(${P.ln},.6)`; x.fillText(isT?(w.n?`오늘 ${w.n}명`:'오늘'):w.n+'명',Math.cos(am)*rl,Math.sin(am)*rl+S*0.024); }
+      });
+      x.lineCap='butt';
+    }
+    else if(prog>0){
       // 물처럼 일렁이는 진행 링: 두께가 끝으로 갈수록 출렁이고, 끝은 물방울처럼 부풀었다 가라앉음
       const a0=-Math.PI/2+t*0.05, span=Math.PI*2*Math.max(0.03,prog), a1=a0+span; const N=Math.max(24,Math.ceil(span/(Math.PI*2)*180));
       const half=a=>{ const dE=Math.min(a-a0,a1-a), e=Math.exp(-Math.pow(dE/0.38,2));
@@ -4090,7 +4126,7 @@ const bgfx={
     // 물방울: 몇 초마다 위에서 연못으로
     if(t>st.next){ st.drops.push({y:-S*0.46,vy:S*0.2,born:t}); st.next=t+3.2+Math.random()*1.6; }
     // 연못 물높이 (전체 진행률 평균 · 은은하게)
-    const lvl=0.38+(segs.length?prog:0.5)*0.34;
+    const lvl=D.week&&D.week.length===7?0.38+(D.week.filter(w=>w.n).length/7)*0.34:0.38+(segs.length?prog:0.5)*0.34;
     let E=0; st.rings.forEach(r=>{ const age=t-r.t; if(age<1.6) E+=Math.exp(-age*2.2); });
     const surf=px=>Rp-2*Rp*lvl+Math.sin(px/Rp*3.1+t*1.5)*Rp*(0.035+0.05*E)+Math.sin(px/Rp*5.3-t*2.1)*Rp*(0.018+0.03*E);
     // 연못 바탕
@@ -4986,11 +5022,15 @@ function vHomeHud(){
       </div>
       <div class="acts"><button class="btn pri" data-act="brief">${ic('send')}브리핑 듣기</button><button class="btn" data-act="cmd">${ic('search')}명령 <span style="opacity:.6;font-family:var(--mono);font-size:11px">Ctrl K</span></button></div>
     </section>
-    <div class="core-wrap"><canvas id="corefx" aria-label="진행 중 과정 ${running.length}개, 확인할 알림 ${un.length}건"></canvas>
+    ${(()=>{ const sc=typeof schCoreText==='function'?schCoreText():null; return sc?`<div class="core-wrap sch-core" data-act="schOpen" role="button" tabindex="0" aria-label="학생 스케줄 열기"><canvas id="corefx" aria-label="이번 주 학생 수업 스케줄"></canvas>
+      <div class="core-label t">${esc(sc.top)}</div>
+      <div class="core-next"><b>${esc(sc.b)}</b><span>${esc(sc.s)}</span></div>
+      <div class="core-label b">${esc(sc.bot)}</div>
+    </div>`:`<div class="core-wrap"><canvas id="corefx" aria-label="진행 중 과정 ${running.length}개, 확인할 알림 ${un.length}건"></canvas>
       <div class="core-label t">SYSTEM CORE · ${running.length} ACTIVE · ${late?late+' 진도 확인':'NOMINAL'}</div>
       <div class="core-next"><b>${nextTxt.b}</b><span>${esc(nextTxt.s)}</span></div>
       <div class="core-label b">STUDENTS ${list('students').length} · COURSES ${cs.length}</div>
-    </div>
+    </div>`; })()}
     <section class="hpanel right">
       <div class="hl">ALERTS · ${un.length}</div>
       ${act.length?`<div class="alist">${act.slice(0,7).map(a=>`<div class="aitem ${a.type==='end'?'e':''}" data-act="toNotice" data-id="${a.c.id}" data-key="${a.key}" style="${a.ack?'opacity:.45':''}"><b>${a.type==='start'?'개강':'종강'} D-${diffDays(t,a.date)}</b><span class="n">${esc(a.c.name)}</span><span class="s">${fmtMD(a.date)} · ${esc(roomLabel(a.c)||'')} · ${esc(a.c.time||'')} · 안내 ${noticeStat(a).sent}/${noticeStat(a).n}</span></div>`).join('')}</div>`:'<div class="empty">ALL CLEAR — 지금 확인할 알림이 없어요.</div>'}
@@ -7680,6 +7720,58 @@ Object.assign(WACT,{
   qsStaffMemo:el=>{ const d=S.qsStaffData[S.qsStaffSel]; const x=d&&d.list&&d.list[+el.dataset.i]; if(!x) return; S.rm=rmSync(rmFromQuote(x.q,`${memberName(S.qsStaffSel)}님 견적`)); rmKeep(); S.rmEdited=false; S.qtTab='memo'; render(); },
 });
 document.addEventListener('change',e=>{ if(e.target.classList&&e.target.classList.contains('qs-to')){ e.target.closest('.qs-p').classList.toggle('on',e.target.checked); const b=$('#qsGo'); if(b) b.disabled=!$$('.qs-to').some(x=>x.checked); } });
+/* ===== 홈 가운데 원 = 학생 스케줄 =====
+   원을 7칸(월~일)으로 나눠 이번 주에 수업 듣는 학생 수만큼 칸이 차오르고, 오늘 칸은 숨 쉬듯 빛나요.
+   원을 누르면 요일마다 "몇 시 · 어떤 수업 · 누가 오는지"가 나오는 주간 학생 스케줄이 열려요. */
+const SCH_ON=['수강중','등록대기'];   // 스케줄에 넣는 학생 상태
+function weekStart(ymdStr){ const d=parseYmd(ymdStr); const k=(d.getDay()+6)%7; return addDays(ymdStr,-k); }
+function schStudents(c){ return studentsIn(c.id).filter(s=>SCH_ON.includes(s.status)); }
+function schDay(day){ return list('courses').filter(c=>sessionsOf(c).includes(day)).map(c=>({c,sts:schStudents(c),time:noticeTime(c),no:sessionsOf(c).indexOf(day)+1,tot:sessionsOf(c).length}))
+  .sort((a,b)=>String(a.c.time||'').localeCompare(String(b.c.time||''))); }
+function schWeek(ws){ return [...Array(7)].map((_,i)=>{ const d=addDays(ws,i); const L=schDay(d); return {d,L,n:L.reduce((a,x)=>a+x.sts.length,0),cls:L.length}; }); }
+function schStartMin(c){ const m=String(c.time||'').match(/(\d{1,2}):(\d{2})/); return m?+m[1]*60+ +m[2]:null; }
+
+/* 원에 넘길 숫자 */
+const _hudCoreData=typeof hudCoreData==='function'?hudCoreData:null;
+hudCoreData=function(){ const base=_hudCoreData?_hudCoreData():{}; const t=todayStr(); const W=schWeek(weekStart(t));
+  return {...base,week:W.map(w=>({n:w.n,cls:w.cls})),today:W.findIndex(w=>w.d===t)}; };
+
+/* 원 아래 글자: 오늘(또는 다음) 학생 수업 */
+function schCoreText(){ const t=todayStr(); const now=new Date(); const nm=now.getHours()*60+now.getMinutes();
+  const today=schDay(t).filter(x=>x.sts.length); const W=schWeek(weekStart(t));   const up=today.find(x=>{ const m=schStartMin(x.c); return m==null||m+150>nm; });
+  let b,s;
+  if(up){ b=(String(up.c.time||'').match(/\d{1,2}:\d{2}/)||['오늘'])[0]; s=`${subjectOf(up.c)} · ${up.sts.slice(0,2).map(x=>x.name.replace(/^예시\s/,'')).join(', ')}${up.sts.length>2?` 외 ${up.sts.length-2}명`:''}`; }
+  else { let nx=null; for(let i=1;i<=14&&!nx;i++){ const d=addDays(t,i); const L=schDay(d).filter(x=>x.sts.length); if(L.length) nx={d,x:L[0],n:L.reduce((a,y)=>a+y.sts.length,0)}; }
+    if(nx){ b=diffDays(t,nx.d)===1?'내일':fmtMD(nx.d).replace(/\(.\)/,''); s=`${subjectOf(nx.x.c)} ${String(nx.x.c.time||'').split(/[~–-]/)[0]} · 학생 ${nx.n}명`; }
+    else { b='—'; s='2주 안에 수업 있는 학생이 없어요'; } }
+  const uniq=new Set(); W.forEach(w=>w.L.forEach(x=>x.sts.forEach(s=>uniq.add(s.id))));
+  return {b,s,top:`STUDENT SCHEDULE · 이번 주 ${W.filter(w=>w.n).length}일 · 학생 ${uniq.size}명`,bot:`오늘 학생 ${today.reduce((a,x)=>a+x.sts.length,0)}명 · 눌러서 주간 스케줄`}; }
+
+/* 주간 학생 스케줄 창 */
+function schOpen(ws){ S.schWs=ws||S.schWs||weekStart(todayStr()); schDraw(); }
+function schDraw(){
+  const ws=S.schWs, t=todayStr(), W=schWeek(ws); const we=addDays(ws,6);
+  const uq=new Set(); W.forEach(w=>w.L.forEach(x=>x.sts.forEach(s=>uq.add(s.id)))); const tot=uq.size;
+  const html=`${mHead('학생 스케줄')}<div class="body sch-body">
+    <div class="sch-top"><button class="btn sm ghost" data-act="schWk" data-k="-7" aria-label="지난주">${ic('down')}</button>
+      <b>${fmtMD(ws)} ~ ${fmtMD(we)}</b>${ws!==weekStart(t)?'<button class="btn sm" data-act="schWk" data-k="0">이번 주</button>':'<span class="chip ok">이번 주</span>'}
+      <button class="btn sm ghost" data-act="schWk" data-k="7" aria-label="다음 주">${ic('down')}</button><span class="sch-sum">수업 ${W.reduce((a,w)=>a+w.cls,0)}회 · 학생 ${tot}명</span></div>
+    <div class="sch-week">${W.map(w=>`<section class="sch-day ${w.d===t?'today':''} ${w.d<t?'past':''}">
+      <h3><span>${DOW[parseYmd(w.d).getDay()]}</span><b>${+w.d.slice(8)}</b>${w.n?`<em>${w.n}명</em>`:''}</h3>
+      ${w.L.length?w.L.map(x=>`<div class="sch-cls ${x.sts.length?'':'empty'}" data-act="openCourse" data-id="${x.c.id}">
+        <div class="sch-t num">${esc(String(x.c.time||'시간 미정'))}</div><div class="sch-n">${esc(subjectOf(x.c))}</div>
+        <div class="sch-m">${x.no}/${x.tot}회 · ${esc(roomLabel(x.c)||x.c.room||'')}</div>
+        <div class="sch-sts">${x.sts.length?x.sts.map(s=>`<button class="sch-st ${s.status==='등록대기'?'wait':''}" data-act="openStudent" data-id="${s.id}" title="${esc(s.status)}">${esc(s.name.replace(/^예시\s/,''))}</button>`).join(''):'<small>연결된 학생 없음</small>'}</div></div>`).join('')
+      :'<div class="sch-none">수업 없음</div>'}</section>`).join('')}</div>
+    <p class="rm-hint">수강중 · 등록대기 학생만 나와요. 이름을 누르면 학생 정보, 수업 칸을 누르면 과정 정보가 열려요.</p>
+  </div><footer><button class="btn ghost" data-act="close">닫기</button></footer>`;
+  if(modalEl&&modalEl._kind==='sch') modalEl.querySelector('.sheet').innerHTML=html; else { openModal(html,'wide sch-m'); modalEl._kind='sch'; }
+  setTimeout(()=>{ const el=modalEl&&modalEl.querySelector('.sch-day.today'); if(el&&innerWidth<=760) el.scrollIntoView({block:'start'}); },60);
+}
+Object.assign(WACT,{
+  schOpen:()=>schOpen(),
+  schWk:el=>{ const k=+el.dataset.k; S.schWs=k?addDays(S.schWs,k):weekStart(todayStr()); schDraw(); },
+});
 /* ===== 학생용 개강 안내 페이지 링크 =====
    수업 정보를 링크 주소(# 뒤)에 압축해서 넣어요 → 서버에 아무것도 저장하지 않고, 받은 사람만 그 내용을 봐요.
    보는 화면: c.html (GitHub Pages). ZOOM 링크 · 캠퍼스 강의 안내는 과정마다 직접 적어 두면 다음에도 그대로 써요. */
@@ -8168,6 +8260,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261031-2211';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261031-2218';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
