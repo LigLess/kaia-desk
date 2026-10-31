@@ -1827,6 +1827,22 @@ body.dark .bg-view,body.hud:not(.hlight):not(.exec) .bg-view{--bgp:#10131b;--bgp
 
 /* 저장한 · 받은 견적: 폰에서는 이름 줄을 위에 한 줄 다 쓰고 버튼은 아래로 */
 @media (max-width:700px){.qt-sv{flex-wrap:wrap;row-gap:10px}.qt-sv>.grow{flex:1 1 100%}.qt-sv .t1{white-space:normal;font-size:15px}.qt-sv .t2{white-space:normal;line-height:1.5}.qt-sv>.btn{flex:none}}
+
+/* 2주 반복 요일 (화목화목금 · 월수금월수) */
+.wkp{display:inline-flex;gap:4px;vertical-align:middle;flex-wrap:wrap}
+.wkp>span{display:inline-flex;align-items:center;gap:4px;padding:1px 8px 1px 3px;border-radius:99px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);font-weight:600;color:var(--fg);font-size:12.5px;white-space:nowrap}
+.wkp b{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.wkp>span+span b{background:var(--warn-soft);color:var(--warn)}
+.wkd{font-weight:600;color:var(--fg)}
+.t-time{font-size:12px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+.cal-day .t2 .wkp,.cal-day .t2 .wkd{margin-right:4px}
+.wkedit{display:flex;flex-direction:column;gap:8px}
+.wkrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.wkrow>b{width:70px;font-size:13px;display:flex;flex-direction:column;line-height:1.25}.wkrow>b small{font-size:11px;font-weight:500;color:var(--muted)}
+.wkrow .dowpick button.on{background:var(--accent);color:#fff}.wkrow.b .dowpick button.on{background:var(--warn);color:#fff}
+.wkt{font-size:13px}.wkt small{color:var(--muted)}
+.wklist{display:flex;flex-direction:column;gap:4px;max-height:240px;overflow:auto;padding:8px;border-radius:12px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.wkl{display:flex;gap:10px;align-items:baseline;font-size:13px;padding:4px 6px;border-radius:8px}.wkl>b{flex:none;width:96px;font-size:12px}.wkl>b small{font-weight:500;color:var(--accent)}.wkl.b>b small{color:var(--warn)}
+.wkl.b{background:var(--warn-soft)}.wkl span{font-variant-numeric:tabular-nums}.wkl i{font-style:normal;color:var(--faint);margin:0 4px}
 </style>
 </head>
 <body><script>
@@ -1940,8 +1956,16 @@ function daysLabel(days,daysB){
     if(key==='6,0') return '토·일';
     return s.map(x=>DOW[x]).join('·');
   };
-  return daysB&&daysB.length? `${lab(days)} / ${lab(daysB)} 격주` : lab(days);
+  const pl=d=>[...d].sort((x,y)=>((x+6)%7)-((y+6)%7)).map(x=>DOW[x]).join('');
+  return daysB&&daysB.length&&pl(days)!==pl(daysB)? `1주 ${pl(days)} / 2주 ${pl(daysB)}` : lab(days);
 }
+/* 2주 반복(화목화목금 · 월수금월수) 요일을 한눈에: 1주차 · 2주차를 나눠서 칩으로 */
+function daysHtml(c){ const ord=d=>[...(d||[])].sort((x,y)=>((x+6)%7)-((y+6)%7)).map(x=>DOW[x]).join('');
+  if(c&&c.daysB&&c.daysB.length&&ord(c.days)!==ord(c.daysB)) return `<span class="wkp" title="${ord(c.days)}${ord(c.daysB)} (2주 반복)"><span><b>1주</b>${ord(c.days)}</span><span><b>2주</b>${ord(c.daysB)}</span></span>`;
+  return `<span class="wkd">${esc(daysLabel(c&&c.days&&c.days.length?c.days:defaultDays(c||{}),null))}</span>`; }
+/* 수업 날짜를 주(월~일)마다 묶기 → 어느 주가 1주 · 2주 패턴인지 확인 */
+function sessionWeeks(c){ const ss=sessionsOf(c); if(!ss.length) return []; const s0=parseYmd(c.start); const w0=new Date(s0); w0.setDate(w0.getDate()-s0.getDay());
+  const out=[]; let cur=null; ss.forEach(d=>{ const dt=parseYmd(d); const wi=Math.floor(Math.round((dt-w0)/864e5)/7); if(!cur||cur.wi!==wi){ cur={wi,b:!!(c.daysB&&c.daysB.length&&wi%2),days:[]}; out.push(cur); } cur.days.push(d); }); return out; }
 function defaultDays(c){ if(c.kind==='주말') return [6,0]; return [1,2,3,4,5]; }
 
 /* all class dates for a course */
@@ -2773,7 +2797,7 @@ function noticeDays(c){
   if(c.dayText&&c.dayText.trim()) return c.dayText.trim();
   const ord=d=>[...d].sort((x,y)=>((x+6)%7)-((y+6)%7));
   const A=c.days&&c.days.length?c.days:defaultDays(c);
-  if(c.daysB&&c.daysB.length) return ord(A).map(x=>DOW[x]).join('')+' / '+ord(c.daysB).map(x=>DOW[x]).join('')+' (격주)';
+  if(c.daysB&&c.daysB.length&&ord(A).join()!==ord(c.daysB).join()) return ord(A).map(x=>DOW[x]).join('')+' / '+ord(c.daysB).map(x=>DOW[x]).join('')+' (격주)';
   if(ord(A).join(',')==='1,2,3,4,5') return '월~금';
   return ord(A).map(x=>DOW[x]).join('');
 }
@@ -3047,8 +3071,8 @@ function vTimetable(){
   let selBox='';
   if(S.calSel){ const x=S.calSel; const evs=ev[x]||[]; const running=cs.filter(c=>sessionsOf(c).includes(x));
     selBox=`<div class="cal-day"><h2 style="margin-bottom:6px">${fmtKo(x)}${HOLIDAYS[x]?` <span class="chip bad">${HOLIDAYS[x]}</span>`:''}</h2><div class="list">
-      ${evs.map(e=>`<div class="row click" data-act="openCourse" data-id="${e.c.id}"><span class="dbadge ${e.k}">${e.k==='s'?'개강':'종강'}</span><div class="grow"><div class="t1">${esc(e.c.name)}</div><div class="t2">${esc(e.c.time||'')} · ${esc(e.c.room||'')}</div></div></div>`).join('')}
-      ${running.filter(c=>!evs.some(e=>e.c.id===c.id)).map(c=>{const p=progOf(c);return `<div class="row click" data-act="openCourse" data-id="${c.id}" data-tab="prog"><span class="dbadge n">${p.ss.indexOf(x)+1}회차</span><div class="grow"><div class="t1">${esc(c.name)}</div><div class="t2">${esc(c.time||'')} · ${esc(c.room||'')}</div></div></div>`}).join('')}
+      ${evs.map(e=>`<div class="row click" data-act="openCourse" data-id="${e.c.id}"><span class="dbadge ${e.k}">${e.k==='s'?'개강':'종강'}</span><div class="grow"><div class="t1">${esc(e.c.name)}</div><div class="t2">${daysHtml(e.c)} ${esc(e.c.time||'')} · ${esc(e.c.room||'')}</div></div></div>`).join('')}
+      ${running.filter(c=>!evs.some(e=>e.c.id===c.id)).map(c=>{const p=progOf(c);return `<div class="row click" data-act="openCourse" data-id="${c.id}" data-tab="prog"><span class="dbadge n">${p.ss.indexOf(x)+1}회차</span><div class="grow"><div class="t1">${esc(c.name)}</div><div class="t2">${daysHtml(c)} ${esc(c.time||'')} · ${esc(c.room||'')}</div></div></div>`}).join('')}
       ${!evs.length&&!running.length?'<div class="empty">이 날은 수업이 없어요.</div>':''}</div></div>`; }
   const monthCs=cs.filter(c=>c.start&&c.start<=mEnd&&courseEnd(c)>=mStart).sort((a,b)=>a.start<b.start?-1:1);
   return `<div class="view">
@@ -3068,7 +3092,7 @@ function vTimetable(){
   </section>
   <section class="pane"><h2>${M}월 과정 <small>${monthCs.length}개 · 진행 중 포함</small></h2>
     ${monthCs.length?`<div class="tablewrap"><table class="t"><thead><tr><th>구분</th><th>과정명</th><th>기간</th><th class="hide-m">요일 · 시간</th><th class="hide-m">회차</th><th>학생</th><th>상태</th></tr></thead><tbody>
-    ${monthCs.map(c=>{const s=courseStatus(c);const p=progOf(c);return `<tr class="click" data-act="openCourse" data-id="${c.id}"><td><span class="chip ${c.kind==='주말'?'cyan':''}">${esc(c.kind||'기타')}</span></td><td class="wrap">${esc(c.name)}</td><td class="num">${fmtMD(c.start)} ~ ${fmtMD(courseEnd(c))}</td><td class="hide-m">${esc(daysLabel(c.days,c.daysB))} ${esc(c.time||'')}</td><td class="hide-m num">${p.total}회${c.total&&c.total!==p.total?' <span class="chip warn">표 '+c.total+'</span>':''}</td><td class="num">${studentsIn(c.id).length}명</td><td><span class="chip ${s.chip}">${s.label}</span></td></tr>`}).join('')}
+    ${monthCs.map(c=>{const s=courseStatus(c);const p=progOf(c);return `<tr class="click" data-act="openCourse" data-id="${c.id}"><td><span class="chip ${c.kind==='주말'?'cyan':''}">${esc(c.kind||'기타')}</span></td><td class="wrap">${esc(c.name)}</td><td class="num">${fmtMD(c.start)} ~ ${fmtMD(courseEnd(c))}</td><td class="hide-m">${daysHtml(c)}<div class="t-time">${esc(c.time||'')}</div></td><td class="hide-m num">${p.total}회${c.total&&c.total!==p.total?' <span class="chip warn">표 '+c.total+'</span>':''}</td><td class="num">${studentsIn(c.id).length}명</td><td><span class="chip ${s.chip}">${s.label}</span></td></tr>`}).join('')}
     </tbody></table></div>`:`<div class="empty"><b>${M}월에 등록된 과정이 없어요</b>위의 "엑셀 올리기"로 이번 달 시간표를 넣어 주세요. 형식이 달라도 제목줄(과정명 · 개강일 · 종강일 · 요일 · 시간)을 찾아 읽어요.</div>`}
   </section></div>`;
 }
@@ -3317,7 +3341,12 @@ function drawCourse(){
       <label class="field full"><span>과정명</span><input id="cfName" class="in" value="${esc(c.name)}" placeholder="예: 정보처리기사 실기 평일반"></label>
       <label class="field"><span>구분</span><select id="cfKind" class="in">${['평일','주말','기타'].map(k=>`<option ${c.kind===k?'selected':''}>${k}</option>`).join('')}</select></label>
       <label class="field"><span>시간</span><input id="cfTime" class="in" value="${esc(c.time||'')}" placeholder="19:30–22:00"></label>
-      <div class="field full"><span>수업 요일</span><div class="dowpick" id="cfDays">${[1,2,3,4,5,6,0].map(d=>`<button type="button" data-act="cDay" data-d="${d}" class="${(c.days||[]).includes(d)?'on':''}">${DOW[d]}</button>`).join('')}</div>${c.daysB?`<span style="font-size:12px;color:var(--warn)">격주 수업: 짝수 주는 ${daysLabel(c.daysB)} (엑셀에서 읽음)</span>`:''}</div>
+      <div class="field full"><span>수업 요일</span>
+        <div class="wkedit">${c.daysB?`<div class="wkrow"><b>1주차<small>개강 주</small></b><div class="dowpick">${[1,2,3,4,5,6,0].map(d=>`<button type="button" data-act="cDay" data-d="${d}" class="${(c.days||[]).includes(d)?'on':''}">${DOW[d]}</button>`).join('')}</div></div>
+          <div class="wkrow b"><b>2주차<small>다음 주</small></b><div class="dowpick">${[1,2,3,4,5,6,0].map(d=>`<button type="button" data-act="cDayB" data-d="${d}" class="${(c.daysB||[]).includes(d)?'on':''}">${DOW[d]}</button>`).join('')}</div></div>`
+          :`<div class="dowpick" id="cfDays">${[1,2,3,4,5,6,0].map(d=>`<button type="button" data-act="cDay" data-d="${d}" class="${(c.days||[]).includes(d)?'on':''}">${DOW[d]}</button>`).join('')}</div>`}
+          <label class="check wkt"><input type="checkbox" data-act="cWk" ${c.daysB?'checked':''}>2주마다 요일이 바뀌어요 <small>(예: 화목화목금 · 월수금월수)</small></label></div></div>
+      ${(()=>{ const W=sessionWeeks(c); if(!W.length) return ''; return `<div class="field full"><span>수업 날짜 확인 <small style="color:var(--faint)">주마다 · ${W.reduce((a,w)=>a+w.days.length,0)}회</small></span><div class="wklist">${W.map((w,i)=>`<div class="wkl ${w.b?'b':''}"><b>${i+1}주${c.daysB?` <small>${w.b?'2주 패턴':'1주 패턴'}</small>`:''}</b><span>${w.days.map(d=>fmtMD(d)).join('<i>·</i>')}</span></div>`).join('')}</div></div>`; })()}
       <label class="field"><span>개강일</span><input id="cfStart" class="in" type="date" value="${c.start||''}"></label>
       <label class="field"><span>종강일 <small style="color:var(--faint)">(비우면 회차로 계산)</small></span><input id="cfEnd" class="in" type="date" value="${c.end||''}"></label>
       <label class="field"><span>총 회차</span><input id="cfTotal" class="in" type="number" min="1" value="${c.total||''}" placeholder="예: 20"></label>
@@ -7867,7 +7896,9 @@ const ACT={
     COLS.forEach(c=>Object.keys(S.real[c]).forEach(id=>store.del(c,id))); S.settings={...clone(DEFAULT_SETTINGS),started:true}; store.saveSettings(); toast('모두 지웠어요',''); render(); },
   /* course modal */
   cTab:el=>{ if(CM.tab==='info') readCourseForm(); CM.tab=el.dataset.k; drawCourse(); },
-  cDay:el=>{ readCourseForm(); const d=+el.dataset.d; const s=new Set(CM.draft.days||[]); s.has(d)?s.delete(d):s.add(d); CM.draft.days=[...s].sort(); CM.draft.daysB=null; drawCourse(); },
+  cDay:el=>{ readCourseForm(); const d=+el.dataset.d; const s=new Set(CM.draft.days||[]); s.has(d)?s.delete(d):s.add(d); CM.draft.days=[...s].sort(); CM.draft.dayText=''; drawCourse(); },
+  cDayB:el=>{ readCourseForm(); const d=+el.dataset.d; const s=new Set(CM.draft.daysB||[]); s.has(d)?s.delete(d):s.add(d); CM.draft.daysB=[...s].sort(); if(!CM.draft.daysB.length) CM.draft.daysB=null; CM.draft.dayText=''; drawCourse(); },
+  cWk:el=>{ readCourseForm(); CM.draft.daysB=el.checked?[...(CM.draft.days||[])]:null; CM.draft.dayText=''; drawCourse(); },
   saveCourse:()=>{ const c=readCourseForm(); if(!c.name){ toast('과정명을 적어 주세요',''); return; } if(!c.start){ toast('개강일을 골라 주세요',''); return; } if(!c.days||!c.days.length){ toast('수업 요일을 하나 이상 골라 주세요',''); return; }
     if(!c.end&&!c.total){ toast('종강일이나 총 회차 중 하나는 적어 주세요',''); return; }
     if(S.demo&&!CM.id) startReal(true);
@@ -7956,6 +7987,7 @@ document.addEventListener('change',e=>{
   const act=el.dataset.act; if(!act) return;
   if(el.type==='checkbox'&&!ACT[act]&&WACT[act]){ WACT[act](el,e); return; }
   if(act==='sentToggle'){ const s=D().students[el.dataset.id]; const sent={...(s.sent||{})}; const k=`${S.noticeCourse}|${S.ntTpl}`; if(el.checked) sent[k]=todayStr(); else delete sent[k]; store.put('students',{...s,sent}); scheduleRender(); }
+  else if(act==='cWk'){ ACT.cWk(el); }
   else if(act==='taskDone'){ const k=D().tasks[el.dataset.id]; store.put('tasks',{...k,done:el.checked,doneAt:el.checked?Date.now():null}); setTimeout(render,250); }
   else if(act==='sfxToggle'){ S.settings.sfx=el.checked; store.saveSettings(); if(el.checked) sfx('ok'); }
   else if(act==='offToggle'){ const o=+el.dataset.o; const s=new Set(S.settings.offsets||[]); el.checked?s.add(o):s.delete(o); if(!s.size){ el.checked=true; toast('하나 이상은 골라 주세요',''); return; } S.settings.offsets=[...s].sort((a,b)=>b-a); store.saveSettings(); render(); }
@@ -8033,6 +8065,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261031-1520';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261031-1826';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

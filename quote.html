@@ -1820,6 +1820,22 @@ body.dark .bg-view,body.hud:not(.hlight):not(.exec) .bg-view{--bgp:#10131b;--bgp
 
 /* 저장한 · 받은 견적: 폰에서는 이름 줄을 위에 한 줄 다 쓰고 버튼은 아래로 */
 @media (max-width:700px){.qt-sv{flex-wrap:wrap;row-gap:10px}.qt-sv>.grow{flex:1 1 100%}.qt-sv .t1{white-space:normal;font-size:15px}.qt-sv .t2{white-space:normal;line-height:1.5}.qt-sv>.btn{flex:none}}
+
+/* 2주 반복 요일 (화목화목금 · 월수금월수) */
+.wkp{display:inline-flex;gap:4px;vertical-align:middle;flex-wrap:wrap}
+.wkp>span{display:inline-flex;align-items:center;gap:4px;padding:1px 8px 1px 3px;border-radius:99px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line);font-weight:600;color:var(--fg);font-size:12.5px;white-space:nowrap}
+.wkp b{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.wkp>span+span b{background:var(--warn-soft);color:var(--warn)}
+.wkd{font-weight:600;color:var(--fg)}
+.t-time{font-size:12px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+.cal-day .t2 .wkp,.cal-day .t2 .wkd{margin-right:4px}
+.wkedit{display:flex;flex-direction:column;gap:8px}
+.wkrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.wkrow>b{width:70px;font-size:13px;display:flex;flex-direction:column;line-height:1.25}.wkrow>b small{font-size:11px;font-weight:500;color:var(--muted)}
+.wkrow .dowpick button.on{background:var(--accent);color:#fff}.wkrow.b .dowpick button.on{background:var(--warn);color:#fff}
+.wkt{font-size:13px}.wkt small{color:var(--muted)}
+.wklist{display:flex;flex-direction:column;gap:4px;max-height:240px;overflow:auto;padding:8px;border-radius:12px;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line)}
+.wkl{display:flex;gap:10px;align-items:baseline;font-size:13px;padding:4px 6px;border-radius:8px}.wkl>b{flex:none;width:96px;font-size:12px}.wkl>b small{font-weight:500;color:var(--accent)}.wkl.b>b small{color:var(--warn)}
+.wkl.b{background:var(--warn-soft)}.wkl span{font-variant-numeric:tabular-nums}.wkl i{font-style:normal;color:var(--faint);margin:0 4px}
 </style>
 <style>
 html{height:auto!important;overflow-y:auto!important}
