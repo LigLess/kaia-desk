@@ -1961,6 +1961,37 @@ body.dark[data-bg="lounge"] .dh-a b{color:#2a1606}
 .dh-a.ack{opacity:.5}
 @media (max-width:1100px){.dh-main{grid-template-columns:1fr}}
 @media (max-width:900px){.dh-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.dh-stat{min-height:124px;padding:16px}.dh-head .btns{width:100%}.dh-head .btns .btn{flex:1 1 auto}}
+
+/* ===== 네이비 클래식 (모던) ===== */
+body.hud.exec.xo.xn{--bg:#f2f1ec;--bg-soft:#ebeae4;--card:#fbfaf6;--surface:#fbfaf6;--surface-2:#efeee8;--surface-3:#e5e4dd;
+  --fg:#101824;--fg-2:#2c3442;--muted:#6c7280;--faint:#a4a8b0;--line:#e3e2da;--line-2:#d2d1c7;
+  --ink:#101824;--ink-fg:#fbfaf6;--ink-2:#26303f;--ink-soft:rgba(16,24,36,.06);--accent:#1f3a5f;--accent-2:#16304f;--accent-soft:rgba(31,58,95,.10);
+  --amber:#a8823f;--amber-soft:rgba(168,130,63,.14);--cyan:#1f3a5f;--cyan-soft:rgba(31,58,95,.10);--violet:#1f3a5f;--pill-bg:#101824;--pill-fg:#fbfaf6;--spot:rgba(31,58,95,.06);
+  --shadow-md:0 16px 34px -20px rgba(16,24,36,.26);--shadow-lg:0 40px 80px -30px rgba(16,24,36,.3),0 0 0 1px rgba(16,24,36,.05);background:#f2f1ec}
+body.hud.exec.xo.xn .pane,body.hud.exec.xo.xn .stat,body.hud.exec.xo.xn .pcard,body.hud.exec.xo.xn .snip,body.hud.exec.xo.xn .alarm,body.hud.exec.xo.xn .hpanel{background:#fbfaf6;border:1px solid #e1e0d8;box-shadow:0 1px 0 rgba(16,24,36,.04),0 22px 40px -30px rgba(16,24,36,.28)}
+body.hud.exec.xo.xn .btn.pri{background:#1f3a5f;border-color:#1f3a5f;color:#fbfaf6}
+body.hud.exec.xo.xn .btn.pri:hover{background:#16304f}
+body.hud.exec.xo.xn .topnav,body.hud.exec.xo.xn .rail{background:rgba(251,250,246,.88);border-color:#e1e0d8}
+body.hud.exec.xo.xn .hl::before{background:#a8823f}
+body.hud.exec.xo.xn .toast{background:#101824;color:rgba(251,250,246,.85)}
+body.hud.exec.xo.xn ::selection{background:#1f3a5f;color:#fff}
+body.hud.exec.xo.xn .pane.dh-stat.hot{background:#1f3a5f;border-color:#1f3a5f;box-shadow:0 22px 40px -26px rgba(16,24,36,.5)}body.xn .dh-stat.hot .lab,body.xn .dh-stat.hot .val{color:#fbfaf6}body.xn .dh-stat.hot .sub{color:rgba(251,250,246,.7)}body.xn .dh-stat.hot .go{background:#a8823f;color:#fff}
+/* ===== 그리드 페이퍼 (기하학) ===== */
+body[data-bg="grid"]{--bg:#fbfbf9;--bg-soft:#f4f5f7;--surface:#ffffff;--surface-2:#f4f5f8;--surface-3:#e9ecf3;--fg:#0b0b0f;--fg-2:#30323a;--muted:#686b75;--faint:#a3a6ae;--line:#e6e8ee;--line-2:#d5d9e2;
+  --ink:#0b0b0f;--ink-fg:#ffffff;--ink-soft:rgba(11,11,15,.06);--accent:#2346d8;--accent-2:#3b5cf0;--accent-soft:rgba(35,70,216,.09);--bar:rgba(255,255,255,.86);--bar-line:rgba(11,11,15,.08);--pill-bg:#0b0b0f;--pill-fg:#fff;--spot:rgba(35,70,216,.06);
+  --shadow-sm:0 1px 2px rgba(11,11,15,.04);--shadow-md:0 12px 30px -18px rgba(11,11,15,.2),0 2px 6px rgba(11,11,15,.04);background:#fbfbf9}
+body[data-bg="grid"] .pane{box-shadow:0 0 0 1px var(--line),0 12px 30px -24px rgba(11,11,15,.25)}
+body[data-bg="grid"] ::selection{background:#2346d8;color:#fff}
+/* ===== 에메랄드 클럽 (다크) ===== */
+body.dark[data-bg="emerald"]{--bg:#04110c;--bg-soft:#071a13;--surface:rgba(8,26,19,.6);--surface-2:rgba(255,255,255,.06);--surface-3:rgba(255,255,255,.1);--fg:#f3efe4;--fg-2:#e2dccb;--muted:rgba(232,226,208,.64);--faint:rgba(232,226,208,.4);
+  --line:rgba(214,182,120,.14);--line-2:rgba(214,182,120,.26);--accent:#d6b678;--accent-2:#e8d2a0;--accent-soft:rgba(214,182,120,.14);--amber:#e8d2a0;--ok:#7fd1b0;
+  --bar:rgba(6,22,16,.6);--bar-line:rgba(214,182,120,.18);--pill-bg:#f3efe4;--pill-fg:#04110c;--ink:#f3efe4;--ink-fg:#04110c;background:#04110c}
+body.dark[data-bg="emerald"] .btn.pri{background:#d6b678;border-color:transparent;color:#0a1a12;font-weight:700}
+body.dark[data-bg="emerald"] .btn.pri:hover{background:#e3c68c}
+body.dark[data-bg="emerald"] .sheet header,body.dark[data-bg="emerald"] .sheet footer,body.dark[data-bg="emerald"] .tabs{background:rgba(7,26,19,.97);border-color:rgba(214,182,120,.14)}
+body.dark[data-bg="emerald"] .seg button.on{background:#f3efe4;color:#04110c}
+body.dark[data-bg="emerald"] .dh-stat.hot .go,body.dark[data-bg="emerald"] .dt-me,body.dark[data-bg="emerald"] .dt-crumb .dt-ic,body.dark[data-bg="emerald"] .rail .rb,body.dark[data-bg="emerald"] .dh-a b{color:#0a1a12}
+body.dark[data-bg="emerald"] ::selection{background:#d6b678;color:#04110c}
 </style>
 <style>
 html{height:auto!important;overflow-y:auto!important}
