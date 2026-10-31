@@ -2036,6 +2036,21 @@ body.dark[data-bg="emerald"] ::selection{background:#d6b678;color:#04110c}
 .lw-e{color:var(--muted);font-size:13px;padding:12px 4px}
 .lw-f{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .lw-big{display:flex;gap:14px;align-items:center;padding:6px 4px 10px}.lw-big>b{white-space:nowrap;font-size:34px;font-weight:800;letter-spacing:-.03em;color:var(--accent)}.lw-big span{font-weight:700;min-width:0}.lw-big small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.lw-memo{width:100%;min-height:140px;box-sizing:border-box;resize:vertical;border:0;border-radius:10px;padding:10px 12px;background:var(--surface-2);color:var(--fg);font:inherit;font-size:14px;line-height:1.6}
+.lw-memo:focus{outline:2px solid var(--accent)}
+.lw-add{width:100%;box-sizing:border-box;margin-top:6px;height:36px;font-size:13px}
+.lw-tk.done span{text-decoration:line-through;color:var(--muted)}
+.lw-r.copied{background:var(--ok-soft)}.lw-r.copied b{color:var(--ok)}
+.lw-r>b svg{width:14px;height:14px;vertical-align:-2px}
+a.lw-r{color:inherit;text-decoration:none}
+.cw-list{display:flex;flex-direction:column;gap:4px}
+.cw-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto auto 34px 34px auto 34px;gap:8px;align-items:center;padding:6px 8px;border-radius:10px;background:var(--surface-2)}
+.cw-row .lw-ic{width:28px;height:28px}.cw-row b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cw-row small{color:var(--muted);font-size:12px}.cw-row .check{margin:0;font-size:13px}
+.cw-row.off{opacity:.55}.cw-row .btn svg{width:16px;height:16px}
+.cw-new{margin-top:18px;padding:16px;border-radius:14px;border:1px dashed var(--line-2,var(--line))}.cw-new h3{margin:0 0 12px;font-size:15px}
+.cw-ics{display:flex;flex-wrap:wrap;gap:6px}.cw-ics button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg-2,var(--fg));display:grid;place-items:center;cursor:pointer}.cw-ics button svg{width:17px;height:17px}.cw-ics button.on{background:var(--accent);color:#fff;border-color:transparent}
+.cw-snips{display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}.cw-snips .check{margin:0}
+@media(max-width:760px){.cw-row{grid-template-columns:28px minmax(0,1fr) auto 34px 34px;}.cw-row small,.cw-row>span:empty{display:none}}
 @media (max-width:760px){
   .lnch{flex-direction:row;padding:5px 8px;border-radius:999px;left:50%!important;right:auto!important;top:auto!important;bottom:calc(78px + env(safe-area-inset-bottom));transform:translateX(-50%)}
   .ln-grip{display:none}.ln-i{width:38px;height:38px}.ln-i.on::after{display:none}.ln-tip{display:none}
@@ -8713,13 +8728,16 @@ Object.assign(WACT,{
    - 어느 화면(시간표 · 학생 · 과제 …)에 있든 떠 있어요. 위치 · 열린 창은 내 기기 설정에 저장돼요.
    - 손잡이를 두 번 누르면 런처가 로고 하나로 작아지고, 로고를 누르면 다시 펼쳐져요. */
 if(typeof PERSONAL_KEYS!=='undefined') PERSONAL_KEYS.push('lnch');
-const LW={
+const LW0={
   sch:{t:'오늘 학생 스케줄',i:'cal'},
   al:{t:'알림',i:'bell'},
   nx:{t:'다음 개강',i:'send'},
   tk:{t:'오늘 할 일',i:'task'},
   hw:{t:'채점 대기',i:'chart'},
 };
+/* 보이는 위젯 = 기본 위젯(숨긴 것 빼고) + 내가 만든 위젯, 내가 정한 순서대로 */
+function lnW(){ const st=lnSt(); const cw=st.cw||[]; const all=[...new Set([...(st.ord||[]),...Object.keys(LW0),...cw.map(c=>c.id)])]; const o={};
+  all.forEach(k=>{ if(LW0[k]){ if(!(st.hide||[]).includes(k)) o[k]=LW0[k]; return; } const c=cw.find(x=>x.id===k); if(c&&!c.off) o[k]={t:c.t||'내 위젯',i:c.i||'flag',c}; }); return o; }
 const LN_POP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="10" width="7" height="6" rx="1" fill="currentColor" stroke="none"/><path d="M8 21h8"/></svg>';
 const LN={st:null,el:null,wins:{},t:0};
 function lnSt(){ const d={side:'r',y:0.42,mini:false,open:{}}; const s=S.settings.lnch; LN.st=LN.st||{...d,...(s&&typeof s==='object'?clone(s):{})}; LN.st.open=LN.st.open||{}; return LN.st; }
@@ -8729,6 +8747,7 @@ const lnClamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------- 위젯 내용 ---------- */
 function lnBody(k){
+  const cw=(lnSt().cw||[]).find(x=>x.id===k); if(cw) return lnCwBody(cw);
   const t=todayStr();
   if(k==='sch'){ const L=typeof schDay==='function'?schDay(t).filter(x=>x.sts.length):[];
     return (L.length?`<div class="lw-l">${L.map(x=>`<button class="lw-r" data-act="openCourse" data-id="${x.c.id}"><b class="num">${esc((String(x.c.time||'').match(/\d{1,2}:\d{2}/)||['—'])[0])}</b><span>${esc(subjectOf(x.c))}<small>${x.no}/${x.tot}회 · ${x.sts.map(s=>esc(s.name.replace(/^예시\s/,''))).join(', ')}</small></span></button>`).join('')}</div>`:'<div class="lw-e">오늘은 수업 있는 학생이 없어요</div>')
@@ -8753,6 +8772,7 @@ function lnCount(k){ const t=todayStr(); try{
   if(k==='al') return activeAlarms().filter(a=>!a.ack).length;
   if(k==='tk') return list('tasks').filter(x=>!x.done&&x.due&&x.due<=t).length;
   if(k==='hw') return typeof hwOf==='function'?list('students').reduce((n,s)=>n+hwOf(s).filter(h=>(h.st==='제출'||h.st==='지각')&&h.sc==null).length,0):0;
+  const cw=(lnSt().cw||[]).find(x=>x.id===k); if(cw&&cw.type==='check') return (cw.items||[]).filter(x=>!x.d).length;
   if(k==='sch') return typeof schDay==='function'?schDay(t).reduce((n,x)=>n+x.sts.length,0):0;
 }catch(e){} return 0; }
 
@@ -8765,7 +8785,7 @@ function lnDraw(){
   el.className=`lnch ${st.side==='l'?'l':'r'} ${st.mini?'mini':''}`;
   el.innerHTML=`<div class="ln-grip" title="끌어서 옮기기 · 두 번 누르면 작게" aria-label="런처 옮기기"><i></i><i></i><i></i><i></i><i></i><i></i></div>
     ${st.mini?`<button class="ln-i ln-logo" data-ln="__open" aria-label="런처 펼치기"><img src="${LOGO}" alt=""></button>`
-    :Object.entries(LW).map(([k,w])=>{ const n=lnCount(k); return `<button class="ln-i ${st.open[k]?'on':''}" data-ln="${k}" aria-label="${w.t}" aria-pressed="${!!st.open[k]}">${ic(w.i)}${n&&k!=='sch'?`<b class="ln-n">${n>9?'9+':n}</b>`:''}<span class="ln-tip">${w.t}</span></button>`; }).join('')+`<i class="ln-sep"></i><button class="ln-i ln-pop ${LP.win&&!LP.win.closed?'on':''}" data-lnpop aria-label="바탕화면에 띄우기">${LN_POP}<span class="ln-tip">바탕화면에 띄우기 · 항상 위</span></button>`}`;
+    :Object.entries(lnW()).map(([k,w])=>{ const n=lnCount(k); return `<button class="ln-i ${st.open[k]?'on':''}" data-ln="${k}" aria-label="${w.t}" aria-pressed="${!!st.open[k]}">${ic(w.i)}${n&&k!=='sch'?`<b class="ln-n">${n>9?'9+':n}</b>`:''}<span class="ln-tip">${w.t}</span></button>`; }).join('')+`<i class="ln-sep"></i><button class="ln-i ln-pop ${LP.win&&!LP.win.closed?'on':''}" data-lnpop aria-label="바탕화면에 띄우기">${LN_POP}<span class="ln-tip">바탕화면에 띄우기 · 항상 위</span></button><button class="ln-i ln-cfg" data-ln="__cfg" aria-label="위젯 관리 · 추가">${ic('plus')}<span class="ln-tip">위젯 추가 · 관리</span></button>`}`;
   lnPlace();
 }
 function lnPlace(){ const st=lnSt(), el=LN.el; if(!el||el.hidden) return; const h=el.offsetHeight||300;
@@ -8775,13 +8795,13 @@ function lnPlace(){ const st=lnSt(), el=LN.el; if(!el||el.hidden) return; const 
 /* ---------- 위젯 창 ---------- */
 function lnWin(k){ const st=lnSt(); const o=st.open[k]; let w=LN.wins[k];
   if(!o){ if(w){ w.remove(); delete LN.wins[k]; } return; }
-  if(!w){ w=LN.wins[k]=document.createElement('section'); w.className='lw'; w.dataset.k=k; w.setAttribute('aria-label',LW[k].t);
-    w.innerHTML=`<header class="lw-h"><span class="lw-ic">${ic(LW[k].i)}</span><b>${LW[k].t}</b><button class="lw-x" data-lnx="${k}" aria-label="접기" title="런처로 넣기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg></button></header><div class="lw-b"></div>`;
+  if(!w){ w=LN.wins[k]=document.createElement('section'); w.className='lw'; w.dataset.k=k; w.setAttribute('aria-label',lnW()[k].t);
+    w.innerHTML=`<header class="lw-h"><span class="lw-ic">${ic(lnW()[k].i)}</span><b>${lnW()[k].t}</b><button class="lw-x" data-lnx="${k}" aria-label="접기" title="런처로 넣기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg></button></header><div class="lw-b"></div>`;
     document.body.appendChild(w);
     if(!matchMedia('(prefers-reduced-motion: reduce)').matches){ const b=LN.el&&LN.el.querySelector(`[data-ln="${k}"]`); const r=b&&b.getBoundingClientRect();
       requestAnimationFrame(()=>{ const r2=w.getBoundingClientRect(); const dx=r?r.left+r.width/2-(r2.left+r2.width/2):0, dy=r?r.top+r.height/2-(r2.top+r2.height/2):0;
         w.animate([{transform:`translate(${dx}px,${dy}px) scale(.15)`,opacity:0},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.23,1,.32,1)'}); }); } }
-  w.querySelector('.lw-b').innerHTML=lnBody(k); lnWinPlace(w,o); }
+  const hb=w.querySelector('.lw-h b'); if(hb) hb.textContent=lnW()[k]?lnW()[k].t:''; const bd=w.querySelector('.lw-b'); if(LN.force||!lnTyping(bd,document)) bd.innerHTML=lnBody(k); lnWinPlace(w,o); }
 function lnWinPlace(w,o){ if(lnMobile()){ w.style.left='';w.style.top=''; return; } const W=w.offsetWidth||300, H=w.offsetHeight||200;
   w.style.left=lnClamp(o.x,8,innerWidth-W-8)+'px'; w.style.top=lnClamp(o.y,8,innerHeight-Math.min(H,80)-8)+'px'; }
 function lnDefaultPos(k){ const st=lnSt(); const n=Object.keys(st.open).length; const r=LN.el?LN.el.getBoundingClientRect():{left:innerWidth-70,right:innerWidth-12,top:200};
@@ -8797,7 +8817,7 @@ function lnClose(k){ const st=lnSt(); const w=LN.wins[k]; delete st.open[k]; lnS
     a.onfinish=()=>{ lnWin(k); }; } else lnWin(k);
   lnDraw(); }
 let lnZ=60; function lnFront(w){ if(w) w.style.zIndex=++lnZ; }
-function lnRefresh(){ if(!LN.el) return; lnDraw(); Object.keys(lnSt().open).forEach(k=>{ if(LW[k]) lnWin(k); else delete lnSt().open[k]; }); }
+function lnRefresh(){ if(!LN.el) return; lnDraw(); Object.keys(lnSt().open).forEach(k=>{ if(lnW()[k]) lnWin(k); else { delete lnSt().open[k]; lnWin(k); } }); }
 
 /* ---------- 끌기 ---------- */
 document.addEventListener('pointerdown',e=>{
@@ -8815,7 +8835,7 @@ document.addEventListener('pointerdown',e=>{
 },true);
 document.addEventListener('dblclick',e=>{ if(e.target.closest&&e.target.closest('.ln-grip')){ const st=lnSt(); st.mini=!st.mini; lnSave(); lnDraw(); } });
 document.addEventListener('click',e=>{
-  const b=e.target.closest&&e.target.closest('[data-ln]'); if(b){ e.preventDefault(); const k=b.dataset.ln; if(k==='__open'){ lnSt().mini=false; lnSave(); lnDraw(); } else lnToggle(k); return; }
+  const b=e.target.closest&&e.target.closest('[data-ln]'); if(b){ e.preventDefault(); const k=b.dataset.ln; if(k==='__open'){ lnSt().mini=false; lnSave(); lnDraw(); } else if(k==='__cfg'){ lnCfg(); } else lnToggle(k); return; }
   const x=e.target.closest&&e.target.closest('[data-lnx]'); if(x){ e.preventDefault(); lnClose(x.dataset.lnx); }
 });
 addEventListener('resize',()=>{ lnPlace(); Object.entries(LN.wins).forEach(([k,w])=>{ const o=lnSt().open[k]; if(o) lnWinPlace(w,o); }); });
@@ -8855,7 +8875,7 @@ async function lnPop(){
   const st=d.createElement('style'); st.textContent=LP_CSS; d.head.appendChild(st);
   const ico=d.createElement('link'); ico.rel='icon'; ico.href=LOGO; d.head.appendChild(ico);
   d.body.innerHTML='<div class="lp" id="lp"></div>';
-  d.addEventListener('click',lpClick); d.addEventListener('change',lpChange);
+  d.addEventListener('click',lpClick); d.addEventListener('change',lpChange); ['click','change','input','keydown'].forEach(ev=>d.addEventListener(ev,lnCwEvt,true));
   w.addEventListener('pagehide',()=>{ LP.win=null; clearInterval(LP.clk); lnDraw(); });
   const s=lnSt(); if(!Array.isArray(s.pip)) s.pip=['sch','al','tk']; lnSave();
   lpDraw(); clearInterval(LP.clk); LP.clk=setInterval(lpClock,15000); lnDraw();
@@ -8865,22 +8885,117 @@ function lpDraw(){
   const w=LP.win; if(!w||w.closed) return; const d=w.document, box=d.getElementById('lp'); if(!box) return;
   d.documentElement.className=document.documentElement.className; [...document.documentElement.attributes].forEach(a=>{ if(a.name!=='class') d.documentElement.setAttribute(a.name,a.value); });
   d.body.className=document.body.className+' lpip'; d.body.setAttribute('style',document.body.getAttribute('style')||'');
-  const s=lnSt(); const on=(s.pip||[]).filter(k=>LW[k]);
-  const top=d.querySelector('.lp-ws'); const sc=top?top.scrollTop:0;
-  box.innerHTML=`<header class="lp-h"><img src="${LOGO}" alt=""><b>KAIA DESK</b><span class="lp-clk" id="lpClk"></span></header>
-    <nav class="lp-tabs">${Object.entries(LW).map(([k,x])=>{ const n=lnCount(k); return `<button class="ln-i ${on.includes(k)?'on':''}" data-lp="${k}" title="${x.t}" aria-label="${x.t}" aria-pressed="${on.includes(k)}">${ic(x.i)}${n&&k!=='sch'?`<b class="ln-n">${n>9?'9+':n}</b>`:''}</button>`; }).join('')}</nav>
-    <div class="lp-ws">${on.length?on.map(k=>`<section class="lp-w"><h3><span class="lw-ic">${ic(LW[k].i)}</span><span class="t">${LW[k].t}</span><button class="lw-x" data-lp="${k}" aria-label="끄기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg></button></h3><div class="lw-b">${lnBody(k)}</div></section>`).join('')
+  const s=lnSt(); const on=(s.pip||[]).filter(k=>lnW()[k]);
+  if(!LN.force&&lnTyping(box,d)) return; const top=d.querySelector('.lp-ws'); const sc=top?top.scrollTop:0;
+  box.innerHTML=`<header class="lp-h"><img src="${LOGO}" alt=""><b>KAIA DESK</b><span class="lp-clk" id="lpClk"></span><button class="lw-x" data-lpcfg title="위젯 관리 · 추가" aria-label="위젯 관리">${ic('gear')}</button></header>
+    <nav class="lp-tabs">${Object.entries(lnW()).map(([k,x])=>{ const n=lnCount(k); return `<button class="ln-i ${on.includes(k)?'on':''}" data-lp="${k}" title="${x.t}" aria-label="${x.t}" aria-pressed="${on.includes(k)}">${ic(x.i)}${n&&k!=='sch'?`<b class="ln-n">${n>9?'9+':n}</b>`:''}</button>`; }).join('')}</nav>
+    <div class="lp-ws">${on.length?on.map(k=>`<section class="lp-w"><h3><span class="lw-ic">${ic(lnW()[k].i)}</span><span class="t">${lnW()[k].t}</span><button class="lw-x" data-lp="${k}" aria-label="끄기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 12h12"/></svg></button></h3><div class="lw-b">${lnBody(k)}</div></section>`).join('')
       :'<div class="lp-e">위 아이콘을 눌러 띄울 위젯을 골라 주세요</div>'}</div>`;
   lpClock();
 }
 function lpMain(){ try{ window.focus(); }catch(e){} }
-function lpClick(e){ const t=e.target;
-  const p=t.closest('[data-lp]'); if(p){ e.preventDefault(); const s=lnSt(); const k=p.dataset.lp; s.pip=(s.pip||[]).includes(k)?s.pip.filter(x=>x!==k):(s.pip||[]).concat(k).sort((a,b)=>Object.keys(LW).indexOf(a)-Object.keys(LW).indexOf(b)); lnSave(); lpDraw(); return; }
+function lpClick(e){ const t=e.target; if(t.closest('[data-lpcfg]')){ e.preventDefault(); lpMain(); lnCfg(); return; }
+  const p=t.closest('[data-lp]'); if(p){ e.preventDefault(); const s=lnSt(); const k=p.dataset.lp; s.pip=(s.pip||[]).includes(k)?s.pip.filter(x=>x!==k):(s.pip||[]).concat(k).sort((a,b)=>Object.keys(lnW()).indexOf(a)-Object.keys(lnW()).indexOf(b)); lnSave(); lpDraw(); return; }
   const g=t.closest('[data-go]'); if(g){ e.preventDefault(); lpMain(); go(g.dataset.go); return; }
   const a=t.closest('[data-act]'); if(a&&a.tagName!=='INPUT'){ const f=ACT[a.dataset.act]||WACT[a.dataset.act]; if(f){ e.preventDefault(); lpMain(); f(a,e); } } }
 function lpChange(e){ const el=e.target; if(el.dataset&&el.dataset.act==='taskDone'){ const k=D().tasks[el.dataset.id]; if(k){ store.put('tasks',{...k,done:el.checked,doneAt:el.checked?Date.now():null}); toast('할 일을 끝냈어요',k.text); setTimeout(render,250); } } }
 { const _rf=lnRefresh; lnRefresh=function(){ _rf(); try{ lpDraw(); }catch(e){} }; }
 document.addEventListener('click',e=>{ if(e.target.closest&&e.target.closest('[data-lnpop]')){ e.preventDefault(); lnPop(); } });
+
+/* ===== 내 위젯 만들기 =====
+   종류: 메모 · 체크리스트 · 링크 모음 · 문구 빠른 복사 · D-day · 학생 목록(과목 · 상태로 거르기)
+   위젯 관리 창에서 이름 · 아이콘을 정하고, 순서를 바꾸고, 기본 위젯을 숨길 수 있어요. 런처 · 바탕화면 위젯 둘 다에 나와요. */
+const CW_TYPES=[['memo','메모','적어 두는 메모장'],['check','체크리스트','할 것 목록 · 체크'],['links','링크 모음','자주 여는 사이트 · ZOOM'],['snip','문구 빠른 복사','저장한 안내 문구를 한 번에 복사'],['dday','D-day','시험 · 마감 날짜까지 남은 날'],['stu','학생 목록','과목 · 상태로 거른 학생']];
+const CW_ICONS=['flag','edit','task','clip','copy','send','cal','users','book','bell','quote','receipt','search','chart','home','mail'];
+const cwOf=id=>(lnSt().cw||[]).find(x=>x.id===id);
+function lnTyping(box,doc){ const a=doc&&doc.activeElement; return !!(box&&a&&box.contains(a)&&/TEXTAREA|INPUT/.test(a.tagName)&&a.type!=='checkbox'); }
+const cwHost=u=>{ try{ return new URL(u).hostname.replace(/^www\./,''); }catch(e){ return ''; } };
+function lnCwBody(c){ const t=todayStr();
+  if(c.type==='memo') return `<textarea class="lw-memo" data-cwf="${c.id}" placeholder="여기에 바로 적으면 저장돼요" spellcheck="false">${esc(c.text||'')}</textarea>`;
+  if(c.type==='check'){ const L=c.items||[];
+    return `${L.length?`<div class="lw-l">${L.map((x,i)=>`<label class="lw-r lw-tk ${x.d?'done':''}"><input type="checkbox" data-cwc="${c.id}|${i}" ${x.d?'checked':''}><span>${esc(x.t)}</span></label>`).join('')}</div>`:''}
+      <input class="in lw-add" data-cwa="${c.id}" placeholder="+ 항목 적고 Enter" autocomplete="off">${L.some(x=>x.d)?`<div class="lw-f"><button class="btn sm ghost" data-cwclr="${c.id}">끝낸 항목 지우기</button></div>`:''}`; }
+  if(c.type==='links'){ const L=(c.items||[]).filter(x=>/^https?:\/\//.test(x.u));
+    return L.length?`<div class="lw-l">${L.map(x=>`<a class="lw-r" href="${esc(x.u)}" target="_blank" rel="noopener"><b>↗</b><span>${esc(x.n||cwHost(x.u))}<small>${esc(cwHost(x.u))}</small></span></a>`).join('')}</div>`:`<div class="lw-e">위젯 관리에서 링크를 넣어 주세요</div>`; }
+  if(c.type==='snip'){ const all=list('snippets'); const L=(c.ids&&c.ids.length?c.ids.map(id=>D().snippets[id]).filter(Boolean):all).slice(0,30);
+    return L.length?`<div class="lw-l">${L.map(n=>`<button class="lw-r" data-cwcp="${n.id}"><b>${ic('copy')}</b><span>${esc(n.title||'문구')}<small>${esc(String(n.text||'').split('\n')[0].slice(0,40))}</small></span></button>`).join('')}</div>`:`<div class="lw-e">저장한 문구가 없어요</div>`; }
+  if(c.type==='dday'){ const L=(c.items||[]).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.d)).sort((a,b)=>a.d.localeCompare(b.d));
+    return L.length?`<div class="lw-l">${L.map(x=>{ const k=diffDays(t,x.d); return `<div class="lw-r"><b class="num ${k<0?'e':''}">${k===0?'D-DAY':k>0?'D-'+k:'D+'+(-k)}</b><span>${esc(x.n)}<small>${fmtMD(x.d)}</small></span></div>`; }).join('')}</div>`:`<div class="lw-e">위젯 관리에서 날짜를 넣어 주세요</div>`; }
+  if(c.type==='stu'){ const ids=c.g&&typeof hwIds==='function'?hwIds(c.g):null;
+    const L=list('students').filter(s=>(!c.s||s.status===c.s)&&(!ids||(s.courses||[]).some(id=>ids.includes(id)))).sort((a,b)=>a.name.localeCompare(b.name,'ko')).slice(0,40);
+    return L.length?`<div class="lw-l">${L.map(s=>`<button class="lw-r" data-act="openStudent" data-id="${s.id}"><b>${esc(s.status||'')}</b><span>${esc(s.name.replace(/^예시\s/,''))}<small>${esc(s.phone||'')}</small></span></button>`).join('')}</div>`:`<div class="lw-e">조건에 맞는 학생이 없어요</div>`; }
+  return '';
+}
+function cwRefresh(){ LN.force=true; try{ lnRefresh(); }finally{ LN.force=false; } }
+function cwCopy(txt,doc){ const w=doc&&doc.defaultView||window; const ok=()=>toast('복사했어요','카톡이나 문자에 붙여넣으면 돼요.');
+  try{ w.navigator.clipboard.writeText(txt).then(ok,()=>copyText(txt)); }catch(e){ copyText(txt); } }
+function lnCwEvt(e){ const t=e.target; if(!t||!t.dataset) return; const doc=t.ownerDocument;
+  if(e.type==='input'&&t.dataset.cwf){ const c=cwOf(t.dataset.cwf); if(c){ c.text=t.value; lnSave(); } return; }
+  if(e.type==='change'&&t.dataset.cwc){ const [id,i]=t.dataset.cwc.split('|'); const c=cwOf(id); if(c&&c.items[i]){ c.items[i].d=t.checked; lnSave(); setTimeout(cwRefresh,120); } return; }
+  if(e.type==='keydown'&&t.dataset.cwa&&e.key==='Enter'&&!e.isComposing){ e.preventDefault(); const v=t.value.trim(); if(!v) return; const c=cwOf(t.dataset.cwa); if(!c) return; (c.items=c.items||[]).push({t:v.slice(0,200),d:false}); lnSave(); cwRefresh();
+    const n=doc.querySelector(`[data-cwa="${c.id}"]`); if(n) n.focus(); return; }
+  if(e.type==='click'){ const x=t.closest('[data-cwclr]'); if(x){ e.preventDefault(); e.stopPropagation(); const c=cwOf(x.dataset.cwclr); if(c){ c.items=(c.items||[]).filter(y=>!y.d); lnSave(); cwRefresh(); } return; }
+    const cp=t.closest('[data-cwcp]'); if(cp){ e.preventDefault(); e.stopPropagation(); const n=D().snippets[cp.dataset.cwcp]; if(n) cwCopy(n.text||'',doc); cp.classList.add('copied'); setTimeout(()=>cp.classList.remove('copied'),900); return; } }
+}
+['click','change','input','keydown'].forEach(ev=>document.addEventListener(ev,lnCwEvt,true));
+
+/* ---------- 위젯 관리 창 ---------- */
+function lnCfg(){ S._cw=S._cw||{type:'memo',i:'edit'}; lnCfgDraw(); }
+function lnCfgDraw(){
+  const st=lnSt(); const cw=st.cw||[]; const all=[...new Set([...(st.ord||[]),...Object.keys(LW0),...cw.map(c=>c.id)])].filter(k=>LW0[k]||cw.some(c=>c.id===k));
+  const F=S._cw; const ed=F.id?cwOf(F.id):null; const ty=F.type;
+  const kv=id=>{ const e=$(id); return e?e.value:null; };
+  const nm=kv('#cwName')??(ed?ed.t:''); const tx=kv('#cwTxt')??(ed&&(ty==='links'||ty==='dday')?(ed.items||[]).map(x=>`${x.n||''} | ${ty==='links'?x.u:x.d}`).join('\n'):'');
+  const groups=typeof hwGroups==='function'?[...hwGroups().keys()].sort((a,b)=>a.localeCompare(b,'ko')):[];
+  const row=k=>{ const c=cw.find(x=>x.id===k); const w=LW0[k]||{t:c.t,i:c.i}; const shown=LW0[k]?!(st.hide||[]).includes(k):!c.off;
+    return `<div class="cw-row ${shown?'':'off'}"><span class="lw-ic">${ic(w.i||'flag')}</span><b>${esc(w.t||'내 위젯')}</b><small>${LW0[k]?'기본':((CW_TYPES.find(x=>x[0]===c.type)||[])[1]||'')}</small>
+      <label class="check" title="런처에 보이기"><input type="checkbox" data-cwshow="${k}" ${shown?'checked':''}>보이기</label>
+      <button class="btn sm ghost" data-act="cwMove" data-k="${k}" data-d="-1" aria-label="위로">↑</button><button class="btn sm ghost" data-act="cwMove" data-k="${k}" data-d="1" aria-label="아래로">↓</button>
+      ${c?`<button class="btn sm" data-act="cwEdit" data-k="${k}">고치기</button><button class="btn sm ghost" data-act="cwDel" data-k="${k}" aria-label="삭제">${ic('trash')}</button>`:'<span></span><span></span>'}</div>`; };
+  const html=`${mHead('위젯 관리 · 추가')}<div class="body cw-body">
+    <div class="field"><span>내 위젯 <small>보이기 체크 · 순서 바꾸기 · 런처와 바탕화면 위젯에 같이 적용</small></span><div class="cw-list">${all.map(row).join('')}</div></div>
+    <div class="cw-new"><h3>${ed?`"${esc(ed.t)}" 고치기`:'새 위젯 만들기'}</h3>
+      <div class="field"><span>종류</span><div class="rm-chips">${CW_TYPES.map(([k,l,sub])=>`<button class="rm-chip ${ty===k?'on':''}" data-act="cwType" data-k="${k}" ${ed?'disabled':''}>${l}<small>${sub}</small></button>`).join('')}</div></div>
+      <div class="form"><label class="field"><span>이름</span><input class="in" id="cwName" value="${esc(nm||'')}" placeholder="예: ${ty==='links'?'ZOOM · 사이트':ty==='dday'?'시험 일정':ty==='snip'?'자주 쓰는 문구':ty==='stu'?'등록대기 학생':ty==='check'?'개강 준비':'오늘 메모'}" maxlength="20"></label>
+        <div class="field"><span>아이콘</span><div class="cw-ics">${CW_ICONS.map(x=>`<button class="${F.i===x?'on':''}" data-act="cwIcon" data-k="${x}" aria-label="${x}">${ic(x)}</button>`).join('')}</div></div></div>
+      ${ty==='links'?`<label class="field"><span>링크 <small>한 줄에 하나 · "이름 | 주소"</small></span><textarea class="in" id="cwTxt" rows="4" placeholder="ZOOM 1강의실 | https://zoom.us/j/...&#10;인트라넷 | https://...">${esc(tx||'')}</textarea></label>`:''}
+      ${ty==='dday'?`<label class="field"><span>날짜 <small>한 줄에 하나 · "이름 | 2026-11-29"</small></span><textarea class="in" id="cwTxt" rows="4" placeholder="정보처리기사 실기 | 2026-11-29">${esc(tx||'')}</textarea></label>`:''}
+      ${ty==='snip'?`<div class="field"><span>보일 문구 <small>안 고르면 전부</small></span><div class="cw-snips">${list('snippets').map(n=>`<label class="check"><input type="checkbox" data-cwsn="${n.id}" ${(F.ids||[]).includes(n.id)?'checked':''}>${esc(n.title||'문구')}</label>`).join('')||'<small>저장한 문구가 없어요</small>'}</div></div>`:''}
+      ${ty==='stu'?`<div class="form"><label class="field"><span>과목</span><select class="in" id="cwG"><option value="">모든 과목</option>${groups.map(g=>`<option ${F.g===g?'selected':''}>${esc(g)}</option>`).join('')}</select></label>
+        <label class="field"><span>상태</span><select class="in" id="cwS"><option value="">모든 상태</option>${STATUSES.map(x=>`<option ${F.s===x?'selected':''}>${x}</option>`).join('')}</select></label></div>`:''}
+      ${ty==='memo'||ty==='check'?`<p class="rm-hint">${ty==='memo'?'내용은 위젯 안에서 바로 적으면 저장돼요.':'항목은 위젯 안에서 적고 Enter로 추가해요.'}</p>`:''}
+      <div class="btns">${ed?`<button class="btn ghost" data-act="cwCancel">새로 만들기로</button>`:''}<button class="btn pri" data-act="cwSave">${ic(ed?'check':'plus')}${ed?'고친 내용 저장':'위젯 추가'}</button></div></div>
+  </div><footer><button class="btn pri" data-act="close">완료</button></footer>`;
+  if(modalEl&&modalEl._kind==='cw'){ const sh=modalEl.querySelector('.sheet'); const y=sh.scrollTop; sh.innerHTML=html; sh.scrollTop=y; } else { openModal(html,'wide'); modalEl._kind='cw'; }
+}
+function cwRead(){ const F=S._cw; const n=$('#cwName'); if(n) F.t=n.value.trim(); const tx=$('#cwTxt'); if(tx) F.txt=tx.value; if($('#cwG')) F.g=$('#cwG').value; if($('#cwS')) F.s=$('#cwS').value; if($$('[data-cwsn]').length) F.ids=$$('[data-cwsn]').filter(x=>x.checked).map(x=>x.dataset.cwsn); }
+function cwLines(txt,kind){ return String(txt||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{ const p=l.split('|').map(x=>x.trim()); const v=p.length>1?p[p.length-1]:p[0]; const n=p.length>1?p.slice(0,-1).join(' | '):'';
+  if(kind==='links'){ const u=/^https?:\/\//.test(v)?v:/^[\w-]+\.[\w.-]+/.test(v)?'https://'+v:''; return u?{n,u}:null; }
+  const d=v.replace(/[./]/g,'-').match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/); return d?{n:n||'D-day',d:`${d[1]}-${pad(+d[2])}-${pad(+d[3])}`}:null; }).filter(Boolean); }
+document.addEventListener('change',e=>{ const el=e.target; if(!el.dataset||!el.dataset.cwshow) return; const st=lnSt(); const k=el.dataset.cwshow;
+  if(LW0[k]){ st.hide=(st.hide||[]).filter(x=>x!==k); if(!el.checked) st.hide.push(k); } else { const c=cwOf(k); if(c) c.off=!el.checked; }
+  if(!el.checked&&st.open[k]){ delete st.open[k]; } if(!el.checked&&Array.isArray(st.pip)) st.pip=st.pip.filter(x=>x!==k);
+  lnSave(); cwRefresh(); el.closest('.cw-row').classList.toggle('off',!el.checked); });
+Object.assign(WACT,{
+  cwType:el=>{ cwRead(); const tx=$('#cwTxt'); if(tx) tx.remove(); S._cw.txt=''; S._cw.type=el.dataset.k; S._cw.i={memo:'edit',check:'task',links:'clip',snip:'copy',dday:'flag',stu:'users'}[el.dataset.k]; S._cw.ids=[]; lnCfgDraw(); },
+  cwIcon:el=>{ cwRead(); S._cw.i=el.dataset.k; lnCfgDraw(); },
+  cwCancel:()=>{ S._cw={type:'memo',i:'edit'}; const n=$('#cwName'); if(n) n.value=''; const tx=$('#cwTxt'); if(tx) tx.remove(); lnCfgDraw(); },
+  cwEdit:el=>{ const c=cwOf(el.dataset.k); if(!c) return; S._cw={id:c.id,type:c.type,i:c.i,g:c.g||'',s:c.s||'',ids:(c.ids||[]).slice()}; const n=$('#cwName'); if(n) n.value=''; const tx=$('#cwTxt'); if(tx) tx.remove(); lnCfgDraw(); const nn=$('#cwName'); if(nn){ nn.value=c.t||''; nn.focus(); } },
+  cwDel:async el=>{ const c=cwOf(el.dataset.k); if(!c||!await confirmBox(`"${c.t}" 위젯을 지울까요?`,'안에 적은 내용도 같이 지워져요.','지우기',true)) return;
+    const st=lnSt(); st.cw=(st.cw||[]).filter(x=>x.id!==c.id); delete st.open[c.id]; if(Array.isArray(st.pip)) st.pip=st.pip.filter(x=>x!==c.id); st.ord=(st.ord||[]).filter(x=>x!==c.id); if(S._cw.id===c.id) S._cw={type:'memo',i:'edit'}; lnSave(); cwRefresh(); lnCfg(); },
+  cwMove:el=>{ const st=lnSt(); const ord=[...new Set([...(st.ord||[]),...Object.keys(LW0),...(st.cw||[]).map(c=>c.id)])].filter(k=>LW0[k]||cwOf(k)); const i=ord.indexOf(el.dataset.k), j=i+ +el.dataset.d;
+    if(i<0||j<0||j>=ord.length) return; [ord[i],ord[j]]=[ord[j],ord[i]]; st.ord=ord; lnSave(); cwRefresh(); cwRead(); lnCfgDraw(); },
+  cwSave:()=>{ cwRead(); const F=S._cw; const st=lnSt(); st.cw=st.cw||[];
+    const t=F.t||(CW_TYPES.find(x=>x[0]===F.type)||[])[1]; let c=F.id?cwOf(F.id):null;
+    if(!c){ if(st.cw.length>=20){ toast('위젯은 20개까지 만들 수 있어요',''); return; } c={id:'cw'+Date.now().toString(36),type:F.type,items:[],text:''}; st.cw.push(c); }
+    c.t=t.slice(0,20); c.i=F.i||'flag';
+    if(F.type==='links'||F.type==='dday'){ c.items=cwLines(F.txt,F.type); if(!c.items.length&&String(F.txt||'').trim()){ toast(F.type==='links'?'링크를 읽지 못했어요':'날짜를 읽지 못했어요',F.type==='links'?'"이름 | https://주소" 모양으로 적어 주세요.':'"이름 | 2026-11-29" 모양으로 적어 주세요.'); if(!F.id) st.cw.pop(); return; } }
+    if(F.type==='snip') c.ids=F.ids||[];
+    if(F.type==='stu'){ c.g=F.g||''; c.s=F.s||''; }
+    const isNew=!F.id; lnSave(); S._cw={type:'memo',i:'edit'};
+    if(isNew&&Array.isArray(st.pip)&&!st.pip.includes(c.id)) st.pip.push(c.id);
+    { const n=$('#cwName'); if(n) n.value=''; const tx=$('#cwTxt'); if(tx) tx.remove(); } cwRefresh(); lnCfgDraw(); toast(isNew?'위젯을 추가했어요':'위젯을 고쳤어요',`${c.t} · 런처 아이콘을 누르거나 바탕화면 위젯에서 켜면 보여요.`); },
+});
 /* ===== EVENTS ===== */
 function ackToggle(key){
   const acks={...(S.settings.acks||{})}; if(acks[key]) delete acks[key]; else acks[key]=todayStr();
@@ -9101,6 +9216,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261031-2327';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261031-2332';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
