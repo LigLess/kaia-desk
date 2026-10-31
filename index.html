@@ -7716,17 +7716,20 @@ function bgSection(c,s,read,forceOpen){
   </article>`;
 }
 function vBiz(){
-  const p=S.mode==='gas'?bgPost():null, lead=S.myRole==='lead', u=me().user;
-  const canUp=S.mode==='gas'&&(!p||lead||p.by===u);
+  const solo=!!window.KAIA_SOLO;
+  if(solo&&!BG.data){ try{ const g=JSON.parse(lsGet('md.bizGuide')||'null'); if(bgValid(g)) BG.data=g; }catch(e){} }
+  const p=solo?(BG.data?{by:'',byName:'나',at:+(lsGet('md.bizGuideAt')||0)}:null):S.mode==='gas'?bgPost():null, lead=S.myRole==='lead', u=me().user;
+  const canUp=solo||(S.mode==='gas'&&(!p||lead||p.by===u));
   const head=vh('사업부 업무 가이드','처음 온 사람도 위에서부터 순서대로 읽으면 돼요',canUp?`<button class="btn" data-act="bgUp">${ic('up')}${p?'새 버전 올리기':'가이드 파일 올리기'}</button>`:'');
-  if(S.mode!=='gas') return `<div class="view">${head}<section class="pane"><div class="empty"><b>팀 서버에 로그인하면 볼 수 있어요</b>보고양식 · 규정은 회사 내부 자료라 팀 서버에만 두고, 팀원끼리만 봐요.${S.demo?'':'<div class="btns" style="justify-content:center;margin-top:14px"><button class="btn pri" data-act="openLogin">로그인 · 가입</button></div>'}</div></section></div>`;
-  if(!S.members) loadMembers().then(()=>{ if(S.view==='biz') scheduleRender(); });
+  if(solo&&!p) return `<div class="view">${head}<section class="pane"><div class="empty"><b>가이드 파일을 한 번만 불러와 주세요</b>팀장님께 받은 <b>사업부가이드.json</b> 파일을 오른쪽 위 <b>가이드 파일 올리기</b>로 고르면, 이 기기에 저장돼서 다음부터 바로 열려요.</div></section></div>`;
+  if(!solo&&S.mode!=='gas') return `<div class="view">${head}<section class="pane"><div class="empty"><b>팀 서버에 로그인하면 볼 수 있어요</b>보고양식 · 규정은 회사 내부 자료라 팀 서버에만 두고, 팀원끼리만 봐요.${S.demo?'':'<div class="btns" style="justify-content:center;margin-top:14px"><button class="btn pri" data-act="openLogin">로그인 · 가입</button></div>'}</div></section></div>`;
+  if(!solo&&!S.members) loadMembers().then(()=>{ if(S.view==='biz') scheduleRender(); });
   if(!p) return `<div class="view">${head}<section class="pane"><div class="empty"><b>아직 가이드가 올라오지 않았어요</b>팀장님이 <b>사업부가이드.json</b> 파일을 오른쪽 위 <b>가이드 파일 올리기</b>로 한 번만 올리면, 팀원 모두가 여기서 볼 수 있어요.</div></section></div>`;
-  bgLoad(p);
+  if(!solo) bgLoad(p);
   if(!BG.data) return `<div class="view">${head}<section class="pane"><div class="empty">${BG.err?`<b>${esc(BG.err)}</b>인터넷 연결을 확인하고 다시 눌러 주세요.<div class="btns" style="justify-content:center;margin-top:14px"><button class="btn pri" data-act="bgRetry">다시 불러오기</button></div>`:'<b>가이드를 불러오는 중이에요</b>처음 한 번만 조금 걸려요.'}</div></section></div>`;
   const g=BG.data, read=bgRead(); S._bgTpl=[];
   const all=g.chapters.flatMap(c=>c.sections.map(s=>[c,s])), nRead=all.filter(([c,s])=>read[`${c.id}.${s.id}`]).length;
-  const seenAt=+(lsGet('md.bgSeenAt')||0), fresh=seenAt&&(p.edited||p.at)>seenAt; if(!seenAt||fresh) setTimeout(()=>lsSet('md.bgSeenAt',String(Date.now())),3000);
+  const seenAt=+(lsGet('md.bgSeenAt')||0), fresh=!solo&&seenAt&&(p.edited||p.at)>seenAt; if(!seenAt||fresh) setTimeout(()=>lsSet('md.bgSeenAt',String(Date.now())),3000);
   const q=(S.bgQ||'').trim(); const ch=g.chapters.find(c=>c.id===S.bgCh)||g.chapters[0]; const ci=g.chapters.indexOf(ch);
   const pct=Math.round(nRead/all.length*100);
   const nav=`<nav class="bg-nav">${g.chapters.map((c,i)=>{ const n=c.sections.filter(s=>read[`${c.id}.${s.id}`]).length; return `<button class="${!q&&c===ch?'on':''} ${n===c.sections.length?'done':''}" data-act="bgCh" data-k="${c.id}"><i>${n===c.sections.length?ic('check'):i+1}</i><span><b>${esc(c.title)}</b><small>${esc(c.sum||'')}</small></span><em>${n}/${c.sections.length}</em></button>`; }).join('')}</nav>`;
@@ -7740,7 +7743,7 @@ function vBiz(){
     <section class="pane bg-top"><p class="bg-intro">${esc(g.intro||'')}</p>
       <div class="bg-prog"><div class="bg-bar"><i style="width:${pct}%"></i></div><span>${nRead}/${all.length} 읽음 · ${pct}%</span></div>
       <div class="cp bg-q"><span class="cp-ic">${ic('search')}</span><input id="bgQ" class="in" value="${esc(S.bgQ||'')}" placeholder="궁금한 말로 찾기 — 예: 환불, 재배정, 지각, 권한, 요청메모" autocomplete="off"></div>
-      <div class="bg-meta">기준: ${(g.src||[]).map(esc).join(' · ')} · 올린 사람 ${esc(p.byName||memberName(p.by))}</div></section>
+      <div class="bg-meta">기준: ${(g.src||[]).map(esc).join(' · ')} ${solo?'':` · 올린 사람 ${esc(p.byName||memberName(p.by))}`}</div></section>
     <div class="bg-grid">${nav}<div class="bg-main">${main}</div></div></div>`;
 }
 document.addEventListener('input',e=>{ if(e.target.id==='bgQ'){ S.bgQ=e.target.value; clearTimeout(S._bgT); S._bgT=setTimeout(()=>{ const pos=e.target.selectionStart; render(); const x=$('#bgQ'); if(x){ x.focus(); try{ x.setSelectionRange(pos,pos); }catch(err){} } },250); } });
@@ -7748,7 +7751,7 @@ document.addEventListener('input',e=>{ if(e.target.id==='bgQ'){ S.bgQ=e.target.v
 function bgUpModal(){
   S._bgNew=null;
   openModal(`${mHead('사업부 가이드 올리기')}<div class="body">
-    <p class="cu-lead"><b>사업부가이드.json</b> 파일을 골라 주세요. 팀 서버에만 저장되고 팀원끼리만 봐요. 새 버전을 올리면 모두의 화면이 새 내용으로 바뀌어요.</p>
+    <p class="cu-lead">${window.KAIA_SOLO?'<b>사업부가이드.json</b> 파일을 골라 주세요. 이 기기에만 저장돼요. 새 버전을 받으면 다시 올리면 돼요.':'<b>사업부가이드.json</b> 파일을 골라 주세요. 팀 서버에만 저장되고 팀원끼리만 봐요. 새 버전을 올리면 모두의 화면이 새 내용으로 바뀌어요.'}</p>
     <label class="btn pri" style="align-self:flex-start">${ic('clip')}파일 고르기<input type="file" id="bgFile" accept=".json,application/json" hidden></label>
     <div id="bgNewInfo"></div></div>
     <footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="bgUpGo" id="bgGo" disabled>올리기</button></footer>`,'narrow');
@@ -7765,7 +7768,10 @@ Object.assign(WACT,{
   bgQx:()=>{ S.bgQ=''; render(); },
   bgRetry:()=>{ BG.fid=''; BG.err=''; render(); },
   bgUp:()=>bgUpModal(),
-  bgUpGo:async el=>{ const f=S._bgNew; if(!f||el.disabled) return; el.disabled=true; el.textContent='올리는 중…'; const m=me(), old=bgPost();
+  bgUpGo:async el=>{ const f=S._bgNew; if(!f||el.disabled) return;
+    if(window.KAIA_SOLO){ try{ const t=await f.text(); const g=JSON.parse(t); if(!bgValid(g)) throw 0; lsSet('md.bizGuide',t); lsSet('md.bizGuideAt',String(Date.now())); if(lsGet('md.bizGuide')!==t) throw 1; BG.data=g; closeModal(); toast('가이드를 불러왔어요','이 기기에 저장했어요. 다음부터 바로 열려요.'); render(); }
+      catch(e){ toast('불러오지 못했어요',e===1?'기기 저장 공간이 부족해요.':'가이드 파일이 맞는지 확인해 주세요.','alarm-t'); } return; }
+    el.disabled=true; el.textContent='올리는 중…'; const m=me(), old=bgPost();
     try{ const j=await upFile(f,pct=>{ el.textContent=`올리는 중 ${pct}%`; });
       teamPut('posts',{id:old&&old.by===m.user?old.id:uid('p'),cat:BIZ_CAT,title:'사업부 업무 가이드',body:'',files:[{id:j.id,name:j.name,size:j.size,type:'application/json'}],by:m.user,byName:m.name,at:(old&&old.at)||Date.now(),edited:Date.now()});
       if(old&&old.by===m.user) (old.files||[]).forEach(x=>gas.call('POST',null,{a:'unfile',id:x.id}).catch(()=>{}));
@@ -7989,6 +7995,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261029-2120';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261031-1434';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

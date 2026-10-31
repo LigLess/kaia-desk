@@ -1,11 +1,12 @@
 /* KAIA DESK service worker — 앱 화면을 저장해 두고 오프라인에서도 열리게 해요 */
-const VER='kaia-desk-261029-2120';
+const VER='kaia-desk-261031-1434';
 const SHELL=['./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./icons/apple-touch-icon.png','./icons/favicon-64.png'];
 self.addEventListener('install',e=>{ e.waitUntil(caches.open(VER).then(c=>Promise.all([c.addAll(SHELL),fetch('./index.html',{cache:'no-store'}).then(r=>c.put('./index.html',r))])).then(()=>self.skipWaiting())); });
-self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VER).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
+self.addEventListener('activate',e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VER&&k.startsWith('kaia-desk-')).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
 self.addEventListener('fetch',e=>{
   const u=new URL(e.request.url);
   if(e.request.method!=='GET') return;
+  if(u.pathname.includes('/solo/')) return;                   // 개인용 복사본은 따로 (자기 sw.js가 맡음)
   if(u.hostname.includes('script.google')) return;            // 동기화 요청은 항상 네트워크로
   if(e.request.mode==='navigate'){                             // 화면: 새 버전 우선, 안 되면 저장본
     const key=/\/(index\.html)?$/.test(u.pathname)?'./index.html':u.pathname;   // 앱 · 견적서 · 가이드는 각자 따로 저장
