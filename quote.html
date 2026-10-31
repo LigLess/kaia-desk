@@ -2605,7 +2605,7 @@ const rmStrip=n=>String(n||'').replace(/\(지원과목\)\s*$/,'').trim();
 const rmLevel=n=>rmStrip(n).replace(qtSuffix,'').trim();                 // Python2/주 → Python2
 const rmBase=n=>rmLevel(n).replace(/\s*\d+$/,'').trim()||rmLevel(n);      // Python2 → Python
 const rmYM=v=>v?`${v.slice(2,4)}.${v.slice(5,7)}`:'';
-function rmNew(){ return {src:'',srcLabel:'',name:'',rows:[],orig:0,quoted:0,dept:'',mcf:'X',pay:'카드',period:'',space:false,kind:'pay',paid:'',codAmt:10000,codDate:'',receipt:'-',
+function rmNew(){ return {src:'',srcLabel:'',name:'',rows:[],orig:0,quoted:0,dept:'',mcf:'X',pay:'카드',payer:'',rcptNo:'',period:'',space:false,kind:'pay',paid:'',codAmt:10000,codDate:'',receipt:'-',
   cat:'tier',tier:{과목:{on:true,p:5},당일:{on:false,p:10},리뷰:{on:false,p:5}},empPct:30,subDisc:'',subDiscRow:'',subDiscOn:false,support:'',supportOn:false,notice:true}; }
 function rmDraft(){ if(!S.rm){ try{ S.rm=JSON.parse(lsGet('md.rmDraft')||'null'); }catch(e){} if(!S.rm||!Array.isArray(S.rm.rows)) S.rm=rmNew(); if(!S.rm.subDiscOn){ S.rm.subDiscRow=''; S.rm.subDisc=''; } if(!S.rm.supportOn) S.rm.support=''; } return S.rm; }
 function rmKeep(){ try{ lsSet('md.rmDraft',JSON.stringify(S.rm)); }catch(e){} }
@@ -2697,17 +2697,24 @@ function rmRate(R,k){
   const parts=['과목','당일','리뷰'].filter(x=>R.tier[x].on).map(x=>`${x}${R.tier[x].p}%`);
   return `${parts.join(', ')||'과목0%'} -> ${rmWon(k.disc)}원 할인`;
 }
+/* 결제수단 · 현금영수증 (실제 계좌이체 요청메모 기준)
+   계좌이체 → "기업-입금자명" (학원 기업은행 계좌로 받으니 앞에 '기업', 뒤는 통장에 찍힌 이름 — 학생 이름과 다를 수 있어 직접 고침)
+   현금영수증 → 카드는 "-", 계좌이체 · 현금은 적은 번호(보통 휴대폰) · 안 적으면 "자진" */
+const rmCashLike=R=>R.pay!=='카드';
+function rmPayText(R){ if(R.pay==='계좌이체') return `기업-${(R.payer||'').trim()||R.name||'(입금자명)'}`; return R.pay; }
+function rmRcptText(R){ if(!rmCashLike(R)) return '-'; const v=(R.rcptNo||'').trim(); if(!v) return '자진'; const d=v.replace(/[^0-9]/g,'');
+  if(/^01\d{8,9}$/.test(d)&&d.length===v.replace(/[\s-]/g,'').length) return d.replace(/^(\d{3})(\d{3,4})(\d{4})$/,'$1-$2-$3'); return v; }
 function rmText(R){
   const k=rmCalc(R); const sep=R.space?' / ':'/';
   const subs=[]; R.rows.forEach(r=>{ const b=rmBase(r.n); if(b&&!subs.includes(b)) subs.push(b); });
   const content=[R.name||'(이름)',...subs,R.period||'(기간)'].join(sep);
   const cod=R.kind==='cod', codAmt=rmNum(R.codAmt)||0, bal=Math.max(0,k.final-codAmt);
   const cd=R.codDate?`${R.codDate.slice(2,4)}.${R.codDate.slice(5,7)}.${R.codDate.slice(8,10)}`:'(날짜)';
-  const L=['*수납','',`학과 : ${R.dept||'(학과)'}`,'',`MCF 안내여부: ${R.mcf}`,'',`결제수단 : ${R.pay}`,'',`결제내용 : ${content}`,'',
+  const L=['*수납','',`학과 : ${R.dept||'(학과)'}`,'',`MCF 안내여부: ${R.mcf}`,'',`결제수단 : ${rmPayText(R)}`,'',`결제내용 : ${content}`,'',
     cod?`납부금액 : ${rmWon(codAmt)}원(COD)`:`납부금액 : ${rmWon(k.final)}원`,'',
     cod?`잔액: ${rmWon(bal)}원`:'잔액: -','',
     cod?`납부일정: ${cd} 잔액 ${rmWon(bal)}원 납부 예정`:'납부일정: -','',
-    `현금영수증 : ${R.receipt||'-'}`,'---------------------------------','* 할인','',`원 수강료 : ${rmWon(R.orig)}원`,'',`할인율 : ${rmRate(R,k)}`];
+    `현금영수증 : ${rmRcptText(R)}`,'---------------------------------','* 할인','',`원 수강료 : ${rmWon(R.orig)}원`,'',`할인율 : ${rmRate(R,k)}`];
   const tail=[]; if(k.supText) tail.push(`> 과목지원 = ${k.supText}`);
   if(k.pi>=0&&k.amt>0) tail.push(`> 과목할인 = ${rmFull(k.al[k.pi].n)}에서 ${rmWon(k.amt)}원 할인${R.notice?'(수강생안내완료)':''}`);
   if(tail.length) L.push('',...tail);
@@ -2749,8 +2756,12 @@ function rmView(){
        <div class="field"><span>잔액 납부 예정일</span><input class="in" type="date" data-rm="codDate" value="${esc(R.codDate)}">${rmChips('codDate',[[addDays(t,7),'1주 뒤'],[addDays(t,14),'2주 뒤'],...(firstS&&firstS>t?[[firstS,'개강일']]:[])],R.codDate)}</div>
        <div class="field full rm-bal">할인 후 총 수강료 <b>${qtWon(k.final)}원</b> = 오늘 COD <b>${qtWon(rmNum(R.codAmt)||0)}원</b> + 잔액 <b>${qtWon(Math.max(0,k.final-(rmNum(R.codAmt)||0)))}원</b></div>`:''}
        <div class="field full"><span>결제수단</span>${rmChips('pay',RM_PAYS.map(p=>[p,p]),R.pay)}</div>
+       ${R.pay==='계좌이체'?`<label class="field full"><span>입금자명 <small class="rm-hint" style="display:inline;margin:0">통장에 찍힌 이름 그대로 · 비우면 학생 이름</small> <b class="rm-hand">입력</b></span>
+         <input class="in" data-rm="payer" value="${esc(R.payer)}" placeholder="${esc(R.name||'예: 박정화 · OOO기업')}" autocomplete="off"><small class="rm-hint" style="margin:4px 0 0">요청메모에는 <b>${esc(rmPayText(R))}</b> 로 들어가요.</small></label>`:''}
        <div class="field"><span>MCF 안내여부</span>${rmChips('mcf',[['X','X'],['O','O']],R.mcf)}</div>
-       <div class="field"><span>현금영수증</span>${rmChips('receipt',[['-','-'],['소득공제','소득공제'],['지출증빙','지출증빙']],R.receipt)}</div>
+       ${rmCashLike(R)?`<label class="field"><span>현금영수증 번호 <small class="rm-hint" style="display:inline;margin:0">비우면 "자진"</small></span>
+         <input class="in" data-rm="rcptNo" value="${esc(R.rcptNo)}" inputmode="tel" placeholder="보통 휴대폰 번호 · 010-0000-0000" autocomplete="off"><small class="rm-hint" style="margin:4px 0 0">요청메모: <b>${esc(rmRcptText(R))}</b></small></label>`
+         :`<div class="field"><span>현금영수증</span><div class="rm-hint" style="margin:6px 0 0">카드 결제는 <b>-</b> 로 들어가요.</div></div>`}
      </div></section>
    <section class="pane"><h2><i class="rm-step">3</i>할인 종류 <small>하나만 고르세요</small></h2>
      <div class="rm-cats">
