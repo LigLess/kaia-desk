@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>코딩 테스트 · 코리아AI아카데미</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="문제를 풀고 채점한 뒤 제출하세요.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="코딩 테스트 · 코리아AI아카데미">
+<meta property="og:description" content="브라우저에서 바로 코드를 짜고 채점해 보세요.">
+<meta property="og:image" content="https://ligless.github.io/kaia-desk/icons/og-notice.png">
+<meta name="theme-color" content="#14161d">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<style>
+:root{
+  --bg:#12141b; --panel:#191c25; --panel-2:#20242f; --panel-3:#2a2f3c; --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.14);
+  --fg:#eef0f5; --fg-2:#c9cdd8; --muted:#9aa1b2; --faint:#6d7486;
+  --acc:#ff9d4d; --acc-ink:#24140a; --acc-soft:rgba(255,157,77,.14);
+  --ok:#5fd59a; --ok-soft:rgba(95,213,154,.13); --bad:#ff7b72; --bad-soft:rgba(255,123,114,.13); --warn:#ffc163; --warn-soft:rgba(255,193,99,.13); --info:#8ab4ff;
+  --f:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;
+  --mono:'JetBrains Mono','D2Coding','Consolas','SFMono-Regular',Menlo,monospace;
+  --ease:cubic-bezier(.23,1,.32,1);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-rows:auto auto minmax(0,1fr);}
+.app.rv{grid-template-rows:auto auto auto minmax(0,1fr);}
+.app{height:100vh;height:100dvh}
+/* 위쪽 줄 */
+.top{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.mark{width:30px;height:30px;border-radius:9px;background:var(--acc);color:var(--acc-ink);display:grid;place-items:center;flex:none}.mark svg{width:17px;height:17px}
+.ttl{min-width:0}.ttl b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ttl small{display:block;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:999px;background:var(--panel-2);font-size:13px;font-weight:600;color:var(--fg-2);white-space:nowrap}
+.pill.dd.soon{color:var(--acc)}.pill.dd.over{color:var(--bad)}
+.btn{appearance:none;border:0;display:inline-flex;align-items:center;justify-content:center;gap:7px;height:36px;padding:0 14px;border-radius:10px;background:var(--panel-3);color:var(--fg);font-weight:600;font-size:14px;cursor:pointer;transition:background .15s,transform .12s var(--ease);white-space:nowrap}
+.btn:hover{background:#343a49}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn svg{width:16px;height:16px}
+.btn.pri{background:var(--acc);color:var(--acc-ink)}.btn.pri:hover{background:#ffad66}
+.btn.ok{background:#2f8f62;color:#fff}.btn.ok:hover{background:#38a571}
+.btn.ghost{background:transparent;color:var(--fg-2)}.btn.ghost:hover{background:var(--panel-2)}
+/* 문제 탭 */
+.tabs{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel);overflow-x:auto}
+.tab{appearance:none;border:0;display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:9px;background:transparent;color:var(--muted);font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tab:hover{background:var(--panel-2);color:var(--fg)}.tab.on{background:var(--panel-3);color:var(--fg)}
+.tab i{width:8px;height:8px;border-radius:50%;background:var(--faint)}.tab i.w{background:var(--info)}.tab i.p{background:var(--warn)}.tab i.a{background:var(--ok)}
+.tab em{font-style:normal;font-size:11px;padding:1px 6px;border-radius:6px;background:var(--panel-2);color:var(--muted)}
+/* 본문 */
+.main{display:grid;grid-template-columns:minmax(340px,42%) minmax(0,1fr);min-height:0}
+.desc{overflow:auto;padding:22px 24px 40px;border-right:1px solid var(--line)}
+.desc .lv{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:6px}
+.desc .lv b{color:var(--acc);font-weight:700}
+.desc h1{font-size:21px;margin:0 0 14px;letter-spacing:-.01em}
+.desc .tx{white-space:pre-wrap;color:var(--fg-2)}
+.desc h3{font-size:14px;margin:24px 0 8px;color:var(--fg)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.tags span{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--panel-2);color:var(--fg-2)}
+table.io{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:13px;border-radius:10px;overflow:hidden;background:var(--panel)}
+table.io th{font-family:var(--f);font-weight:600;font-size:12.5px;color:var(--muted);text-align:left;padding:8px 12px;background:var(--panel-2)}
+table.io td{padding:8px 12px;border-top:1px solid var(--line);vertical-align:top;white-space:pre-wrap;word-break:break-all;color:var(--fg)}
+.hintb{margin-top:16px}.hintb summary{cursor:pointer;color:var(--acc);font-weight:600;font-size:13.5px}.hintb p{margin:8px 0 0;color:var(--fg-2)}
+.schema{font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;background:var(--panel);border-radius:10px;padding:12px 14px;color:var(--fg-2)}
+.main>section{min-width:0}.work{min-width:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto minmax(150px,34%);min-height:0}
+.ebar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
+.ebar .lang{font-size:12.5px;font-weight:700;color:var(--fg-2);padding:4px 10px;border-radius:8px;background:var(--panel-2)}
+.ebar .sp{flex:1}.ebar small{color:var(--faint);font-size:12px}
+.editor{min-height:0;min-width:0;position:relative;overflow:hidden;background:#151821}
+.editor .CodeMirror{height:100%;background:#151821;color:#e6e9ef;font-family:var(--mono);font-size:14px;line-height:1.6}
+.CodeMirror-gutters{background:#151821!important;border-right:1px solid var(--line)!important}.CodeMirror-linenumber{color:#4f5668!important}
+.CodeMirror-cursor{border-left:2px solid var(--acc)!important}.CodeMirror-selected{background:rgba(138,180,255,.18)!important}.CodeMirror-focused .CodeMirror-selected{background:rgba(138,180,255,.24)!important}
+.CodeMirror-matchingbracket{color:#fff!important;background:rgba(255,157,77,.25)}
+.editor .CodeMirror .cm-keyword{color:#ff9db0}.editor .CodeMirror .cm-def{color:#82aaff}.editor .CodeMirror .cm-variable-2{color:#e6e9ef}.editor .CodeMirror .cm-builtin{color:#7fdbca}.editor .CodeMirror .cm-string{color:#c3e88d}.editor .CodeMirror .cm-number{color:#f78c6c}.editor .CodeMirror .cm-comment{color:#6b7389;font-style:italic}.editor .CodeMirror .cm-operator{color:#89ddff}.editor .CodeMirror .cm-type{color:#ffcb6b}.editor .CodeMirror .cm-atom{color:#f78c6c}.editor .CodeMirror .cm-property{color:#e6e9ef}.editor .CodeMirror .cm-variable,.editor .CodeMirror .cm-variable-3{color:#e6e9ef}.editor .CodeMirror .cm-meta{color:#c792ea}.editor .CodeMirror .cm-bracket{color:#e6e9ef}
+textarea.plain{width:100%;height:100%;border:0;resize:none;padding:12px 14px;background:#151821;color:#e6e9ef;font-family:var(--mono);font-size:14px;line-height:1.6;tab-size:4;outline:0}
+.actions{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
+.actions .sp{flex:1}
+.actions .st{font-size:13px;color:var(--muted)}
+.console{overflow:auto;padding:12px 14px 24px;background:#10121a;font-size:13.5px}
+.console .empty{color:var(--faint)}
+.res{border-radius:10px;background:var(--panel);margin-bottom:8px;overflow:hidden}
+.res-h{display:flex;align-items:center;gap:10px;padding:9px 12px;font-weight:600}
+.res-h .b{font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px}
+.b.ok{background:var(--ok-soft);color:var(--ok)}.b.bad{background:var(--bad-soft);color:var(--bad)}.b.warn{background:var(--warn-soft);color:var(--warn)}.b.info{background:rgba(138,180,255,.14);color:var(--info)}
+.res-h .ms{margin-left:auto;font-size:12px;color:var(--faint);font-weight:500}
+.res-b{padding:0 12px 10px;font-family:var(--mono);font-size:12.5px;color:var(--fg-2);white-space:pre-wrap;word-break:break-all}
+.res-b .k{color:var(--muted);font-family:var(--f)}
+.grade{border-radius:12px;background:var(--panel);padding:14px;margin-bottom:10px}
+.grade .big{display:flex;align-items:baseline;gap:10px}.grade .big b{font-size:28px;font-weight:800}.grade .big span{color:var(--muted)}
+.cells{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cell{display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:8px;background:var(--panel-2);font-size:12.5px;font-family:var(--mono)}
+.cell i{width:8px;height:8px;border-radius:50%}.cell.ok i{background:var(--ok)}.cell.bad i{background:var(--bad)}.cell.to i{background:var(--warn)}.cell.er i{background:#c792ea}
+.sqlt{border-collapse:collapse;font-family:var(--mono);font-size:12px;margin:6px 0}.sqlt th,.sqlt td{border:1px solid var(--line-2);padding:3px 8px;text-align:left}.sqlt th{color:var(--muted)}
+.loading{display:flex;align-items:center;gap:10px;color:var(--muted)}.spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--panel-3);border-top-color:var(--acc);animation:sp 0.8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+/* 제출 창 */
+.ov{position:fixed;inset:0;background:rgba(5,6,10,.66);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.ov.on{display:flex}
+.sheet{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--panel);border-radius:18px;box-shadow:0 0 0 1px var(--line-2),0 30px 80px rgba(0,0,0,.5);padding:20px}
+.sheet h2{margin:0 0 4px;font-size:19px}.sheet p.s{margin:0 0 14px;color:var(--muted);font-size:13.5px}
+.sum-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto 64px;gap:10px;align-items:center;padding:10px 4px;border-top:1px solid var(--line)}
+.sum-row .n{color:var(--muted);font-weight:700}.sum-row b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sum-row .sc{text-align:right;font-weight:800}
+.bar{height:6px;border-radius:9px;background:var(--panel-3);overflow:hidden;width:90px}.bar i{display:block;height:100%;background:var(--acc);width:var(--w)}
+textarea.cm{width:100%;margin-top:12px;min-height:70px;border-radius:10px;border:1px solid var(--line-2);background:var(--panel-2);color:var(--fg);padding:10px 12px;font:inherit;font-size:14px;resize:vertical}
+.msg{white-space:pre-wrap;font-family:var(--mono);font-size:11.5px;color:var(--fg-2);background:#10121a;border-radius:10px;padding:10px 12px;max-height:140px;overflow:auto;word-break:break-all;margin-top:12px}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+.banner{padding:8px 16px;background:rgba(138,180,255,.12);color:var(--info);font-size:13px;font-weight:600;border-bottom:1px solid var(--line)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;background:#2a2f3c;color:var(--fg);padding:10px 16px;border-radius:10px;font-size:13.5px;font-weight:600;transition:all .25s var(--ease);pointer-events:none;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.fail{max-width:420px;margin:20vh auto;text-align:center;padding:24px}.fail b{display:block;font-size:19px;margin-bottom:6px}.fail p{color:var(--muted)}
+@media (max-width:900px){
+  .app,.app.rv{display:block;height:auto;min-height:100vh}
+  .main{display:block}
+  .desc{border-right:0;border-bottom:1px solid var(--line);max-height:none;overflow:visible}
+  .work{display:flex;flex-direction:column}
+  .editor{height:56vh;flex:none}
+  .console{min-height:180px}
+  .top .pill.tm{display:none}
+  .top{flex-wrap:wrap}.ttl{flex:1 1 55%}.top .sp{display:none}
+  .actions{flex-wrap:wrap}.actions .st{order:-1;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app" class="app"><div class="fail" id="boot"><div class="loading" style="justify-content:center"><i class="spin"></i>문제를 불러오는 중…</div></div></div>
+<div class="ov" id="ov"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="codebank.js"></script>
+<script>
+'use strict';
+/* ===== 코딩 테스트 (학생용) =====
+   링크(# 뒤)에 과제 정보가 압축돼 들어 있어요 → 서버 없음. 문제는 codebank.js.
+   파이썬: 브라우저 안 파이썬(Pyodide, Web Worker · 시간 초과 시 중단) · SQL: 브라우저 안 SQLite(sql.js)
+   자바 · C: 브라우저에서 실행할 수 없어 코드만 제출 → 멘토가 확인 · 채점
+   최종 제출하면 [제출 확인 코드]가 담긴 메시지를 만들어 멘토에게 보내요(문자 · 카톡 · 복사). */
+var PYO='https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+var SQLJS='https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/';
+var CMB='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/';
+var P=function(d){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };
+var IC={logo:P('<path d="M4 19V5l8 7 8-7v14"/>'),play:P('<path d="M7 5v14l11-7z"/>'),check:P('<path d="M20 6 9 17l-5-5"/>'),send:P('<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>'),reset:P('<path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/>'),copy:P('<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),share:P('<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>'),sms:P('<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>')};
+function h(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function $(s){ return document.querySelector(s); }
+var toastT=0; function toast(t){ var e=$('#toast'); e.textContent=t; e.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(function(){ e.classList.remove('on'); },2400); }
+function b64d(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; var bin=atob(s), u=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; }
+function b64e(u){ var b=''; for(var i=0;i<u.length;i+=0x8000) b+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(b).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function decodeStr(t){ var m=String(t).match(/^([01])\.(.+)$/); if(!m) return Promise.reject(0); var bytes=b64d(m[2]);
+  if(m[1]==='0') return Promise.resolve(JSON.parse(new TextDecoder().decode(bytes)));
+  var ds=new DecompressionStream('deflate-raw'); var w=ds.writable.getWriter(); w.write(bytes); w.close(); return new Response(ds.readable).text().then(JSON.parse); }
+function encode(o){ var raw=new TextEncoder().encode(JSON.stringify(o)); if(typeof CompressionStream==='undefined') return Promise.resolve('0.'+b64e(raw));
+  var cs=new CompressionStream('deflate-raw'); var w=cs.writable.getWriter(); w.write(raw); w.close(); return new Response(cs.readable).arrayBuffer().then(function(b){ return '1.'+b64e(new Uint8Array(b)); }); }
+function loadScript(src){ return new Promise(function(ok,no){ var s=document.createElement('script'); s.src=src; s.onload=ok; s.onerror=no; document.head.appendChild(s); }); }
+var DOW='일월화수목금토'; function ymd(s){ var p=String(s).split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+function md(s){ var d=ymd(s); return (d.getMonth()+1)+'/'+d.getDate()+'('+DOW[d.getDay()]+')'; }
+var LV=['','하','중','상'];
+
+/* ---------- 상태 ---------- */
+var D=null, PS=[], cur=0, ST=null, CM=null, REVIEW=false, busy=false, KEY='';
+function stLoad(){ try{ return JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){ return null; } }
+var saveT=0; function stSave(){ clearTimeout(saveT); saveT=setTimeout(function(){ if(REVIEW) return; try{ localStorage.setItem(KEY,JSON.stringify(ST)); }catch(e){} },300); }
+function pst(i){ var id=PS[i].id; ST.p[id]=ST.p[id]||{c:PS[i].st,runs:0,subs:0,sec:0,last:null,best:null}; return ST.p[id]; }
+
+/* ---------- 채점기: 파이썬 (Web Worker 안 Pyodide) ---------- */
+var PYW=null, pyReady=null, pyJobs={}, pyN=0;
+var WORKER_SRC=[
+"var py=null;",
+"self.onmessage=async function(e){ var m=e.data;",
+" if(m.init){ try{ importScripts(m.url+'pyodide.js'); py=await loadPyodide({indexURL:m.url}); py.runPython(m.boot); postMessage({ready:true}); }catch(err){ postMessage({ready:false,err:String(err)}); } return; }",
+" try{ var r=py.globals.get('_kaia_run')(m.code,m.args,m.fn); postMessage({id:m.id,r:r}); }catch(err){ postMessage({id:m.id,r:JSON.stringify({ok:false,err:'InternalError',msg:String(err).slice(0,300)})}); }",
+"};"].join('\n');
+var PY_BOOT=[
+"import sys, io, json, time, traceback, builtins",
+"_BLOCK={'js','pyodide','pyodide_js','_pyodide','micropip','pyodide.ffi','pyodide.http','pyodide.code'}",
+"_real_import=builtins.__import__",
+"def _guard(name,*a,**k):",
+"    if name.split('.')[0] in _BLOCK: raise ImportError('이 모듈은 쓸 수 없어요: '+name)",
+"    return _real_import(name,*a,**k)",
+"def _no_input(*a,**k): raise RuntimeError('input()은 쓰지 않아요. solution 함수의 매개변수를 사용하세요.')",
+"def _norm(x,d=0):",
+"    if d>40: return repr(x)",
+"    if isinstance(x,bool) or x is None or isinstance(x,(int,str)): return x",
+"    if isinstance(x,float): return x if x==x and x not in (float('inf'),float('-inf')) else repr(x)",
+"    if isinstance(x,(list,tuple)): return [_norm(v,d+1) for v in x]",
+"    if isinstance(x,(set,frozenset)):",
+"        try: return sorted(_norm(v,d+1) for v in x)",
+"        except Exception: return [_norm(v,d+1) for v in x]",
+"    if isinstance(x,dict): return {'__dict__':[[_norm(k,d+1),_norm(v,d+1)] for k,v in x.items()]}",
+"    return repr(x)",
+"def _kaia_run(code,args_json,fn):",
+"    out=io.StringIO(); old=sys.stdout; sys.stdout=out; ns={'__name__':'__main__','input':_no_input}",
+"    builtins.__import__=_guard",
+"    try:",
+"        exec(compile(code,'solution.py','exec'),ns)",
+"        f=ns.get(fn)",
+"        if not callable(f): raise NameError(fn+' 함수를 찾을 수 없어요. def '+fn+'(...) 로 시작해야 해요.')",
+"        args=json.loads(args_json)",
+"        t=time.perf_counter(); r=f(*args); ms=(time.perf_counter()-t)*1000",
+"        return json.dumps({'ok':True,'r':_norm(r),'ms':round(ms,2),'out':out.getvalue()[:3000]},ensure_ascii=False)",
+"    except BaseException as e:",
+"        line=None",
+"        tb=e.__traceback__",
+"        while tb is not None:",
+"            if tb.tb_frame.f_code.co_filename=='solution.py': line=tb.tb_lineno",
+"            tb=tb.tb_next",
+"        if isinstance(e,SyntaxError): line=e.lineno",
+"        return json.dumps({'ok':False,'err':type(e).__name__,'msg':str(e)[:400],'line':line,'out':out.getvalue()[:3000]},ensure_ascii=False)",
+"    finally:",
+"        sys.stdout=old; builtins.__import__=_real_import"].join('\n');
+function pyStart(){ if(pyReady) return pyReady;
+  pyReady=new Promise(function(ok,no){ try{ PYW=new Worker(URL.createObjectURL(new Blob([WORKER_SRC],{type:'text/javascript'}))); }catch(e){ no(e); return; }
+    PYW.onmessage=function(e){ var m=e.data; if('ready' in m){ m.ready?ok():no(m.err); return; } var j=pyJobs[m.id]; if(j){ delete pyJobs[m.id]; clearTimeout(j.t); j.ok(JSON.parse(m.r)); } };
+    PYW.onerror=function(e){ no(e.message||'worker'); };
+    PYW.postMessage({init:true,url:PYO,boot:PY_BOOT}); });
+  pyReady.catch(function(){ pyReady=null; });
+  return pyReady; }
+function pyKill(){ try{ PYW&&PYW.terminate(); }catch(e){} PYW=null; pyReady=null; Object.keys(pyJobs).forEach(function(k){ clearTimeout(pyJobs[k].t); }); pyJobs={}; }
+function pyRun(code,args,fn,tl){ return pyStart().then(function(){ return new Promise(function(ok){ var id=++pyN;
+  pyJobs[id]={ok:ok,t:setTimeout(function(){ delete pyJobs[id]; pyKill(); ok({ok:false,err:'Timeout',msg:'시간 초과 ('+(tl/1000)+'초)'}); },tl)};
+  PYW.postMessage({id:id,code:code,args:JSON.stringify(args),fn:fn}); }); }); }
+function deq(a,b){ if(typeof a==='number'&&typeof b==='number') return Math.abs(a-b)<=1e-6*Math.max(1,Math.abs(b));
+  if(Array.isArray(a)&&Array.isArray(b)) return a.length===b.length&&a.every(function(v,i){ return deq(v,b[i]); });
+  if(a&&b&&typeof a==='object'&&typeof b==='object'){ if(a.__dict__){ var ka=a.__dict__; var kb=Object.keys(b); return ka.length===kb.length&&ka.every(function(p){ return Object.prototype.hasOwnProperty.call(b,String(p[0]))&&deq(p[1],b[String(p[0])]); }); }
+    var x=Object.keys(a),y=Object.keys(b); return x.length===y.length&&x.every(function(k){ return deq(a[k],b[k]); }); }
+  return a===b; }
+function pyRepr(v){ if(v&&typeof v==='object'&&v.__dict__) return '{'+v.__dict__.map(function(p){ return pyRepr(p[0])+': '+pyRepr(p[1]); }).join(', ')+'}';
+  if(Array.isArray(v)) return '['+v.map(pyRepr).join(', ')+']'; if(v&&typeof v==='object') return '{'+Object.keys(v).map(function(k){ return pyRepr(k)+': '+pyRepr(v[k]); }).join(', ')+'}';
+  if(typeof v==='string') return JSON.stringify(v); if(v===true) return 'True'; if(v===false) return 'False'; if(v===null) return 'None'; return String(v); }
+
+/* ---------- 채점기: SQL (sql.js) ---------- */
+var SQLP=null;
+function sqlStart(){ if(SQLP) return SQLP; SQLP=loadScript(SQLJS+'sql-wasm.js').then(function(){ return initSqlJs({locateFile:function(f){ return SQLJS+f; }}); }); SQLP.catch(function(){ SQLP=null; }); return SQLP; }
+function sqlRun(p,q){ return sqlStart().then(function(SQL){ var db=new SQL.Database(); var t=performance.now();
+  try{ db.exec(CODE_SCHEMAS[p.sc].sql); var rs=db.exec(q); var ms=performance.now()-t; var last=rs[rs.length-1]||{columns:[],values:[]}; return {ok:true,cols:last.columns,rows:last.values,ms:ms}; }
+  catch(e){ var m=String(e.message||e); return {ok:false,err:/syntax/i.test(m)?'SyntaxError':/no such (table|column)/i.test(m)?'NameError':'SQLError',msg:m.slice(0,300)}; }
+  finally{ db.close(); } }); }
+function sqlSame(p,r){ if(!r.ok) return false; if(r.cols.length!==p.cols.length||r.rows.length!==p.rows.length) return false;
+  var norm=function(rows){ return rows.map(function(row){ return row.map(function(v){ return typeof v==='number'?Math.round(v*1000)/1000:v; }); }); };
+  var a=norm(r.rows), b=norm(p.rows); if(!p.ord){ var k=function(x){ return JSON.stringify(x); }; a=a.map(k).sort(); b=b.map(k).sort(); }
+  return JSON.stringify(a)===JSON.stringify(b); }
+function sqlTable(cols,rows,max){ max=max||8; return '<table class="sqlt"><tr>'+cols.map(function(c){ return '<th>'+h(c)+'</th>'; }).join('')+'</tr>'+rows.slice(0,max).map(function(r){ return '<tr>'+r.map(function(v){ return '<td>'+h(v===null?'NULL':v)+'</td>'; }).join('')+'</tr>'; }).join('')+(rows.length>max?'<tr><td colspan="'+cols.length+'">… '+(rows.length-max)+'줄 더</td></tr>':'')+'</table>'; }
+
+/* ---------- 실행 · 채점 ---------- */
+function code(){ return CM?CM.getValue():($('#plain')?$('#plain').value:''); }
+function runCases(p,all){ var c=code();
+  if(p.lang==='python'){ var T=all?p.tests:p.tests.slice(0,p.ex); var out=[]; var chain=Promise.resolve();
+    T.forEach(function(t,i){ chain=chain.then(function(){ return pyRun(c,t.a,'solution',p.tl).then(function(r){ var pass=r.ok&&deq(r.r,t.r); out.push({i:i,hidden:i>=p.ex,t:t,r:r,pass:pass}); paintProgress(out.length,T.length); }); }); });
+    return chain.then(function(){ return out; }); }
+  if(p.lang==='sql') return sqlRun(p,c).then(function(r){ return [{i:0,hidden:false,r:r,pass:sqlSame(p,r)}]; });
+  return Promise.resolve(null); }
+function fms(v){ return v<1?'1ms 미만':Math.round(v)+'ms'; }
+function paintProgress(n,t){ var e=$('#prog'); if(e) e.textContent=n+' / '+t; }
+function codeOf(r){ return !r.ok?(r.err==='Timeout'?'to':'er'):''; }
+function showRun(p,res,all){
+  var box=$('#console'); if(!res){ box.innerHTML='<div class="res"><div class="res-h"><span class="b info">안내</span>'+h(CODE_LANGS[p.lang].name)+'는 이 페이지에서 실행할 수 없어요</div><div class="res-b"><span class="k">본인 개발 환경(IDE)에서 아래 예제 입력으로 실행해 보고, 출력이 같으면 제출하세요. 멘토님이 코드를 직접 확인하고 채점해요.</span></div></div>'; return; }
+  if(all){ var n=res.length, ok=res.filter(function(x){ return x.pass; }).length, sc=Math.round(ok/n*100);
+    var head='<div class="grade"><div class="big"><b class="num" style="color:'+(sc===100?'var(--ok)':sc>=50?'var(--warn)':'var(--bad)')+'">'+sc+'점</b><span>'+ok+' / '+n+' 테스트 통과'+(sc===100?' · 모두 맞았어요!':'')+'</span></div>'
+      +'<div class="cells">'+res.map(function(x,i){ var c=x.pass?'ok':codeOf(x.r)||'bad'; return '<span class="cell '+c+'"><i></i>'+(p.lang==='sql'?'결과표 비교':(x.hidden?'숨은 ':'예제 ')+(i+1))+(x.r.ms!=null?' · '+fms(x.r.ms):'')+'</span>'; }).join('')+'</div></div>';
+    box.innerHTML=head+res.filter(function(x){ return !x.hidden; }).map(function(x){ return resCard(p,x); }).join('')+(res.some(function(x){ return x.hidden&&!x.pass; })?'<div class="res"><div class="res-h"><span class="b warn">숨은 테스트</span>예제는 맞았는데 숨은 테스트에서 틀렸어요</div><div class="res-b"><span class="k">경계값(0, 1, 빈 값, 아주 큰 값, 음수)과 시간 제한을 다시 생각해 보세요.</span></div></div>':'');
+  } else box.innerHTML=res.map(function(x){ return resCard(p,x); }).join('');
+  box.scrollTop=0; }
+function resCard(p,x){ var r=x.r, b;
+  if(p.lang==='sql'){ b=r.ok?(x.pass?'<span class="b ok">정답</span>':'<span class="b bad">결과가 달라요</span>'):'<span class="b bad">'+h(r.err)+'</span>';
+    return '<div class="res"><div class="res-h">'+b+'실행 결과'+(r.ms!=null?'<span class="ms">'+r.ms.toFixed(1)+'ms</span>':'')+'</div><div class="res-b">'+(r.ok?'<div class="k">내 결과 ('+r.rows.length+'줄)</div>'+sqlTable(r.cols,r.rows)+(x.pass?'':'<div class="k">기대 결과 ('+p.rows.length+'줄)</div>'+sqlTable(p.cols,p.rows)):h(r.msg))+'</div></div>'; }
+  b=x.pass?'<span class="b ok">통과</span>':r.ok?'<span class="b bad">실패</span>':r.err==='Timeout'?'<span class="b warn">시간 초과</span>':'<span class="b bad">'+h(r.err)+'</span>';
+  var body='<span class="k">입력값 〉</span> '+h(x.t.a.map(pyRepr).join(', '))+'\n<span class="k">기댓값 〉</span> '+h(pyRepr(x.t.r));
+  if(r.ok) body+='\n<span class="k">실행 결과 〉</span> '+h(pyRepr(r.r));
+  else body+='\n<span class="k">에러 〉</span> '+h(r.msg)+(r.line?' <span class="k">('+r.line+'번째 줄)</span>':'');
+  if(r.out) body+='\n<span class="k">출력 〉</span>\n'+h(r.out);
+  return '<div class="res"><div class="res-h">'+b+'테스트 '+(x.i+1)+(r.ms!=null?'<span class="ms">'+fms(r.ms)+'</span>':'')+'</div><div class="res-b">'+body+'</div></div>'; }
+function engineLoading(p){ $('#console').innerHTML='<div class="loading"><i class="spin"></i>'+(p.lang==='python'?'파이썬 실행 환경을 준비하는 중… (처음 한 번은 10초 정도 걸려요)':'SQL 실행 환경을 준비하는 중…')+' <span id="prog" class="num"></span></div>'; }
+function doRun(all){ if(busy||shown!==cur) return; var p=PS[cur], s=pst(cur); s.c=code();
+  if(!CODE_LANGS[p.lang].run){ showRun(p,null); if(all){ s.subs++; s.last={sc:null,pass:null}; stSave(); paintTabs(); toast('코드를 저장했어요 · 최종 제출에 함께 들어가요'); } return; }
+  busy=true; setBtns(); engineLoading(p); all?s.subs++:s.runs++;
+  runCases(p,all).then(function(res){ busy=false; setBtns(); showRun(p,res,all);
+    if(all){ var ok=res.filter(function(x){ return x.pass; }).length; var sc=Math.round(ok/res.length*100);
+      s.last={sc:sc,pass:res.map(function(x){ return x.pass?1:codeOf(x.r)==='to'?2:codeOf(x.r)==='er'?3:0; }),err:res.map(function(x){ return x.r.ok?'':x.r.err; }),ms:res.map(function(x){ return x.r.ms!=null?Math.round(x.r.ms):null; }),at:Date.now(),c:s.c};
+      if(!s.best||sc>=s.best.sc) s.best=s.last; if(sc===100&&!s.firstOk) s.firstOk=s.subs; }
+    stSave(); paintTabs(); })
+  .catch(function(e){ busy=false; setBtns(); $('#console').innerHTML='<div class="res"><div class="res-h"><span class="b bad">실행 환경 오류</span>실행 환경을 불러오지 못했어요</div><div class="res-b"><span class="k">인터넷 연결을 확인하고 다시 눌러 주세요. 계속 안 되면 PC의 크롬 · 엣지에서 열어 주세요.</span></div></div>'; console.warn(e); }); }
+function setBtns(){ ['#bRun','#bGrade','#bReset'].forEach(function(s){ var e=$(s); if(e) e.disabled=busy; }); var st=$('#runst'); if(st) st.textContent=busy?'실행 중…':''; }
+
+/* ---------- 화면 ---------- */
+function render(){
+  var due=ymd(D.due), end=new Date(due); var tm=String(D.dt||'23:59').split(':'); end.setHours(+tm[0]||23,+tm[1]||59,59);
+  var now=new Date(), left=Math.round((due-new Date(now.getFullYear(),now.getMonth(),now.getDate()))/864e5), over=now>end;
+  $('#app').classList.toggle('rv',REVIEW); $('#app').innerHTML=(REVIEW?'<div class="banner">멘토 검토 모드 · 학생이 낸 코드로 다시 채점해요 (고쳐도 학생에게는 바뀌지 않아요)</div>':'')+
+   '<header class="top"><span class="mark">'+IC.logo+'</span><div class="ttl"><b>'+h(D.t)+'</b><small>'+h((D.n?D.n+'님 · ':'')+(D.cn||'')+(D.cn?' · ':'')+CODE_LANGS[D.lang].name+' · '+PS.length+'문제')+'</small></div><span class="sp"></span>'+
+   '<span class="pill dd num '+(over?'over':left<=1?'soon':'')+'">'+(over?'마감 지남':left===0?'오늘 마감':'D-'+left)+' · '+md(D.due)+' '+h(D.dt||'23:59')+'</span>'+
+   '<span class="pill tm num" id="tmr" title="이 문제에 쓴 시간">이 문제 0초</span>'+(REVIEW?'':'<button class="btn pri" id="bFinal">'+IC.send+'최종 제출</button>')+'</header>'+
+   '<nav class="tabs" id="tabs" role="tablist"></nav><div class="main"><section class="desc" id="desc"></section><section class="work">'+
+   '<div class="ebar"><span class="lang">'+h(CODE_LANGS[D.lang].name)+'</span><small id="saved"></small><span class="sp"></span><button class="btn ghost" id="bReset" title="처음 코드로 되돌리기">'+IC.reset+'초기화</button></div>'+
+   '<div class="editor" id="ed"></div>'+
+   '<div class="actions"><span class="st" id="runst"></span><span class="sp"></span>'+(CODE_LANGS[D.lang].run?'<button class="btn" id="bRun">'+IC.play+'코드 실행</button><button class="btn ok" id="bGrade">'+IC.check+'제출 후 채점하기</button>':'<button class="btn ok" id="bGrade">'+IC.check+'이 문제 코드 저장</button>')+'</div>'+
+   '<div class="console" id="console"><div class="empty">'+(CODE_LANGS[D.lang].run?'코드 실행을 누르면 예제로, 제출 후 채점하기를 누르면 숨은 테스트까지 채점해요.':'본인 개발 환경에서 예제를 실행해 확인한 뒤, 코드를 붙여 넣고 저장하세요. 멘토님이 직접 채점해요.')+'</div></div></section></div>';
+  if($('#bRun')) $('#bRun').onclick=function(){ doRun(false); }; $('#bGrade').onclick=function(){ doRun(true); };
+  $('#bReset').onclick=function(){ if(!confirm('이 문제 코드를 처음 상태로 되돌릴까요?')) return; setCode(PS[cur].st); };
+  if($('#bFinal')) $('#bFinal').onclick=openFinal;
+  makeEditor(); go(0);
+}
+function paintTabs(){ $('#tabs').innerHTML=PS.map(function(p,i){ var s=ST.p[p.id]; var k=!s||(s.c===p.st&&!s.last)?'':s.best&&s.best.sc===100?'a':s.best&&s.best.sc>0?'p':'w';
+  return '<button class="tab '+(i===cur?'on':'')+'" role="tab" aria-selected="'+(i===cur)+'" data-i="'+i+'"><i class="'+k+'"></i>문제 '+(i+1)+'<em>'+LV[p.lv]+'</em>'+(s&&s.best&&s.best.sc!=null?'<em class="num">'+s.best.sc+'</em>':'')+'</button>'; }).join('');
+  [].forEach.call(document.querySelectorAll('.tab'),function(b){ b.onclick=function(){ go(+b.dataset.i); }; }); }
+var shown=-1;
+function go(i){ if(shown>=0&&PS[shown]) pst(shown).c=code(); cur=i; var p=PS[i], s=pst(i);
+  var d='<div class="lv">'+h(CODE_LANGS[p.lang].name)+' · 난이도 <b>'+LV[p.lv]+'</b> · 시간 제한 '+(p.tl/1000)+'초</div><h1>'+h(p.ti)+'</h1><div class="tx">'+h(p.d)+'</div><div class="tags">'+p.tg.map(function(t){ return '<span>'+h(t)+'</span>'; }).join('')+'</div>';
+  if(p.lang==='python') d+='<h3>입출력 예</h3><table class="io"><tr>'+p.params.map(function(x){ return '<th>'+h(x)+'</th>'; }).join('')+'<th>result</th></tr>'+p.tests.slice(0,p.ex).map(function(t){ return '<tr>'+t.a.map(function(v){ return '<td>'+h(pyRepr(v))+'</td>'; }).join('')+'<td>'+h(pyRepr(t.r))+'</td></tr>'; }).join('')+'</table>';
+  if(p.lang==='sql') d+='<h3>테이블 구조</h3><div class="schema">'+h(CODE_SCHEMAS[p.sc].doc)+'</div><h3>결과 예 (열)</h3><table class="io"><tr>'+p.cols.map(function(c){ return '<th>'+h(c)+'</th>'; }).join('')+'</tr><tr>'+p.rows[0].map(function(v){ return '<td>'+h(v)+'</td>'; }).join('')+'</tr></table><p class="note">결과는 '+p.rows.length+'줄이에요.'+(p.ord?' 정렬 순서까지 맞아야 해요.':'')+'</p>';
+  if(p.lang==='java'||p.lang==='c') d+='<h3>예제</h3>'+p.tests.slice(0,p.ex).map(function(t,j){ return '<table class="io" style="margin-bottom:8px"><tr><th>예제 입력 '+(j+1)+'</th><th>예제 출력 '+(j+1)+'</th></tr><tr><td>'+h(t.i)+'</td><td>'+h(t.o)+'</td></tr></table>'; }).join('')+(p.lang==='java'?'<p class="note">클래스 이름은 Main으로 해 주세요.</p>':'');
+  if(p.hint) d+='<details class="hintb"><summary>힌트 보기</summary><p>'+h(p.hint)+'</p></details>';
+  $('#desc').innerHTML=d; $('#desc').scrollTop=0; setCode(s.c); shown=i; paintTabs();
+  $('#console').innerHTML=s.last&&s.last.sc!=null?'<div class="grade"><div class="big"><b class="num">'+s.best.sc+'점</b><span>지금까지 가장 높은 점수 · 채점 '+s.subs+'번</span></div></div>':'<div class="empty">코드 실행을 누르면 예제로, 제출 후 채점하기를 누르면 숨은 테스트까지 채점해요.</div>'; }
+function setCode(c){ if(CM){ CM.setValue(c); CM.clearHistory(); CM.focus(); } else if($('#plain')) $('#plain').value=c; }
+function makeEditor(){ var mode={python:'python',sql:'text/x-sql',java:'text/x-java',c:'text/x-csrc'}[D.lang];
+  var plain=function(){ $('#ed').innerHTML='<textarea id="plain" class="plain" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="코드 입력"></textarea>'; var t=$('#plain');
+    t.addEventListener('keydown',function(e){ if(e.key==='Tab'){ e.preventDefault(); var s=t.selectionStart; t.setRangeText('    ',s,t.selectionEnd,'end'); }
+      else if(e.key==='Enter'){ var s2=t.selectionStart; var line=t.value.slice(0,s2).split('\n').pop(); var ind=(line.match(/^\s*/)||[''])[0]+(/[:{]\s*$/.test(line)?'    ':''); e.preventDefault(); t.setRangeText('\n'+ind,s2,t.selectionEnd,'end'); } onEdit(); });
+    t.addEventListener('input',onEdit); if(PS.length) t.value=pst(cur).c; };
+  if(window.CodeMirror){ $('#ed').innerHTML=''; CM=CodeMirror($('#ed'),{value:'',mode:mode,lineNumbers:true,lineWrapping:D.lang==='sql',indentUnit:4,tabSize:4,indentWithTabs:false,matchBrackets:true,autoCloseBrackets:true,extraKeys:{Tab:function(cm){ cm.somethingSelected()?cm.indentSelection('add'):cm.replaceSelection('    ','end'); },'Ctrl-Enter':function(){ doRun(false); },'Cmd-Enter':function(){ doRun(false); }}});
+    CM.on('change',onEdit); setTimeout(function(){ CM.refresh(); },30); } else plain(); }
+function onEdit(){ if(!PS[cur]||shown!==cur) return; pst(cur).c=code(); stSave(); var s=$('#saved'); if(s){ s.textContent='자동 저장됨'; clearTimeout(s._t); s._t=setTimeout(function(){ s.textContent=''; },1500); } }
+/* 문제마다 쓴 시간(보고 있을 때만) */
+setInterval(function(){ if(!ST||document.hidden||REVIEW||!PS[cur]) return; var s=pst(cur); s.sec=(s.sec||0)+1; if(s.sec%10===0) stSave(); var t=$('#tmr'); if(t){ var m=Math.floor(s.sec/60); t.textContent='이 문제 '+(m?m+'분 ':'')+(s.sec%60)+'초'; } },1000);
+
+/* ---------- 최종 제출 ---------- */
+function totals(){ var rows=PS.map(function(p,i){ var s=ST.p[p.id]; var b=s&&s.best; return {p:p,s:s,sc:b&&b.sc!=null?b.sc:null}; });
+  var auto=rows.filter(function(r){ return CODE_LANGS[r.p.lang].run; }); var tot=auto.length?Math.round(auto.reduce(function(a,r){ return a+(r.sc||0); },0)/auto.length):null; return {rows:rows,tot:tot}; }
+function openFinal(){ if(shown>=0) pst(shown).c=code(); var T=totals(); var notDone=T.rows.filter(function(r){ return !r.s||(CODE_LANGS[r.p.lang].run&&r.sc==null); }).length;
+  $('#sheet').innerHTML='<h2>최종 제출</h2><p class="s">문제마다 <b>가장 높은 점수를 받은 코드</b>가 제출돼요. 채점을 안 한 문제는 지금 코드 그대로 들어가요.</p>'+
+   T.rows.map(function(r,i){ return '<div class="sum-row"><span class="n">'+(i+1)+'</span><b>'+h(r.p.ti)+'</b><span class="bar"><i style="--w:'+(r.sc||0)+'%"></i></span><span class="sc num">'+(r.sc==null?(CODE_LANGS[r.p.lang].run?'미채점':'멘토 채점'):r.sc+'점')+'</span></div>'; }).join('')+
+   (T.tot!=null?'<div class="sum-row" style="border-top:2px solid var(--line-2)"><span></span><b>평균</b><span></span><span class="sc num" style="color:var(--acc)">'+T.tot+'점</span></div>':'')+
+   (notDone?'<p class="note" style="color:var(--warn)">아직 채점하지 않은 문제가 '+notDone+'개 있어요.</p>':'')+
+   '<textarea class="cm" id="fCm" maxlength="400" placeholder="멘토님께 한마디 (선택) · 어려웠던 점이나 질문"></textarea>'+
+   '<div id="fOut"></div><div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end"><button class="btn ghost" id="fX">계속 풀기</button><button class="btn pri" id="fGo">'+IC.send+'제출 메시지 만들기</button></div>';
+  $('#ov').classList.add('on'); $('#fX').onclick=closeOv; $('#fGo').onclick=makeSubmit; }
+function closeOv(){ $('#ov').classList.remove('on'); }
+$('#ov').addEventListener('click',function(e){ if(e.target.id==='ov') closeOv(); });
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeOv(); });
+function makeSubmit(){ var T=totals(); var at=new Date().toISOString(); var cm=($('#fCm').value||'').trim().slice(0,400);
+  var r=T.rows.map(function(x){ var s=x.s||{c:x.p.st}; var b=s.best||{}; return {p:x.p.id,c:(b.c!=null?b.c:s.c||'').slice(0,6000),s:b.sc!=null?b.sc:null,ps:b.pass||null,e:b.err||null,ms:b.ms||null,ru:s.runs||0,su:s.subs||0,se:s.sec||0,fo:s.firstOk||null,cc:s.c!==b.c?(s.c||'').slice(0,6000):null}; });
+  var o={k:'code',h:D.h,sid:D.sid,n:D.n,t:D.t,lang:D.lang,at:at,cm:cm,tot:T.tot,r:r};
+  encode(o).then(function(code){ var d=new Date(at); var when=(d.getMonth()+1)+'/'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+    var msg='[코딩 과제 제출] '+(D.n||'')+' · '+D.t+'\n'+(T.tot!=null?'자동 채점 평균: '+T.tot+'점\n':'')+T.rows.map(function(x,i){ return (i+1)+'. '+x.p.ti+' — '+(x.sc==null?'-':x.sc+'점'); }).join('\n')+(cm?'\n한마디: '+cm:'')+'\n제출 시각: '+when+'\n\n제출 확인 코드: KAIAHW1.'+code;
+    ST.sent=at; stSave();
+    $('#fOut').innerHTML='<div class="msg" id="fMsg"></div><div class="row3"><button class="btn pri" id="fSms">'+IC.sms+'문자</button><button class="btn" id="fSh">'+IC.share+'공유</button><button class="btn" id="fCp">'+IC.copy+'복사</button></div><p class="note">메시지 맨 아래 <b>제출 확인 코드</b>까지 통째로 보내야 제출이 기록돼요. 코드가 길면 문자보다 <b>카톡에 붙여넣기</b>가 편해요.</p>';
+    $('#fMsg').textContent=msg; $('#fGo').textContent='메시지를 다시 만들기';
+    $('#fCp').onclick=function(){ copy(msg); }; $('#fSh').onclick=function(){ if(navigator.share) navigator.share({text:msg}).catch(function(){}); else copy(msg); };
+    $('#fSms').onclick=function(){ if(!D.hp){ copy(msg); toast('멘토 번호가 없어 복사했어요 · 카톡에 붙여 넣어 주세요'); return; } var ios=/iP(hone|ad|od)/.test(navigator.userAgent); location.href='sms:'+String(D.hp).replace(/[^0-9+]/g,'')+(ios?'&':'?')+'body='+encodeURIComponent(msg); }; }); }
+function copy(t){ if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(t).then(function(){ toast('복사했어요'); },fb); else fb(); function fb(){ var a=document.createElement('textarea'); a.value=t; a.style.position='fixed'; a.style.opacity='0'; document.body.appendChild(a); a.select(); try{ document.execCommand('copy'); toast('복사했어요'); }catch(e){ toast('길게 눌러 직접 복사해 주세요'); } a.remove(); } }
+
+/* ---------- 시작 ---------- */
+function fail(t){ $('#app').innerHTML='<div class="fail"><b>'+h(t||'과제 정보를 열 수 없어요')+'</b><p>링크가 잘렸을 수 있어요. 받은 링크 전체를 다시 눌러 주세요.</p></div>'; }
+function boot(d){ if(!d||!d.ps||!d.lang||!window.CODEBANK) throw 0; D=d;
+  PS=d.ps.map(function(id){ return CODEBANK.find(function(p){ return p.id===id; }); }).filter(Boolean); if(!PS.length) throw 0;
+  KEY='kaiacode.'+d.h; REVIEW=!!d.rv; ST=REVIEW?{p:{}}:(stLoad()||{p:{}});
+  if(REVIEW) d.rv.forEach(function(x){ ST.p[x.p]={c:x.c,runs:0,subs:0,sec:0}; });
+  document.title=d.t+' · 코딩 테스트';
+  var cmReady=loadScript(CMB+'codemirror.min.js').then(function(){ var m={python:'mode/python/python.min.js',sql:'mode/sql/sql.min.js',java:'mode/clike/clike.min.js',c:'mode/clike/clike.min.js'}[d.lang];
+    return Promise.all([loadScript(CMB+m),loadScript(CMB+'addon/edit/matchbrackets.min.js'),loadScript(CMB+'addon/edit/closebrackets.min.js')]); }).catch(function(){});
+  var tmo=new Promise(function(ok){ setTimeout(ok,4000); });
+  Promise.race([cmReady,tmo]).then(function(){ render(); if(CODE_LANGS[d.lang].run){ (d.lang==='python'?pyStart():sqlStart()).catch(function(){}); }
+    if(REVIEW) setTimeout(function(){ var i=0; (function nx(){ if(i>=PS.length) return; go(i); doRunAsync().then(function(){ i++; nx(); }); })(); },300); }); }
+function doRunAsync(){ return new Promise(function(ok){ doRun(true); var w=setInterval(function(){ if(!busy){ clearInterval(w); ok(); } },200); }); }
+var hs=location.hash.slice(1); if(!hs) fail(); else decodeStr(hs).then(boot).catch(function(){ fail(); });
+</script>
+</body>
+</html>
