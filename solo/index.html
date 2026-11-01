@@ -8512,7 +8512,9 @@ function hwMentor(){ const m=nlMentorTel(); return {mn:nlMentorName(),hp:m.hp||'
 async function hwLinksFor(L){ const M=hwMentor(); const out={};
   for(const x of L){ const o={v:1,h:x.h.id,sid:x.s.id,n:x.s.name.replace(/^예시\s/,''),t:x.h.t,due:x.h.d,dt:x.h.dt||'23:59',cn:x.h.cid&&D().courses[x.h.cid]?subjectOf(D().courses[x.h.cid]):'',...M};
     if(x.h.desc) o.ds=x.h.desc;
-    if(x.h.k&&x.h.sv){ o.k=x.h.k; o.sv=x.h.sv; if(x.h.af) o.af=x.h.af.map(f=>f.name); }
+    if(x.h.k&&x.h.sv){ const m=String(x.h.sv).match(/^https:\/\/script\.google\.com\/macros\/s\/([\w-]+)\/exec/);   // 짧은 링크: 열쇠 + 서버 이름만 (과제 내용은 페이지가 서버에서 읽어요) → 카톡 미리보기가 잘 떠요
+      const so={v:2,k:x.h.k,...(m?{s:m[1]}:{sv:x.h.sv})}; if(M.mn) so.mn=M.mn; if(M.hp) so.hp=M.hp; else if(M.tel) so.tel=M.tel; if(o.cn) so.cn=o.cn;
+      out[x.s.id+'|'+x.h.id]=hwBase()+'#'+await hwZip(so); continue; }
     if(x.h.kind==='code'&&x.h.code){ o.k='code'; o.lang=x.h.code.lang; o.ps=x.h.code.ps; out[x.s.id+'|'+x.h.id]=hcBase()+'#'+await hwZip(o); continue; }
     out[x.s.id+'|'+x.h.id]=hwBase()+'#'+await hwZip(o); }
   return out; }
@@ -9327,6 +9329,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261101-1503';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261101-1514';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

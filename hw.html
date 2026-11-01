@@ -207,13 +207,13 @@ function render(d){ D=d;
   if(prev.at&&prev.code){ showDone(prev); }
 }
 /* ---------- 팀 서버로 파일 주고받기 (링크에 서버 주소 · 열쇠가 있을 때) ---------- */
-var SV=false, PICK=[];
+var SV=false, PICK=[], HWI=null;
 function api(params){ var q=Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&'); return fetch(D.sv+(D.sv.indexOf('?')>=0?'&':'?')+q,{redirect:'follow'}).then(function(r){ return r.json(); }); }
 function apiPost(body){ return fetch(D.sv,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){ return r.json(); }); }
 function fsz(n){ return n>1048576?(n/1048576).toFixed(1)+'MB':Math.max(1,Math.round(n/1024))+'KB'; }
 function when(t){ var d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
 function srvInit(){
-  api({a:'hwinfo',k:D.k}).then(function(j){ if(!j||j.error) throw 0; paintFiles(j.files||[]); paintSubs(j.subs||[]); })
+  (HWI?Promise.resolve(HWI):api({a:'hwinfo',k:D.k})).then(function(j){ HWI=null; if(!j||j.error) throw 0; paintFiles(j.files||[]); paintSubs(j.subs||[]); })
     .catch(function(){ document.getElementById('flist').innerHTML='<div class="hint2">과제 파일을 불러오지 못했어요. 잠시 뒤 새로고침하거나, 아래 링크 제출을 써 주세요.</div>'; });
   var fin=document.getElementById('fin'), drop=document.getElementById('drop');
   fin.onchange=function(){ addPick([].slice.call(fin.files)); fin.value=''; };
@@ -263,7 +263,14 @@ function showDone(v){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function fail(){ document.getElementById('app').innerHTML='<section class="glass fail"><b>과제 정보를 열 수 없어요</b><p>링크가 잘렸을 수 있어요. 받은 링크 전체를 다시 눌러 주세요.</p></section>'; }
-decode().then(function(d){ if(!d||!d.h||!d.t||!d.due) throw 0; SV=!!(d.k&&/^https:\/\/script\.google(usercontent)?\.com\//.test(d.sv||'')); render(d); }).catch(fail);
+decode().then(function(d){ if(!d) throw 0;
+  if(d.v===2&&d.k){ if(d.s) d.sv='https://script.google.com/macros/s/'+String(d.s).replace(/[^\w-]/g,'')+'/exec'; d.h=d.k;   // 짧은 링크: 과제 내용은 서버에서
+    if(!/^https:\/\/script\.google\.com\//.test(d.sv||'')) throw 0;
+    document.getElementById('app').innerHTML='<section class="glass fail"><b>과제를 불러오는 중…</b><p>잠시만 기다려 주세요.</p></section>';
+    var q='a=hwinfo&k='+encodeURIComponent(d.k);
+    return fetch(d.sv+'?'+q,{redirect:'follow'}).then(function(r){ return r.json(); }).then(function(j){ if(!j||j.error) throw 0;
+      d.t=j.t; d.n=j.n; d.due=j.due; d.dt=j.dt; if(j.ds) d.ds=j.ds; SV=true; HWI=j; render(d); }); }
+  if(!d.h||!d.t||!d.due) throw 0; SV=!!(d.k&&/^https:\/\/script\.google(usercontent)?\.com\//.test(d.sv||'')); render(d); }).catch(fail);
 </script>
 <script src="scene-fx.js" defer></script>
 </body>
