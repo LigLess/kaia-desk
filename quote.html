@@ -168,7 +168,7 @@ body.dark .tn-nav .pill{box-shadow:inset 0 1px 0 rgba(255,255,255,.3);border:1px
 
 /* ---------- content ---------- */
 .view{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
-.view>*{animation:rise .8s var(--ease) both;animation-delay:calc(var(--i,0)*70ms)}
+.view>*{animation:rise .8s var(--ease) backwards;animation-delay:calc(var(--i,0)*70ms)}
 @keyframes rise{from{opacity:.001;transform:translateY(18px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
 .vh{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:14px 2px 6px}
 .vh h1{margin:0;font-size:36px;font-weight:700;letter-spacing:-.035em;line-height:1.1;text-wrap:balance}
@@ -781,7 +781,7 @@ body.hud.exec{
 }
 body.hud.exec .space::after{display:none}
 body.hud.exec .veil{background:none}
-body.hud.exec .view>*{animation:rise .9s var(--ease) both;animation-delay:calc(var(--i,0)*80ms)}
+body.hud.exec .view>*{animation:rise .9s var(--ease) backwards;animation-delay:calc(var(--i,0)*80ms)}
 body.hud.exec .pane,body.hud.exec .stat,body.hud.exec .pcard,body.hud.exec .snip,body.hud.exec .alarm,body.hud.exec .hpanel{
   background:var(--card,#fff);border:1px solid var(--line);border-radius:22px;box-shadow:0 1px 2px rgba(16,16,24,.03),0 18px 40px -28px rgba(16,16,24,.22);backdrop-filter:none;-webkit-backdrop-filter:none}
 body.hud.exec .pane::after,body.hud.exec .hpanel::after,body.hud.exec .stat::after,body.hud.exec .pcard::after{display:none}
