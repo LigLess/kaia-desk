@@ -8559,6 +8559,9 @@ Object.assign(WACT,{
   haPreview:()=>{ const k=Object.keys(HA.links)[0]; if(k) window.open(HA.links[k],'_blank','noopener'); },
   hwLinks:async el=>{ const [sid,hid]=el.dataset.k.split('|'); const s=D().students[sid]; const h=s&&(s.hw||[]).find(x=>x.id===hid); if(!h) return;
     const L=h.aid?list('students').map(x=>({s:x,h:(x.hw||[]).find(y=>y.aid===h.aid)})).filter(x=>x.h):[{s,h}];
+    if(hwSrv()&&h.kind!=='code'&&L.some(x=>!x.h.k)){ const keepF=S._haFiles; S._haFiles=[]; const ok=await hwRegister(L.filter(x=>!x.h.k),h.t,h.d,h.dt||'23:59',h.desc||''); S._haFiles=keepF;
+      if(!ok) toast('파일 제출로 바꾸지 못했어요','팀 서버(Code.gs)가 v10인지 확인해 주세요. 이번엔 링크 제출로 보내요.','alarm-t');
+      L.forEach(x=>{ x.s=D().students[x.s.id]; x.h=(x.s.hw||[]).find(y=>y.id===x.h.id)||x.h; }); }
     HA.list=L; HA.links={}; closeModal(); hwSentModal(); HA.links=await hwLinksFor(L); },
   hwRecv:()=>hwRecvModal(),
   hrSave:()=>{ let n=0; (HA.recv||[]).forEach(x=>{ const s=D().students[x.s.id]; if(!s) return;
@@ -9318,6 +9321,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261101-1437';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261101-1444';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
