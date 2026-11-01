@@ -2144,6 +2144,14 @@ body.dark[data-bg="lounge"] .hw-av,body.dark[data-bg="emerald"] .hw-av{color:#1a
 @media (max-width:760px){.hw-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.hw-it{grid-template-columns:56px 1fr auto 34px}.hw-it .mb{display:none}.hw-rk{grid-template-columns:20px 70px 1fr 34px}.hw-rk small{display:none}.hw-ins{grid-template-columns:1fr}.hw-ins .full{grid-column:auto}}
 @media (prefers-reduced-motion:reduce){.hw-ln{animation:none;stroke-dashoffset:0}.hw-ra,.hw-rk .tr i,.hw-hist .hb i{animation:none}}
 
+.ha-files{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ha-f{display:inline-flex;align-items:center;gap:6px;padding:6px 6px 6px 10px;border-radius:10px;background:var(--surface-2);font-size:13px;max-width:100%}.ha-f svg{width:14px;height:14px;color:var(--accent);flex:none}
+.ha-f b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px}.ha-f small{color:var(--muted)}.ha-f em{font-style:normal;font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+.ha-x{appearance:none;border:0;background:transparent;color:var(--muted);width:24px;height:24px;border-radius:6px;display:grid;place-items:center;cursor:pointer}.ha-x svg{width:13px;height:13px}.ha-x:hover{background:var(--surface-3);color:var(--fg)}
+.hw-subs{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}.hw-sf{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--surface-2)}
+.hw-sf>span{flex:1;min-width:0;display:flex;align-items:center;gap:8px}.hw-sf svg{width:15px;height:15px;color:var(--accent);flex:none}.hw-sf b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.hw-sf small{color:var(--muted);font-size:12px;white-space:nowrap}
+.hw-gb{display:inline-flex;gap:6px}
+.hw-af{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-top:6px}.hw-af svg{width:14px;height:14px}
 /* 코딩 테스트 */
 .hc-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
 .hc-bank{display:flex;flex-direction:column;gap:4px;max-height:280px;overflow:auto;padding:4px;border:1px solid var(--line);border-radius:12px}
@@ -3000,6 +3008,7 @@ const gas={
         if(d.id==='settings'&&d.data){ const keep={zooms:S.settings.zooms,rooms:S.settings.rooms,prices:S.settings.prices}; S.settings=normSettings({...d.data,...(this._team?keep:{})}); applyTheme(); n++; }
         if(d.id==='team'&&d.data){ this._team=true; if(Array.isArray(d.data.zooms)) S.settings.zooms=d.data.zooms; if(d.data.rooms) S.settings.rooms=d.data.rooms; if('prices' in d.data) S.settings.prices=Array.isArray(d.data.prices)&&d.data.prices.length?d.data.prices:null; this._teamSent=JSON.stringify({zooms:S.settings.zooms,rooms:S.settings.rooms,prices:S.settings.prices||null}); n++; }
         continue; }
+      if(d.col==='hwsub'){ if(!d.del&&d.data&&typeof hwSubApply==='function'&&hwSubApply(d.data)) n++; continue; }
       if(d.col==='inbox'){ S.inbox=S.inbox||{}; const was=S.inbox[d.id]; if(d.del) delete S.inbox[d.id]; else { S.inbox[d.id]={...d.data,id:d.id,at:d.data&&d.data.at||d.t}; if(!was&&!d.data.done) this._newIn=(this._newIn||0)+1; } n++; continue; }
       if(TEAM_COLS.includes(d.col)){ const cur=(S.team||{})[d.col]&&S.team[d.col][d.id]; if(!d.del&&cur&&JSON.stringify({...d.data,id:d.id})===JSON.stringify(cur)) continue; teamApply(d); n++; continue; }
       if(!COLS.includes(d.col)) continue;
@@ -6435,7 +6444,7 @@ function qzTitle(sub,lv){ return `${QBANK[sub].name} ${QLEVEL[lv]} 단계 과제
 
 /* ---------- 제작 마법사 ---------- */
 function openQuiz(opt={}){ qzKeys();
-  QW={step:opt.sub?2:1,sub:opt.sub||'',lv:opt.lv||2,topics:opt.topics||null,per:opt.per||3,sid:opt.sid||'',qs:null,back:opt.back||''};
+  QW={step:opt.sub?2:1,sub:opt.sub||'',lv:opt.lv||2,topics:opt.topics||null,per:opt.per||3,sid:opt.sid||'',qs:null,back:opt.back||'',toHw:!!opt.toHw};
   drawQuiz();
 }
 function drawQuiz(){
@@ -6454,11 +6463,12 @@ function drawQuiz(){
     const B=QBANK[w.sub]; const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
     body=`<div class="qz-head"><div><b>${esc(qzTitle(w.sub,w.lv))}</b><span>${w.qs.length}문항 · ${[...new Set(w.qs.map(q=>B.topics[q.t].n))].join(' · ')}</span></div><button class="btn sm ghost" data-act="qzShuffle">${ic('right')}다시 뽑기</button></div>
       ${B.ref?`<pre class="qz-ref">${esc(B.ref)}</pre>`:''}<div class="qz-prev">${w.qs.map((q,i)=>`<div class="qz-q"><div class="qz-qh"><b>${i+1}.</b> ${esc(q.q)} <span class="chip">${esc(B.topics[q.t].n)} · ${QLEVEL[q.l]}</span></div>${q.c?`<pre>${esc(q.c)}</pre>`:''}<ol>${q.o.map((o,k)=>`<li class="${k+1===q.a?'ok':''}">${CIRC[k+1]} ${esc(o)}</li>`).join('')}</ol></div>`).join('')}</div>
-      <div class="form qz-reg"><label class="field"><span>학생</span><select id="qzSid" class="in"><option value="">학생 없이 (인쇄 · 파일만)</option>${sts.map(s=>`<option value="${s.id}" ${w.sid===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></label>
+      <div class="form qz-reg" ${w.toHw?"style=\"display:none\"":""}><label class="field"><span>학생</span><select id="qzSid" class="in"><option value="">학생 없이 (인쇄 · 파일만)</option>${sts.map(s=>`<option value="${s.id}" ${w.sid===s.id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></label>
       <label class="field"><span>제출 마감</span><input id="qzDue" class="in" type="date" value="${addDays(t,7)}"></label></div>`;
   }
-  const foot=w.step===1?`<button class="btn ghost" data-act="${w.back?'qzBack':'close'}">취소</button>`
+  const foot=w.step===1?`<button class="btn ghost" data-act="${w.back||w.toHw?'qzBack':'close'}">취소</button>`
     :w.step===2?`<button class="btn ghost" data-act="qzPrev">이전</button><button class="btn pri" data-act="qzMake">문제 뽑기</button>`
+    :w.toHw?`<button class="btn ghost" data-act="qzPrev">이전</button><button class="btn" data-act="qzShuffle">다시 뽑기</button><button class="btn pri" data-act="qzToHw">${ic('clip')}이 시험지를 과제 파일로 붙이기</button>`
     :`<button class="btn ghost" data-act="qzPrev">이전</button><button class="btn" data-act="qzWord">${ic('dl')}Word</button><button class="btn" data-act="qzPrint">인쇄</button><button class="btn pri" data-act="qzSave">학생 과제로 등록</button>`;
   const html=`${mHead('과제 제작')}<div class="body qz">${body}</div><footer>${foot}</footer>`;
   if(modalEl&&modalEl._kind==='quiz') modalEl.querySelector('.sheet').innerHTML=html; else { openModal(html,'wide'); modalEl._kind='quiz'; }
@@ -6651,7 +6661,9 @@ Object.assign(WACT,{
   qzLv:el=>{ QW.topics=qzSelTopics(); QW.lv=+el.dataset.k; drawQuiz(); },
   qzPer:el=>{ QW.topics=qzSelTopics(); QW.per=+el.dataset.k; drawQuiz(); },
   qzPrev:()=>{ if(QW.step===3){ QW.step=2; } else { QW.step=1; } drawQuiz(); },
-  qzBack:()=>{ const sid=QW.back; closeModal(); if(sid) wGoAs(sid); },
+  qzBack:()=>{ if(QW.toHw){ closeModal(); hwQuizBack(); return; } const sid=QW.back; closeModal(); if(sid) wGoAs(sid); },
+  qzToHw:()=>{ const qz={sub:QW.sub,lv:QW.lv,qs:QW.qs,title:qzTitle(QW.sub,QW.lv)}; const file=new File([wordDoc(wsHTML(qz,{name:''}),qz.title)],qzFileName(qz,'','과제'),{type:'application/msword'}); file._quiz=true;
+    S._haFiles=[file].concat((S._haFiles||[]).filter(f=>!f._quiz)).slice(0,5); S._haQuiz=qz; closeModal(); hwQuizBack(qz.title); },
   qzMake:()=>{ const tp=qzSelTopics(); if(!tp.length){ toast('영역을 하나 이상 골라 주세요',''); return; } QW.topics=tp; QW.qs=qzPick(QW.sub,QW.lv,tp,QW.per); QW.step=3; drawQuiz(); },
   qzShuffle:()=>{ QW.qs=qzPick(QW.sub,QW.lv,QW.topics,QW.per); drawQuiz(); },
   qzWord:()=>{ qzAutoReg(); const s=D().students[$('#qzSid').value]; const qz={sub:QW.sub,lv:QW.lv,qs:QW.qs,title:qzTitle(QW.sub,QW.lv)}; saveFile(qzFileName(qz,s&&s.name,'과제'),wordDoc(wsHTML(qz,{name:s?s.name:''}),qz.title)); },
@@ -8284,7 +8296,7 @@ function hwFilter(L){ if(!S.hwCourse) return L; const ids=hwIds(S.hwCourse); ret
 /* 문제은행 · 직접 입력 과제(s.assigns)도 분석에 같이 넣기: 퀴즈 채점 결과 → 100점 환산, "8/10" 같은 점수도 환산 */
 function hwAsScore(a){ if(a.res&&a.res.n) return Math.round(a.res.ok/a.res.n*100); const v=String(a.score||'').trim(); if(!v) return null;
   const m=v.match(/(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)/); if(m&&+m[2]) return Math.round(+m[1]/+m[2]*100); const n=v.match(/^(\d+(?:\.\d+)?)\s*점?$/); return n&&+n[1]<=100?+n[1]:null; }
-function hwAsRecs(s){ const t=todayStr(); return (Array.isArray(s.assigns)?s.assigns:[]).map(a=>{ const late=a.st==='set'&&a.due&&a.due<t; const sc=a.st==='set'?null:hwAsScore(a);
+function hwAsRecs(s){ const t=todayStr(); return (Array.isArray(s.assigns)?s.assigns:[]).filter(a=>!a.hid).map(a=>{ const late=a.st==='set'&&a.due&&a.due<t; const sc=a.st==='set'?null:hwAsScore(a);
   return {id:'as:'+a.id,virt:1,kind:a.kind==='quiz'?'문제은행':'직접',t:`${a.week?a.week+'주차 ':''}${a.title||'과제'}`,d:a.doneAt||a.subAt||a.due||a.setAt||'',cid:'',st:a.st==='set'?(late?'미제출':'대기'):'제출',late:late?1:0,sc,sk:null,memo:a.fb||'',url:'',at:a.at||0,due:a.due||''}; }); }
 /* 과목 검색 상자 (초성 가능) — k: f=위 거르기, a=과제 내기, b=점수 한꺼번에 */
 CPK.hwGrp={
@@ -8382,7 +8394,7 @@ function hwStudent(s,pool){
 }
 
 /* 채점 대기 줄 */
-function hwGradeBox(grade){ return grade.length?`<section class="pane hw-grade"><h2>채점 대기 <small>${grade.length}개 · 제출됐는데 점수가 없는 과제</small></h2><div class="hw-gl">${grade.map(({s,h})=>`<div class="hw-g"><b>${esc(s.name.replace(/^예시\s/,''))}</b><span>${esc(h.t)}<small>${h.sub?fmtMD(h.sub.slice(0,10))+' 제출':''}${h.st==='지각'?' · 지각':''}</small></span>${h.kind==='code'?`<span class="chip blue">코딩</span><span></span><button class="btn sm pri" data-act="hwEdit" data-id="${s.id}" data-h="${h.id}">결과 보고 채점</button>`:h.virt?`<span class="chip">${h.kind}</span><span></span><button class="btn sm pri" data-act="wOpen" data-tab="as" data-id="${s.id}">채점하러 가기</button>`:`${h.url?`<a class="btn sm" href="${esc(h.url)}" target="_blank" rel="noopener">${ic('right')}과제 열기</a>`:'<span></span>'}<input class="in num" type="number" min="0" max="100" placeholder="점수" data-gr="${s.id}|${h.id}"><button class="btn sm pri" data-act="hwGrade" data-k="${s.id}|${h.id}">저장</button>`}</div>`).join('')}</div></section>`:''; }
+function hwGradeBox(grade){ return grade.length?`<section class="pane hw-grade"><h2>채점 대기 <small>${grade.length}개 · 제출됐는데 점수가 없는 과제</small></h2><div class="hw-gl">${grade.map(({s,h})=>`<div class="hw-g"><b>${esc(s.name.replace(/^예시\s/,''))}</b><span>${esc(h.t)}<small>${h.sub?fmtMD(h.sub.slice(0,10))+' 제출':''}${h.st==='지각'?' · 지각':''}</small></span>${h.kind==='code'?`<span class="chip blue">코딩</span><span></span><button class="btn sm pri" data-act="hwEdit" data-id="${s.id}" data-h="${h.id}">결과 보고 채점</button>`:h.virt?`<span class="chip">${h.kind}</span><span></span><button class="btn sm pri" data-act="wOpen" data-tab="as" data-id="${s.id}">채점하러 가기</button>`:`${(h.subs||[]).length?(h.quiz?`<span class="hw-gb"><button class="btn sm" data-act="hwFileGet" data-id="${esc(h.subs[h.subs.length-1].id)}" data-k="${esc(h.subs[h.subs.length-1].name)}" aria-label="파일 받기">${ic('dl')}</button><button class="btn sm" data-act="hwQzGrade" data-k="${s.id}|${h.id}">${ic('check')}자동 채점</button></span>`:`<button class="btn sm" data-act="hwFileGet" data-id="${esc(h.subs[h.subs.length-1].id)}" data-k="${esc(h.subs[h.subs.length-1].name)}">${ic('dl')}파일 받기</button>`):h.url?`<a class="btn sm" href="${esc(h.url)}" target="_blank" rel="noopener">${ic('right')}과제 열기</a>`:'<span></span>'}<input class="in num" type="number" min="0" max="100" placeholder="점수" data-gr=""${s.id}|${h.id}"><button class="btn sm pri" data-act="hwGrade" data-k="${s.id}|${h.id}">저장</button>`}</div>`).join('')}</div></section>`:''; }
 
 /* ---------- 입력 ---------- */
 function hwModal(sid,hid){
@@ -8403,6 +8415,9 @@ function hwModal(sid,hid){
     <label class="field"><span>피드백 메모 <small>선택</small></span><textarea class="in" id="hwM" rows="2" placeholder="예: 반복문 조건 실수 · 변수 이름 좋아짐">${esc(h?h.memo||'':'')}</textarea></label>
     <label class="field"><span>과제 링크 <small>선택 · 깃허브, 드라이브 등</small></span><input class="in" id="hwU" value="${esc(h?h.url||'':'')}" placeholder="https://" inputmode="url"></label>
     ${h&&h.stm?`<div class="hw-stm"><span>학생 한마디</span><p>${esc(h.stm)}</p></div>`:''}
+    ${h&&(h.subs||[]).length?`<div class="field"><span>학생이 올린 파일 <small>${h.subs.length}개 · 최근 순</small></span><div class="hw-subs">${h.subs.slice().reverse().map(f=>`<div class="hw-sf"><span>${ic('clip')}<b>${esc(f.name)}</b><small>${fsize(f.size||0)} · ${new Date(f.at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</small></span><button class="btn sm" data-act="hwFileGet" data-id="${esc(f.id)}" data-k="${esc(f.name)}">${ic('dl')}받기</button></div>`).join('')}</div>
+      ${h.quiz?`<button class="btn sm pri" data-act="hwQzGrade" data-k="${s.id}|${h.id}">${ic('check')}답안표 자동 채점 · 수준 분석</button>`:''}</div>`:''}
+    ${h&&(h.af||[]).length?`<div class="hw-af">${ic('clip')}과제 파일: ${h.af.map(f=>esc(f.name)).join(', ')}</div>`:''}
     <div class="btns">${h&&h.url?`<a class="btn sm" href="${esc(h.url)}" target="_blank" rel="noopener">${ic('right')}과제 열기</a>`:''}${h?`<button class="btn sm" data-act="hwLinks" data-k="${s.id}|${h.id}">${ic('send')}제출 링크 ${h.aid?'다시 ':''}보내기</button>`:''}</div>
   </div><footer>${h?`<button class="btn danger" data-act="hwDel" style="margin-right:auto">${ic('trash')}삭제</button>`:''}<button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="hwSave">저장</button></footer>`,'');
   modalEl._kind='hw';
@@ -8472,16 +8487,18 @@ function hwAssignModal(){
   const cid=S._haC||S.hwCourse||''; S._haC=cid;
   const only=S._haOnly&&D().students[S._haOnly]; const sts=(cid?hwStudentsOf(cid):[]).concat(only&&!(cid&&hwStudentsOf(cid).some(x=>x.id===only.id))?[only]:[]).filter(s=>!['환불','보류'].includes(s.status)).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
   const keep=id=>{ const e=$(id); return e?e.value:null; };
-  const T=keep('#haT'),Dd=keep('#haD'),Tm=keep('#haTm'),Ds=keep('#haDs');
+  const T=keep('#haT')??S._haTitle,Dd=keep('#haD'),Tm=keep('#haTm'),Ds=keep('#haDs'); S._haTitle=null;
   const html=`${mHead('과제 내기 · 제출 링크')}<div class="body hw-form">
-    <p class="rm-hint" style="margin-top:0">학생마다 이름이 들어간 과제 페이지 링크가 만들어져요. 학생은 링크에서 결과물 주소를 적고 <b>제출</b>을 누르면, 확인 코드가 담긴 문자를 멘토님께 보내요.</p>
+    ${hwSrv()?`<p class="rm-hint" style="margin-top:0">학생마다 과제 링크가 만들어져요. 학생은 링크에서 <b>과제 파일(Word 등)을 받고, 다 작성한 파일을 그대로 올려요.</b> 올린 파일은 팀 드라이브에 저장되고 여기 과제 화면으로 자동으로 들어와요.</p>`:''}
+    <p class="rm-hint" style="margin-top:0;${hwSrv()?'display:none':''}">학생마다 이름이 들어간 과제 페이지 링크가 만들어져요. 학생은 링크에서 결과물 주소를 적고 <b>제출</b>을 누르면, 확인 코드가 담긴 문자를 멘토님께 보내요.</p>
     <div class="form"><div class="field"><span>과목</span>${hwGrpBox('a',cid)}</div>
       <label class="field"><span>과제 이름</span><input class="in" id="haT" value="${esc(T||'')}" placeholder="예: 3주차 반복문 실습"></label>
       <label class="field"><span>마감일</span><input class="in" type="date" id="haD" value="${esc(Dd||addDays(todayStr(),7))}"></label>
       <label class="field"><span>마감 시간</span><input class="in" type="time" id="haTm" value="${esc(Tm||'23:59')}"></label></div>
+    ${hwSrv()?`<div class="field"><span>과제 파일 <small>Word · 한글 · PDF 등 최대 5개 · 학생이 링크에서 받아요</small></span><div class="ha-files">${(S._haFiles||[]).map((f,i)=>`<span class="ha-f">${ic('clip')}<b>${esc(f.name)}</b><small>${fsize(f.size)}</small>${S._haQuiz&&f._quiz?'<em>문제은행 · 답안 자동 채점</em>':''}<button class="ha-x" data-act="haFileDel" data-i="${i}" aria-label="빼기">${ic('x')}</button></span>`).join('')}<label class="btn sm">${ic('up')}파일 붙이기<input type="file" id="haFileIn" multiple hidden></label><button class="btn sm ghost" data-act="haQuizMake">${ic('task')}문제은행 시험지 만들어 붙이기</button></div></div>`:''}
     <label class="field"><span>과제 설명 <small>선택 · 학생 페이지에 그대로 나와요</small></span><textarea class="in" id="haDs" rows="4" placeholder="예: 구구단을 출력하는 프로그램을 만들고 깃허브에 올린 뒤 저장소 링크를 제출하세요.">${esc(Ds||'')}</textarea></label>
     ${sts.length?`<div class="field"><span>받을 학생 <small>${sts.length}명</small></span><div class="ha-sts">${sts.map(s=>`<label class="check"><input type="checkbox" data-ha="${s.id}" ${!S._haOnly||S._haOnly===s.id?'checked':''}>${esc(s.name.replace(/^예시\s/,''))}</label>`).join('')}</div></div>`:(cid?'<div class="empty">이 과목에 연결된 학생이 없어요</div>':'<div class="empty">위에서 과목을 검색해 골라 주세요</div>')}
-    <p class="rm-hint">파일은 서버 없이 받을 수 없어서, 학생이 깃허브 · 구글 드라이브 · 노션 같은 <b>공유 링크</b>로 제출해요.</p>
+    ${hwSrv()?'':'<p class="rm-hint">혼자 쓰는 모드라 파일을 받아 둘 서버가 없어요. 학생은 구글 드라이브 · 깃허브 같은 <b>공유 링크</b>로 제출해요. (팀 서버에 연결하면 Word 파일을 바로 올려서 받을 수 있어요)</p>'}
   </div><footer><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="haMake" ${sts.length?'':'disabled'}>${ic('send')}과제 내고 링크 만들기</button></footer>`;
   if(modalEl&&modalEl._kind==='ha') modalEl.querySelector('.sheet').innerHTML=html; else { openModal(html,'wide'); modalEl._kind='ha'; }
 }
@@ -8489,6 +8506,7 @@ function hwMentor(){ const m=nlMentorTel(); return {mn:nlMentorName(),hp:m.hp||'
 async function hwLinksFor(L){ const M=hwMentor(); const out={};
   for(const x of L){ const o={v:1,h:x.h.id,sid:x.s.id,n:x.s.name.replace(/^예시\s/,''),t:x.h.t,due:x.h.d,dt:x.h.dt||'23:59',cn:x.h.cid&&D().courses[x.h.cid]?subjectOf(D().courses[x.h.cid]):'',...M};
     if(x.h.desc) o.ds=x.h.desc;
+    if(x.h.k&&x.h.sv){ o.k=x.h.k; o.sv=x.h.sv; if(x.h.af) o.af=x.h.af.map(f=>f.name); }
     if(x.h.kind==='code'&&x.h.code){ o.k='code'; o.lang=x.h.code.lang; o.ps=x.h.code.ps; out[x.s.id+'|'+x.h.id]=hcBase()+'#'+await hwZip(o); continue; }
     out[x.s.id+'|'+x.h.id]=hwBase()+'#'+await hwZip(o); }
   return out; }
@@ -8500,7 +8518,8 @@ function hwSentModal(){ const L=HA.list; const h0=L[0]&&L[0].h;
     <p class="rm-hint">학생이 제출하면 <b>[과제 제출]</b> 문자가 와요. 그 문자를 통째로 복사해서 과제 분석 → <b>제출 받기</b>에 붙여 넣으면 제출 · 지각이 자동으로 기록돼요.</p>
   </div><footer><button class="btn ghost" data-act="haPreview">${ic('right')}학생 화면 미리 보기</button><button class="btn pri" data-act="close">완료</button></footer>`;
   if(modalEl&&modalEl._kind==='hs') modalEl.querySelector('.sheet').innerHTML=html; else { openModal(html,'wide'); modalEl._kind='hs'; } }
-function hwMsg(x,u){ if(x.h.kind==='code') return `${x.s.name.replace(/^예시\s/,'')}님, ${S.settings.mentor||nlMentorName()||'멘토'}입니다.\n[코딩 과제] ${x.h.t} (${(CODE_LANGS[x.h.code.lang]||{}).name||''} ${x.h.code.ps.length}문제)\n마감: ${fmtMD(x.h.d)} ${x.h.dt||''}까지\n\n아래 링크에서 바로 코드를 짜고 채점해 볼 수 있어요. 다 풀면 '최종 제출'을 눌러 메시지를 보내 주세요. (PC 크롬 · 엣지 권장)\n${u}`; return `${x.s.name.replace(/^예시\s/,'')}님, ${S.settings.mentor||nlMentorName()||'멘토'}입니다.\n[과제] ${x.h.t}\n마감: ${fmtMD(x.h.d)} ${x.h.dt||''}까지\n\n아래 링크에서 과제 내용을 보고, 결과물 링크를 적어 제출해 주세요.\n${u}`; }
+function hwMsg(x,u){ if(x.h.k&&x.h.sv) return `${x.s.name.replace(/^예시\s/,'')}님, ${S.settings.mentor||nlMentorName()||'멘토'}입니다.\n[과제] ${x.h.t}\n마감: ${fmtMD(x.h.d)} ${x.h.dt||''}까지\n\n아래 링크에서 ${(x.h.af||[]).length?'과제 파일을 받고, 작성한 파일을 그대로 올려 주세요.':'작성한 파일을 올려 주세요.'} 올리면 저에게 바로 전달돼요.\n${u}`;
+  if(x.h.kind==='code') return `${x.s.name.replace(/^예시\s/,'')}님, ${S.settings.mentor||nlMentorName()||'멘토'}입니다.\n[코딩 과제] ${x.h.t} (${(CODE_LANGS[x.h.code.lang]||{}).name||''} ${x.h.code.ps.length}문제)\n마감: ${fmtMD(x.h.d)} ${x.h.dt||''}까지\n\n아래 링크에서 바로 코드를 짜고 채점해 볼 수 있어요. 다 풀면 '최종 제출'을 눌러 메시지를 보내 주세요. (PC 크롬 · 엣지 권장)\n${u}`; return `${x.s.name.replace(/^예시\s/,'')}님, ${S.settings.mentor||nlMentorName()||'멘토'}입니다.\n[과제] ${x.h.t}\n마감: ${fmtMD(x.h.d)} ${x.h.dt||''}까지\n\n아래 링크에서 과제 내용을 보고, 결과물 링크를 적어 제출해 주세요.\n${u}`; }
 
 /* 제출 받기 */
 function hwRecvModal(){
@@ -8530,7 +8549,9 @@ Object.assign(WACT,{
     const d=$('#haD').value||addDays(todayStr(),7), dt=$('#haTm').value||'23:59', desc=$('#haDs').value.trim().slice(0,1500), grp=S._haC;
     const ids=$$('[data-ha]').filter(x=>x.checked).map(x=>x.dataset.ha); if(!ids.length){ toast('학생을 한 명 이상 골라 주세요',''); return; }
     const aid=uid('a'); const L=[];
-    ids.forEach(id=>{ const s=D().students[id]; if(!s) return; const h={id:uid('h'),aid,t,d,dt,cid:hwCidFor(s,grp),st:'대기',sc:null,sk:null,memo:'',url:'',desc,at:Date.now()}; hwPut(s,(s.hw||[]).concat(h)); L.push({s:D().students[id],h}); });
+    ids.forEach(id=>{ const s=D().students[id]; if(!s) return; const h={id:uid('h'),aid,t,d,dt,cid:hwCidFor(s,grp),st:'대기',sc:null,sk:null,memo:'',url:'',desc,at:Date.now(),...(S._haQuiz?{quiz:S._haQuiz}:{})}; hwPut(s,(s.hw||[]).concat(h)); L.push({s:D().students[id],h}); });
+    if(hwSrv()&&L.length){ const ok=await hwRegister(L,t,d,dt,desc); if(!ok) toast('파일 제출 연결을 못 했어요','이번 과제는 링크 제출로 나가요. 설정 → 팀 서버(Code.gs)가 v10인지 확인해 주세요.','alarm-t'); }
+    S._haFiles=[]; S._haQuiz=null;
     HA.list=L; HA.links={}; S.hwCourse=grp; S.hwSid=''; hwSentModal(); if(S.view==='hw') render();
     HA.links=await hwLinksFor(L); },
   haCopy:el=>{ const u=HA.links[el.dataset.k]; if(!u){ toast('링크를 만드는 중이에요','잠깐 뒤에 다시 눌러 주세요.'); return; }
@@ -8757,6 +8778,58 @@ Object.assign(WACT,{
   hcNext:()=>{ const {sid}=S._hcR||{}; const s=D().students[sid]; const h=s&&(s.hw||[]).find(x=>x.id===S._hcR.hid); closeModal(); S._hc={lang:h.code.lang,lv:0,ps:(S._hcRec||[]).slice()}; S._hcOnly=sid; S._hcC=hwGrpOf(h.cid)||''; hcAssignModal(); },
   hcDel:async()=>{ const {sid,hid}=S._hcR||{}; const s=D().students[sid]; if(!s||!await confirmBox('이 코딩 테스트를 지울까요?','이 학생의 기록에서만 지워져요.','지우기',true)) return; hwPut(s,(s.hw||[]).filter(x=>x.id!==hid)); closeModal(); render(); },
 });
+/* ===== 과제 파일 주고받기 (팀 서버 v10) =====
+   과제 내기 때 Word 같은 과제 파일을 붙이면 → 팀 드라이브에 올리고, 학생마다 열쇠를 받아 링크에 넣어요.
+   학생은 링크에서 과제 파일을 받고 다 쓴 파일을 올려요 → 서버가 '제출 기록(hwsub)'을 남기고, 평소 동기화로 이 앱에 들어와요.
+   문제은행 시험지를 붙인 과제는 학생이 올린 답안표를 읽어 바로 자동 채점 · 수준 분석까지 해요.
+   혼자 쓰는 모드(서버 없음)는 예전처럼 링크로 받아요. */
+const hwSrv=()=>S.mode==='gas'&&!!(gas.cfg&&gas.cfg());
+let HW_SRV_V=0;
+async function hwSrvOk(){ if(HW_SRV_V>=10) return true; try{ const j=await gas.call('GET',{a:'ping'}); HW_SRV_V=+j.v||0; }catch(e){ HW_SRV_V=0; } return HW_SRV_V>=10; }
+async function hwRegister(L,t,d,dt,desc){
+  try{ if(!await hwSrvOk()) return false;
+    const files=[]; for(const f of (S._haFiles||[]).slice(0,5)){ toast('과제 파일을 올리는 중이에요',f.name); const j=await upFile(f); files.push({id:j.id,name:j.name||f.name,size:j.size||f.size}); }
+    const j=await gas.call('POST',null,{a:'hwreg',files,items:L.map(x=>({h:x.h.id,sid:x.s.id,n:x.s.name.replace(/^예시\s/,''),t,due:d,dt,ds:desc}))});
+    const sv=gas.cfg().url;
+    L.forEach(x=>{ const k=j.keys&&j.keys[x.s.id+'|'+x.h.id]; if(!k) return; const s=D().students[x.s.id]; const nh={...x.h,k,sv,af:j.files||files}; hwPut(s,(s.hw||[]).map(y=>y.id===x.h.id?nh:y)); x.s=D().students[x.s.id]; x.h=nh; });
+    return true; }
+  catch(e){ console.warn(e); return false; } }
+/* 서버에서 온 제출 기록 → 학생 과제에 붙이기 (같은 파일은 한 번만) */
+function hwSubApply(d){ const s=D().students[d.sid]; const h=s&&(s.hw||[]).find(x=>x.id===d.h); if(!h) return false;
+  if((h.subs||[]).some(f=>f.id===d.fid)) return false;
+  const at=new Date(d.at||Date.now()); const end=new Date(h.d+'T'+(h.dt||'23:59')+':59');
+  const subs=(h.subs||[]).concat({id:d.fid,name:d.name,size:d.size,type:d.type,at:d.at}).slice(-15);
+  const nh={...h,subs,st:at>end?'지각':'제출',sub:at.toISOString(),stm:d.cm||h.stm||''};
+  hwPut(s,(s.hw||[]).map(x=>x.id===h.id?nh:x));
+  if(!S._hwNewN) setTimeout(()=>{ const k=S._hwNewN; S._hwNewN=0; if(k) toast(`새 과제 제출 ${k}건`,'과제 화면의 채점할 것에서 확인하세요.'); },1200);
+  S._hwNewN=(S._hwNewN||0)+1; return true; }
+async function hwFileGet(id,name){ toast('파일을 받는 중이에요',name||'');
+  try{ const r=await teamFileBlob(id,name); const url=URL.createObjectURL(r.blob);
+    if(/pdf|image/.test(r.type)) window.open(url,'_blank','noopener'); else { const a=document.createElement('a'); a.href=url; a.download=r.name||name||'과제'; document.body.appendChild(a); a.click(); a.remove(); }
+    setTimeout(()=>URL.revokeObjectURL(url),60000); return r; }
+  catch(e){ toast('파일을 받지 못했어요','팀 서버 연결을 확인해 주세요.','alarm-t'); return null; } }
+document.addEventListener('change',e=>{ if(e.target.id!=='haFileIn') return; const fs=[...e.target.files]; e.target.value='';
+  const big=fs.find(f=>f.size>30*1024*1024); if(big){ toast('30MB 넘는 파일은 붙일 수 없어요',big.name); return; }
+  S._haFiles=(S._haFiles||[]).concat(fs).slice(0,5); hwAssignModal(); });
+Object.assign(WACT,{
+  haFileDel:el=>{ const f=(S._haFiles||[])[+el.dataset.i]; S._haFiles=(S._haFiles||[]).filter((_,i)=>i!==+el.dataset.i); if(f&&f._quiz) S._haQuiz=null; hwAssignModal(); },
+  haQuizMake:()=>{ const keep={t:$('#haT')&&$('#haT').value}; S._haBack={c:S._haC,only:S._haOnly,t:keep.t}; openQuiz({toHw:true}); },
+  hwFileGet:el=>hwFileGet(el.dataset.id,el.dataset.k),
+  hwQzGrade:async el=>{ const [sid,hid]=el.dataset.k.split('|'); const s=D().students[sid]; const h=s&&(s.hw||[]).find(x=>x.id===hid); if(!h||!h.quiz) return;
+    const f=(h.subs||[]).slice(-1)[0]; if(!f){ toast('아직 올린 파일이 없어요',''); return; }
+    toast('답안표를 읽는 중이에요',f.name);
+    let r; try{ r=await teamFileBlob(f.id,f.name); }catch(e){ toast('파일을 받지 못했어요','팀 서버 연결을 확인해 주세요.','alarm-t'); return; }
+    const file=new File([r.blob],r.name||f.name,{type:r.type}); const n=h.quiz.qs.length; let ans=[];
+    try{ ans=await answersFromFile(file,n); }catch(e){ ans=[]; }
+    const got=(ans||[]).filter(Boolean).length;
+    const s0=wNorm(clone(D().students[sid])); let a=s0.assigns.find(x=>x.hid===hid);
+    if(!a){ const week=(s0.assigns.reduce((m,x)=>Math.max(m,+x.week||0),0))+1; a={id:wid('a'),hid,week,kind:'quiz',title:h.quiz.title||h.t,body:'',due:h.d,st:'sub',setAt:(h.at?new Date(h.at).toISOString().slice(0,10):todayStr()),subAt:todayStr(),at:Date.now(),quiz:{sub:h.quiz.sub,lv:h.quiz.lv,qs:h.quiz.qs}}; s0.assigns.push(a); }
+    if(!got){ a.qAns=Array(n).fill(0); store.put('students',s0); closeModal(); toast('답을 읽지 못했어요','학생이 답안표 칸에 번호를 적었는지 확인하고, 학생 과제 화면에서 답을 직접 눌러 넣어 주세요.','alarm-t'); wGoAs(sid); return; }
+    a.qAns=ans; gradeQuiz(a); const sc=Math.round(a.res.ok/a.res.n*100);
+    s0.hw=s0.hw.map(x=>x.id===hid?{...x,sc,graded:a.id}:x); store.put('students',s0);
+    toast('자동 채점했어요',`${s.name.replace(/^예시\s/,'')} · ${sc}점 · ${got}/${n}문항 읽음`); closeModal(); openReport(sid,a.id); },
+});
+function hwQuizBack(title){ const b=S._haBack||{}; S._haC=b.c||S._haC; S._haOnly=b.only||''; S._haTitle=b.t||title||null; S._haBack=null; hwAssignModal(); }
 /* ===== 학생용 개강 안내 페이지 링크 =====
    수업 정보를 링크 주소(# 뒤)에 압축해서 넣어요 → 서버에 아무것도 저장하지 않고, 받은 사람만 그 내용을 봐요.
    보는 화면: c.html (GitHub Pages). ZOOM 링크 · 캠퍼스 강의 안내는 과정마다 직접 적어 두면 다음에도 그대로 써요. */
@@ -9245,6 +9318,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261101-1246';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261101-1437';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

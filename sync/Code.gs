@@ -13,6 +13,9 @@
  * 팀장 권한: kaia_users 탭 H열(role)에 "팀장"이라고 적으면 그 사람은 앱의 팀 → 팀원 학생에서 직원들의 학생 명단을 볼 수 있어요(보기 전용).
  *   I열(manager)에 팀장 아이디를 적은 직원만 그 팀장에게 보이고, I열이 비어 있으면 모든 팀장에게 보여요. 조회 기록은 kaia_log 탭에 남아요.
  *
+ * 과제 제출(v10): 학생은 로그인 없이 과제 링크로 과제 파일을 받고, 작성한 파일을 올려요. 링크마다 따로 만든 열쇠가 맞을 때만 돼요.
+ *   올린 파일은 "KAIA DESK 팀 파일" 폴더에 저장되고, 과제를 낸 멘토의 앱으로 자동으로 들어가요(제출 기록은 kaia_data 탭 hwsub).
+ *
  * 비밀번호를 잊은 팀원: 시트의 kaia_users 탭에서 그 사람 줄을 지우면, 같은 아이디로 다시 가입할 수 있고 데이터는 그대로예요.
  */
 const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
@@ -21,7 +24,9 @@ const DATA = 'kaia_data';
 const USERS = 'kaia_users';
 const TEAM_OWNER = '_team';
 const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true, qshare: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
-const MAX_FILE = 31 * 1024 * 1024;   // 게시판 첨부 한 파일 30MB (구글 앱스 스크립트 요청 한도 약 50MB 안쪽)
+const MAX_FILE = 31 * 1024 * 1024;
+const HW_MAX_SUB = 15;               // 과제 링크 하나로 올릴 수 있는 파일 수 (다시 제출 포함)
+const HW_OWNER = '_hw';              // 과제 열쇠를 적어 두는 줄의 주인 이름   // 게시판 첨부 한 파일 30MB (구글 앱스 스크립트 요청 한도 약 50MB 안쪽)
 
 function ss_() { return SpreadsheetApp.getActive(); }
 function dataSheet_() {
@@ -101,6 +106,33 @@ function authorize() {
   Logger.log('권한 확인 완료 — 팀 파일 폴더: ' + f.getName());
 }
 /* 서버에서 오류가 나도 앱이 원인을 볼 수 있게 감싸요 (편집기에서 ▶실행을 눌러도 오류 안 남) */
+
+/* ---------- 과제 제출 (v10) ---------- */
+function hwKey_(k) {   // 열쇠로 과제 찾기 → { r: 줄 데이터 }
+  k = String(k || '').replace(/[^\w]/g, '');
+  if (k.length < 20) return null;
+  const v = dataSheet_().getDataRange().getValues();
+  for (let i = 1; i < v.length; i++) if (v[i][0] === HW_OWNER && v[i][1] === 'hwkey' && String(v[i][2]) === k && !v[i][5]) { try { return { k: k, d: JSON.parse(v[i][3]) }; } catch (e) { return null; } }
+  return null;
+}
+function hwSubs_(k) {
+  const out = [];
+  dataSheet_().getDataRange().getValues().slice(1).forEach(r => { if (r[1] !== 'hwsub' || r[5]) return; let d = null; try { d = JSON.parse(r[3] || 'null'); } catch (e) {} if (d && d.k === k) out.push({ name: d.name, size: d.size, at: d.at }); });
+  return out;
+}
+function hwRate_(k) { const c = CacheService.getScriptCache(); const n = Number(c.get('hw_' + k) || 0); if (n > 40) return false; c.put('hw_' + k, String(n + 1), 600); return true; }
+function hwSave_(key, bytes, name, type, cm) {   // 학생 파일 저장 + 멘토에게 제출 기록
+  const d = key.d;
+  if (hwSubs_(key.k).length >= HW_MAX_SUB) return { error: 'limit' };
+  const clean = String(name || 'file').replace(/[\\/:*?"<>|]/g, '_').slice(0, 100);
+  const f = folder_().createFile(Utilities.newBlob(bytes, String(type || 'application/octet-stream'), '[과제] ' + String(d.n || '').slice(0, 20) + ' - ' + clean));
+  f.setDescription(d.uid);
+  const sub = { k: key.k, h: d.h, sid: d.sid, n: d.n, t: d.t, fid: f.getId(), name: clean, size: bytes.length, type: String(type || ''), cm: String(cm || '').slice(0, 500), at: Date.now() };
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try { dataSheet_().appendRow([d.uid, 'hwsub', 's' + Utilities.getUuid().replace(/-/g, '').slice(0, 16), JSON.stringify(sub), Date.now(), '']); } finally { lock.releaseLock(); }
+  return { ok: true, name: clean, size: bytes.length, at: sub.at };
+}
+
 function doGet(e) { try { return doGet_(e || { parameter: {} }); } catch (err) { return out_({ error: 'server', msg: String(err && err.message || err) }); } }
 function doPost(e) { try { return doPost_(e || { postData: { contents: '{}' } }); } catch (err) { return out_({ error: 'server', msg: String(err && err.message || err) }); } }
 
@@ -112,7 +144,20 @@ function doGet_(e) {
     if (uid) { const it = tmpFolder_().getFilesByName('cal_' + uid + '.ics'); if (it.hasNext()) txt = it.next().getBlob().getDataAsString('UTF-8'); }
     return ContentService.createTextOutput(txt).setMimeType(ContentService.MimeType.ICAL);
   }
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 9 });
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 10 });
+  if (p.a === 'hwinfo') {   // 학생 과제 페이지: 과제 정보 · 과제 파일 목록 · 이미 낸 파일 (열쇠가 맞을 때만)
+    const key = hwKey_(p.k); if (!key || !hwRate_(key.k)) return out_({ error: 'nokey' });
+    const d = key.d;
+    return out_({ ok: true, t: d.t, n: d.n, due: d.due, dt: d.dt, ds: d.ds || '', files: (d.files || []).map(f => ({ id: f.id, name: f.name, size: f.size })), subs: hwSubs_(key.k) });
+  }
+  if (p.a === 'hwget') {    // 학생이 과제 파일 받기 (그 과제에 붙인 파일만 · 3MB씩)
+    const key = hwKey_(p.k); if (!key || !hwRate_(key.k)) return out_({ error: 'nokey' });
+    const id = String(p.id || ''); if (!(key.d.files || []).some(f => f.id === id)) return out_({ error: 'nofile' });
+    let f; try { f = DriveApp.getFileById(id); } catch (err) { return out_({ error: 'nofile' }); }
+    const bytes = f.getBlob().getBytes();
+    const off = Math.max(0, Number(p.off || 0)), len = Math.min(3 * 1024 * 1024, Math.max(1, Number(p.len || 3 * 1024 * 1024)));
+    return out_({ name: f.getName(), type: f.getBlob().getContentType(), size: bytes.length, off: off, data: Utilities.base64Encode(bytes.slice(off, off + len)) });
+  }
   const uid = auth_(p.token); if (!uid) return out_({ error: 'auth' });
   if (p.a === 'members') {
     const v = userSheet_().getDataRange().getValues().slice(1);
@@ -208,6 +253,44 @@ function doPost_(e) {
     const f = folder_().createFile(Utilities.newBlob(bytes, String(b.type || 'application/octet-stream'), name));
     f.setDescription(uid);
     return out_({ ok: true, id: f.getId(), name: name, size: bytes.length, type: String(b.type || '') });
+  }
+  if (b.a === 'hwreg') {    // 멘토: 학생마다 과제 열쇠 만들기 (과제 파일은 먼저 upload로 올려 두고 id만 넘겨요)
+    const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
+    const items = (b.items || []).slice(0, 80); const keys = {};
+    const files = (b.files || []).slice(0, 5).filter(x => { try { const f = DriveApp.getFileById(String(x.id)); return inFolder_(f) && f.getDescription() === uid; } catch (e) { return false; } })
+      .map(x => ({ id: String(x.id), name: String(x.name || '').slice(0, 120), size: Number(x.size || 0) }));
+    const clip = (v, m) => String(v == null ? '' : v).slice(0, m);
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try {
+      const s = dataSheet_();
+      items.forEach(it => {
+        const k = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '').slice(0, 8);
+        const d = { uid: uid, h: clip(it.h, 40), sid: clip(it.sid, 40), n: clip(it.n, 40), t: clip(it.t, 120), due: clip(it.due, 10), dt: clip(it.dt, 5), ds: clip(it.ds, 1500), files: files, at: Date.now() };
+        s.appendRow([HW_OWNER, 'hwkey', k, JSON.stringify(d), Date.now(), '']);
+        keys[d.sid + '|' + d.h] = k;
+      });
+    } finally { lock.releaseLock(); }
+    return out_({ ok: true, keys: keys, files: files });
+  }
+  if (b.a === 'hwup') {     // 학생: 3MB 이하 파일 한 번에 올리기 (로그인 없이 · 열쇠 필요)
+    const key = hwKey_(b.k); if (!key || !hwRate_(key.k)) return out_({ error: 'nokey' });
+    const bytes = Utilities.base64Decode(String(b.data || ''));
+    if (!bytes.length || bytes.length > MAX_FILE) return out_({ error: 'size' });
+    return out_(hwSave_(key, bytes, b.name, b.type, b.cm));
+  }
+  if (b.a === 'hwupc') {    // 학생: 큰 파일은 3MB씩 나눠서
+    const key = hwKey_(b.k); if (!key || !hwRate_(key.k)) return out_({ error: 'nokey' });
+    const id = String(b.up || '').replace(/[^\w-]/g, '').slice(0, 40), i = Number(b.i), n = Number(b.n);
+    if (!id || !(n > 0 && n <= 10) || !(i >= 0 && i < n)) return out_({ error: 'bad' });
+    const tmp = tmpFolder_(), pre = 'hw.' + key.k + '.' + id + '.';
+    tmp.createFile(pre + i, String(b.data || ''), 'text/plain');
+    if (i < n - 1) return out_({ ok: true, part: i });
+    const parts = []; let txt = '';
+    for (let q = 0; q < n; q++) { const it = tmp.getFilesByName(pre + q); if (!it.hasNext()) return out_({ error: 'missing', part: q }); const f = it.next(); parts.push(f); txt += f.getBlob().getDataAsString(); }
+    parts.forEach(f => { try { f.setTrashed(true); } catch (err) {} });
+    const bytes = Utilities.base64Decode(txt); txt = '';
+    if (!bytes.length || bytes.length > MAX_FILE) return out_({ error: 'size' });
+    return out_(hwSave_(key, bytes, b.name, b.type, b.cm));
   }
   if (b.a === 'calkey') {   // 휴대폰 달력 구독 링크용 열쇠 (본인만 · 새로 만들면 예전 링크는 끊겨요)
     const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
