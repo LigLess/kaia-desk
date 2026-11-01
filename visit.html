@@ -206,6 +206,5 @@ function render(D){
 function fail(){ document.getElementById('app').innerHTML='<section class="glass fail"><b>예약 정보를 열 수 없어요</b><p>링크가 잘렸을 수 있어요. 받은 링크 전체를 다시 눌러 주세요.</p></section>'; }
 decode().then(function(d){ if(!d||!d.d) throw 0; render(d); }).catch(fail);
 </script>
-<script src="scene-fx.js" defer></script>
 </body>
 </html>
