@@ -151,6 +151,18 @@ h1,h2,h3{margin:0;text-wrap:balance}
 .copy{border:0;background:var(--glass-3);color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:6px 12px;border-radius:999px;transition:transform 160ms var(--ease-out)}
 .copy:active{transform:scale(.95)}
 .memo{white-space:pre-wrap;margin-top:14px;padding:14px 16px;background:var(--glass-2);box-shadow:inset 0 0 0 1px var(--edge);border-radius:14px;color:var(--ink);font-size:15px}
+.car h3{display:flex;align-items:center;gap:8px}.car h3 svg{width:20px;height:20px;color:var(--amber)}
+.navis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:14px}
+.navi{appearance:none;border:0;font:inherit;font-weight:700;font-size:15px;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:9px;height:52px;border-radius:16px;background:var(--glass-3);box-shadow:inset 0 0 0 1px var(--edge);cursor:pointer;transition:transform 140ms,background 160ms}
+.navi:hover{background:rgba(255,255,255,.14)}.navi:active{transform:scale(.97)}
+.navi i{font-style:normal;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:14px;font-weight:900}
+.n-kakao i{background:#fee500;color:#191600}.n-naver i{background:#03c75a;color:#fff}.n-tmap i{background:linear-gradient(135deg,#e5124f,#6a2bd9);color:#fff}
+.park{margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--glass-2);box-shadow:inset 0 0 0 1px var(--edge)}
+.park-h{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink-2)}.park-h b{width:26px;height:26px;border-radius:7px;background:#2f6fdf;color:#fff;display:grid;place-items:center;font-size:15px}
+.park-r{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.park-c{padding:12px 14px;border-radius:12px;background:rgba(0,0,0,.18)}.park-c span{display:block;font-size:13px;color:var(--sub)}.park-c b{font-size:22px;font-weight:800}
+.park-c.free b{color:var(--ok)}
+.park-n{margin:10px 0 0;font-size:12.5px;color:var(--sub)}
 .blk+.blk{margin-top:28px;padding-top:24px;border-top:1px solid var(--edge)}
 .blk h3{font-size:17px;font-weight:700}
 .blk p{margin:4px 0 0;color:var(--sub);font-size:14px}
@@ -221,7 +233,8 @@ h1,h2,h3{margin:0;text-wrap:balance}
 document.documentElement.classList.add('js');
 var DOW='일월화수목금토';
 var BRANCH={name:'코리아AI아카데미 부산점',addr:'부산 부산진구 중앙대로 668 에이원플라자 4층',map:'https://map.naver.com/p/entry/place/1728207405',
-  routes:[['train','서면역 2번 출구','직진 도보 7분 · 삼정타워 옆 건물'],['train','범내골역 8번 출구','직진 도보 7분'],['car','주차','1시간 무료, 이후 30분당 1,500원']]};
+  routes:[['train','서면역 2번 출구','직진 도보 7분 · 삼정타워 옆 건물'],['train','범내골역 8번 출구','직진 도보 7분']],
+  q:'부산 부산진구 중앙대로 668', park:[['1시간','무료'],['이후 30분마다','1,500원']]};
 var $=function(s,r){return (r||document).querySelector(s)};
 function el(tag,attrs,kids){ var e=document.createElement(tag); if(attrs) for(var k in attrs){ if(k==='text') e.textContent=attrs[k]; else if(k==='html') e.innerHTML=attrs[k]; else if(k==='cls') e.className=attrs[k]; else e.setAttribute(k,attrs[k]); } (kids||[]).forEach(function(c){ if(c!=null) e.appendChild(typeof c==='string'?document.createTextNode(c):c); }); return e; }
 function safeUrl(u){ try{ var x=new URL(String(u||'').trim()); return /^https?:$/.test(x.protocol)?x.href:''; }catch(e){ return ''; } }
@@ -260,6 +273,22 @@ var ICON={
   car:P('<path d="M5 16V11l2-5h10l2 5v5M5 16h14M5 16v2.5M19 16v2.5M4 11h16"/>'),
   arrow:P('<path d="M7 17 17 7M9 7h8v8"/>'),
   clock:P('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>')};
+/* 차로 오시는 분: 내비 앱으로 바로 · 주차 요금 */
+var NAVI=[['kakao','카카오맵','kakaomap://search?q=','https://map.kakao.com/?q='],['naver','네이버 지도','nmap://search?appname=ligless.github.io&query=',null],['tmap','티맵','tmap://search?name=',null]];
+var MOBILE=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+function openNavi(n){ var q=encodeURIComponent(BRANCH.q); var web=n[3]?n[3]+q:BRANCH.map;
+  if(!MOBILE){ window.open(web,'_blank','noopener'); return; }
+  var left=false; var onHide=function(){ if(document.hidden) left=true; }; document.addEventListener('visibilitychange',onHide);
+  location.href=n[2]+q;
+  setTimeout(function(){ document.removeEventListener('visibilitychange',onHide); if(!left&&!document.hidden){ toast(n[1]+' 앱이 없어서 웹 지도로 열어요'); location.href=web; } },1600); }
+function carBlock(){ var b=el('div',{cls:'blk car'},[el('h3',{html:ICON.car+'<span>차로 오시는 길</span>'}),el('p',{text:'내비 앱을 누르면 학원 주소('+BRANCH.q+')로 바로 길안내를 시작할 수 있어요.'})]);
+  var nv=el('div',{cls:'navis'}); NAVI.forEach(function(n){ if(!MOBILE&&!n[3]&&n[0]==='tmap') return;
+    var a=el('button',{cls:'navi n-'+n[0],type:'button',html:'<i>'+({kakao:'K',naver:'N',tmap:'T'})[n[0]]+'</i><span></span>'}); a.querySelector('span').textContent=n[1]; a.addEventListener('click',function(){ openNavi(n); }); nv.appendChild(a); });
+  b.appendChild(nv);
+  var pk=el('div',{cls:'park'},[el('div',{cls:'park-h',html:'<b>P</b><span>건물 주차장 이용 · 주차 요금</span>'})]); var row=el('div',{cls:'park-r'});
+  BRANCH.park.forEach(function(x,i){ row.appendChild(el('div',{cls:'park-c'+(i?'':' free')},[el('span',{text:x[0]}),el('b',{cls:'num',text:x[1]})])); }); pk.appendChild(row);
+  pk.appendChild(el('p',{cls:'park-n',text:'예: 3시간 주차하면 1시간 무료 + 2시간(30분 × 4) 6,000원. 자세한 정산 방법은 담당 멘토에게 물어봐 주세요.'})); b.appendChild(pk);
+  return b; }
 function btn(href,label,icon,ghost,extra){ var a=el('a',{cls:'btn'+(ghost?' ghost':''),href:href,html:(icon?ICON[icon]:'')+'<span></span>'}); a.querySelector('span').textContent=label; if(extra) for(var k in extra) a.setAttribute(k,extra[k]); return a; }
 
 /* 길 안내 그림 (선이 그려지는 설명 모션) */
@@ -375,7 +404,7 @@ function render(D){
     var a=el('div',{cls:'blk'},[el('h3',{text:BRANCH.name}),el('p',{text:BRANCH.addr})]);
     var ol=el('ol',{cls:'route'}); BRANCH.routes.forEach(function(r){ var li=el('li',{html:'<span class="ic">'+ICON[r[0]]+'</span><div><b></b><span></span></div>'}); li.querySelector('b').textContent=r[1]; li.querySelector('div span').textContent=r[2]; ol.appendChild(li); });
     a.appendChild(ol); var bb=el('div',{cls:'btns'}); bb.appendChild(btn(BRANCH.map,'지도 열기','map',false,{target:'_blank',rel:'noopener'})); var cb=el('button',{cls:'btn ghost',type:'button',html:ICON.pin+'<span>주소 복사</span>'}); cb.addEventListener('click',function(){ copy(BRANCH.addr,'주소'); }); bb.appendChild(cb); a.appendChild(bb);
-    jc.appendChild(a);
+    jc.appendChild(a); jc.appendChild(carBlock());
     if(hasZoom) jc.appendChild(zoomBlock('학원에 못 오는 날은 ZOOM으로','실시간 비대면으로 같은 수업에 참여할 수 있어요. 참여하기 전에 담당 멘토에게 꼭 미리 알려 주세요.'));
     side=el('section',{cls:'card glass span2 rv fig'},[el('h2',{text:'역에서 7분'}),el('div',{cls:'cap',text:'두 역 모두 출구에서 직진, 중앙대로를 따라 와요.'})]); side.insertAdjacentHTML('beforeend',mapSvg());
   } else if(D.md==='zoom'){
