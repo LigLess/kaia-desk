@@ -8,8 +8,9 @@
 <meta name="description" content="과제 내용을 확인하고 결과물 링크를 제출하세요.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="과제 제출 · 코리아AI아카데미">
-<meta property="og:description" content="과제 내용을 확인하고 결과물 링크로 제출해 주세요.">
-<meta property="og:image" content="https://ligless.github.io/kaia-desk/icons/og-notice.png">
+<meta property="og:description" content="과제 파일을 받고, 작성한 파일을 올려 주세요.">
+<meta property="og:image" content="https://ligless.github.io/kaia-desk/icons/og-hw.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="theme-color" content="#16110d">
 <link rel="icon" type="image/png" href="icons/favicon-64.png">
 <link rel="preload" as="image" href="icons/bg-lounge.jpg">
@@ -264,5 +265,6 @@ function showDone(v){
 function fail(){ document.getElementById('app').innerHTML='<section class="glass fail"><b>과제 정보를 열 수 없어요</b><p>링크가 잘렸을 수 있어요. 받은 링크 전체를 다시 눌러 주세요.</p></section>'; }
 decode().then(function(d){ if(!d||!d.h||!d.t||!d.due) throw 0; SV=!!(d.k&&/^https:\/\/script\.google(usercontent)?\.com\//.test(d.sv||'')); render(d); }).catch(fail);
 </script>
+<script src="scene-fx.js" defer></script>
 </body>
 </html>

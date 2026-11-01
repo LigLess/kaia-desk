@@ -8452,7 +8452,7 @@ function hwDemoSeed(){ if(!S.demo||S._hwSeeded) return; S._hwSeeded=true; const 
    과제 내용(제목 · 마감 · 설명)을 링크 주소(# 뒤)에 압축해 넣어요 → 서버 저장 없음.
    학생은 hw.html 에서 과제를 보고 결과물 링크(깃허브 · 드라이브 · 노션 등)를 적어 "제출"하면
    [제출 확인 코드]가 들어간 문자가 만들어져요. 멘토가 그 문자를 "제출 받기"에 붙여 넣으면 자동으로 기록돼요. */
-const HW_BASE='https://ligless.github.io/kaia-desk/hw.html';
+const HW_BASE='https://ligless.github.io/kaia-desk/hw.html?v=2';   // ?v=2: 카톡 미리보기 새로 읽게
 const hwBase=()=>/github\.io$/.test(location.hostname)||location.protocol==='file:'?HW_BASE:new URL('/hw.html',location.origin).href;
 async function hwZip(o){ const raw=new TextEncoder().encode(JSON.stringify(o));
   try{ if(typeof CompressionStream!=='undefined'){ const cs=new CompressionStream('deflate-raw'); const w=cs.writable.getWriter(); w.write(raw); w.close(); return '1.'+nlB64(new Uint8Array(await new Response(cs.readable).arrayBuffer())); } }catch(e){}
@@ -9300,6 +9300,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261101-1451';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261101-1503';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
