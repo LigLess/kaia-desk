@@ -2155,6 +2155,7 @@ body.dark[data-bg="lounge"] .hw-av,body.dark[data-bg="emerald"] .hw-av{color:#1a
 .qz-cat small{font-weight:500;color:var(--muted);margin-left:6px;font-size:12px}
 .qz-sub.qz-code{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
 .qz-codetip{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 12px;border-radius:12px;background:var(--accent-soft);margin-bottom:14px;font-size:13.5px}.qz-codetip>svg{width:16px;height:16px;color:var(--accent)}.qz-codetip span{flex:1;min-width:200px}
+.dt-vs{height:40px;border-radius:999px}
 /* 코딩 테스트 */
 .hc-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
 .hc-bank{display:flex;flex-direction:column;gap:4px;max-height:280px;overflow:auto;padding:4px;border:1px solid var(--line);border-radius:12px}
@@ -3257,7 +3258,7 @@ function renderSide(){
   if(dash){ const rl=$('#rail'); const rh=dashRail(n,tn); if(rl&&rl._h!==rh){ rl._h=rh; rl.innerHTML=rh; } }
   const topHtml=dash?dashTop(n,tn):`<div class="tn-left"><div class="lights"><i></i><i></i><i></i></div><button class="wordmark" data-go="home" aria-label="홈"><img src="${LOGO}" alt=""><b class="full">KAIA DESK</b></button><span class="tn-title">${TITLES[S.view]||''}</span></div>
    <nav class="tn-nav" id="nav" aria-label="메뉴"><i class="pill" id="pill"></i>${items}</nav>
-   <div class="tn-right">${syncChip()}
+   <div class="tn-right">${syncChip()}<button class="tn-btn" data-act="vsOpen" aria-label="상담 예약 안내 보내기" title="상담 예약 안내 보내기">${ic('cal')}</button>
      <button class="tn-btn m-only" data-go="alarms" aria-label="알림">${ic('bell')}${n?'<i class="dot"></i>':''}</button>
      <button class="tn-btn d-only" data-act="collapse" aria-label="${S.collapsed?'메뉴 이름 보이기':'메뉴 아이콘만 보기'}" title="${S.collapsed?'메뉴 이름 보이기':'아이콘만 보기'}">${ic(S.collapsed?'down':'up2')}</button>
      <button class="tn-btn" data-act="cmd" aria-label="명령 (Ctrl+K)" title="명령 · Ctrl+K">${ic('search')}</button>
@@ -8195,6 +8196,8 @@ function dashTop(n,tn){
     <div class="tn-right">${syncChip()}
       <span class="dt-clock d-only num" id="dashClock">${pad(now.getHours())}:${pad(now.getMinutes())}<small>${now.getMonth()+1}/${now.getDate()} (${DOW[now.getDay()]})</small></span>
       <button class="tn-btn" data-go="alarms" aria-label="알림">${ic('bell')}${n?`<i class="dot"></i>`:''}</button>
+      <button class="btn d-only dt-vs" data-act="vsOpen" title="상담 예약 안내 링크 보내기">${ic('cal')}상담 예약</button>
+      <button class="tn-btn m-only" data-act="vsOpen" aria-label="상담 예약 안내 보내기">${ic('cal')}</button>
       <button class="btn pri d-only dt-new" data-act="newStudent">${ic('plus')}학생 추가</button>
       <button class="tn-btn m-only" data-act="cmd" aria-label="검색">${ic('search')}</button>
       <button class="dt-me d-only" data-go="settings" aria-label="설정 · 내 정보">${esc((S.settings.name||'K').slice(-2))}<i></i></button>
@@ -9346,6 +9349,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261101-1529';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261101-1532';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
