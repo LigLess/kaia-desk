@@ -3545,7 +3545,7 @@ function vStudents(){
   if(q) st=st.filter(s=>(s.name+' '+(s.phone||'')+' '+(s.memo||'')+' '+(s.goal||'')).toLowerCase().includes(q.toLowerCase()));
   st.sort((a,b)=>(b.at||0)-(a.at||0));
   const counts={}; list('students').forEach(s=>counts[s.status]=(counts[s.status]||0)+1);
-  return `<div class="view">${vh('학생',`전체 ${list('students').length}명 · 수강 중 ${counts['수강중']||0}명`,`<button class="btn" data-act="wLead">${ic('plus')}빠른 상담 등록</button><button class="btn" data-act="pasteStudents">${ic('copy')}인트라넷에서 복사해 등록</button><label class="btn" for="stuJson">${ic('up')}이전 프로그램에서 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><button class="btn pri" data-act="newStudent">${ic('plus')}학생 추가</button>`)}
+  return `<div class="view">${vh('학생',`전체 ${list('students').length}명 · 수강 중 ${counts['수강중']||0}명`,`<button class="btn" data-act="vsOpen">${ic('send')}상담 예약 안내</button><button class="btn" data-act="wLead">${ic('plus')}빠른 상담 등록</button><button class="btn" data-act="pasteStudents">${ic('copy')}인트라넷에서 복사해 등록</button><label class="btn" for="stuJson">${ic('up')}이전 프로그램에서 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><button class="btn pri" data-act="newStudent">${ic('plus')}학생 추가</button>`)}
   <section class="pane">
     <div class="btns" style="margin-bottom:14px">
       <div style="position:relative;flex:1;min-width:200px"><input id="stuQ" class="in" placeholder="이름 · 연락처 · 메모 검색" value="${esc(S.stuQ)}" style="padding-left:38px"><span style="position:absolute;left:12px;top:11px;width:18px;height:18px;color:var(--faint)">${ic('search')}</span></div>
@@ -3789,7 +3789,7 @@ function drawStudent(){
     ${(s.prevCourses||[]).length?`<div class="field full"><span>시간표에 없는 수강 이력 <small style="color:var(--faint)">(이전 프로그램 · 같은 날짜 수업이 시간표에 올라오면 자동 연결)</small></span><div class="btns">${s.prevCourses.map(p=>typeof p==='string'?{name:p}:p).map(p=>`<span class="chip">${esc(p.name)}${p.start?` ${yyDot(p.start)}~${yyDot(p.end)}`:''}${p.att?` · 출석 ${p.att}회`:''}</span>`).join('')}</div></div>`:''}
     <label class="field full"><span>메모</span><textarea id="sfMemo" class="in" rows="5">${esc(s.memo||'')}</textarea></label>
     <div class="field full wk-hint">상담 · 통화 · 진단 기록과 콜백은 <b>기록</b> 탭, 과제 제작 · 제출 · 채점은 왼쪽 메뉴 <b>과제</b> 화면, 자소서 · 면접 첨삭은 <b>첨삭</b> 탭에서 관리해요.</div>
-  </div></div>`}<footer>${s.id?`<button class="btn danger" data-act="delStudent" style="margin-right:auto">${ic('trash')}삭제</button>`:''}<button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="saveStudent">${s.id?'저장':'추가'}</button></footer>`;
+  </div></div>`}<footer>${s.id?`<button class="btn danger" data-act="delStudent" style="margin-right:auto">${ic('trash')}삭제</button>`:''}<button class="btn" data-act="vsOpen" data-id="${s.id||''}">${ic('send')}상담 예약 안내</button><button class="btn ghost" data-act="close">취소</button><button class="btn pri" data-act="saveStudent">${s.id?'저장':'추가'}</button></footer>`;
   if(modalEl&&modalEl._kind==='student'){ modalEl.querySelector('.sheet').innerHTML=html; } else { openModal(html); modalEl._kind='student'; }
 }
 function readStudentForm(){ const s=SM; if(!$('#sfName')) return s; s.name=$('#sfName').value.trim(); s.phone=$('#sfPhone').value.trim(); s.status=$('#sfStatus').value; s.goal=$('#sfGoal').value.trim(); s.memo=$('#sfMemo').value; s.type=$('#sfType').value.trim(); s.funding=$('#sfFunding').value.trim();
@@ -8907,6 +8907,50 @@ Object.assign(WACT,{
   nlPreview:()=>{ const u=nlGet('_'); if(u) window.open(u,'_blank','noopener'); },
 });
 function markNlSent(k){ const b=document.querySelector(`[data-act="nlCopyMsg"][data-k="${k}"]`); if(b){ b.classList.add('done'); } }
+/* ===== 상담 예약 안내 링크 =====
+   상담 날짜 · 시간 · 이름만 넣으면 → 오시는 길(1층 빽다방 · 엘리베이터 4층 · 통유리문) · 지하철 · 내비 · 주차 · 명함이 담긴
+   학생용 페이지(visit.html) 링크를 만들어요. 서버 저장 없이 링크 안에 정보가 들어가요. 업무에 상담 일정도 같이 잡아 줄 수 있어요. */
+const VS_BASE='https://ligless.github.io/kaia-desk/visit.html';
+const vsBase=()=>/github\.io$/.test(location.hostname)||location.protocol==='file:'?VS_BASE:new URL('/visit.html',location.origin).href;
+const VS_PREP=['신분증','국민내일배움카드 (있으시면 · 없어도 상담에서 발급 방법을 안내드려요)','최종학력 · 자격증 등 관련 서류 (있으시면)','궁금한 점 메모'];
+const VS={url:'',t:0};
+function vsOpen(sid){ const s=sid&&D().students[sid];
+  const F=S._vs={sid:sid||'',n:s?s.name.replace(/^예시\s/,''):'',d:addDays(todayStr(),1),tm:'14:00',nt:'',pr:VS_PREP.slice(0,2),task:true};
+  vsDraw(); vsMake(); }
+function vsDraw(){ const F=S._vs; const m=nlMentorTel();
+  const html=`${mHead('상담 예약 안내 링크')}<div class="body hw-form">
+    <p class="rm-hint" style="margin-top:0">링크 하나에 <b>예약 일정 · 오시는 길(건물 안내) · 지하철 · 내비 · 주차 · 내 명함</b>이 담겨요. 카톡으로 링크만 보내면 돼요.</p>
+    <div class="form"><label class="field"><span>이름</span><input class="in" data-vs="n" value="${esc(F.n)}" placeholder="예: 홍길동"></label>
+      <label class="field"><span>상담 날짜</span><input class="in" type="date" data-vs="d" value="${esc(F.d)}"></label>
+      <label class="field"><span>시간</span><input class="in" type="time" data-vs="tm" value="${esc(F.tm)}"></label></div>
+    <div class="field"><span>가져오시면 좋은 것</span><div class="ha-sts">${VS_PREP.map(x=>`<label class="check"><input type="checkbox" data-vsp="${esc(x)}" ${F.pr.includes(x)?'checked':''}>${esc(x.replace(/\s*\(.*\)$/,''))}</label>`).join('')}</div></div>
+    <label class="field"><span>한마디 <small>선택 · 페이지 위쪽에 보여요</small></span><textarea class="in" rows="2" data-vs="nt" placeholder="예: 내일 조심히 오세요! 국비 지원 가능 여부도 같이 봐 드릴게요.">${esc(F.nt)}</textarea></label>
+    <div class="field"><span>명함 연락처 <small>${esc(nlMentorName()||'이름은 설정 → 내 정보')}</small></span><div class="nl-2"><input class="in" data-nls="nlTel" value="${esc(m.tel)}" placeholder="학원 전화"><input class="in" data-nls="nlHp" value="${esc(m.hp)}" placeholder="내 휴대폰 번호"></div></div>
+    <label class="check"><input type="checkbox" data-vs="task" ${F.task?'checked':''}>업무에 상담 일정도 잡기 (시간 맞춰 알림)</label>
+    <div class="nl-go"><button class="btn pri" data-act="vsCopyMsg">${ic('copy')}안내 문구 + 링크 복사</button><button class="btn" data-act="vsCopy">${ic('copy')}링크만</button><button class="btn ghost" data-act="vsPreview">${ic('right')}미리 보기</button></div>
+  </div><footer><button class="btn ghost" data-act="close">닫기</button></footer>`;
+  if(modalEl&&modalEl._kind==='vs'){ const sh=modalEl.querySelector('.sheet'); const y=sh.scrollTop; sh.innerHTML=html; sh.scrollTop=y; } else { openModal(html,'wide'); modalEl._kind='vs'; } }
+async function vsMake(){ const F=S._vs; const m=nlMentorTel();
+  const o={n:F.n,d:F.d,tm:F.tm,mn:nlMentorName()};   // 짧게: 카톡 미리보기가 잘 뜨도록 꼭 필요한 것만
+  if(m.hp) o.hp=m.hp; else if(m.tel) o.tel=m.tel; if(F.nt) o.nt=F.nt.slice(0,300); o.p=VS_PREP.map((x,i)=>F.pr.includes(x)?i:'').join('');
+  VS.url=vsBase()+'#'+await hwZip(o); }
+function vsMsg(){ const F=S._vs; const d=parseYmd(F.d); const p=String(F.tm||'').split(':'); const hh=+p[0];
+  const when=`${d.getMonth()+1}월 ${d.getDate()}일(${DOW[d.getDay()]})${F.tm?` ${hh<12?'오전':'오후'} ${(hh%12)||12}시${+p[1]?' '+(+p[1])+'분':''}`:''}`;
+  return `안녕하세요${F.n?' '+F.n+'님':''}! ${S.settings.branch||'코리아AI아카데미'} ${nlMentorName()||'멘토'}입니다 :)\n${when} 상담 예약이 확정되었습니다.\n\n오시는 길(건물 안내 · 지하철 · 주차), 제 연락처를 아래 링크에 정리해 두었어요. 조심히 오세요!\n${VS.url}`; }
+function vsTask(){ const F=S._vs; if(!F.task||F._tasked===F.d+F.tm+F.n) return; F._tasked=F.d+F.tm+F.n;
+  store.put('tasks',{id:uid('t'),text:`${F.n||'상담'} 방문 상담`,due:F.d,time:F.tm,cat:'상담',sid:F.sid||'',done:false,at:Date.now()}); }
+document.addEventListener('input',e=>{ const t=e.target; if(!t.dataset||!S._vs||!modalEl||modalEl._kind!=='vs') return;
+  if(t.dataset.vs&&t.type!=='checkbox'){ S._vs[t.dataset.vs]=t.value; clearTimeout(VS.t); VS.t=setTimeout(vsMake,150); } });
+document.addEventListener('change',e=>{ const t=e.target; if(!t.dataset||!S._vs||!modalEl||modalEl._kind!=='vs') return;
+  if(t.dataset.vs==='task') S._vs.task=t.checked;
+  if(t.dataset.vsp!=null){ S._vs.pr=VS_PREP.filter(x=>x===t.dataset.vsp?t.checked:S._vs.pr.includes(x)); vsMake(); }
+  if(t.dataset.nls) vsMake(); });
+Object.assign(WACT,{
+  vsOpen:el=>{ if(typeof wSync==='function'&&el.closest('.modal')) wSync(); vsOpen(el.dataset.id||''); },
+  vsCopyMsg:()=>{ if(!VS.url){ toast('링크를 만드는 중이에요',''); vsMake(); return; } copyText(vsMsg()); vsTask(); },
+  vsCopy:()=>{ if(!VS.url){ vsMake(); return; } copyText(VS.url); vsTask(); },
+  vsPreview:()=>{ if(VS.url) window.open(VS.url,'_blank','noopener'); },
+});
 /* ===== 수강료표 쉽게 추가 =====
    인트라넷 강의 카드를 그대로 복사해 붙여넣거나, 시간표에 있는 과정을 고르면
    과목명 · 시간 · 횟수 · 분/월 · 구분을 알아서 채워요. 사람은 수강료만 넣으면 돼요. */
@@ -9329,6 +9373,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261101-1514';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261101-1529';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
