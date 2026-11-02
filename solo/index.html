@@ -2185,6 +2185,26 @@ body.dark[data-bg="lounge"] .hw-av,body.dark[data-bg="emerald"] .hw-av{color:#1a
 .hc-sum{padding:14px 16px;border-radius:14px;background:color-mix(in srgb,var(--accent) 7%,var(--surface-2));margin-bottom:16px}
 .hc-sum ul{margin:0;padding-left:18px}.hc-sum li{margin:4px 0;line-height:1.55}
 .hc-cm{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--surface);font-size:13.5px}.hc-cm span{display:block;font-size:12px;color:var(--muted)}
+.hc-mentor{padding:16px 18px;border-radius:14px;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));margin-bottom:18px}
+.hc-mcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.hc-mcols>div{padding:12px 14px;border-radius:12px;background:var(--surface-2)}
+.hc-mcols h4{margin:0 0 6px;font-size:13px}.hc-mcols>div:nth-child(1) h4{color:var(--ok)}.hc-mcols>div:nth-child(2) h4{color:var(--warn)}.hc-mcols>div:nth-child(3) h4{color:var(--accent)}
+.hc-mcols ul{margin:0;padding-left:16px;font-size:13.5px;line-height:1.55}.hc-mcols li{margin:3px 0}
+.hc-reply{margin-top:12px;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--accent) 8%,var(--surface-2));font-size:13.5px;line-height:1.6}.hc-reply span{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}
+.hc-fb{margin-top:12px}.hc-fbh{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13.5px}.hc-fb textarea{font-size:13.5px;line-height:1.6;resize:vertical}
+.hc-charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}.hc-charts .hc-wide{grid-column:1/-1}
+.hc-svg{width:100%;height:auto;display:block;overflow:visible}.hc-radar{max-width:300px;margin:0 auto}
+.hc-svgax{font-size:11px;fill:var(--muted)}.hc-svgv{font-size:11px;font-weight:700;fill:var(--fg)}.hc-svgbig{font-size:24px;font-weight:800;fill:var(--fg)}.hc-svgsm{font-size:11px;fill:var(--muted)}
+.hc-svgleg{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin-top:6px}.hc-svgleg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}.hc-svgleg i.ln{height:3px;width:14px;vertical-align:2px}
+.hc-donut{display:flex;align-items:center;gap:18px}.hc-donut svg{width:140px;flex:none}.hc-donut ul{list-style:none;margin:0;padding:0;flex:1;font-size:13px}.hc-donut li{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)}.hc-donut li:last-child{border:0}.hc-donut li i{width:10px;height:10px;border-radius:3px}.hc-donut li b{margin-left:auto}
+.hc-tries{display:grid;gap:8px}.hc-try{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.hc-try i{display:flex;height:10px;border-radius:9px;background:var(--surface-3);overflow:hidden}.hc-try i b.ru{background:color-mix(in srgb,var(--accent) 45%,transparent)}.hc-try i b.su{background:var(--accent)}
+.hc-try em{font-style:normal;font-weight:700;white-space:nowrap}.hc-try em small{font-weight:500;color:var(--ok);margin-left:4px}
+.hc-rev{display:grid;gap:6px;margin:10px 0 4px}.hc-rev>div{font-size:13px;line-height:1.55;padding:8px 10px;border-radius:9px}
+.hc-rev b{font-size:11.5px;margin-right:8px;padding:1px 7px;border-radius:6px}
+.hc-rev .g{background:color-mix(in srgb,var(--ok) 9%,transparent)}.hc-rev .g b{background:color-mix(in srgb,var(--ok) 20%,transparent);color:var(--ok)}
+.hc-rev .t{background:color-mix(in srgb,var(--warn) 9%,transparent)}.hc-rev .t b{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+@media (max-width:760px){.hc-mcols,.hc-charts{grid-template-columns:minmax(0,1fr)}.hc-donut{flex-direction:column;align-items:stretch}.hc-donut svg{margin:0 auto}}
 .hc-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
 .hc-box{padding:14px 16px;border-radius:14px;background:var(--surface-2)}
 .hc-bar{display:grid;grid-template-columns:118px minmax(0,1fr) 44px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
@@ -8836,6 +8856,10 @@ function hcReport(sid,hid){ const s=D().students[sid]; const h=s&&(s.hw||[]).fin
   const usedIds=new Set((s.hw||[]).flatMap(x=>x.code?x.code.ps:[])); const avgLv=Math.round(ps.reduce((a,p)=>a+p.lv,0)/ps.length);
   const nextLv=auto?(tot>=85?Math.min(3,avgLv+1):tot<50?Math.max(1,avgLv-1):avgLv):avgLv;
   const rec=CODEBANK.filter(p=>p.lang===lang&&!usedIds.has(p.id)).map(p=>({p,w:(weak.length&&p.tg.some(t=>weak.includes(t))?2:0)+(p.lv===nextLv?1:0)})).sort((a,b)=>b.w-a.w).slice(0,3).map(x=>x.p);
+  const rv=R.map((x,i)=>hcReview(lang,x,met[i]));
+  const tpts=(s.hw||[]).filter(x=>x.code&&x.code.sub&&x.id!==hid&&x.sc!=null).map(x=>({t:x.t,sc:Math.round(x.sc),at:x.code.sub.at||x.sub||x.d})).concat(tot!=null?[{t:h.t,sc:Math.round(tot),at:sub.at||h.sub||h.d,cur:true}]:[])
+    .sort((a,b)=>String(a.at).localeCompare(String(b.at))).slice(-8).map(x=>({...x,d:fmtMD(String(x.at).slice(0,10))}));
+  const M=hcMentor({nm,R,rv,tags,tot,auto,passT,allT:allT.length,runs,subs,secs,stm:h.stm,rec,nextLv,L,title:h.t,prev:tpts.filter(x=>!x.cur)});
   const cell=(v,i,ex,ms)=>{ const c=v===1?'ok':v===2?'to':v===3?'er':'bad'; return `<span class="hc-cell ${c}" title="${i<ex?'예제':'숨은 테스트'} ${i+1}${ms!=null?' · '+ms+'ms':''}"><i></i>${i<ex?'예':'숨'}${i+1}</span>`; };
   const html=`${mHead(`${esc(nm)} · ${esc(h.t)}`)}<div class="body hc-rep">
     <div class="hc-top">
@@ -8849,6 +8873,8 @@ function hcReport(sid,hid){ const s=D().students[sid]; const h=s&&(s.hw||[]).fin
       </div>
     </div>
     <section class="hc-sum"><h3>한눈에 정리</h3><ul>${lines.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>${h.stm?`<div class="hc-cm"><span>학생 한마디</span>${esc(h.stm)}</div>`:''}</section>
+    ${hcMentorHtml(M)}
+    ${hcCharts({R,tags,auto,trend:hcTrend(tpts)})}
     ${auto?`<div class="hc-grid2"><section class="hc-box"><h3>영역별 정답률 <small>테스트 기준</small></h3>${tags.map(t=>`<div class="hc-bar"><span>${esc(t.t)}</span><i><b style="--w:${t.p||0}%" class="${t.p>=80?'ok':t.p>=50?'mid':'low'}"></b></i><em class="num">${t.p==null?'-':t.p+'%'}</em></div>`).join('')}</section>
       <section class="hc-box"><h3>틀린 이유 <small>통과 못 한 테스트 ${allT.length-passT}개</small></h3>${errs.length?errs.map(([k,n])=>{ const E=HC_ERR[k]||[k,'']; return `<div class="hc-err"><b>${esc(E[0])}<em class="num">${n}</em></b><small>${esc(E[1])}</small></div>`; }).join(''):'<div class="hc-none">모든 테스트를 통과했어요</div>'}</section></div>`:''}
     <h3 class="hc-h">문제별 결과</h3>${auto?'<div class="hc-leg"><span class="hc-cell ok"><i></i>통과</span><span class="hc-cell bad"><i></i>오답</span><span class="hc-cell to"><i></i>시간 초과</span><span class="hc-cell er"><i></i>에러</span><small>예 = 학생에게 보인 예제 · 숨 = 숨은 테스트</small></div>':''}
@@ -8859,7 +8885,7 @@ function hcReport(sid,hid){ const s=D().students[sid]; const h=s&&(s.hw||[]).fin
       <div class="hc-meta"><span>실행 ${x.ru||0} · 채점 ${x.su||0}번${x.fo?` · ${x.fo}번째 채점에 만점`:''}</span><span>${x.se>=60?Math.round(x.se/60)+'분':(x.se||0)+'초'} 사용</span><span>${m.lines}줄</span>${lang!=='sql'?`<span>반복 ${m.loops} · 조건 ${m.conds}${m.fns?` · 함수 ${m.fns}`:''}${m.depth>=2?` · <b class="warn">중첩 반복 ${m.depth}단계</b>`:''}${m.rec?' · 재귀':''}</span>`:''}</div>
       ${(x.e||[]).filter(Boolean).length?`<div class="hc-warn">에러: ${Object.entries((x.e||[]).filter(Boolean).reduce((a,k)=>(a[k]=(a[k]||0)+1,a),{})).map(([k,n])=>`${esc((HC_ERR[k]||[k])[0])} ${n}번`).join(' · ')}</div>`:''}
       ${m.syn.length?`<div class="hc-syn">${m.syn.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}
-      ${m.blank?'<div class="hc-warn">코드가 거의 비어 있어요 — 손대지 못한 문제예요.</div>':''}
+      ${m.blank?'<div class="hc-warn">코드가 거의 비어 있어요 — 손대지 못한 문제예요.</div>':hcRevHtml(rv[i])}
       <details class="hc-code" ${i===0?'open':''}><summary>제출한 코드 보기</summary><pre>${String(x.c||'').split('\n').map((l,k)=>`<i>${k+1}</i>${esc(l)}`).join('\n')}</pre>${x.cc?`<div class="hc-warn">학생 화면엔 이 코드보다 나중에 고친 코드가 있었어요(채점 점수가 더 낮거나 채점 안 함). 가장 높은 점수의 코드를 받았어요.</div>`:''}</details>
       ${!auto&&p.tests?`<details class="hc-code"><summary>테스트 입력 · 기대 출력 ${p.tests.length}개 (직접 확인용)</summary>${p.tests.map((t,j)=>`<div class="hc-io"><div><span>입력 ${j+1}${j<ex?' (예제)':''}</span><pre>${esc(t.i)}</pre></div><div><span>기대 출력</span><pre>${esc(t.o)}</pre></div></div>`).join('')}</details>`:''}
     </section>`; }).join('')}
@@ -8899,6 +8925,165 @@ Object.assign(WACT,{
   hcNext:()=>{ const {sid}=S._hcR||{}; const s=D().students[sid]; const h=s&&(s.hw||[]).find(x=>x.id===S._hcR.hid); closeModal(); S._hc={lang:h.code.lang,lv:0,ps:(S._hcRec||[]).slice()}; S._hcOnly=sid; S._hcC=hwGrpOf(h.cid)||''; hcAssignModal(); },
   hcDel:async()=>{ const {sid,hid}=S._hcR||{}; const s=D().students[sid]; if(!s||!await confirmBox('이 코딩 테스트를 지울까요?','이 학생의 기록에서만 지워져요.','지우기',true)) return; hwPut(s,(s.hw||[]).filter(x=>x.id!==hid)); closeModal(); render(); },
 });
+/* ===== 코딩 테스트 결과창: 멘토 코멘트 · 코드 리뷰 · 그래프 =====
+   hcReport(hwcode.js)가 불러 써요. 모두 이 브라우저 안에서 규칙으로 계산해요(서버 · AI 호출 없음).
+   - hcReview: 문제마다 학생 코드를 보고 "잘한 점 / 이렇게도 써 보세요"를 뽑아요.
+   - hcMentor: 점수 · 영역 · 시도 기록 · 코드 리뷰 · 학생 한마디를 묶어 멘토 멘트와 학생에게 보낼 피드백 문구를 만들어요.
+   - hcCharts: 테스트 결과 도넛 · 문제별 점수와 시간 · 시도 횟수 · 영역 레이더 · 점수 추이(이전 코딩 테스트) */
+
+/* ---------- 코드 리뷰 규칙 ---------- */
+const hcNorm=s=>String(s||'').replace(/#.*$/gm,'').replace(/--.*$/gm,'').replace(/\/\/.*$/gm,'');
+function hcReview(lang,x,m){ const c=String(x.c||''), z=hcNorm(c), good=[], tip=[]; const p=x.p||{}; const tg=p.tg||[];
+  const add=(a,t)=>{ if(!a.includes(t)) a.push(t); };
+  if(m&&m.blank) return {good,tip:['코드가 거의 비어 있어요. 문제를 읽고 어디서 막혔는지 먼저 물어봐 주세요.']};
+  if(x.fo===1&&x.s===100&&(x.ru||0)<=3) add(good,'첫 채점에 바로 만점 — 실행으로 확인하고 낸 깔끔한 풀이예요.');
+  if(lang==='python'){
+    if(!/def\s+solution\s*\(/.test(z)) add(tip,'def solution(...) 틀을 지우면 채점이 안 돼요. 틀 안에 코드를 쓰고 return으로 답을 돌려주는 방식이에요.');
+    if(/print\s*\(/.test(z)&&!/\breturn\b/.test(z)) add(tip,'print로 출력만 하고 return이 없어요. 함수 문제는 답을 return으로 돌려줘야 해요.');
+    if(/range\s*\(\s*len\s*\(/.test(z)) add(tip,'for i in range(len(리스트)) 대신 for x in 리스트(값만 필요할 때)나 enumerate(번호도 필요할 때)를 쓰면 더 간단해요.');
+    if(/join\s*\(\s*reversed\s*\(/.test(z)) add(tip,"''.join(reversed(s))도 정답이지만, 문자열 뒤집기는 슬라이싱 s[::-1] 한 줄이 가장 짧아요.");
+    else if(/\[\s*::\s*-1\s*\]/.test(z)) add(good,'슬라이싱 [::-1]로 한 줄에 뒤집었어요.');
+    const acc=z.match(/(\w+)\s*=\s*0\s*\n[\s\S]*?\bfor\b[\s\S]*?\1\s*\+=/);
+    if(acc){ add(good,'반복문으로 값을 하나씩 누적하는 기본기가 잡혀 있어요.'); if(/range\s*\(\s*1\s*,\s*\w+\s*\+\s*1\s*\)/.test(z)) add(tip,'1부터 n까지 합은 sum(range(1, n+1)) 한 줄로도, 공식 n*(n+1)//2로도 구할 수 있어요(반복이 필요 없어서 n이 커도 빨라요).'); else add(tip,'누적 반복은 sum()으로 한 줄로 줄일 수도 있어요. 둘 다 알아 두면 좋아요.'); }
+    if(/\breturn\s+True\b[\s\S]{0,60}\belse\s*:\s*\n?\s*return\s+False\b/.test(z)||/\breturn\s+False\b[\s\S]{0,60}\belse\s*:\s*\n?\s*return\s+True\b/.test(z)) add(tip,'if 조건: return True / else: return False 는 return 조건 한 줄로 줄일 수 있어요.');
+    if(/[=!]=\s*(True|False)\b/.test(z)) add(tip,'== True / == False 비교는 빼도 돼요. if 조건: / if not 조건: 으로 써요.');
+    const conds=[...z.matchAll(/^\s*(?:el)?if\s+(.+?)\s*:/gm)].map(r=>r[1].replace(/\s+/g,''));
+    const neg=a=>a.includes('!=')?a.replace('!=','=='):a.includes('==')?a.replace('==','!='):null;
+    if(conds.some((a,i)=>conds.slice(i+1).includes(neg(a)))) add(tip,'앞 조건의 반대를 다시 검사하는 if/elif가 있어요. 남은 경우는 else로 받으면 더 짧고 실수가 줄어요.');
+    if(/^\s*(list|str|sum|max|min|dict|len|input|int|set)\s*=/m.test(z)) add(tip,'list · sum · max 같은 내장 이름을 변수 이름으로 쓰면 그 함수가 가려져요. total · nums처럼 다른 이름을 권해요.');
+    if(/\[[^\]\n]+\bfor\b[^\]\n]+\]/.test(z)) add(good,'리스트 컴프리헨션을 쓸 줄 알아요.');
+    if(/\b(max|min|sum|sorted|len)\s*\(/.test(z)&&!acc) add(good,'max · sum · sorted 같은 내장 함수를 잘 활용했어요.');
+    if(/\bf['"]/.test(z)) add(good,'f-문자열로 출력을 깔끔하게 만들었어요.');
+    if(m&&m.depth>=2&&(x.ps||[]).includes(2)) add(tip,`반복문이 ${m.depth}겹이라 큰 입력에서 시간 초과가 났어요. 한 번 계산한 값을 저장(딕셔너리 · 집합)해 두면 반복을 줄일 수 있어요.`);
+    else if(m&&m.depth>=2) add(tip,`반복이 ${m.depth}겹이에요. 지금은 통과했지만 입력이 커지면 느려질 수 있어요.`);
+  }
+  if(lang==='sql'){
+    const up=(c.match(/\b(SELECT|FROM|WHERE|ORDER BY|GROUP BY|HAVING|JOIN|ON|AS|AND|OR)\b/g)||[]).length, low=(c.match(/\b(select|from|where|order by|group by|having|join)\b/g)||[]).length;
+    if(/select\s+\*/i.test(z)) add(tip,'SELECT * 는 모든 칸을 가져와요. 문제에서 필요한 칸만 적는 습관(예: SELECT name, dept)이 실무에서도 좋아요.');
+    else if(/select\s+[\w.]+\s*,/i.test(z)) add(good,'필요한 칸만 골라서 조회했어요(SELECT *를 쓰지 않음).');
+    if(up&&!low&&c.split('\n').filter(l=>l.trim()).length>=2) add(good,'키워드를 대문자로 쓰고 줄을 나눠서 읽기 좋게 썼어요.');
+    else if(low) add(tip,'select · from 같은 키워드를 대문자로 쓰면 칸 이름과 구분돼서 읽기 쉬워요.');
+    if(c.trim()&&c.split('\n').filter(l=>l.trim()).length===1&&c.length>70) add(tip,'긴 쿼리는 SELECT / FROM / WHERE마다 줄을 나누면 고치기 쉬워요.');
+    if(/=\s*null\b/i.test(z)) add(tip,'NULL은 = 로 비교할 수 없어요. IS NULL / IS NOT NULL을 써요.');
+    if(/\bhaving\b/i.test(z)&&!/\bgroup\s+by\b/i.test(z)) add(tip,'HAVING은 GROUP BY로 묶은 결과를 거를 때 써요. 일반 조건은 WHERE에 써요.');
+    if(/\bjoin\b/i.test(z)) add(good,/\bleft\s+(outer\s+)?join\b/i.test(z)?'LEFT JOIN으로 짝이 없는 행까지 챙겼어요.':'JOIN으로 두 표를 연결했어요.');
+    if(/\(\s*select\b/i.test(z)) add(good,'서브쿼리를 활용했어요.');
+    if(/\bas\s+\w+/i.test(z)) add(good,'AS로 결과 칸에 알기 쉬운 이름을 붙였어요.');
+    if(/\border\s+by\b/i.test(z)&&!/\b(asc|desc)\b/i.test(z)) add(tip,'ORDER BY는 기본이 오름차순(ASC)이에요. 내림차순이 필요하면 DESC를 붙여요.');
+    if(c.trim()&&!/;\s*$/.test(c.trim())) add(tip,'문장 끝에 세미콜론(;)을 붙이는 습관을 들이면 여러 쿼리를 이어 쓸 때 실수가 줄어요.');
+  }
+  if(lang==='java'){
+    if(/\bScanner\b/.test(z)) add(good,'Scanner로 입력을 받는 기본 구조를 갖췄어요.');
+    if(/System\.out\.print/.test(z)&&/\bfor\b[\s\S]*System\.out\.print/.test(z)&&(x.p.tests||[]).length) add(tip,'반복문 안에서 println을 많이 부르면 느려질 수 있어요. StringBuilder에 모아 한 번에 출력하는 방법도 있어요.');
+    if(!/\bclass\s+Main\b/.test(z)) add(tip,'클래스 이름을 Main으로 맞춰야 채점 환경에서 실행돼요.');
+  }
+  if(lang==='c'){
+    if(/scanf\s*\(\s*"[^"]*"\s*,\s*[a-z_]\w*\s*[,)]/.test(z)&&!/scanf\s*\([^)]*&/.test(z)) add(tip,'scanf에서 변수 앞의 &를 빠뜨리지 않았는지 확인해요(배열 · 문자열 제외).');
+    if(/\breturn\s+0\s*;/.test(z)) add(good,'main을 return 0으로 깔끔하게 끝냈어요.');
+  }
+  /* 틀린 테스트가 있으면 그 이유를 맨 앞에 */
+  const bad=(x.ps||[]).map((v,i)=>({v,i})).filter(o=>o.v!==1);
+  if(bad.length){ const ers=[...new Set(bad.filter(o=>o.v===3).map(o=>(x.e||[])[o.i]).filter(Boolean))]; const to=bad.some(o=>o.v===2), wa=bad.filter(o=>!o.v).length;
+    const why=[]; ers.forEach(k=>why.push(`${(HC_ERR[k]||[k])[0]}(${k})${/ZeroDivision/.test(k)?' — 0으로 나누는 경우를 먼저 따로 처리해야 해요':HC_ERR[k]?' — '+HC_ERR[k][1]:''}`)); if(to) why.push('시간 초과 — 반복을 줄이는 방법이 필요해요'); if(wa) why.push(lang==='sql'?`오답 ${wa}개 — 결과 칸 이름 · 순서, WHERE 조건(이상/초과), 정렬 방향을 문제와 하나씩 비교해 보세요`:`오답 ${wa}개 — 경계값(0 · 1 · 빈 값 · 아주 큰 수)에서 결과를 손으로 따라가 보세요`);
+    tip.unshift(`통과 못 한 테스트 ${bad.length}개: ${why.join(' / ')}`); }
+  return {good,tip}; }
+
+/* ---------- 멘토 코멘트 + 학생에게 보낼 피드백 ---------- */
+function hcMentor(o){ const {nm,R,rv,tags,tot,auto,passT,allT,runs,subs,secs,stm,rec,nextLv,L,title,prev}=o;
+  const strong=tags.filter(t=>t.p!=null&&t.p>=80).map(t=>t.t), weak=tags.filter(t=>t.p!=null&&t.p<60).map(t=>t.t);
+  const perfect=R.filter(x=>x.s===100).length, first=R.filter(x=>x.fo===1&&x.s===100).length;
+  const hard=R.map((x,i)=>({x,i})).sort((a,b)=>(b.x.ru||0)+(b.x.su||0)*2-((a.x.ru||0)+(a.x.su||0)*2))[0];
+  const goods=[...new Set(rv.flatMap(r=>r.good))], tips=rv.flatMap((r,i)=>r.tip.map(t=>({i,t})));
+  const mm=Math.max(1,Math.round(secs/60));
+  const praise=[], fix=[], next=[];
+  if(auto){ if(tot>=90) praise.push(`${R.length}문제 중 ${perfect}문제를 만점으로 풀었어요. 테스트 ${passT}/${allT}개 통과로 이 난이도는 충분히 소화했어요.`);
+    else if(tot>=60) praise.push(`테스트 ${passT}/${allT}개를 통과했어요. 기본 흐름은 이해하고 있어요.`);
+    else praise.push(`끝까지 ${R.length}문제 모두 코드를 써서 제출한 것부터 좋아요. 막힌 부분이 어디인지 보이는 결과예요.`); }
+  if(first) praise.push(`${first}문제는 첫 채점에 바로 만점이었어요.`);
+  if(strong.length) praise.push(`${strong.join(', ')} 영역은 안정적이에요.`);
+  goods.slice(0,2).forEach(g=>praise.push(g));
+  if(runs+subs>0&&subs<=R.length*2) praise.push(`실행 ${runs}번 · 채점 ${subs}번 — 돌려 보고 고치면서 푸는 습관이 좋아요.`);
+  if(weak.length) fix.push(`${weak.join(', ')} 영역이 약해요. ${weak.map(w=>HC_TIP[w]).filter(Boolean)[0]||'관련 문제를 더 풀어 보기'}를 권해요.`);
+  { const srt=tips.slice().sort((a,b)=>(R[a.i].s??100)-(R[b.i].s??100)); const seen=new Set(), pick=[]; srt.forEach(t=>{ if(!seen.has(t.i)){ seen.add(t.i); pick.push(t); } }); srt.forEach(t=>{ if(pick.length<3&&!pick.includes(t)) pick.push(t); }); pick.slice(0,3).forEach(t=>fix.push(`${t.i+1}번: ${t.t}`)); }
+  if(hard&&((hard.x.ru||0)>=6||(hard.x.su||0)>=3)) fix.push(`${hard.i+1}번(${hard.x.p.ti})에서 가장 오래 고민했어요(실행 ${hard.x.ru||0} · 채점 ${hard.x.su||0}번). 수업 때 같이 풀어 보면 좋아요.`);
+  if(!fix.length) fix.push('크게 고칠 점은 없어요. 다음엔 같은 문제를 더 짧고 효율적으로 바꿔 보는 연습을 권해요.');
+  if(auto) next.push(tot>=85?`다음 과제는 한 단계 높은 ${HC_LV[nextLv]} 난이도로 내도 좋아요.`:tot<50?`다음 과제는 ${HC_LV[nextLv]} 난이도로 한 번 더 다지는 게 좋아요.`:`다음 과제도 ${HC_LV[nextLv]} 난이도로, ${weak.length?weak[0]+' 위주로':'영역을 섞어서'} 내 보세요.`);
+  if(rec.length) next.push(`추천 문제: ${rec.map(p=>p.ti).join(', ')}`);
+  if(prev&&prev.length){ const last=prev[prev.length-1]; if(last.sc!=null&&tot!=null){ const d=Math.round(tot-last.sc); next.unshift(d>0?`지난 코딩 테스트(${last.sc}점)보다 ${d}점 올랐어요.`:d<0?`지난 코딩 테스트(${last.sc}점)보다 ${-d}점 내려갔어요. 이번 문제 난이도가 높았는지 같이 봐 주세요.`:`지난 코딩 테스트와 같은 점수예요.`); } }
+  /* 학생 한마디에 답하기 */
+  let reply='';
+  if(stm){ const nums=[...new Set([...String(stm).matchAll(/(\d+)\s*번/g)].map(r=>+r[1]).filter(n=>n>=1&&n<=R.length))];
+    const parts=nums.map(n=>{ const t=(rv[n-1]||{}).tip||[]; return t.length?`${n}번은 ${t.slice(0,2).join(' 그리고 ')}`:`${n}번은 잘 풀었어요. 지금 방식도 정답이에요.`; });
+    if(/함수|def|틀/.test(stm)&&!parts.some(p=>/def solution/.test(p))) parts.unshift('문제에 있는 def solution(...) 틀은 지우지 말고 그 안을 채우면 돼요. 함수가 답을 return하면 채점기가 그 값을 확인하는 구조예요.');
+    if(/재밌|재미|좋았/.test(stm)) parts.push('재밌었다니 다행이에요! 이 느낌 그대로 다음 단계도 가 봐요.');
+    if(/어렵|힘들|모르겠|당황/.test(stm)&&!parts.length) parts.push('처음엔 다들 헷갈려요. 막힌 부분은 수업 때 같이 짚어 볼게요.');
+    reply=parts.join(' '); }
+  const lines=[`${nm}님, ${title} 결과 보내드려요.`,auto&&tot!=null?`점수 ${Math.round(tot)}점 · 테스트 ${passT}/${allT}개 통과 · 풀이 ${mm}분`:`${L.name} ${R.length}문제 · 풀이 ${mm}분`,
+    '',`[잘한 점]`,...praise.slice(0,3).map(t=>'- '+t),'',`[이렇게 해 보세요]`,...fix.slice(0,3).map(t=>'- '+t)];
+  if(reply) lines.push('','[질문에 대한 답]',reply);
+  if(next.length) lines.push('','[다음 과제]',...next.slice(0,2).map(t=>'- '+t));
+  lines.push('',`궁금한 건 편하게 물어봐 주세요! — ${(typeof nlMentorName==='function'&&nlMentorName())||'담당 멘토'}`);
+  return {praise,fix,next,reply,msg:lines.join('\n')}; }
+
+/* ---------- 그래프 (SVG · 테마 색 그대로) ---------- */
+const HC_COL={ok:'var(--ok)',bad:'var(--bad)',to:'var(--warn)',er:'#9b7cf6',mut:'var(--muted)',line:'var(--line)',acc:'var(--accent)'};
+const hcFmtS=s=>s>=60?Math.round(s/60)+'분':(s||0)+'초';
+function hcDonut(cnt){ const tot=cnt.reduce((a,c)=>a+c.n,0)||1; let a=-Math.PI/2; const r=46,R0=64,cx=70,cy=70;
+  const arcs=cnt.filter(c=>c.n).map(c=>{ const a2=a+c.n/tot*Math.PI*2; const big=a2-a>Math.PI?1:0;
+    const pt=(ang,rr)=>`${(cx+rr*Math.cos(ang)).toFixed(2)} ${(cy+rr*Math.sin(ang)).toFixed(2)}`;
+    const d=c.n===tot?`M ${cx} ${cy-R0} A ${R0} ${R0} 0 1 1 ${cx-0.01} ${cy-R0} L ${cx-0.01} ${cy-r} A ${r} ${r} 0 1 0 ${cx} ${cy-r} Z`
+      :`M ${pt(a,R0)} A ${R0} ${R0} 0 ${big} 1 ${pt(a2,R0)} L ${pt(a2,r)} A ${r} ${r} 0 ${big} 0 ${pt(a,r)} Z`; a=a2; return `<path d="${d}" style="fill:${c.col}"><title>${c.t} ${c.n}개</title></path>`; }).join('');
+  const ok=(cnt.find(c=>c.k==='ok')||{n:0}).n;
+  return `<div class="hc-donut"><svg viewBox="0 0 140 140" role="img" aria-label="테스트 결과 구성">${arcs}<text x="70" y="68" text-anchor="middle" class="hc-svgbig">${Math.round(ok/tot*100)}%</text><text x="70" y="86" text-anchor="middle" class="hc-svgsm">통과율</text></svg>
+    <ul>${cnt.map(c=>`<li><i style="background:${c.col}"></i>${c.t}<b class="num">${c.n}</b></li>`).join('')}</ul></div>`; }
+function hcBars(R){ /* 문제별 점수(막대) + 풀이 시간(선) */
+  const W=900,H=230,pl=34,pr=46,pt=18,pb=34; const n=R.length, bw=Math.min(54,(W-pl-pr)/n*0.5), step=(W-pl-pr)/n;
+  const maxS=Math.max(60,...R.map(x=>x.se||0)); const y=v=>pt+(H-pt-pb)*(1-v/100), ys=v=>pt+(H-pt-pb)*(1-v/maxS);
+  const grid=[0,50,100].map(v=>`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" style="stroke:${HC_COL.line}"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" class="hc-svgax">${v}</text>`).join('');
+  const bars=R.map((x,i)=>{ const cx=pl+step*i+step/2, s=x.s==null?0:x.s; const col=s>=100?HC_COL.ok:s>=50?HC_COL.to:HC_COL.bad;
+    return `<rect x="${cx-bw/2}" y="${y(s)}" width="${bw}" height="${Math.max(1,y(0)-y(s))}" rx="5" style="fill:${col};opacity:.85"><title>${i+1}번 ${x.p.ti} · ${x.s==null?'-':x.s}점</title></rect><text x="${cx}" y="${H-pb+16}" text-anchor="middle" class="hc-svgax">${i+1}번</text><text x="${cx}" y="${y(s)-5}" text-anchor="middle" class="hc-svgv">${x.s==null?'-':x.s}</text>`; }).join('');
+  const pts=R.map((x,i)=>[pl+step*i+step/2,ys(x.se||0)]);
+  const line=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" style="fill:none;stroke:${HC_COL.acc};stroke-width:2"/>`+pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" style="fill:var(--surface);stroke:${HC_COL.acc};stroke-width:2"><title>${i+1}번 풀이 ${hcFmtS(R[i].se)}</title></circle>`).join('');
+  const ax2=`<text x="${W-pr+6}" y="${pt+4}" class="hc-svgax">${hcFmtS(maxS)}</text><text x="${W-pr+6}" y="${y(0)+4}" class="hc-svgax">0</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="hc-svg" role="img" aria-label="문제별 점수와 풀이 시간">${grid}${bars}${line}${ax2}</svg>
+    <div class="hc-svgleg"><span><i style="background:${HC_COL.ok}"></i>점수(막대)</span><span><i class="ln" style="background:${HC_COL.acc}"></i>풀이 시간(선 · 오른쪽 눈금)</span></div>`; }
+function hcTries(R){ /* 문제별 실행 · 채점 횟수 */
+  const mx=Math.max(1,...R.map(x=>(x.ru||0)+(x.su||0)));
+  return `<div class="hc-tries">${R.map((x,i)=>{ const ru=x.ru||0, su=x.su||0; return `<div class="hc-try"><span>${i+1}번</span><i><b class="ru" style="width:${ru/mx*100}%"></b><b class="su" style="width:${su/mx*100}%"></b></i><em class="num">${ru} · ${su}${x.fo&&x.s===100?` <small>${x.fo}번째 만점</small>`:''}</em></div>`; }).join('')}</div>
+    <div class="hc-svgleg"><span><i style="background:color-mix(in srgb,var(--accent) 45%,transparent)"></i>실행</span><span><i style="background:var(--accent)"></i>채점</span></div>`; }
+function hcRadar(tags){ const T=tags.filter(t=>t.p!=null).slice(0,6); if(T.length<3) return '';
+  const cx=110,cy=100,r=72,n=T.length; const P=(i,v)=>{ const a=-Math.PI/2+i*2*Math.PI/n; return [cx+r*v/100*Math.cos(a),cy+r*v/100*Math.sin(a)]; };
+  const rings=[25,50,75,100].map(v=>`<polygon points="${T.map((_,i)=>P(i,v).join(',')).join(' ')}" style="fill:none;stroke:${HC_COL.line}"/>`).join('');
+  const axes=T.map((t,i)=>{ const e=P(i,100), l=P(i,124); return `<line x1="${cx}" y1="${cy}" x2="${e[0]}" y2="${e[1]}" style="stroke:${HC_COL.line}"/><text x="${l[0]}" y="${l[1]+4}" text-anchor="middle" class="hc-svgax">${esc(t.t)}</text>`; }).join('');
+  const poly=`<polygon points="${T.map((t,i)=>P(i,t.p).join(',')).join(' ')}" style="fill:color-mix(in srgb,var(--accent) 22%,transparent);stroke:${HC_COL.acc};stroke-width:2"/>`;
+  return `<svg viewBox="-50 -6 320 222" class="hc-svg hc-radar" role="img" aria-label="영역별 정답률">${rings}${axes}${poly}${T.map((t,i)=>{ const p=P(i,t.p); return `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" style="fill:${HC_COL.acc}"><title>${esc(t.t)} ${t.p}%</title></circle>`; }).join('')}</svg>`; }
+function hcTrend(pts){ if(pts.length<2) return '';
+  const W=440,H=200,pl=30,pr=20,pt=20,pb=30; const n=pts.length, step=n>1?(W-pl-pr)/(n-1):0; const y=v=>pt+(H-pt-pb)*(1-v/100);
+  const P=pts.map((p,i)=>[pl+step*i,y(p.sc)]);
+  return `<svg viewBox="0 0 ${W} ${H}" class="hc-svg" role="img" aria-label="코딩 테스트 점수 추이">${[0,50,100].map(v=>`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" style="stroke:${HC_COL.line}"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end" class="hc-svgax">${v}</text>`).join('')}
+    <polyline points="${P.map(p=>p.join(',')).join(' ')}" style="fill:none;stroke:${HC_COL.acc};stroke-width:2.2"/>
+    ${P.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="${pts[i].cur?6:4.5}" style="fill:${pts[i].cur?HC_COL.acc:'var(--surface)'};stroke:${HC_COL.acc};stroke-width:2"><title>${esc(pts[i].t)} · ${pts[i].sc}점</title></circle><text x="${p[0]}" y="${p[1]-10}" text-anchor="middle" class="hc-svgv">${pts[i].sc}</text><text x="${p[0]}" y="${H-10}" text-anchor="${i===0?'start':i===P.length-1?'end':'middle'}" class="hc-svgax">${esc(pts[i].d)}${pts[i].cur?' (이번)':''}</text>`).join('')}</svg>`; }
+function hcCharts(o){ const {R,tags,auto,trend}=o;
+  const cnt=[{k:'ok',t:'통과',col:HC_COL.ok,n:0},{k:'bad',t:'오답',col:HC_COL.bad,n:0},{k:'to',t:'시간 초과',col:HC_COL.to,n:0},{k:'er',t:'에러',col:HC_COL.er,n:0}];
+  R.forEach(x=>(x.ps||[]).forEach(v=>{ cnt[v===1?0:v===2?2:v===3?3:1].n++; }));
+  const radar=auto?hcRadar(tags):'';
+  return `<h3 class="hc-h">그래프로 보기</h3><div class="hc-charts">
+    ${auto?`<section class="hc-box"><h3>테스트 결과 <small>숨은 테스트 포함</small></h3>${hcDonut(cnt)}</section>`:''}
+    <section class="hc-box"><h3>몇 번 만에 풀었나 <small>실행 · 채점 횟수</small></h3>${hcTries(R)}</section>
+    ${auto?`<section class="hc-box hc-wide"><h3>문제별 점수 · 풀이 시간</h3>${hcBars(R)}</section>`:''}
+    ${radar?`<section class="hc-box"><h3>영역 균형 <small>정답률</small></h3>${radar}</section>`:''}
+    ${trend?`<section class="hc-box"><h3>점수 추이 <small>이 학생의 코딩 테스트 기록</small></h3>${trend}</section>`:''}
+  </div>`; }
+function hcRevHtml(r){ if(!r||(!r.good.length&&!r.tip.length)) return '';
+  return `<div class="hc-rev">${r.good.map(t=>`<div class="g"><b>잘한 점</b>${esc(t)}</div>`).join('')}${r.tip.map(t=>`<div class="t"><b>이렇게도</b>${esc(t)}</div>`).join('')}</div>`; }
+function hcMentorHtml(M){ return `<section class="hc-mentor"><h3>멘토 코멘트 <small>코드 · 점수 · 풀이 기록을 보고 만든 초안이에요. 고쳐서 쓰세요</small></h3>
+    <div class="hc-mcols"><div><h4>잘한 점</h4><ul>${M.praise.slice(0,4).map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>
+      <div><h4>보완할 점</h4><ul>${M.fix.slice(0,4).map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>
+      <div><h4>다음 단계</h4><ul>${M.next.length?M.next.slice(0,3).map(t=>`<li>${esc(t)}</li>`).join(''):'<li>같은 난이도로 한 번 더</li>'}</ul></div></div>
+    ${M.reply?`<div class="hc-reply"><span>학생 한마디에 답하기</span>${esc(M.reply)}</div>`:''}
+    <div class="hc-fb"><div class="hc-fbh"><b>학생에게 보낼 피드백</b><span class="grow"></span><button class="btn sm pri" data-act="hcFbCopy">${ic('copy')}복사</button></div>
+      <textarea class="in" id="hcFb" rows="10">${esc(M.msg)}</textarea></div></section>`; }
+Object.assign(WACT,{ hcFbCopy:()=>{ const t=$('#hcFb'); if(!t) return; copyText(t.value); toast('피드백을 복사했어요','카톡에 붙여 넣으세요'); } });
 /* ===== 과제 파일 주고받기 (팀 서버 v10) =====
    과제 내기 때 Word 같은 과제 파일을 붙이면 → 팀 드라이브에 올리고, 학생마다 열쇠를 받아 링크에 넣어요.
    학생은 링크에서 과제 파일을 받고 다 쓴 파일을 올려요 → 서버가 '제출 기록(hwsub)'을 남기고, 평소 동기화로 이 앱에 들어와요.
@@ -9502,6 +9687,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261102-1019';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261102-1138';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
