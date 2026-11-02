@@ -19,6 +19,8 @@
  * DB 유입(v11): 앱의 팀 → DB 유입 → 시트 연결에서 구글 스프레드시트 주소를 넣으면, 그 시트에 새 줄이 생길 때마다 팀원 모두의 앱에 알림이 떠요.
  *   그 시트는 이 서버를 배포한 구글 계정에 "보기" 권한으로 공유돼 있어야 해요. 처음 한 번 편집기에서 authorize를 ▶실행해 권한을 허용해 주세요.
  *
+ * 개강 안내 짧은 링크(v12): 링크가 길면 카카오톡 미리보기가 안 떠서, 수업 정보는 서버(kaia_data 탭 _nl 줄)에 두고 링크엔 열쇠만 넣어요.
+ *
  * 비밀번호를 잊은 팀원: 시트의 kaia_users 탭에서 그 사람 줄을 지우면, 같은 아이디로 다시 가입할 수 있고 데이터는 그대로예요.
  */
 const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
@@ -29,6 +31,7 @@ const TEAM_OWNER = '_team';
 const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true, qshare: true, inflow: true, inflowsrc: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
 const MAX_FILE = 31 * 1024 * 1024;
 const HW_MAX_SUB = 15;               // 과제 링크 하나로 올릴 수 있는 파일 수 (다시 제출 포함)
+const NL_OWNER = '_nl';             // 개강 안내 짧은 링크 내용을 적어 두는 줄의 주인 이름
 const HW_OWNER = '_hw';              // 과제 열쇠를 적어 두는 줄의 주인 이름   // 게시판 첨부 한 파일 30MB (구글 앱스 스크립트 요청 한도 약 50MB 안쪽)
 
 function ss_() { return SpreadsheetApp.getActive(); }
@@ -212,7 +215,15 @@ function doGet_(e) {
     if (uid) { const it = tmpFolder_().getFilesByName('cal_' + uid + '.ics'); if (it.hasNext()) txt = it.next().getBlob().getDataAsString('UTF-8'); }
     return ContentService.createTextOutput(txt).setMimeType(ContentService.MimeType.ICAL);
   }
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 11 });
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 12 });
+  if (p.a === 'nlget') {   // 개강 안내 짧은 링크: 열쇠로 수업 정보 꺼내기 (로그인 없이 · 열쇠를 아는 사람만)
+    const k = String(p.k || '').replace(/[^\w]/g, '').slice(0, 24); if (k.length < 8) return out_({ error: 'nokey' });
+    const c = CacheService.getScriptCache(); const hit = c.get('nl_' + k); if (hit) return out_({ data: JSON.parse(hit) });
+    const r = dataSheet_().getDataRange().getValues().find(x => x[0] === NL_OWNER && x[1] === 'nl' && String(x[2]) === k && !x[5]);
+    if (!r) return out_({ error: 'nokey' });
+    try { c.put('nl_' + k, String(r[3]), 21600); } catch (err) {}
+    return out_({ data: JSON.parse(r[3]) });
+  }
   if (p.a === 'hwinfo') {   // 학생 과제 페이지: 과제 정보 · 과제 파일 목록 · 이미 낸 파일 (열쇠가 맞을 때만)
     const key = hwKey_(p.k); if (!key || !hwRate_(key.k)) return out_({ error: 'nokey' });
     const d = key.d;
@@ -384,6 +395,14 @@ function doPost_(e) {
       s.appendRow([TEAM_OWNER, 'inflowsrc', src.id, JSON.stringify(src), Date.now(), '']); } finally { lock.releaseLock(); }
     try { inflowPoll_(true); } catch (err) {}
     return out_({ ok: true, src: src });
+  }
+  if (b.a === 'nlput') {    // 개강 안내 짧은 링크 만들기 (팀원만) → 열쇠 돌려줌
+    const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
+    const json = JSON.stringify(b.data || {}); if (json.length > 20000) return out_({ error: 'big' });
+    const key = Utilities.getUuid().replace(/-/g, '').slice(0, 12);
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try { dataSheet_().appendRow([NL_OWNER, 'nl', key, json, Date.now(), '']); } finally { lock.releaseLock(); }
+    return out_({ ok: true, key: key });
   }
   if (b.a === 'calkey') {   // 휴대폰 달력 구독 링크용 열쇠 (본인만 · 새로 만들면 예전 링크는 끊겨요)
     const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });

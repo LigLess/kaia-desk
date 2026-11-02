@@ -249,7 +249,13 @@ function copy(t,label){ var ok=function(){ toast((label||'')+' 복사했어요')
 
 /* 링크 해석: #1.<deflate-raw → base64url> 또는 #0.<base64url JSON> */
 function b64d(s){ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; var bin=atob(s), u=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u; }
-function decode(){ var h=location.hash.slice(1); var m=h.match(/^([01])\.(.+)$/); if(!m) return Promise.reject(0);
+function decode(){ var h=location.hash.slice(1);
+  /* 짧은 링크 #2.<열쇠>.<서버 번호>[.<이름>] — 수업 정보는 팀 서버에서 받아 와요 */
+  var s=h.match(/^2\.(\w{8,24})\.([\w-]{20,120})(?:\.([\w-]+))?$/);
+  if(s){ var rt=document.getElementById('root'); if(rt) rt.innerHTML='<div class="err"><div class="glass"><h1>안내를 불러오는 중…</h1><p>잠시만 기다려 주세요.</p></div></div>';
+    return fetch('https://script.google.com/macros/s/'+s[2]+'/exec?a=nlget&k='+s[1],{redirect:'follow'}).then(function(r){ return r.json(); }).then(function(j){ if(!j||!j.data) throw 0; var D=j.data;
+      if(s[3]){ try{ D.n=new TextDecoder().decode(b64d(s[3])); }catch(e){} } return D; }); }
+  var m=h.match(/^([01])\.(.+)$/); if(!m) return Promise.reject(0);
   var bytes=b64d(m[2]);
   if(m[1]==='0') return Promise.resolve(JSON.parse(new TextDecoder().decode(bytes)));
   if(typeof DecompressionStream==='undefined') return Promise.reject(1);
@@ -492,7 +498,9 @@ function motion(months,bars,ni,placeTip){
 }
 
 function fail(){ document.documentElement.classList.remove('js'); $('#root').innerHTML='<div class="err"><div class="glass"><h1>안내 링크를 열 수 없어요</h1><p>링크가 잘렸거나 바뀌었을 수 있어요.<br>받은 메시지의 링크를 처음부터 끝까지 그대로 눌러 주시고, 그래도 안 되면 담당 멘토에게 알려 주세요.</p></div></div>'; }
-decode().then(function(D){ if(!D||!D.s) throw 0; render(D); }).catch(fail);
+decode().then(function(D){ if(!D||!D.s) throw 0;
+  if(D.dz&&!D.dt){ var a=0; D.dt=String(D.dz).split('').map(function(c){ a+=parseInt(c,36); return a; }); }
+  render(D); }).catch(fail);
 addEventListener('hashchange',function(){ location.reload(); });
 })();
 </script>
