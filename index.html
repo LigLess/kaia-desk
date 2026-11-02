@@ -1329,6 +1329,16 @@ body.dark:not(.hud) .hpanel .aitem.e b{background:rgba(255,199,94,.22);color:var
 .tm-tabs{margin:0 0 14px;display:inline-flex!important;width:auto!important;max-width:100%}
 .tm-g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
 .tm-n{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:var(--bad);color:#fff;font-size:10.5px;font-weight:700}
+.if-srcs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.if-src{display:inline-flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border-radius:12px;background:var(--glass2,rgba(127,127,127,.08));border:1px solid var(--line);font-size:13px}
+.if-src small{color:var(--muted-r,var(--muted));font-size:11.5px}.if-src.bad{border-color:var(--bad)}.if-src.bad small{color:var(--bad)}
+.if-src .icon-btn{width:26px;height:26px;display:grid;place-items:center;border-radius:8px;background:none;border:0;color:var(--muted);cursor:pointer}.if-src .icon-btn svg{width:14px;height:14px}
+.if-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px}.in.if-sel{width:auto;min-width:170px;max-width:100%;height:38px;padding-top:0;padding-bottom:0}
+.if-row .click{cursor:pointer}.if-row.done{opacity:.72}.if-ph{font-variant-numeric:tabular-nums;color:var(--muted-r,var(--muted));font-weight:500}
+.if-ok{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ok,#1a8f5a);white-space:nowrap}.if-ok svg{width:14px;height:14px}
+.if-dl{display:grid;grid-template-columns:minmax(90px,max-content) 1fr;gap:8px 16px;margin:0}.if-dl dt{color:var(--muted-r,var(--muted));font-size:13px}.if-dl dd{margin:0;word-break:break-word}
+.if-steps{margin:0 0 16px;padding-left:20px;display:grid;gap:10px;font-size:14px;line-height:1.55}.if-mail{display:flex;align-items:center;gap:8px;margin-top:6px}.if-mail code{padding:6px 10px;border-radius:8px;background:var(--glass2,rgba(127,127,127,.1));font-size:13px}
+@media (max-width:700px){.if-row{flex-wrap:wrap}.if-row .grow{flex-basis:calc(100% - 80px)}}
 .tm-new{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--bad);color:#fff;font-size:9.5px;font-style:normal;font-weight:700;vertical-align:2px;letter-spacing:.02em}
 .tm-pin{display:inline-block;margin-right:6px;font-size:11px;font-weight:700;color:var(--warn)}
 .tm-lead.unseen{background:var(--accent-soft);border-radius:14px}
@@ -6714,7 +6724,7 @@ document.addEventListener('change',async e=>{
   }catch(err){ console.warn(err); toast('시험지를 읽지 못했어요','KAIA DESK에서 Word로 받은 시험지(.doc) 파일인지 확인해 주세요.','alarm-t'); }
 });
 /* ===== 팀 커뮤니티: 게시판 · 파일 · DB 배정 (팀 서버 로그인 시) ===== */
-const TEAM_COLS=['posts','comments','leads'];
+const TEAM_COLS=['posts','comments','leads','inflow','inflowsrc'];
 const HIDDEN_CATS=['커리큘럼','특처연락처'];   // 게시판 목록 · 알림에 안 나오는 분류 (각자 탭에서 보여요)
 const POST_CATS=['공지','자유','자료'];
 const LEAD_ST=['배정','연락중','완료'];
@@ -6733,7 +6743,7 @@ function myLeads(){ const u=me().user; return Object.values(teamData().leads).fi
 function unseenLeads(){ return myLeads().filter(l=>!l.seen&&l.status!=='완료'); }
 function seenBoardAt(){ return +lsGet('md.boardSeen')||0; }
 function newPosts(){ const u=me().user, t=seenBoardAt(); return Object.values(teamData().posts).filter(p=>!HIDDEN_CATS.includes(p.cat)&&p.by!==u&&(p.at||0)>t).length; }
-function teamBadge(){ return S.mode==='gas'?unseenLeads().length+newPosts():0; }
+function teamBadge(){ return S.mode==='gas'?unseenLeads().length+newPosts()+(typeof inflowNew==='function'?inflowNew():0):0; }
 
 /* 서버에서 들어온 팀 문서 반영 + 나에게 온 배정 알림 */
 function teamApply(d){
@@ -6742,6 +6752,7 @@ function teamApply(d){
   if(d.col==='leads'&&!d.del){ const l=T.leads[d.id]; const u=me().user;
     if(l.to===u&&!l.seen&&l.status!=='완료'&&(!was||was.to!==u)) gas._newLeads=(gas._newLeads||[]).concat(l);
     if(was&&l.from===u&&was.status!==l.status&&l.status==='완료') gas._doneLeads=(gas._doneLeads||[]).concat(l); }
+  if(d.col==='inflow'&&!d.del&&!was){ const x=T.inflow[d.id]; if(x&&!x.ok&&(x.at||0)>Date.now()-864e5) gas._newInflow=(gas._newInflow||[]).concat(x); }
   if(d.col==='posts'&&!d.del){ const p=T.posts[d.id]; if(p&&!HIDDEN_CATS.includes(p.cat)&&(p.notify||p.byRole==='lead')&&p.by!==me().user&&!was&&(p.at||0)>Date.now()-3*864e5) gas._newPosts=(gas._newPosts||[]).concat(p); }
 }
 function teamNotify(){
@@ -6762,6 +6773,7 @@ function teamNotify(){
         alertShow({title:`${p.byRole==='lead'?'[팀장] ':''}${p.title||'(제목 없음)'}`,body:`${who} · ${snip||(p.files&&p.files.length?'첨부 파일 '+p.files.length+'개':'게시판에서 확인하세요')}`,nbody:`${who} · ${snip}`,cls:p.byRole==='lead'?'post-t lead-post':'post-t',tag:'post-'+p.id,go:'team',tab:'board'}); });
       if(fp.length>3) alertShow({title:`게시판 알림 ${fp.length}건`,body:'팀 → 게시판에서 모두 볼 수 있어요.',tag:'post-many',go:'team',tab:'board'});
       alertSound(fp[0].title||'게시판 새 글'); },700); }
+  if(typeof inflowNotify==='function') inflowNotify();
   done.forEach(l=>setTimeout(()=>toast(`${l.name||''} 문의 처리 완료`,`${l.toName||memberName(l.to)}님이 완료로 바꿨어요.`),600));
 }
 async function loadMembers(force){
@@ -6777,8 +6789,8 @@ function vTeam(){
   if(!S.members) loadMembers().then(()=>{ if(S.view==='team') scheduleRender(); });
   const old=S.teamOld?`<div class="banner"><p><b>팀 서버 업데이트가 필요해요.</b> 커뮤니티 기능은 새 팀 서버 코드에서 동작해요. 팀 서버를 만든 사람이 Code.gs를 새 버전으로 바꾸고 <b>배포 관리 → 수정 → 새 버전</b>으로 다시 배포해 주세요.</p></div>`:'';
   const tab=S.teamTab||'db'; const nL=unseenLeads().length, nP=newPosts();
-  const tabs=`<div class="seg tm-tabs"><button class="${tab==='db'?'on':''}" data-act="tmTab" data-k="db">DB 배정${nL?` <b class="tm-n">${nL}</b>`:''}</button><button class="${tab==='board'?'on':''}" data-act="tmTab" data-k="board">게시판${nP?` <b class="tm-n">${nP}</b>`:''}</button><button class="${tab==='curri'?'on':''}" data-act="tmTab" data-k="curri">커리큘럼</button>${S.myRole==='lead'?`<button class="${tab==='staff'?'on':''}" data-act="tmTab" data-k="staff">팀원 학생</button>`:''}</div>`;
-  return `<div class="view">${head}${old}${tabs}${tab==='db'?leadsPane():tab==='staff'&&S.myRole==='lead'?staffPane():tab==='curri'?curriPane():boardPane()}</div>`;
+  const tabs=`<div class="seg tm-tabs"><button class="${tab==='db'?'on':''}" data-act="tmTab" data-k="db">DB 배정${nL?` <b class="tm-n">${nL}</b>`:''}</button><button class="${tab==='board'?'on':''}" data-act="tmTab" data-k="board">게시판${nP?` <b class="tm-n">${nP}</b>`:''}</button><button class="${tab==='inflow'?'on':''}" data-act="tmTab" data-k="inflow">DB 유입${inflowNew()?` <b class="tm-n">${inflowNew()}</b>`:''}</button><button class="${tab==='curri'?'on':''}" data-act="tmTab" data-k="curri">커리큘럼</button>${S.myRole==='lead'?`<button class="${tab==='staff'?'on':''}" data-act="tmTab" data-k="staff">팀원 학생</button>`:''}</div>`;
+  return `<div class="view">${head}${old}${tabs}${tab==='db'?leadsPane():tab==='staff'&&S.myRole==='lead'?staffPane():tab==='curri'?curriPane():tab==='inflow'?inflowPane():boardPane()}</div>`;
 }
 function boardPane(){
   const cat=S.boardCat||'전체'; const u=me().user, seen=seenBoardAt();
@@ -6977,6 +6989,101 @@ Object.assign(WACT,{
   tmStaffPh:()=>{ S.staffPh=!S.staffPh; render(); },
 });
 document.addEventListener('input',e=>{ if(e.target.id==='staffQ'){ S.staffQ=e.target.value; clearTimeout(S._sq); S._sq=setTimeout(()=>{ const pos=e.target.selectionStart; render(); const x=$('#staffQ'); if(x){ x.focus(); try{ x.setSelectionRange(pos,pos); }catch(err){} } },250); } });
+/* ===== 팀 → DB 유입: 구글 스프레드시트에 새 줄(문의)이 생기면 팀원 모두에게 알림 =====
+   - 시트 연결: 시트 주소 + 이름(예: 11월 AI과정)만 넣으면 끝. 시트는 팀 서버 계정에 "보기"로 공유돼 있어야 해요.
+   - 팀 서버(Code.gs v11)가 1분에 한 번 시트를 열어 새 줄을 inflow로 적고, 앱은 25초마다 받아서 알림을 띄워요.
+   - 여기서는 "확인"만 해요(누가 언제 확인했는지 팀 모두에게 보여요). 학생 등록 · 배정은 하지 않아요. */
+const IF_KEYS={
+  name:/성함|이름|성명|name/i,
+  phone:/연락처|전화|휴대|핸드폰|폰|phone|mobile/i,
+  course:/과정|과목|관심|희망|분야|course/i,
+  time:/타임스탬프|timestamp|일시|날짜|신청일|접수/i };
+const ifPick=(x,k)=>{ const p=(x.f||[]).find(([h])=>IF_KEYS[k].test(h)); return p?p[1]:''; };
+const ifList=()=>Object.values(teamData().inflow||{});
+const ifSrcs=()=>Object.values(teamData().inflowsrc||{}).sort((a,b)=>(a.at||0)-(b.at||0));
+function inflowNew(){ return S.mode==='gas'?ifList().filter(x=>!x.ok).length:0; }
+
+function inflowNotify(){
+  let noted=[]; try{ noted=JSON.parse(lsGet('md.ifNoti')||'[]'); }catch(e){}
+  const fresh=(gas._newInflow||[]).filter(x=>!noted.includes(x.id)); gas._newInflow=[];
+  if(!fresh.length) return;
+  noted=noted.concat(fresh.map(x=>x.id)).slice(-500); lsSet('md.ifNoti',JSON.stringify(noted));
+  setTimeout(()=>{ fresh.slice(0,3).forEach(x=>{ const who=ifPick(x,'name')||'새 문의'; const sub=[ifPick(x,'course'),ifPick(x,'phone')].filter(Boolean).join(' · ');
+      alertShow({title:`[DB 유입] ${x.sn||''} · ${who}`,body:sub||'팀 → DB 유입에서 확인하세요.',nbody:sub||'팀 → DB 유입에서 확인하세요.',cls:'lead-t',tag:'if-'+x.id,go:'team',tab:'inflow'}); });
+    if(fresh.length>3) alertShow({title:`DB 유입 ${fresh.length}건`,body:'팀 → DB 유입에서 모두 볼 수 있어요.',tag:'if-many',go:'team',tab:'inflow'});
+    alertSound('DB 유입'); },600);
+}
+
+/* ---------- 화면 ---------- */
+function inflowPane(){
+  const f=S.ifF||'new', src=S.ifSrc||''; const srcs=ifSrcs();
+  const all=ifList().filter(x=>!src||x.src===src).sort((a,b)=>(b.at||0)-(a.at||0));
+  const L=f==='new'?all.filter(x=>!x.ok):all.slice(0,200); const nNew=all.filter(x=>!x.ok).length;
+  const srcBar=srcs.length?`<div class="if-srcs">${srcs.map(s=>`<span class="if-src${s.err?' bad':''}"><b>${esc(s.name)}</b><small>${s.err?'시트를 열 수 없어요 · 공유 확인':`${esc(s.title||'')}${s.tab?' · '+esc(s.tab):''}`}</small><button class="icon-btn" data-act="ifSrcDel" data-id="${s.id}" title="연결 끊기" aria-label="${esc(s.name)} 연결 끊기">${ic('x')}</button></span>`).join('')}</div>`:'';
+  const row=x=>{ const nm=ifPick(x,'name'), ph=ifPick(x,'phone'), co=ifPick(x,'course');
+    const rest=(x.f||[]).filter(([h])=>!IF_KEYS.name.test(h)&&!IF_KEYS.phone.test(h)&&!IF_KEYS.course.test(h)&&!IF_KEYS.time.test(h)).map(([h,v])=>`${h}: ${v}`).join(' · ');
+    return `<div class="row if-row${x.ok?' done':''}"><span class="chip ${x.ok?'':'warn'}">${esc(x.sn||'DB')}</span>
+      <div class="grow click" data-act="ifOpen" data-id="${x.id}"><div class="t1">${esc(nm||'이름 없음')}${ph?` <span class="if-ph">${esc(ph)}</span>`:''}${co?` · ${esc(co)}`:''}${!x.ok?'<i class="tm-new">N</i>':''}</div>
+      <div class="t2">${agoTxt(x.at)}${rest?' · '+esc(rest.slice(0,90)):''}</div></div>
+      ${x.ok?`<span class="if-ok" title="${esc(new Date(x.ok.at).toLocaleString('ko-KR'))}">${ic('check')}${esc(x.ok.name||'')} · ${agoTxt(x.ok.at)}</span><button class="btn ghost sm" data-act="ifOk" data-id="${x.id}" data-k="0">취소</button>`
+        :`<button class="btn pri sm" data-act="ifOk" data-id="${x.id}" data-k="1">${ic('check')}확인</button>`}</div>`; };
+  return `<section class="pane"><h2>DB 유입 <small>${srcs.length?`시트 ${srcs.length}개 연결 · 확인 전 ${nNew}건`:'연결된 시트 없음'}</small><span class="grow"></span><button class="btn" data-act="ifConnect">${ic('plus')}시트 연결</button></h2>
+    ${srcBar}
+    ${srcs.length?`<div class="if-bar"><div class="seg"><button class="${f==='new'?'on':''}" data-act="ifF" data-k="new">확인 전 ${nNew}</button><button class="${f==='all'?'on':''}" data-act="ifF" data-k="all">전체</button></div>
+      ${srcs.length>1?`<select class="in if-sel" data-act-change="ifSrc"><option value="">모든 시트</option>${srcs.map(s=>`<option value="${s.id}" ${s.id===src?'selected':''}>${esc(s.name)}</option>`).join('')}</select>`:''}
+      ${nNew>1&&f==='new'?`<button class="btn ghost sm" data-act="ifOkAll">${ic('check')}보이는 ${nNew}건 모두 확인</button>`:''}</div>`:''}
+    ${L.length?`<div class="list">${L.map(row).join('')}</div>`
+      :srcs.length?`<div class="empty"><b>${f==='new'?'확인할 새 문의가 없어요':'아직 들어온 문의가 없어요'}</b>시트에 새 줄이 생기면 1분 안팎으로 여기와 오른쪽 아래 알림에 떠요.</div>`
+      :`<div class="empty"><b>구글 스프레드시트를 연결해 보세요</b>문의가 쌓이는 시트(구글 폼 응답 시트 등)를 연결하면, 새 줄이 생길 때마다 팀원 모두에게 알림이 가요.<div class="btns" style="justify-content:center;margin-top:14px"><button class="btn pri" data-act="ifConnect">${ic('plus')}시트 연결</button></div></div>`}
+  </section>`;
+}
+function ifOpenModal(id){ const x=(teamData().inflow||{})[id]; if(!x) return; const ph=ifPick(x,'phone').replace(/[^\d+]/g,'');
+  openModal(`${mHead(`${esc(x.sn||'DB 유입')} · ${esc(ifPick(x,'name')||'문의')}`)}<div class="body">
+    <dl class="if-dl">${(x.f||[]).map(([h,v])=>`<dt>${esc(h)}</dt><dd>${linkify(v)}</dd>`).join('')}</dl>
+    <p class="rm-hint">시트 ${x.row}번째 줄 · ${new Date(x.at).toLocaleString('ko-KR')}에 들어왔어요.${x.ok?` ${esc(x.ok.name)}님이 ${agoTxt(x.ok.at)} 확인했어요.`:''}</p>
+  </div><footer>${ph?`<a class="btn" href="tel:${ph}">전화</a><a class="btn" href="sms:${ph}">문자</a>`:''}<span class="grow"></span><button class="btn ghost" data-act="close">닫기</button>${x.ok?`<button class="btn" data-act="ifOk" data-id="${x.id}" data-k="0">확인 취소</button>`:`<button class="btn pri" data-act="ifOk" data-id="${x.id}" data-k="1">${ic('check')}확인</button>`}</footer>`,'wide');
+  modalEl._kind='if'; }
+
+async function ifConnectModal(){
+  openModal(`${mHead('구글 스프레드시트 연결')}<div class="body hw-form">
+    <ol class="if-steps">
+      <li><b>시트를 팀 서버 계정에 공유</b> — 시트 오른쪽 위 <b>공유</b> → 아래 주소 추가 → 권한 <b>뷰어</b> → 보내기.
+        <div class="if-mail"><code id="ifMail">불러오는 중…</code><button class="btn ghost sm" data-act="ifMailCopy">${ic('copy')}복사</button></div></li>
+      <li><b>시트 주소 붙여넣기</b> — 브라우저 주소창의 주소를 통째로 복사해요. 아래쪽 탭이 여러 개면 <b>문의가 쌓이는 탭을 연 상태</b>에서 복사하세요.</li>
+      <li><b>이름 붙이기</b> — 알림 제목에 들어가요. 예: "11월 AI과정"</li></ol>
+    <div class="form"><label class="field full"><span>시트 주소</span><input class="in" id="ifUrl" placeholder="https://docs.google.com/spreadsheets/d/…/edit#gid=0"></label>
+      <label class="field"><span>이름</span><input class="in" id="ifName" maxlength="40" placeholder="예: 11월 AI과정"></label>
+      <label class="field"><span>지금 있는 문의</span><select class="in" id="ifOld"><option value="0">가져오지 않기 (앞으로 들어오는 것만)</option><option value="10">최근 10건 가져오기</option><option value="30">최근 30건 가져오기</option></select></label></div>
+    <p class="rm-hint" id="ifErr" style="color:var(--bad)"></p>
+  </div><footer><button class="btn ghost" data-act="close">닫기</button><button class="btn pri" data-act="ifAdd">${ic('plus')}연결하기</button></footer>`,'wide');
+  modalEl._kind='ifc';
+  try{ const j=await gas.call('GET',{a:'inflowinfo'}); S._ifMail=j.email||''; }catch(e){ S._ifMail=''; if(String(e.message)==='server'||/inflowinfo/.test(e.msg||'')) S._ifOld=true; }
+  const m=$('#ifMail'); if(m) m.textContent=S._ifMail||'(팀 서버를 만든 사람의 구글 계정)';
+  if(!S._ifMail){ const er=$('#ifErr'); if(er) er.textContent='팀 서버가 아직 DB 유입을 모르는 버전일 수 있어요. 팀 서버 코드를 새 버전(v11)으로 바꾼 뒤 다시 해 주세요.'; }
+}
+function ifSetOk(x,on){ const m=me(); const c=clone(x); c.ok=on?{by:m.user,name:m.name,at:Date.now()}:null; teamPut('inflow',c); }
+
+Object.assign(WACT,{
+  ifConnect:()=>ifConnectModal(),
+  ifMailCopy:()=>{ if(S._ifMail){ copyText(S._ifMail); toast('복사했어요','시트 공유 창에 붙여 넣으세요'); } },
+  ifAdd:async el=>{ const url=$('#ifUrl').value.trim(), name=$('#ifName').value.trim(), old=+$('#ifOld').value||0; const er=$('#ifErr');
+    if(!/docs\.google\.com\/spreadsheets\/d\//.test(url)){ er.textContent='구글 스프레드시트 주소(docs.google.com/spreadsheets/d/…)를 붙여 넣어 주세요.'; return; }
+    if(!name){ er.textContent='이름을 적어 주세요. 알림 제목에 들어가요.'; $('#ifName').focus(); return; }
+    el.disabled=true; er.textContent='시트를 열어 보는 중…'; er.style.color='var(--muted)';
+    try{ const j=await gas.call('POST',null,{a:'inflowadd',url,name,old}); if(!j.src) throw new Error('old');
+      closeModal(); toast('연결했어요',`${name} · 새 줄이 생기면 1분 안팎으로 알림이 가요`); await gas.pull(false).catch(()=>{}); S.teamTab='inflow'; render(); }
+    catch(e){ el.disabled=false; er.style.color='var(--bad)';
+      er.innerHTML=e.message==='noaccess'?`팀 서버가 이 시트를 열 수 없어요. 1번처럼 <b>${esc(S._ifMail||'팀 서버 계정')}</b>에 뷰어로 공유했는지 확인해 주세요.`
+        :e.message==='dup'?'이미 연결된 시트(탭)예요.':e.message==='badurl'?'시트 주소를 다시 확인해 주세요.'
+        :'연결하지 못했어요. 팀 서버가 새 버전(v11)인지 확인해 주세요.'; } },
+  ifSrcDel:async el=>{ const s=(teamData().inflowsrc||{})[el.dataset.id]; if(!s||!await confirmBox(`"${s.name}" 연결을 끊을까요?`,'이미 들어온 문의는 남아 있고, 앞으로 새 줄 알림만 멈춰요. 시트는 그대로예요.','끊기',true)) return;
+    try{ await gas.call('POST',null,{a:'inflowdel',id:s.id}); delete teamData().inflowsrc[s.id]; store.saveLocal(); toast('연결을 끊었어요',s.name); render(); }catch(e){ toast('끊지 못했어요','잠시 뒤 다시 해 주세요'); } },
+  ifOk:el=>{ const x=(teamData().inflow||{})[el.dataset.id]; if(!x) return; ifSetOk(x,el.dataset.k==='1'); if(modalEl&&modalEl._kind==='if') closeModal(); renderSide&&renderSide(); render(); },
+  ifOkAll:async()=>{ const src=S.ifSrc||''; const L=ifList().filter(x=>!x.ok&&(!src||x.src===src)); if(!L.length||!await confirmBox(`${L.length}건을 모두 확인할까요?`,'팀 모두에게 내가 확인한 것으로 보여요.','모두 확인')) return; L.forEach(x=>ifSetOk(x,true)); render(); },
+  ifOpen:el=>ifOpenModal(el.dataset.id),
+  ifF:el=>{ S.ifF=el.dataset.k; render(); },
+});
+document.addEventListener('change',e=>{ const t=e.target; if(t&&t.dataset&&t.dataset.actChange==='ifSrc'){ S.ifSrc=t.value; render(); } });
 /* ===== 커리큘럼 자료실 =====
    팀 게시판(posts)에 분류 '커리큘럼'으로 저장해요 → 팀 서버 코드 수정 없이 팀 모두에게 공유 · 올린 사람만 고치기/지우기.
    파일은 팀 드라이브 폴더에 있고, 한 번 받은 파일은 이 기기에 저장해 두어 다음부터 바로 열리고 인쇄돼요. */
@@ -9349,6 +9456,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261101-1532';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261102-0933';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

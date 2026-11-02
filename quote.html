@@ -1322,6 +1322,16 @@ body.dark:not(.hud) .hpanel .aitem.e b{background:rgba(255,199,94,.22);color:var
 .tm-tabs{margin:0 0 14px;display:inline-flex!important;width:auto!important;max-width:100%}
 .tm-g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}
 .tm-n{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:var(--bad);color:#fff;font-size:10.5px;font-weight:700}
+.if-srcs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.if-src{display:inline-flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border-radius:12px;background:var(--glass2,rgba(127,127,127,.08));border:1px solid var(--line);font-size:13px}
+.if-src small{color:var(--muted-r,var(--muted));font-size:11.5px}.if-src.bad{border-color:var(--bad)}.if-src.bad small{color:var(--bad)}
+.if-src .icon-btn{width:26px;height:26px;display:grid;place-items:center;border-radius:8px;background:none;border:0;color:var(--muted);cursor:pointer}.if-src .icon-btn svg{width:14px;height:14px}
+.if-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px}.in.if-sel{width:auto;min-width:170px;max-width:100%;height:38px;padding-top:0;padding-bottom:0}
+.if-row .click{cursor:pointer}.if-row.done{opacity:.72}.if-ph{font-variant-numeric:tabular-nums;color:var(--muted-r,var(--muted));font-weight:500}
+.if-ok{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ok,#1a8f5a);white-space:nowrap}.if-ok svg{width:14px;height:14px}
+.if-dl{display:grid;grid-template-columns:minmax(90px,max-content) 1fr;gap:8px 16px;margin:0}.if-dl dt{color:var(--muted-r,var(--muted));font-size:13px}.if-dl dd{margin:0;word-break:break-word}
+.if-steps{margin:0 0 16px;padding-left:20px;display:grid;gap:10px;font-size:14px;line-height:1.55}.if-mail{display:flex;align-items:center;gap:8px;margin-top:6px}.if-mail code{padding:6px 10px;border-radius:8px;background:var(--glass2,rgba(127,127,127,.1));font-size:13px}
+@media (max-width:700px){.if-row{flex-wrap:wrap}.if-row .grow{flex-basis:calc(100% - 80px)}}
 .tm-new{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--bad);color:#fff;font-size:9.5px;font-style:normal;font-weight:700;vertical-align:2px;letter-spacing:.02em}
 .tm-pin{display:inline-block;margin-right:6px;font-size:11px;font-weight:700;color:var(--warn)}
 .tm-lead.unseen{background:var(--accent-soft);border-radius:14px}

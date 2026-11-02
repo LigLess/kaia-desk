@@ -16,6 +16,9 @@
  * 과제 제출(v10): 학생은 로그인 없이 과제 링크로 과제 파일을 받고, 작성한 파일을 올려요. 링크마다 따로 만든 열쇠가 맞을 때만 돼요.
  *   올린 파일은 "KAIA DESK 팀 파일" 폴더에 저장되고, 과제를 낸 멘토의 앱으로 자동으로 들어가요(제출 기록은 kaia_data 탭 hwsub).
  *
+ * DB 유입(v11): 앱의 팀 → DB 유입 → 시트 연결에서 구글 스프레드시트 주소를 넣으면, 그 시트에 새 줄이 생길 때마다 팀원 모두의 앱에 알림이 떠요.
+ *   그 시트는 이 서버를 배포한 구글 계정에 "보기" 권한으로 공유돼 있어야 해요. 처음 한 번 편집기에서 authorize를 ▶실행해 권한을 허용해 주세요.
+ *
  * 비밀번호를 잊은 팀원: 시트의 kaia_users 탭에서 그 사람 줄을 지우면, 같은 아이디로 다시 가입할 수 있고 데이터는 그대로예요.
  */
 const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
@@ -23,7 +26,7 @@ const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
 const DATA = 'kaia_data';
 const USERS = 'kaia_users';
 const TEAM_OWNER = '_team';
-const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true, qshare: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
+const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true, qshare: true, inflow: true, inflowsrc: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
 const MAX_FILE = 31 * 1024 * 1024;
 const HW_MAX_SUB = 15;               // 과제 링크 하나로 올릴 수 있는 파일 수 (다시 제출 포함)
 const HW_OWNER = '_hw';              // 과제 열쇠를 적어 두는 줄의 주인 이름   // 게시판 첨부 한 파일 30MB (구글 앱스 스크립트 요청 한도 약 50MB 안쪽)
@@ -103,7 +106,8 @@ function mailLead_(lead, uid) {
 function authorize() {
   const f = folder_(); const t = tmpFolder_();
   const x = t.createFile('권한확인.txt', 'ok', 'text/plain'); x.setTrashed(true);
-  Logger.log('권한 확인 완료 — 팀 파일 폴더: ' + f.getName());
+  try { SpreadsheetApp.openById(ss_().getId()); } catch (err) {}   // DB 유입: 다른 시트를 열어 보는 권한
+  Logger.log('권한 확인 완료 — 팀 파일 폴더: ' + f.getName() + ' · 시트 공유 받을 계정: ' + serverEmail_());
 }
 /* 서버에서 오류가 나도 앱이 원인을 볼 수 있게 감싸요 (편집기에서 ▶실행을 눌러도 오류 안 남) */
 
@@ -133,6 +137,70 @@ function hwSave_(key, bytes, name, type, cm) {   // 학생 파일 저장 + 멘�
   return { ok: true, name: clean, size: bytes.length, at: sub.at };
 }
 
+/* ---------- DB 유입 (v11): 구글 스프레드시트에 새 줄이 생기면 팀 → DB 유입에 올려요 ----------
+ * 원리: 앱이 25초마다 이 서버에 "새 소식 있어?"를 묻는데, 그때 1분에 한 번만 연결된 시트들을 열어서
+ *       마지막으로 본 줄 번호(last) 다음에 새 줄이 있는지 봐요. 새 줄은 kaia_data 탭에 inflow로 적고, 앱이 받아 알림을 띄워요.
+ * 시트는 이 서버를 배포한 구글 계정이 열 수 있어야 해요(그 계정에 "보기" 권한으로 공유). */
+const INFLOW_EVERY = 60;   // 초 — 시트를 이 간격보다 자주 열지 않아요
+function sheetOf_(src) {
+  const book = SpreadsheetApp.openById(src.sid);
+  let sh = null;
+  if (src.gid !== '' && src.gid != null) sh = book.getSheets().find(x => String(x.getSheetId()) === String(src.gid)) || null;
+  return { book: book, sh: sh || book.getSheets()[0] };
+}
+function inflowSrcs_(vals) {
+  const out = [];
+  vals.forEach((r, i) => { if (i && r[0] === TEAM_OWNER && r[1] === 'inflowsrc' && !r[5]) { try { out.push({ row: i + 1, d: JSON.parse(r[3]) }); } catch (err) {} } });
+  return out;
+}
+function inflowPoll_(force) {
+  const c = CacheService.getScriptCache();
+  if (!force && c.get('inflow_t')) return;
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(3000)) return;
+  try {
+    c.put('inflow_t', '1', INFLOW_EVERY);
+    const s = dataSheet_(); const vals = s.getDataRange().getValues();
+    const srcs = inflowSrcs_(vals); if (!srcs.length) return;
+    const idx = {}; vals.forEach((r, i) => { if (i && r[0] === TEAM_OWNER && r[1] === 'inflow') idx[String(r[2])] = i + 1; });
+    const now = Date.now(); const adds = [];
+    srcs.forEach(x => {
+      const src = x.d; const was = JSON.stringify(src);
+      try {
+        const o = sheetOf_(src); const sh = o.sh;
+        const lastRow = sh.getLastRow(), lastCol = Math.min(sh.getLastColumn(), 40);
+        src.err = ''; src.title = o.book.getName(); src.tab = sh.getName();
+        if (lastRow < src.last) src.last = lastRow;   // 줄을 지웠거나 정렬했으면 거기부터 다시 봐요
+        if (lastRow >= 2 && lastCol > 0) {
+          const head = sh.getRange(1, 1, 1, lastCol).getDisplayValues()[0].map((h, i) => String(h || '').trim() || ('열' + (i + 1)));
+          const from = Math.max(2, src.last - 19);   // 마지막 20줄은 다시 읽어서, 사람이 나중에 채운 칸도 반영해요
+          const n = Math.min(lastRow - from + 1, 120);
+          if (n > 0) {
+            const rows = sh.getRange(from, 1, n, lastCol).getDisplayValues();
+            rows.forEach((r, k) => {
+              const rn = from + k; if (!r.some(v => String(v).trim())) return;
+              const id = src.id + '_' + rn; const f = head.map((h, j) => [h, String(r[j] || '').slice(0, 500)]).filter(p => p[1].trim());
+              const at0 = rn > src.last ? now : null;
+              if (idx[id]) {   // 이미 올린 줄: 내용이 바뀌었을 때만 고쳐요 (확인 표시는 그대로)
+                let old = null; try { old = JSON.parse(vals[idx[id] - 1][3] || 'null'); } catch (err) {}
+                if (!old || JSON.stringify(old.f) === JSON.stringify(f)) return;
+                old.f = f; s.getRange(idx[id], 1, 1, 6).setValues([[TEAM_OWNER, 'inflow', id, JSON.stringify(old), now, '']]);
+              } else if (at0) {
+                adds.push([TEAM_OWNER, 'inflow', id, JSON.stringify({ src: src.id, sn: src.name, row: rn, f: f, at: at0, ok: null }), now, '']);
+                src.cnt = (src.cnt || 0) + 1;
+              }
+            });
+          }
+          src.last = Math.max(src.last, lastRow);
+        }
+      } catch (err) { src.err = 'noaccess'; }
+      if (JSON.stringify(src) !== was) s.getRange(x.row, 1, 1, 6).setValues([[TEAM_OWNER, 'inflowsrc', src.id, JSON.stringify(src), now, '']]);
+    });
+    if (adds.length) s.getRange(s.getLastRow() + 1, 1, adds.length, 6).setValues(adds);
+  } finally { lock.releaseLock(); }
+}
+function sheetId_(url) { const m = String(url || '').match(/\/d\/([\w-]{20,})/) || String(url || '').match(/^([\w-]{30,})$/); return m ? m[1] : ''; }
+function serverEmail_() { try { return Session.getEffectiveUser().getEmail() || ''; } catch (err) { return ''; } }
+
 function doGet(e) { try { return doGet_(e || { parameter: {} }); } catch (err) { return out_({ error: 'server', msg: String(err && err.message || err) }); } }
 function doPost(e) { try { return doPost_(e || { postData: { contents: '{}' } }); } catch (err) { return out_({ error: 'server', msg: String(err && err.message || err) }); } }
 
@@ -144,7 +212,7 @@ function doGet_(e) {
     if (uid) { const it = tmpFolder_().getFilesByName('cal_' + uid + '.ics'); if (it.hasNext()) txt = it.next().getBlob().getDataAsString('UTF-8'); }
     return ContentService.createTextOutput(txt).setMimeType(ContentService.MimeType.ICAL);
   }
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 10 });
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 11 });
   if (p.a === 'hwinfo') {   // 학생 과제 페이지: 과제 정보 · 과제 파일 목록 · 이미 낸 파일 (열쇠가 맞을 때만)
     const key = hwKey_(p.k); if (!key || !hwRate_(key.k)) return out_({ error: 'nokey' });
     const d = key.d;
@@ -159,6 +227,7 @@ function doGet_(e) {
     return out_({ name: f.getName(), type: f.getBlob().getContentType(), size: bytes.length, off: off, data: Utilities.base64Encode(bytes.slice(off, off + len)) });
   }
   const uid = auth_(p.token); if (!uid) return out_({ error: 'auth' });
+  if (p.a === 'inflowinfo') return out_({ email: serverEmail_() });   // 시트를 공유해 줄 계정 (팀원에게만)
   if (p.a === 'members') {
     const v = userSheet_().getDataRange().getValues().slice(1);
     const me = v.find(r => norm_(r[0]) === uid);
@@ -215,6 +284,7 @@ function doGet_(e) {
     }
     return out_({ name: f.getName(), type: b.getContentType(), data: Utilities.base64Encode(bytes) });
   }
+  try { inflowPoll_(false); } catch (err) {}   // DB 유입: 1분에 한 번 연결된 시트 확인
   const since = Number(p.since || 0);
   const docs = [];
   dataSheet_().getDataRange().getValues().slice(1).forEach(r => {
@@ -292,6 +362,29 @@ function doPost_(e) {
     if (!bytes.length || bytes.length > MAX_FILE) return out_({ error: 'size' });
     return out_(hwSave_(key, bytes, b.name, b.type, b.cm));
   }
+  if (b.a === 'inflowadd' || b.a === 'inflowdel') {   // DB 유입 시트 연결 · 끊기 (팀원 누구나)
+    const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
+    if (b.a === 'inflowdel') {
+      const lock = LockService.getScriptLock(); lock.waitLock(20000);
+      try { const s = dataSheet_(); const x = inflowSrcs_(s.getDataRange().getValues()).find(y => y.d.id === String(b.id || ''));
+        if (x) s.getRange(x.row, 1, 1, 6).setValues([[TEAM_OWNER, 'inflowsrc', x.d.id, '', Date.now(), 1]]);
+      } finally { lock.releaseLock(); }
+      return out_({ ok: true });
+    }
+    const sid = sheetId_(b.url); if (!sid) return out_({ error: 'badurl' });
+    const gm = String(b.url || '').match(/[#&?]gid=(\d+)/);
+    const src = { id: 'is' + Utilities.getUuid().replace(/-/g, '').slice(0, 10), sid: sid, gid: gm ? gm[1] : '', name: String(b.name || '').trim().slice(0, 40) || 'DB 유입',
+      by: uid, byName: nameOf_(uid), at: Date.now(), cnt: 0, err: '' };
+    try { const o = sheetOf_(src); src.title = o.book.getName(); src.tab = o.sh.getName(); const lr = o.sh.getLastRow();
+      src.last = b.old ? Math.max(1, lr - Math.max(0, Math.min(50, Number(b.old) || 0))) : Math.max(1, lr); src.rows = Math.max(0, lr - 1);
+      src.head = o.sh.getRange(1, 1, 1, Math.max(1, Math.min(o.sh.getLastColumn(), 40))).getDisplayValues()[0].filter(String);
+    } catch (err) { return out_({ error: 'noaccess', email: serverEmail_() }); }
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try { const s = dataSheet_(); if (inflowSrcs_(s.getDataRange().getValues()).some(y => y.d.sid === sid && String(y.d.gid) === String(src.gid))) return out_({ error: 'dup' });
+      s.appendRow([TEAM_OWNER, 'inflowsrc', src.id, JSON.stringify(src), Date.now(), '']); } finally { lock.releaseLock(); }
+    try { inflowPoll_(true); } catch (err) {}
+    return out_({ ok: true, src: src });
+  }
   if (b.a === 'calkey') {   // 휴대폰 달력 구독 링크용 열쇠 (본인만 · 새로 만들면 예전 링크는 끊겨요)
     const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
     const P = PropertiesService.getScriptProperties(); let key = P.getProperty('calu_' + uid);
@@ -365,6 +458,12 @@ function doPost_(e) {
       const owner = (SHARED[w.col] || (w.col === 'meta' && w.id === 'team')) ? TEAM_OWNER : uid;
       const k = owner + '/' + w.col + '/' + w.id;
       // 게시판 · DB 배정: 글쓴이 / 보낸 사람 · 받은 사람만 고칠 수 있어요
+      if (w.col === 'inflowsrc') return;   // 시트 연결은 inflowadd · inflowdel로만
+      if (w.col === 'inflow') {            // DB 유입: 앱에서는 "확인" 표시만 바꿀 수 있어요
+        if (w.del || !idx[k] || !w.data) return;
+        let old = null; try { old = JSON.parse(vals[idx[k] - 1][3] || 'null'); } catch (err) {} if (!old) return;
+        old.ok = w.data.ok ? { by: uid, name: nameOf_(uid), at: Number(w.data.ok.at) || now } : null; w = { col: w.col, id: w.id, data: old };
+      }
       if (w.col === 'posts' || w.col === 'comments' || w.col === 'leads' || w.col === 'qshare') {
         let old = null; if (idx[k]) { try { old = JSON.parse(vals[idx[k] - 1][3] || 'null'); } catch (err) {} }
         if (w.col === 'qshare') {   // 견적서 보내기: 보낸 사람 · 받은 사람만 고칠 수 있어요 (메일은 안 보냄)
