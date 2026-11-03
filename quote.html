@@ -2965,11 +2965,11 @@ function qpkgModal(){ const G=['AI','국비','기초','자격증','취업'];
 function qpkgApply(i,day){ const p=QPKG[i]; if(!p) return; const q=qtDraft();
   q.rows=p.r.map(([n,v])=>({...qtRowFrom(n),n,p:v||null,free:!v,cat:'',type:'',time:'',cnt:''}));
   q.tier=false; q.tierPct=null; q.steps=[]; q.online=p.on?'2년':'없음'; q.onCarve=!!p.on; q.target=String(day?p.day:p.pk); q.pkg={i,n:p.n,day:!!day};
-  q.tpl=p.g==='AI'?'ai':'it'; q.tplSet=true;
+  q.tpl=p.g==='AI'?'ai':'it'; q.tplSet=true; q.name=p.n; q.sid='';
   qtKeep(); }
 Object.assign(WACT,{
   qpkgOpen:()=>qpkgModal(),
-  qpkgPick:async el=>{ const q=qtDraft(); if(q.rows.length&&!await confirmBox('패키지로 바꿀까요?','지금 넣은 과목 · 할인은 패키지 내용으로 바뀌어요. 성함 · 상담일은 그대로예요.','바꾸기')) return;
+  qpkgPick:async el=>{ const q=qtDraft(); if(q.rows.length&&!await confirmBox('패키지로 바꿀까요?','지금 넣은 과목 · 할인 · 성함 칸이 패키지 내용으로 바뀌어요.','바꾸기')) return;
     qpkgApply(+el.dataset.k,false); closeModal(); S.qtTab='make'; render(); toast('패키지를 넣었어요',QPKG[+el.dataset.k].n); },
   qpkgDay:el=>{ const q=qtDraft(); if(!q.pkg) return; const p=QPKG[q.pkg.i]; if(!p) return; q.pkg.day=el.dataset.k==='1'; q.target=String(q.pkg.day?p.day:p.pk); qtKeep(); render(); },
   qpkgOff:()=>{ const q=qtDraft(); delete q.pkg; qtKeep(); render(); },
