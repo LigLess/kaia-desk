@@ -2205,6 +2205,11 @@ body.dark[data-bg="lounge"] .hw-av,body.dark[data-bg="emerald"] .hw-av{color:#1a
 .hc-rev .g{background:color-mix(in srgb,var(--ok) 9%,transparent)}.hc-rev .g b{background:color-mix(in srgb,var(--ok) 20%,transparent);color:var(--ok)}
 .hc-rev .t{background:color-mix(in srgb,var(--warn) 9%,transparent)}.hc-rev .t b{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
 @media (max-width:760px){.hc-mcols,.hc-charts{grid-template-columns:minmax(0,1fr)}.hc-donut{flex-direction:column;align-items:stretch}.hc-donut svg{margin:0 auto}}
+.qp-g{font-size:13px;color:var(--muted);margin:14px 0 6px}.qp-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px}
+.qp-it{display:flex;flex-direction:column;gap:3px;text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);cursor:pointer;font:inherit}
+.qp-it:hover{border-color:var(--accent)}.qp-it b{font-size:14px}.qp-it small{color:var(--muted);font-size:12px;line-height:1.45}.qp-it span{font-size:12.5px}.qp-it s{color:var(--muted)}.qp-it em{font-style:normal;font-weight:700;color:var(--accent)}
+.qp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;margin-bottom:14px;border-radius:14px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))}
+.qp-bar>span{color:var(--muted);font-size:13px;margin-right:auto}
 .hc-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
 .hc-box{padding:14px 16px;border-radius:14px;background:var(--surface-2)}
 .hc-bar{display:grid;grid-template-columns:118px minmax(0,1fr) 44px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
@@ -7423,7 +7428,7 @@ const qtDateLong=v=>{ if(!v) return ''; const d=parseYmd(v); return `${d.getFull
 
 /* ---------- 계산 ---------- */
 function qtCalc(q){
-  const rows=q.rows.map(r=>{ const p=qtFind(r.n); return {...r,orig:r.free?null:p?p.p:null,hit:!!p}; });
+  const rows=q.rows.map(r=>{ const p=qtFind(r.n); const own=r.p!=null&&+r.p>0; return {...r,orig:r.free?null:own?+r.p:p?p.p:null,hit:!!p||own}; });
   const paid=rows.filter(r=>!r.free&&r.n);
   const orig=paid.reduce((a,r)=>a+(r.orig||0),0);
   const n=paid.length, tierPct=q.tier?(q.tierPct==null?QT_TIER(n):+q.tierPct):0;
@@ -7639,7 +7644,7 @@ CPK.qtCourse={items:qtCourseItems,pick:(v,box)=>{ if(v==null) return; const i=bo
 function vQuote(){
   const tab=S.qtTab||'make'; if(tab==='make') setTimeout(qtPreview,0);
   const tabs=`<div class="seg qt-tabs"><button class="${tab==='make'?'on':''}" data-act="qtTab" data-k="make">견적 작성</button><button class="${tab==='saved'?'on':''}" data-act="qtTab" data-k="saved">저장한 견적 ${list('quotes').length||''}</button>${typeof qsTabs==='function'?qsTabs(tab):''}<button class="${tab==='memo'?'on':''}" data-act="qtTab" data-k="memo">요청메모</button><button class="${tab==='price'?'on':''}" data-act="qtTab" data-k="price">수강료표</button></div>`;
-  return `<div class="view">${vh('견적서','과목만 고르면 정가 · 순차 할인 · 과목별 금액이 계산되고, 원본 엑셀 양식 그대로 받을 수 있어요',`<button class="btn" data-act="qtMasterPick" title="예전 마스터본 엑셀로 만든 견적서를 KAIA 견적서로 바꿔요">${ic('up')}마스터본 가져오기</button><input id="qtMasterFile" type="file" accept=".xlsx,.xlsm" hidden><button class="btn" data-act="qtNew">${ic('plus')}새 견적</button>`)}${tabs}${tab==='price'?qtPriceView():tab==='saved'?qtSavedView():tab==='memo'?rmView():tab==='recv'&&typeof qsRecvView==='function'?qsRecvView():tab==='staffq'&&typeof qsStaffView==='function'?qsStaffView():qtMakeView()}</div>`;
+  return `<div class="view">${vh('견적서','과목만 고르면 정가 · 순차 할인 · 과목별 금액이 계산되고, 원본 엑셀 양식 그대로 받을 수 있어요',`<button class="btn" data-act="qtMasterPick" title="예전 마스터본 엑셀로 만든 견적서를 KAIA 견적서로 바꿔요">${ic('up')}마스터본 가져오기</button><input id="qtMasterFile" type="file" accept=".xlsx,.xlsm" hidden><button class="btn" data-act="qpkgOpen">${ic('task')}패키지로 시작</button><button class="btn" data-act="qtNew">${ic('plus')}새 견적</button>`)}${tabs}${tab==='price'?qtPriceView():tab==='saved'?qtSavedView():tab==='memo'?rmView():tab==='recv'&&typeof qsRecvView==='function'?qsRecvView():tab==='staffq'&&typeof qsStaffView==='function'?qsStaffView():qtMakeView()}</div>`;
 }
 function qtMakeView(){
   const q=qtDraft(); const c=qtCalc(q); const sts=list('students').sort((a,b)=>a.name.localeCompare(b.name,'ko'));
@@ -7671,6 +7676,7 @@ function qtMakeView(){
       </div>
       ${q.sid&&D().students[q.sid]?`<p class="qt-link">${ic('users')} 학생 <b>${esc(D().students[q.sid].name)}</b>에 연결됨 — 저장하면 그 학생 기록에도 남아요.</p>`:''}
     </section>
+    ${typeof qpkgBar==='function'?qpkgBar(q):''}
     <section class="pane"><h2>과목 <small>${c.paid}과목 · 1개월 단위</small><label class="qt-chk sm r" style="margin:0"><input type="checkbox" data-act="qtMergeAuto" ${q.mergeAuto!==false?'checked':''}> 같은 과정 칸 자동 합치기</label></h2>
       ${rowsHtml||'<div class="empty"><b>과목을 추가하세요</b>아래 칸에 과목 이름을 치면 수강료표에서 찾아 줘요. 정가 · 구분 · 시간 · 횟수는 자동으로 들어가요.</div>'}
       <div class="qt-add">${cpBox('qtAddC',{id:'qtAddIn',clear:false,ph:'과목 추가 — 이름 일부나 초성(ㅍㅇㅆ)을 치고 고르세요'})}<button class="btn pri" data-act="qtAdd">${ic('plus')}추가</button><button class="btn" data-act="qtAddFree">무료 항목</button></div>
@@ -7817,6 +7823,46 @@ Object.assign(WACT,{
   qtPReset:async()=>{ if(!await confirmBox('수강료표를 기본값으로 되돌릴까요?','2026.10.01 게시 사진 기준으로 돌아가요. 고친 내용은 사라져요.','되돌리기',true)) return; S.settings.prices=null; store.saveSettings(); render(); },
   qtPExp:()=>saveFile(`수강료표_${todayStr().replace(/-/g,'')}.json`,new Blob([JSON.stringify(qtPrices(),null,1)],{type:'application/json'})),
 });
+/* ===== 견적서 패키지 양식 (팀 공통) =====
+   학원 패키지 안내 이미지(2026.11)에서 과목 · 금액만 옮겼어요. 수업 날짜 · 시간은 견적서에서 직접 넣어요.
+   r: [과목 이름, 정가] — 정가가 0이면 무료 항목 · 인터넷강의(따즈아 39만)는 견적서의 인터넷강의(2년) 칸으로 들어가요.
+   orig = 원 수강료(인강 포함), pk = 패키지 할인가, day = 당일등록가 */
+const QPKG=[
+ {n:'생성형 AI 실속패키지',g:'AI',orig:1100000,pk:800000,day:700000,on:false,r:[['생성형 AI 과목 1 (택1)',550000],['생성형 AI 과목 2 (택1)',550000]],tip:'AI 업무생산성 · AI콘텐츠 크리에이티브 · AI 데이터&마케팅 · AI 라이프&시니어 · AI 노코드개발 · 생성형 AI 자격증 중 2과목'},
+ {n:'생성형 AI 올인원패키지',g:'AI',orig:2100000,pk:1400000,day:1200000,on:false,r:[['생성형 AI 과목 1 (택1)',525000],['생성형 AI 과목 2 (택1)',525000],['생성형 AI 과목 3 (택1)',525000],['생성형 AI 과목 4 (택1)',525000]],tip:'6개 트랙 중 4과목'},
+ {n:'AI플랫폼 취업패키지',g:'AI',orig:10240000,pk:5850000,day:5250000,on:true,r:[['챗GPT 활용',550000],['빅데이터분석',2200000],['웹개발',5000000],['코딩테스트',2100000],['재수강권 3회 (3개월 무료)',0]]},
+ {n:'국비 선수학습 패키지',g:'국비',orig:3540000,pk:2200000,day:2000000,on:true,r:[['기초언어 (C/JAVA/PYTHON 택1)',1100000],['DBMS',550000],['리눅스',1500000],['재수강권 1회 (1개월 무료)',0],['국비수업 전액무료',0]]},
+ {n:'국비 선수학습 패키지 (코딩테스트 포함)',g:'국비',orig:5640000,pk:3150000,day:2850000,on:true,r:[['기초언어 (C/JAVA/PYTHON 택1)',1100000],['DBMS',550000],['리눅스',1500000],['코딩테스트',2100000],['국비수업 전액무료',0]]},
+ {n:'기초프로그래밍 패키지 (3개 언어)',g:'기초',orig:3590000,pk:2250000,day:2000000,on:true,r:[['C언어',1000000],['PYTHON',1100000],['JAVA',1100000],['재수강권 1회 (1개월 무료)',0],['무료 컨설팅 서비스',0]]},
+ {n:'기초프로그래밍 패키지 (리눅스 · DBMS 포함)',g:'기초',orig:5640000,pk:3650000,day:3300000,on:true,r:[['C언어',1000000],['PYTHON',1100000],['JAVA',1100000],['리눅스',1500000],['DBMS',550000]]},
+ {n:'방학특강 패키지',g:'기초',orig:3090000,pk:1900000,day:1700000,on:true,r:[['C언어',900000],['PYTHON',900000],['JAVA',900000],['재수강권 1회 (1개월 무료)',0],['무료 컨설팅 서비스',0]]},
+ {n:'정보처리자격증 패키지',g:'자격증',orig:2840000,pk:1700000,day:1500000,on:true,r:[['기초언어 (C/JAVA/PYTHON 택1)',1100000],['DBMS',550000],['정보처리 필기대비반',300000],['정보처리 실기대비반',500000],['재수강권 1회 (1개월 무료)',0]]},
+ {n:'코딩테스트 패키지',g:'취업',orig:3590000,pk:2250000,day:2000000,on:true,r:[['기초언어 (C/JAVA/PYTHON 택1)',1100000],['코딩테스트1',650000],['코딩테스트2',650000],['코딩테스트3',800000],['재수강권 1회 (1개월 무료)',0]]},
+ {n:'빅데이터 패키지',g:'취업',orig:4240000,pk:2650000,day:2350000,on:true,r:[['PYTHON',1100000],['DBMS',550000],['빅데이터1',700000],['빅데이터2',700000],['빅데이터3',800000]]},
+ {n:'프론트엔드 패키지',g:'취업',orig:6440000,pk:4200000,day:3800000,on:true,r:[['기초언어 (C/JAVA/PYTHON 택1)',1100000],['웹표준',850000],['JS/TS',1700000],['DBMS',550000],['프론트엔드 프로젝트',1850000]]},
+ {n:'백엔드 패키지',g:'취업',orig:8540000,pk:5700000,day:4650000,on:true,r:[['기초언어 (C/JAVA/PYTHON 택1)',1100000],['리눅스',1500000],['DBMS',550000],['백엔드',4000000],['백엔드프로젝트',1000000]]},
+ {n:'풀스택 패키지',g:'취업',orig:12940000,pk:8750000,day:7350000,on:true,r:[['기초언어 (C/JAVA/PYTHON 택1)',1100000],['리눅스',1500000],['DBMS',550000],['프론트엔드',4400000],['백엔드',5000000]]},
+ {n:'올인원 패키지',g:'취업',orig:17240000,pk:10550000,day:8000000,on:true,r:[['기초언어 (C/JAVA/PYTHON 택1)',1100000],['리눅스/DBMS',2050000],['풀스택',9400000],['빅데이터',2200000],['코딩테스트',2100000]]},
+];
+const qpWon=n=>Math.round(n).toLocaleString('ko-KR');
+function qpkgModal(){ const G=['AI','국비','기초','자격증','취업'];
+  openModal(`${mHead('패키지로 견적 시작')}<div class="body"><p class="rm-hint" style="margin-top:0">고르면 과목 · 정가 · 패키지 금액이 들어가요. 날짜 · 시간 · 요일은 견적서에서 넣어 주세요. "택1" 과목은 이름 칸에서 실제 과목으로 바꿔도 금액은 그대로예요.</p>
+    ${G.map(g=>`<h3 class="qp-g">${g}</h3><div class="qp-list">${QPKG.map((p,i)=>p.g!==g?'':`<button class="qp-it" data-act="qpkgPick" data-k="${i}"><b>${esc(p.n)}</b><small>${p.r.filter(x=>x[1]).map(x=>esc(x[0].replace(/\s*\(.*\)$/,''))).join(' · ')}${p.on?' · 인강':''}</small><span><s>${qpWon(p.orig)}</s> → <em>${qpWon(p.pk)}</em> · 당일 ${qpWon(p.day)}</span></button>`).join('')}</div>`).join('')}
+  </div><footer><button class="btn ghost" data-act="close">닫기</button></footer>`,'wide'); modalEl._kind='qpkg'; }
+function qpkgApply(i,day){ const p=QPKG[i]; if(!p) return; const q=qtDraft();
+  q.rows=p.r.map(([n,v])=>({...qtRowFrom(n),n,p:v||null,free:!v,cat:'',type:'',time:'',cnt:''}));
+  q.tier=false; q.tierPct=null; q.steps=[]; q.online=p.on?'2년':'없음'; q.onCarve=!!p.on; q.target=String(day?p.day:p.pk); q.pkg={i,n:p.n,day:!!day};
+  q.tpl=p.g==='AI'?'ai':'it'; q.tplSet=true;
+  qtKeep(); }
+Object.assign(WACT,{
+  qpkgOpen:()=>qpkgModal(),
+  qpkgPick:async el=>{ const q=qtDraft(); if(q.rows.length&&!await confirmBox('패키지로 바꿀까요?','지금 넣은 과목 · 할인은 패키지 내용으로 바뀌어요. 성함 · 상담일은 그대로예요.','바꾸기')) return;
+    qpkgApply(+el.dataset.k,false); closeModal(); S.qtTab='make'; render(); toast('패키지를 넣었어요',QPKG[+el.dataset.k].n); },
+  qpkgDay:el=>{ const q=qtDraft(); if(!q.pkg) return; const p=QPKG[q.pkg.i]; if(!p) return; q.pkg.day=el.dataset.k==='1'; q.target=String(q.pkg.day?p.day:p.pk); qtKeep(); render(); },
+  qpkgOff:()=>{ const q=qtDraft(); delete q.pkg; qtKeep(); render(); },
+});
+function qpkgBar(q){ if(!q.pkg) return ''; const p=QPKG[q.pkg.i]; if(!p) return '';
+  return `<div class="qp-bar"><b>${esc(p.n)}</b><span>원 ${qpWon(p.orig)}원</span><div class="seg"><button class="${!q.pkg.day?'on':''}" data-act="qpkgDay" data-k="0">패키지가 ${qpWon(p.pk)}</button><button class="${q.pkg.day?'on':''}" data-act="qpkgDay" data-k="1">당일등록가 ${qpWon(p.day)}</button></div><button class="btn ghost sm" data-act="qpkgOff" title="패키지 표시만 끄기 (금액은 그대로)">${ic('x')}</button></div>`; }
 /* ===== 견적서 → 요청메모 (수납 · 할인) =====
    견적(작성 중 · 저장한 견적 · 견적서 엑셀 파일)을 불러오면 과목 · 원 수강료 · 기간이 자동으로 들어가고,
    손으로 넣는 건 납부금액 · 할인 종류 · 과목할인 금액(필요할 때) · COD 금액과 납부 예정일뿐이에요.
@@ -9687,6 +9733,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261102-1628';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261103-1350';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
