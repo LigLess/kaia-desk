@@ -9181,7 +9181,10 @@ const nlB64=u=>{ let b=''; for(let i=0;i<u.length;i+=0x8000) b+=String.fromCharC
 async function nlUrl(o){ const raw=new TextEncoder().encode(JSON.stringify(o));
   try{ if(typeof CompressionStream!=='undefined'){ const cs=new CompressionStream('deflate-raw'); const w=cs.writable.getWriter(); w.write(raw); w.close(); const z=new Uint8Array(await new Response(cs.readable).arrayBuffer()); return `${nlBase()}#1.${nlB64(z)}`; } }catch(e){}
   return `${nlBase()}#0.${nlB64(raw)}`; }
-function nlMsg(c,s,url){ return `${s&&s.name?s.name.replace(/^예시\s/,'')+'님, ':''}안녕하세요. ${S.settings.branch||'코리아AI아카데미'} ${S.settings.mentor||''}입니다.\n${subjectOf(c)} 개강 안내드립니다.\n수업 날짜 · 시간 · 참여 방법을 아래 페이지에서 확인해 주세요.\n\n${url}`; }
+/* 안내 문구 = 지금 개강안내 화면에서 고른 필수 문자 양식(없으면 개강안내 기본 양식) + 맨 아래 안내 페이지 링크 */
+function nlMsg(c,s,url){ const tk=(S.noticeCourse===c.id&&S.ntTpl&&S.settings.tpl[S.ntTpl])?S.ntTpl:(isOnline(c)?'s7z':'s7');
+  let body=fillTpl(S.settings.tpl[tk],c,s&&s.name?s:null); if(!(s&&s.name)) body=body.replace('○○○님','수강생 여러분').replace(/○○○/g,'수강생');
+  return `${body.trim()}\n\n▶ 수업 날짜 · 시간 · 참여 방법 한눈에 보기\n${url}`; }
 
 /* 링크는 미리 만들어 둠 → 버튼을 누르면 바로 복사 (아이폰은 누른 순간에만 복사가 돼요) */
 const NL={cid:null,links:{},t:0};
@@ -9221,9 +9224,9 @@ function nlDraw(){
       ${I.md==='zoom'&&!I.zu&&!I.zid?'<small class="rm-hint">비워 두면 "ZOOM 링크는 개강 전에 따로 보내드려요"라고 나와요.</small>':''}</div>
     <label class="field"><span>추가 안내 <small>선택 · 준비물, 첫날 안내 등</small></span><textarea class="in" rows="2" data-nl="nt" placeholder="예: 첫 수업은 노트북을 꼭 챙겨 주세요.">${esc(I.nt)}</textarea></label>
     <div class="field"><span>담당 멘토 연락처 <small>${esc(nlMentorName()||'이름은 설정 → 내 정보')} · 페이지 맨 아래 전화 · 문자 버튼</small></span><div class="nl-2"><input class="in" data-nls="nlTel" value="${esc(m.tel)}" placeholder="학원 전화"><input class="in" data-nls="nlHp" value="${esc(m.hp)}" placeholder="내 휴대폰 번호" inputmode="tel"></div>${!m.hp?'<small class="rm-hint" style="color:var(--warn)">내 휴대폰 번호를 넣어 두면 학생이 바로 전화 · 문자할 수 있어요. 한 번만 넣으면 계속 써요.</small>':''}</div>
-    <div class="nl-go"><button class="btn pri" data-act="nlCopy" data-k="_">${ic('copy')}공통 링크 복사</button><button class="btn" data-act="nlCopyMsg" data-k="_">${ic('copy')}안내 문구 + 링크 복사</button><button class="btn ghost" data-act="nlPreview">${ic('right')}미리 보기</button><small id="nlLen" class="rm-hint"></small></div>
+    <div class="nl-go"><button class="btn pri" data-act="nlCopy" data-k="_">${ic('copy')}공통 링크 복사</button><button class="btn" data-act="nlCopyMsg" data-k="_">${ic('copy')}필수 문자 + 링크 복사</button><button class="btn ghost" data-act="nlPreview">${ic('right')}미리 보기</button><small id="nlLen" class="rm-hint"></small></div>
     ${sts.length?`<div class="field"><span>학생마다 이름이 들어간 링크 <small>${sts.length}명</small></span><div class="list nl-sts">${sts.map(s=>`<div class="row"><div class="grow"><div class="t1">${esc(s.name)}</div><div class="t2 num">${esc(s.phone||'')}</div></div>
-      <button class="btn sm" data-act="nlCopyMsg" data-k="${s.id}">${ic('copy')}문구 + 링크</button><button class="btn sm ghost" data-act="nlCopy" data-k="${s.id}">링크만</button></div>`).join('')}</div></div>`:''}
+      <button class="btn sm" data-act="nlCopyMsg" data-k="${s.id}">${ic('copy')}문자 + 링크</button><button class="btn sm ghost" data-act="nlCopy" data-k="${s.id}">링크만</button></div>`).join('')}</div></div>`:''}
     <p class="rm-hint">링크 안에 수업 정보가 들어 있어서 서버에 따로 저장되지 않아요. 수업 정보나 ZOOM을 바꾸면 링크를 다시 복사해서 보내 주세요.</p>
   </div><footer><button class="btn ghost" data-act="close">닫기</button></footer>`;
   if(modalEl&&modalEl._kind==='nl'){ const sh=modalEl.querySelector('.sheet'); const top=sh.scrollTop; sh.innerHTML=html; sh.scrollTop=top; } else { openModal(html,'wide'); modalEl._kind='nl'; }
@@ -9706,6 +9709,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261103-1358';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261103-1519';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
