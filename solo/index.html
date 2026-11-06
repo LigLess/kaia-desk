@@ -9349,19 +9349,21 @@ function vsDraw(){ const F=S._vs; const m=nlMentorTel();
     <div class="nl-go"><button class="btn pri" data-act="vsCopyMsg">${ic('copy')}안내 문구 + 링크 복사</button><button class="btn" data-act="vsCopy">${ic('copy')}링크만</button><button class="btn ghost" data-act="vsPreview">${ic('right')}미리 보기</button></div>
   </div><footer><button class="btn ghost" data-act="close">닫기</button></footer>`;
   if(modalEl&&modalEl._kind==='vs'){ const sh=modalEl.querySelector('.sheet'); const y=sh.scrollTop; sh.innerHTML=html; sh.scrollTop=y; } else { openModal(html,'wide'); modalEl._kind='vs'; } }
-async function vsBookKey(){ const k='ks.bkKey.'+((gas.cfg()||{}).user||''); let v=lsGet(k); if(v) return v;
-  const j=await gas.call('POST',null,{a:'bookkey'}); if(j&&j.key){ lsSet(k,j.key); return j.key; } throw new Error('nokey'); }
+/* 예약 열쇠 + 설정을 서버에 저장 (설정이 바뀌었을 때만 다시 보내요) → 링크엔 열쇠 · 서버 번호만 */
+async function vsBookKey(cfg){ const u=(gas.cfg()||{}).user||'', k='ks.bkKey.'+u, ck='ks.bkCfg.'+u; const js=JSON.stringify(cfg);
+  let v=lsGet(k); if(v&&lsGet(ck)===js) return v;
+  const j=await gas.call('POST',null,{a:'bookkey',cfg}); if(j&&j.key){ lsSet(k,j.key); lsSet(ck,js); return j.key; } throw new Error('nokey'); }
 async function vsMake(){ const F=S._vs; const m=nlMentorTel();
   if(F.mode==='pick'){ VS.url=''; if(S.mode!=='gas'||!gas.cfg()) return; const mm=String(gas.cfg().url||'').match(/^https:\/\/script\.google\.com\/macros\/s\/([\w-]+)\/exec/); if(!mm) return;
-    let key; try{ key=await vsBookKey(); }catch(e){ toast('예약 링크를 만들지 못했어요','팀 서버를 새 버전(v13)으로 바꿨는지 확인해 주세요.'); return; }
-    const o={k:key,s:mm[1],mn:nlMentorName(),a:F.a,b:F.b,bw:F.bw,st:+F.st,dd:+F.dd,x:String(F.x)}; if(m.hp) o.hp=m.hp; else if(m.tel) o.tel=m.tel; o.p=VS_PREP.map((x,i)=>F.pr.includes(x)?i:'').join('');
+    const o={mn:nlMentorName(),a:F.a,b:F.b,bw:F.bw,st:+F.st,dd:+F.dd,x:String(F.x)}; if(m.hp) o.hp=m.hp; else if(m.tel) o.tel=m.tel; o.p=VS_PREP.map((x,i)=>F.pr.includes(x)?i:'').join('');
     ['a','b','bw','st','dd','x'].forEach(k=>lsSet('ks.bk'+{a:'A',b:'B2',bw:'Bw',st:'St',dd:'Dd',x:'X'}[k],String(F[k])));
-    VS.url=vsBase()+'#'+await hwZip(o); return; }
+    let key; try{ key=await vsBookKey(o); }catch(e){ toast('예약 링크를 만들지 못했어요','팀 서버를 새 버전(v13)으로 바꿨는지 확인해 주세요.'); return; }
+    VS.url=vsBase()+'#b.'+key+'.'+mm[1]; return; }
   const o={n:F.n,d:F.d,tm:F.tm,mn:nlMentorName()};   // 짧게: 카톡 미리보기가 잘 뜨도록 꼭 필요한 것만
   if(m.hp) o.hp=m.hp; else if(m.tel) o.tel=m.tel; if(F.nt) o.nt=F.nt.slice(0,300); o.p=VS_PREP.map((x,i)=>F.pr.includes(x)?i:'').join('');
   VS.url=vsBase()+'#'+await hwZip(o); }
 function vsMsg(){ const F=S._vs;
-  if(F.mode==='pick') return `안녕하세요! ${S.settings.branch||'코리아AI아카데미'} ${nlMentorName()||'멘토'}입니다 :)\n방문 상담 편하신 날짜와 시간을 아래 링크에서 눌러 주시면 제 일정에 바로 등록돼요.\n오시는 길(건물 안내 · 지하철 · 주차)도 같이 정리해 두었어요.\n${VS.url}`; const d=parseYmd(F.d); const p=String(F.tm||'').split(':'); const hh=+p[0];
+  if(F.mode==='pick') return `안녕하세요, ${S.settings.branch||'코리아AI아카데미'} ${nlMentorName()||'멘토'}입니다 :)\n\n편하신 방문 날짜와 시간을 눌러 주시면\n제 일정에 바로 등록돼요. 오시는 길 · 주차 안내도 함께 있어요.\n\n▶ 방문 상담 예약하기\n${VS.url}`; const d=parseYmd(F.d); const p=String(F.tm||'').split(':'); const hh=+p[0];
   const when=`${d.getMonth()+1}월 ${d.getDate()}일(${DOW[d.getDay()]})${F.tm?` ${hh<12?'오전':'오후'} ${(hh%12)||12}시${+p[1]?' '+(+p[1])+'분':''}`:''}`;
   return `안녕하세요${F.n?' '+F.n+'님':''}! ${S.settings.branch||'코리아AI아카데미'} ${nlMentorName()||'멘토'}입니다 :)\n${when} 상담 예약이 확정되었습니다.\n\n오시는 길(건물 안내 · 지하철 · 주차), 제 연락처를 아래 링크에 정리해 두었어요. 조심히 오세요!\n${VS.url}`; }
 function vsTask(){ const F=S._vs; if(!F.task||F._tasked===F.d+F.tm+F.n) return; F._tasked=F.d+F.tm+F.n;
@@ -9809,6 +9811,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261106-1517';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261106-1524';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

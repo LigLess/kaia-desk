@@ -204,6 +204,10 @@ function inflowPoll_(force) {
     if (adds.length) s.getRange(s.getLastRow() + 1, 1, adds.length, 6).setValues(adds);
   } finally { lock.releaseLock(); }
 }
+function bookCfg_(k) {
+  const r = dataSheet_().getDataRange().getValues().find(x => x[0] === BK_OWNER && x[1] === 'bk' && String(x[2]) === k && !x[5]);
+  try { return r ? (JSON.parse(r[3]).cfg || null) : null; } catch (e) { return null; }
+}
 function bookUser_(k) {
   if (!k || k.length < 8) return '';
   const r = dataSheet_().getDataRange().getValues().find(x => x[0] === BK_OWNER && x[1] === 'bk' && String(x[2]) === k && !x[5]);
@@ -229,7 +233,7 @@ function doGet_(e) {
     const today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
     const taken = dataSheet_().getDataRange().getValues().filter(r => r[0] === BK_OWNER && r[1] === 'bkd' && !r[5]).map(r => { try { return JSON.parse(r[3]); } catch (e) { return null; } })
       .filter(d => d && d.k === k && d.d >= today).map(d => d.d + ' ' + d.tm);
-    return out_({ ok: true, mn: nameOf_(u), taken: taken });
+    return out_({ ok: true, mn: nameOf_(u), taken: taken, cfg: bookCfg_(k) });
   }
   if (p.a === 'nlget') {   // 개강 안내 짧은 링크: 열쇠로 수업 정보 꺼내기 (로그인 없이 · 열쇠를 아는 사람만)
     const k = String(p.k || '').replace(/[^\w]/g, '').slice(0, 24); if (k.length < 8) return out_({ error: 'nokey' });
@@ -414,10 +418,13 @@ function doPost_(e) {
   if (b.a === 'bookkey') {  // 내 방문 예약 열쇠 (팀원만 · 없으면 만들어요) — 링크엔 아이디 대신 이 열쇠만 들어가요
     const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
     const s = dataSheet_(); const r = s.getDataRange().getValues().find(x => x[0] === BK_OWNER && x[1] === 'bk' && !x[5] && (function () { try { return JSON.parse(x[3]).u === uid; } catch (e) { return false; } })());
-    if (r) return out_({ ok: true, key: String(r[2]) });
+    const cfg = b.cfg && typeof b.cfg === 'object' ? JSON.parse(JSON.stringify(b.cfg).slice(0, 2000)) : null;   // 예약 설정(시간 · 요일 · 명함)도 서버에 → 링크가 짧아져요
+    if (r) { if (cfg) { const all = s.getDataRange().getValues(); const i = all.findIndex(x => x[0] === BK_OWNER && x[1] === 'bk' && String(x[2]) === String(r[2]));
+        const d = JSON.parse(all[i][3]); d.cfg = cfg; s.getRange(i + 1, 4).setValue(JSON.stringify(d)); }
+      return out_({ ok: true, key: String(r[2]) }); }
     const key = Utilities.getUuid().replace(/-/g, '').slice(0, 12);
     const lock = LockService.getScriptLock(); lock.waitLock(20000);
-    try { s.appendRow([BK_OWNER, 'bk', key, JSON.stringify({ u: uid, at: Date.now() }), Date.now(), '']); } finally { lock.releaseLock(); }
+    try { s.appendRow([BK_OWNER, 'bk', key, JSON.stringify({ u: uid, at: Date.now(), cfg: cfg }), Date.now(), '']); } finally { lock.releaseLock(); }
     return out_({ ok: true, key: key });
   }
   if (b.a === 'book') {     // 학생이 방문 시간 고르기 (로그인 없이) → 멘토의 업무(상담)로 바로 들어가요

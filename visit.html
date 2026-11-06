@@ -265,7 +265,11 @@ function renderBook(B){
       else E.textContent=j&&j.error==='busy'?'잠시 후 다시 시도해 주세요.':'예약하지 못했어요. 입력한 내용을 확인하거나 담당 멘토에게 연락해 주세요.'; })
     .catch(function(){ btn.disabled=false; btn.innerHTML=IC.cal+'이 시간으로 예약하기'; E.textContent='연결이 불안정해요. 잠시 후 다시 눌러 주세요.'; }); };
 }
-decode().then(function(d){ if(d&&d.k&&d.s){ renderBook(d); return; } if(!d||!d.d) throw 0; render(d); }).catch(fail);
+/* 짧은 예약 링크 #b.<열쇠>.<서버 번호> — 설정(시간 · 요일 · 명함)은 서버에서 받아 와요 */
+(function(){ var m=location.hash.match(/^#b\.(\w{8,24})\.([\w-]{20,120})$/);
+  if(m){ fetch('https://script.google.com/macros/s/'+m[2]+'/exec?a=bookinfo&k='+m[1],{redirect:'follow'}).then(function(r){ return r.json(); }).then(function(j){ if(!j||!j.ok) throw 0;
+      var B=j.cfg||{}; B.k=m[1]; B.s=m[2]; if(!B.mn) B.mn=j.mn; renderBook(B); }).catch(fail); return; }
+  decode().then(function(d){ if(d&&d.k&&d.s){ renderBook(d); return; } if(!d||!d.d) throw 0; render(d); }).catch(fail); })();
 </script>
 </body>
 </html>
