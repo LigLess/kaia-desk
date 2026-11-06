@@ -131,6 +131,23 @@ textarea.in{resize:vertical;min-height:88px}
 .memo2{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--glass-2);white-space:pre-wrap;color:var(--ink-2);font-size:14.5px}
 .when{display:flex;align-items:center;gap:16px;margin-top:18px;padding:16px 18px;border-radius:16px;background:var(--glass-2);box-shadow:inset 0 0 0 1px var(--edge)}
 .when .dd{font-size:32px;white-space:nowrap;flex:none}.when b{display:block;font-size:17px}.when span{color:var(--sub);font-size:14px}
+/* 방문 예약(학생이 시간 고르기) */
+.bk-lab{font-size:13px;font-weight:700;color:var(--sub);margin:18px 0 8px}
+.bk-days{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:none}.bk-days::-webkit-scrollbar{display:none}
+.bk-d{flex:none;width:60px;padding:10px 0;border-radius:14px;border:0;font:inherit;color:var(--ink);background:var(--glass-2);box-shadow:inset 0 0 0 1px var(--edge);cursor:pointer;text-align:center}
+.bk-d small{display:block;font-size:12px;color:var(--sub)}.bk-d b{font-size:18px}.bk-d.sat small{color:#9cc4ff}
+.bk-d.on{background:var(--amber);color:var(--amber-ink);box-shadow:none}.bk-d.on small{color:var(--amber-ink)}
+.bk-times{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.bk-t{padding:11px 0;border-radius:12px;border:0;font:inherit;font-weight:700;font-size:15px;color:var(--ink);background:var(--glass-2);box-shadow:inset 0 0 0 1px var(--edge);cursor:pointer}
+.bk-t.on{background:var(--amber);color:var(--amber-ink);box-shadow:none}.bk-t:disabled{opacity:.3;text-decoration:line-through;cursor:default}
+.bk-in{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--glass-2);border:0;box-shadow:inset 0 0 0 1px var(--edge);border-radius:12px;padding:13px 14px;margin-top:8px}
+.bk-in::placeholder{color:var(--faint)}
+.bk-ag{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--sub);margin:14px 0 4px;line-height:1.5}.bk-ag input{margin-top:3px;accent-color:var(--amber)}
+.bk-sum{margin-top:16px;padding:12px 14px;border-radius:14px;background:var(--amber-glass);box-shadow:inset 0 0 0 1px var(--amber-edge);font-weight:700;font-size:15px}
+.bk-err{color:var(--bad);font-size:13.5px;min-height:20px;margin-top:8px}
+.bk-ok svg{width:22px;height:22px;flex:none}
+.bk-ok{display:flex;gap:10px;align-items:center;padding:14px 16px;margin-bottom:14px;border-radius:16px;background:rgba(126,224,165,.16);box-shadow:inset 0 0 0 1px rgba(126,224,165,.4);font-weight:700}
+@media (max-width:380px){.bk-times{grid-template-columns:repeat(3,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -204,7 +221,50 @@ function render(D){
   document.getElementById('bAddr').onclick=function(){ copy(BR.addr,'주소'); };
 }
 function fail(){ document.getElementById('app').innerHTML='<section class="glass fail"><b>예약 정보를 열 수 없어요</b><p>링크가 잘렸을 수 있어요. 받은 링크 전체를 다시 눌러 주세요.</p></section>'; }
-decode().then(function(d){ if(!d||!d.d) throw 0; render(d); }).catch(fail);
+/* ===== 방문 예약: 링크에 k(예약 열쇠) · s(서버 번호)가 있으면 학생이 직접 날짜 · 시간을 골라요 =====
+   고른 시간은 담당 멘토의 KAIA DESK 업무(상담)로 바로 들어가고, 이미 찬 시간은 막혀요. 예약하면 아래 오시는 길 안내로 바뀌어요. */
+function pad(n){ return (n<10?'0':'')+n; }
+function ymdOf(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function renderBook(B){
+  var SV='https://script.google.com/macros/s/'+String(B.s).replace(/[^\w-]/g,'')+'/exec';
+  var from=B.a||'10:00', to=B.b||'19:00', step=+B.st||30, days=+B.dd||14, off=String(B.x==null?'0':B.x);
+  var taken={}, sel={d:'',tm:''};
+  var list=[]; var now=new Date(); for(var i=0;list.length<days&&i<days*2;i++){ var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i+(B.t0?0:0)); if(off.indexOf(String(d.getDay()))>=0) continue; list.push(d); }
+  var slots=[]; (function(){ var a=from.split(':'), b=to.split(':'); for(var m=+a[0]*60+ +a[1]; m<=+b[0]*60+ +b[1]; m+=step) slots.push(pad(Math.floor(m/60))+':'+pad(m%60)); })();
+  render({n:'',d:ymdOf(now),tm:'',mn:B.mn,hp:B.hp,tel:B.tel,p:B.p});
+  document.title='방문 상담 예약 · '+BR.name;
+  var hero=document.querySelector('.hero');
+  hero.innerHTML='<span class="eyebrow">'+IC.cal.replace('aria-hidden','style="width:15px;height:15px" aria-hidden')+'방문 상담 예약</span>'+
+    '<h1>편한 날짜와 시간을<br>눌러 주세요</h1><div class="who">고르시면 '+h((B.mn||'담당 멘토').replace(/\s*멘토$/,''))+' 멘토 일정에 바로 등록돼요</div>'+
+    '<div class="bk-lab">날짜</div><div class="bk-days" id="bkD"></div>'+
+    '<div class="bk-lab">시간</div><div class="bk-times" id="bkT"><div style="grid-column:1/-1;color:var(--sub);font-size:14px">날짜를 먼저 골라 주세요</div></div>'+
+    '<div class="bk-lab">예약하시는 분</div><input class="bk-in" id="bkN" placeholder="성함" autocomplete="name" maxlength="30"><input class="bk-in" id="bkP" placeholder="연락처 (010-0000-0000)" inputmode="tel" autocomplete="tel" maxlength="20"><textarea class="bk-in" id="bkM" rows="2" placeholder="궁금한 과정이나 남기실 말씀 (선택)" maxlength="300"></textarea>'+
+    '<label class="bk-ag"><input type="checkbox" id="bkA">상담 일정 안내 목적으로만 성함 · 연락처를 사용하는 데 동의해요</label>'+
+    '<div class="bk-sum" id="bkS" hidden></div><div class="bk-err" id="bkE"></div>'+
+    '<button class="btn pri" id="bkGo" style="width:100%">'+IC.cal+'이 시간으로 예약하기</button>';
+  var DW='일월화수목금토';
+  var dBox=document.getElementById('bkD'), tBox=document.getElementById('bkT');
+  function drawDays(){ dBox.innerHTML=list.map(function(d){ var v=ymdOf(d); return '<button class="bk-d'+(d.getDay()===6?' sat':'')+(sel.d===v?' on':'')+'" data-d="'+v+'"><small>'+(v===ymdOf(new Date())?'오늘':DW[d.getDay()])+'</small><b class="num">'+d.getDate()+'</b><small>'+(d.getMonth()+1)+'월</small></button>'; }).join('');
+    [].forEach.call(dBox.children,function(b){ b.onclick=function(){ sel.d=b.dataset.d; sel.tm=''; drawDays(); drawTimes(); sum(); }; }); }
+  function drawTimes(){ if(!sel.d) return; var n=new Date(), isToday=sel.d===ymdOf(n), nm=n.getHours()*60+n.getMinutes()+60;
+    tBox.innerHTML=slots.map(function(s){ var p=s.split(':'), past=isToday&&(+p[0]*60+ +p[1])<nm, tk=taken[sel.d+' '+s]; return '<button class="bk-t num'+(sel.tm===s?' on':'')+'" data-t="'+s+'"'+(past||tk?' disabled':'')+' title="'+(tk?'이미 예약된 시간':'')+'">'+s+'</button>'; }).join('');
+    [].forEach.call(tBox.children,function(b){ b.onclick=function(){ sel.tm=b.dataset.t; drawTimes(); sum(); }; }); }
+  function sum(){ var e=document.getElementById('bkS'); if(!sel.d||!sel.tm){ e.hidden=true; return; } var d=ymd(sel.d), hh=+sel.tm.split(':')[0], mm=+sel.tm.split(':')[1];
+    e.hidden=false; e.textContent=(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DW[d.getDay()]+') '+(hh<12?'오전 ':'오후 ')+((hh%12)||12)+'시'+(mm?' '+mm+'분':'')+'에 뵐게요'; }
+  drawDays();
+  fetch(SV+'?a=bookinfo&k='+encodeURIComponent(B.k),{redirect:'follow'}).then(function(r){ return r.json(); }).then(function(j){ if(j&&j.taken) j.taken.forEach(function(x){ taken[x]=1; }); if(j&&j.error==='nokey'){ document.getElementById('bkE').textContent='예약 링크가 만료됐어요. 담당 멘토에게 새 링크를 받아 주세요.'; document.getElementById('bkGo').disabled=true; } drawTimes(); }).catch(function(){});
+  document.getElementById('bkGo').onclick=function(){ var E=document.getElementById('bkE'), n=document.getElementById('bkN').value.trim(), p=document.getElementById('bkP').value.trim(), m=document.getElementById('bkM').value.trim();
+    if(!sel.d||!sel.tm){ E.textContent='날짜와 시간을 골라 주세요.'; return; } if(!n){ E.textContent='성함을 적어 주세요.'; return; } if(p.replace(/\D/g,'').length<9){ E.textContent='연락처를 정확히 적어 주세요.'; return; }
+    if(!document.getElementById('bkA').checked){ E.textContent='개인정보 사용에 동의해 주세요.'; return; }
+    var btn=this; btn.disabled=true; E.textContent=''; btn.textContent='예약하는 중…';
+    fetch(SV,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({a:'book',k:B.k,n:n,p:p,d:sel.d,tm:sel.tm,memo:m})}).then(function(r){ return r.json(); }).then(function(j){
+      if(j&&j.ok){ render({n:n,d:sel.d,tm:sel.tm,mn:B.mn,hp:B.hp,tel:B.tel,p:B.p}); var a=document.getElementById('app'); var ok=document.createElement('div'); ok.className='bk-ok in-1'; ok.innerHTML=IC.cal+'예약이 접수됐어요. 담당 멘토가 확인 후 연락드릴게요.'; a.insertBefore(ok,a.children[1]); scrollTo(0,0); return; }
+      btn.disabled=false; btn.innerHTML=IC.cal+'이 시간으로 예약하기';
+      if(j&&j.error==='taken'){ taken[sel.d+' '+sel.tm]=1; sel.tm=''; drawTimes(); sum(); E.textContent='방금 다른 분이 예약한 시간이에요. 다른 시간을 골라 주세요.'; }
+      else E.textContent=j&&j.error==='busy'?'잠시 후 다시 시도해 주세요.':'예약하지 못했어요. 입력한 내용을 확인하거나 담당 멘토에게 연락해 주세요.'; })
+    .catch(function(){ btn.disabled=false; btn.innerHTML=IC.cal+'이 시간으로 예약하기'; E.textContent='연결이 불안정해요. 잠시 후 다시 눌러 주세요.'; }); };
+}
+decode().then(function(d){ if(d&&d.k&&d.s){ renderBook(d); return; } if(!d||!d.d) throw 0; render(d); }).catch(fail);
 </script>
 </body>
 </html>

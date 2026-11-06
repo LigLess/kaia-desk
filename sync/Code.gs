@@ -21,6 +21,8 @@
  *
  * 개강 안내 짧은 링크(v12): 링크가 길면 카카오톡 미리보기가 안 떠서, 수업 정보는 서버(kaia_data 탭 _nl 줄)에 두고 링크엔 열쇠만 넣어요.
  *
+ * 방문 예약(v13): 상담 예약 안내 → "학생이 시간 고르기" 링크. 학생이 고른 시간은 그 멘토의 업무(상담)로 바로 들어가고, 이미 찬 시간은 다른 학생에게 막혀요.
+ *
  * 비밀번호를 잊은 팀원: 시트의 kaia_users 탭에서 그 사람 줄을 지우면, 같은 아이디로 다시 가입할 수 있고 데이터는 그대로예요.
  */
 const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
@@ -31,6 +33,7 @@ const TEAM_OWNER = '_team';
 const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true, qshare: true, inflow: true, inflowsrc: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
 const MAX_FILE = 31 * 1024 * 1024;
 const HW_MAX_SUB = 15;               // 과제 링크 하나로 올릴 수 있는 파일 수 (다시 제출 포함)
+const BK_OWNER = '_bk';             // 방문 예약 링크(열쇠 · 찬 시간)를 적어 두는 줄의 주인 이름
 const NL_OWNER = '_nl';             // 개강 안내 짧은 링크 내용을 적어 두는 줄의 주인 이름
 const HW_OWNER = '_hw';              // 과제 열쇠를 적어 두는 줄의 주인 이름   // 게시판 첨부 한 파일 30MB (구글 앱스 스크립트 요청 한도 약 50MB 안쪽)
 
@@ -201,6 +204,11 @@ function inflowPoll_(force) {
     if (adds.length) s.getRange(s.getLastRow() + 1, 1, adds.length, 6).setValues(adds);
   } finally { lock.releaseLock(); }
 }
+function bookUser_(k) {
+  if (!k || k.length < 8) return '';
+  const r = dataSheet_().getDataRange().getValues().find(x => x[0] === BK_OWNER && x[1] === 'bk' && String(x[2]) === k && !x[5]);
+  try { return r ? JSON.parse(r[3]).u : ''; } catch (e) { return ''; }
+}
 function sheetId_(url) { const m = String(url || '').match(/\/d\/([\w-]{20,})/) || String(url || '').match(/^([\w-]{30,})$/); return m ? m[1] : ''; }
 function serverEmail_() { try { return Session.getEffectiveUser().getEmail() || ''; } catch (err) { return ''; } }
 
@@ -215,7 +223,14 @@ function doGet_(e) {
     if (uid) { const it = tmpFolder_().getFilesByName('cal_' + uid + '.ics'); if (it.hasNext()) txt = it.next().getBlob().getDataAsString('UTF-8'); }
     return ContentService.createTextOutput(txt).setMimeType(ContentService.MimeType.ICAL);
   }
-  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 12 });
+  if (p.a === 'ping') return out_({ ok: true, app: 'kaia-desk', v: 13 });
+  if (p.a === 'bookinfo') {   // 방문 예약 링크: 이미 찬 시간 (로그인 없이 · 예약 열쇠로)
+    const k = String(p.k || '').replace(/[^\w]/g, '').slice(0, 24); const u = bookUser_(k); if (!u) return out_({ error: 'nokey' });
+    const today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+    const taken = dataSheet_().getDataRange().getValues().filter(r => r[0] === BK_OWNER && r[1] === 'bkd' && !r[5]).map(r => { try { return JSON.parse(r[3]); } catch (e) { return null; } })
+      .filter(d => d && d.k === k && d.d >= today).map(d => d.d + ' ' + d.tm);
+    return out_({ ok: true, mn: nameOf_(u), taken: taken });
+  }
   if (p.a === 'nlget') {   // 개강 안내 짧은 링크: 열쇠로 수업 정보 꺼내기 (로그인 없이 · 열쇠를 아는 사람만)
     const k = String(p.k || '').replace(/[^\w]/g, '').slice(0, 24); if (k.length < 8) return out_({ error: 'nokey' });
     const c = CacheService.getScriptCache(); const hit = c.get('nl_' + k); if (hit) return out_({ data: JSON.parse(hit) });
@@ -395,6 +410,31 @@ function doPost_(e) {
       s.appendRow([TEAM_OWNER, 'inflowsrc', src.id, JSON.stringify(src), Date.now(), '']); } finally { lock.releaseLock(); }
     try { inflowPoll_(true); } catch (err) {}
     return out_({ ok: true, src: src });
+  }
+  if (b.a === 'bookkey') {  // 내 방문 예약 열쇠 (팀원만 · 없으면 만들어요) — 링크엔 아이디 대신 이 열쇠만 들어가요
+    const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
+    const s = dataSheet_(); const r = s.getDataRange().getValues().find(x => x[0] === BK_OWNER && x[1] === 'bk' && !x[5] && (function () { try { return JSON.parse(x[3]).u === uid; } catch (e) { return false; } })());
+    if (r) return out_({ ok: true, key: String(r[2]) });
+    const key = Utilities.getUuid().replace(/-/g, '').slice(0, 12);
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try { s.appendRow([BK_OWNER, 'bk', key, JSON.stringify({ u: uid, at: Date.now() }), Date.now(), '']); } finally { lock.releaseLock(); }
+    return out_({ ok: true, key: key });
+  }
+  if (b.a === 'book') {     // 학생이 방문 시간 고르기 (로그인 없이) → 멘토의 업무(상담)로 바로 들어가요
+    const k = String(b.k || '').replace(/[^\w]/g, '').slice(0, 24); const u = bookUser_(k); if (!u) return out_({ error: 'nokey' });
+    if (!hwRate_('bk' + k)) return out_({ error: 'busy' });
+    const n = String(b.n || '').trim().slice(0, 30), ph = String(b.p || '').replace(/[^\d-]/g, '').slice(0, 20), d = String(b.d || ''), tm = String(b.tm || ''), memo = String(b.memo || '').trim().slice(0, 300);
+    if (!n || ph.replace(/\D/g, '').length < 9 || !/^\d{4}-\d{2}-\d{2}$/.test(d) || !/^\d{2}:\d{2}$/.test(tm)) return out_({ error: 'bad' });
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try {
+      const s = dataSheet_();
+      const dup = s.getDataRange().getValues().some(r => r[0] === BK_OWNER && r[1] === 'bkd' && !r[5] && (function () { try { const x = JSON.parse(r[3]); return x.k === k && x.d === d && x.tm === tm; } catch (e) { return false; } })());
+      if (dup) return out_({ error: 'taken' });
+      const now = Date.now(), id = 'tb' + Utilities.getUuid().replace(/-/g, '').slice(0, 10);
+      const task = { id: id, text: n + ' 방문 상담 · ' + ph + (memo ? ' · ' + memo : ''), due: d, time: tm, cat: '상담', sid: '', done: false, at: now, src: 'book', bn: n, bp: ph };
+      s.getRange(s.getLastRow() + 1, 1, 2, 6).setValues([[u, 'tasks', id, JSON.stringify(task), now, ''], [BK_OWNER, 'bkd', id, JSON.stringify({ k: k, d: d, tm: tm }), now, '']]);
+    } finally { lock.releaseLock(); }
+    return out_({ ok: true });
   }
   if (b.a === 'nlput') {    // 개강 안내 짧은 링크 만들기 (팀원만) → 열쇠 돌려줌
     const uid = auth_(b.token); if (!uid) return out_({ error: 'auth' });
