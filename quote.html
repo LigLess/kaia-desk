@@ -2203,6 +2203,11 @@ body.dark[data-bg="lounge"] .hw-av,body.dark[data-bg="emerald"] .hw-av{color:#1a
 .qp-it:hover{border-color:var(--accent)}.qp-it b{font-size:14px}.qp-it small{color:var(--muted);font-size:12px;line-height:1.45}.qp-it span{font-size:12.5px}.qp-it s{color:var(--muted)}.qp-it em{font-style:normal;font-weight:700;color:var(--accent)}
 .qp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;margin-bottom:14px;border-radius:14px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))}
 .qp-bar>span{color:var(--muted);font-size:13px;margin-right:auto}
+.qt-sch{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 2px}
+.qt-sch>span{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);margin-right:2px}.qt-sch>span svg{width:14px;height:14px}
+.qs-c{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);cursor:pointer}
+.qs-c:hover{border-color:var(--accent)}.qs-c.on{background:var(--accent);border-color:var(--accent);color:var(--on-acc,#fff)}.qs-c.more{color:var(--muted);border-style:dashed}
+.qs-row{width:100%;text-align:left;font:inherit;background:none;border:0;border-bottom:1px solid var(--line);color:var(--fg)}
 .hc-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
 .hc-box{padding:14px 16px;border-radius:14px;background:var(--surface-2)}
 .hc-bar{display:grid;grid-template-columns:118px minmax(0,1fr) 44px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
@@ -2766,6 +2771,7 @@ function qtMakeView(){
       ${r.free?'<span class="chip">무료</span>':`<select class="in qt-t" data-q="type">${['평일','주말'].map(t=>`<option ${r.type===t?'selected':''}>${t}</option>`).join('')}</select>`}
       <span class="qt-amt">${r.free?'':x.orig==null?'<span class="chip warn">표에 없음</span>':`${x.alloc===0?'<span class="chip cyan">지원과목</span> ':''}${x.alloc!==x.orig?`<s>${qtWon(x.orig)}</s>`:''}<b>${qtWon(x.alloc)}</b>`}</span>
       <button class="btn sm ghost" data-act="qtRowUp" data-k="${r.id}" aria-label="위로" ${i?'':'disabled'}>${ic('up2')}</button><button class="btn sm ghost" data-act="qtRowDel" data-k="${r.id}" aria-label="빼기">${ic('x')}</button></div>
+    ${typeof qsRowHtml==='function'?qsRowHtml(r):''}
     <div class="qt-r2">
       <label><span>과정 ${i?(()=>{ const on=qtJoined(q,q.rows.filter(x=>x.n),q.rows.filter(x=>x.n).indexOf(r)); return `<button class="qt-join ${on?'on':''}" data-act="qtJoin" data-k="${r.id}" title="자동 → 위와 합치기 → 따로 순서로 바뀌어요">${r.join===true?'위와 합침':r.join===false?'따로':on?'자동 합침':'자동'}</button>`; })():''}</span><input class="in" data-q="cat" value="${esc(r.cat)}" list="qtCats"></label>
       <label><span>개강일</span><input class="in" type="date" data-q="s" value="${esc(r.s)}"></label>

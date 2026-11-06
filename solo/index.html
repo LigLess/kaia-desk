@@ -2210,6 +2210,11 @@ body.dark[data-bg="lounge"] .hw-av,body.dark[data-bg="emerald"] .hw-av{color:#1a
 .qp-it:hover{border-color:var(--accent)}.qp-it b{font-size:14px}.qp-it small{color:var(--muted);font-size:12px;line-height:1.45}.qp-it span{font-size:12.5px}.qp-it s{color:var(--muted)}.qp-it em{font-style:normal;font-weight:700;color:var(--accent)}
 .qp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;margin-bottom:14px;border-radius:14px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))}
 .qp-bar>span{color:var(--muted);font-size:13px;margin-right:auto}
+.qt-sch{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 2px}
+.qt-sch>span{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);margin-right:2px}.qt-sch>span svg{width:14px;height:14px}
+.qs-c{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);cursor:pointer}
+.qs-c:hover{border-color:var(--accent)}.qs-c.on{background:var(--accent);border-color:var(--accent);color:var(--on-acc,#fff)}.qs-c.more{color:var(--muted);border-style:dashed}
+.qs-row{width:100%;text-align:left;font:inherit;background:none;border:0;border-bottom:1px solid var(--line);color:var(--fg)}
 .hc-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
 .hc-box{padding:14px 16px;border-radius:14px;background:var(--surface-2)}
 .hc-bar{display:grid;grid-template-columns:118px minmax(0,1fr) 44px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
@@ -7653,6 +7658,7 @@ function qtMakeView(){
       ${r.free?'<span class="chip">무료</span>':`<select class="in qt-t" data-q="type">${['평일','주말'].map(t=>`<option ${r.type===t?'selected':''}>${t}</option>`).join('')}</select>`}
       <span class="qt-amt">${r.free?'':x.orig==null?'<span class="chip warn">표에 없음</span>':`${x.alloc===0?'<span class="chip cyan">지원과목</span> ':''}${x.alloc!==x.orig?`<s>${qtWon(x.orig)}</s>`:''}<b>${qtWon(x.alloc)}</b>`}</span>
       <button class="btn sm ghost" data-act="qtRowUp" data-k="${r.id}" aria-label="위로" ${i?'':'disabled'}>${ic('up2')}</button><button class="btn sm ghost" data-act="qtRowDel" data-k="${r.id}" aria-label="빼기">${ic('x')}</button></div>
+    ${typeof qsRowHtml==='function'?qsRowHtml(r):''}
     <div class="qt-r2">
       <label><span>과정 ${i?(()=>{ const on=qtJoined(q,q.rows.filter(x=>x.n),q.rows.filter(x=>x.n).indexOf(r)); return `<button class="qt-join ${on?'on':''}" data-act="qtJoin" data-k="${r.id}" title="자동 → 위와 합치기 → 따로 순서로 바뀌어요">${r.join===true?'위와 합침':r.join===false?'따로':on?'자동 합침':'자동'}</button>`; })():''}</span><input class="in" data-q="cat" value="${esc(r.cat)}" list="qtCats"></label>
       <label><span>개강일</span><input class="in" type="date" data-q="s" value="${esc(r.s)}"></label>
@@ -7863,6 +7869,36 @@ Object.assign(WACT,{
 });
 function qpkgBar(q){ if(!q.pkg) return ''; const p=QPKG[q.pkg.i]; if(!p) return '';
   return `<div class="qp-bar"><b>${esc(p.n)}</b><span>원 ${qpWon(p.orig)}원</span><div class="seg"><button class="${!q.pkg.day?'on':''}" data-act="qpkgDay" data-k="0">패키지가 ${qpWon(p.pk)}</button><button class="${q.pkg.day?'on':''}" data-act="qpkgDay" data-k="1">당일등록가 ${qpWon(p.day)}</button></div><button class="btn ghost sm" data-act="qpkgOff" title="패키지 표시만 끄기 (금액은 그대로)">${ic('x')}</button></div>`; }
+/* ===== 견적서 ↔ 시간표: 과목 줄 아래에 그 과목의 다가오는 반을 보여 주고, 누르면 개강일 · 요일 · 횟수 · 종강일 · 시간을 한 번에 채워요 ===== */
+const QS_ALIAS=[[/python|파이썬/g,'python'],[/java(?!script)|자바/g,'java'],[/c언어|c프로그래밍/g,'clang'],[/리눅스|linux/g,'linux'],[/데이터베이스|dbms/g,'dbms'],[/정보처리기사|정처기/g,'정보처리기사'],[/빅데이터/g,'bigdata'],[/웹개발|웹 개발/g,'web']];
+function qsNorm(s){ let t=String(s||'').toLowerCase().replace(/\/(주말|특|주말방특)$/,''); QS_ALIAS.forEach(([a,b])=>t=t.replace(a,b)); return t.replace(/[\s()\[\]·\-_.,&/]/g,''); }
+function qsList(){ if(typeof sessionsOf!=='function'||typeof D!=='function'||!D().courses) return [];
+  const from=addDays(todayStr(),-10); return Object.values(D().courses).filter(c=>c&&c.start&&c.start>=from).sort((a,b)=>a.start.localeCompare(b.start)); }
+const QS_STOP=/(평일반|주말반|대비반|평일|주말|과정|단기|반)/g;
+const qsBi=s=>{ const o=new Set(); for(let i=0;i<s.length-1;i++) o.add(s.slice(i,i+2)); return o; };
+function qsDice(a,b){ a=a.replace(QS_STOP,''); b=b.replace(QS_STOP,''); if(!a||!b) return 0; if(a===b) return 1; const A=qsBi(a), B=qsBi(b); let n=0; A.forEach(x=>{ if(B.has(x)) n++; }); return A.size+B.size?2*n/(A.size+B.size):0; }
+function qsMatch(r){ const want=qsNorm(r.n); if(!want) return []; const base=want.replace(/\d+$/,''), num=(want.match(/(\d+)$/)||[])[1];
+  const wkWant=/\/주말/.test(r.n)?'주말':null;
+  return qsList().map(c=>{ const s=qsNorm(typeof subjectOf==='function'?subjectOf(c):c.name), n=qsNorm(c.name); let sc=0; const dc=Math.max(qsDice(want,s),qsDice(want,n)); if(dc>=.55) sc=1+dc;
+      if(s===want||n===want) sc=3; else if(sc<2&&base.length>=2&&(s.includes(base)||n.includes(base))){ sc=2; const cn=(s.match(/(\d+)$/)||n.match(/(\d+)/)||[])[1]; if(num&&cn&&cn!==num) sc=0.5; }
+      if(sc&&wkWant&&qsIsWk(c)!==(wkWant==='주말')) sc-=.6; return {c,sc}; })
+    .filter(x=>x.sc>=1).sort((a,b)=>b.sc-a.sc||a.c.start.localeCompare(b.c.start)).slice(0,4).map(x=>x.c); }
+const qsDaysOf=c=>c.days&&c.days.length?c.days:defaultDays(c);
+const qsIsWk=c=>qsDaysOf(c).every(d=>d===0||d===6);
+function qsPat(c){ const ord=d=>[...d].sort((x,y)=>((x+6)%7)-((y+6)%7)).map(x=>DOW[x]).join(''); const A=ord(qsDaysOf(c)); return c.daysB&&c.daysB.length&&ord(c.daysB)!==A?A+ord(c.daysB):A; }
+function qsLabel(c){ return `${fmtMD(c.start)} 개강 · ${daysLabel(qsDaysOf(c),c.daysB)} ${c.time||''}`.trim(); }
+function qsRowHtml(r){ if(r.free||!r.n) return ''; const L=qsMatch(r); const all=qsList().length; if(!all) return '';
+  return `<div class="qt-sch"><span>${ic('cal')}시간표</span>${L.map(c=>`<button class="qs-c ${r.cid===c.id?'on':''}" data-act="qsPick" data-k="${r.id}" data-id="${c.id}" title="${esc(c.name)}">${esc(qsLabel(c))}${c.room?` · ${esc(roomLabel(c)||c.room)}`:''}</button>`).join('')}<button class="qs-c more" data-act="qsMore" data-k="${r.id}">${L.length?'다른 반':'시간표에서 고르기'}</button></div>`; }
+function qsFill(r,c){ const ss=sessionsOf(c); r.s=c.start; r.e=courseEnd(c)||ss[ss.length-1]||''; r.cnt=c.total||ss.length||''; r.pat=qsPat(c); r.time=String(c.time||'').replace(/\s*[–\-∼]\s*/g,'~'); r.type=qsIsWk(c)?'주말':'평일'; r.cid=c.id; }
+function qsMoreModal(rid){ const r=qtRow(rid); if(!r) return; S._qsQ=S._qsQ||'';
+  const draw=()=>{ const q=qsNorm(S._qsQ); const L=qsList().filter(c=>!q||qsNorm(c.name+' '+(c.subject||'')).includes(q)||(typeof choOf==='function'&&/^[ㄱ-ㅎ]+$/.test(S._qsQ.replace(/\s/g,''))&&choOf(c.name).replace(/\s/g,'').includes(S._qsQ.replace(/\s/g,''))));
+    const box=$('#qsList'); if(box) box.innerHTML=L.length?L.map(c=>`<button class="row click qs-row" data-act="qsPick" data-k="${rid}" data-id="${c.id}"><div class="grow"><div class="t1">${esc(c.name)}</div><div class="t2">${esc(qsLabel(c))} · ${(sessionsOf(c).length||c.total||'?')}회${c.room?' · '+esc(roomLabel(c)||c.room):''}</div></div><span class="chip ${qsIsWk(c)?'blue':''}">${qsIsWk(c)?'주말':'평일'}</span></button>`).join(''):'<div class="empty"><b>찾는 반이 없어요</b>시간표 탭에 개강표가 올라가 있는지 확인해 주세요.</div>'; };
+  openModal(`${mHead(`시간표에서 고르기 · ${esc(r.n)}`)}<div class="body"><input class="in" id="qsQ" placeholder="반 이름 · 초성으로 찾기" value="${esc(S._qsQ)}" autocomplete="off"><div class="list" id="qsList" style="margin-top:10px;max-height:56vh;overflow:auto"></div></div><footer><button class="btn ghost" data-act="close">닫기</button></footer>`,'wide');
+  modalEl._kind='qs'; draw(); const i=$('#qsQ'); i.oninput=()=>{ S._qsQ=i.value; draw(); }; setTimeout(()=>i.focus(),50); }
+Object.assign(WACT,{
+  qsPick:el=>{ const r=qtRow(el.dataset.k), c=D().courses[el.dataset.id]; if(!r||!c) return; qsFill(r,c); qtKeep(); if(modalEl&&modalEl._kind==='qs') closeModal(); render(); toast('시간표에서 채웠어요',`${qsLabel(c)} · ${r.cnt}회 · 종강 ${fmtMD(r.e)}`); },
+  qsMore:el=>qsMoreModal(el.dataset.k),
+});
 /* ===== 견적서 → 요청메모 (수납 · 할인) =====
    견적(작성 중 · 저장한 견적 · 견적서 엑셀 파일)을 불러오면 과목 · 원 수강료 · 기간이 자동으로 들어가고,
    손으로 넣는 건 납부금액 · 할인 종류 · 과목할인 금액(필요할 때) · COD 금액과 납부 예정일뿐이에요.
@@ -9736,6 +9772,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261103-1519';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261106-1128';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
