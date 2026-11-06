@@ -227,10 +227,11 @@ function pad(n){ return (n<10?'0':'')+n; }
 function ymdOf(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function renderBook(B){
   var SV='https://script.google.com/macros/s/'+String(B.s).replace(/[^\w-]/g,'')+'/exec';
-  var from=B.a||'10:00', to=B.b||'19:00', step=+B.st||30, days=+B.dd||14, off=String(B.x==null?'0':B.x);
+  var from=B.a||'10:00', to=B.b||'21:00', toW=B.bw||to, step=+B.st||30, days=+B.dd||14, off=String(B.x==null?'0':B.x);
   var taken={}, sel={d:'',tm:''};
   var list=[]; var now=new Date(); for(var i=0;list.length<days&&i<days*2;i++){ var d=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i+(B.t0?0:0)); if(off.indexOf(String(d.getDay()))>=0) continue; list.push(d); }
-  var slots=[]; (function(){ var a=from.split(':'), b=to.split(':'); for(var m=+a[0]*60+ +a[1]; m<=+b[0]*60+ +b[1]; m+=step) slots.push(pad(Math.floor(m/60))+':'+pad(m%60)); })();
+  /* 평일 · 주말 마지막 시작 시간이 달라요 */
+  function slotsFor(v){ var wd=ymd(v).getDay(), end=(wd===0||wd===6)?toW:to, out=[], a=from.split(':'), b=end.split(':'); for(var m=+a[0]*60+ +a[1]; m<=+b[0]*60+ +b[1]; m+=step) out.push(pad(Math.floor(m/60))+':'+pad(m%60)); return out; }
   render({n:'',d:ymdOf(now),tm:'',mn:B.mn,hp:B.hp,tel:B.tel,p:B.p});
   document.title='방문 상담 예약 · '+BR.name;
   var hero=document.querySelector('.hero');
@@ -247,7 +248,7 @@ function renderBook(B){
   function drawDays(){ dBox.innerHTML=list.map(function(d){ var v=ymdOf(d); return '<button class="bk-d'+(d.getDay()===6?' sat':'')+(sel.d===v?' on':'')+'" data-d="'+v+'"><small>'+(v===ymdOf(new Date())?'오늘':DW[d.getDay()])+'</small><b class="num">'+d.getDate()+'</b><small>'+(d.getMonth()+1)+'월</small></button>'; }).join('');
     [].forEach.call(dBox.children,function(b){ b.onclick=function(){ sel.d=b.dataset.d; sel.tm=''; drawDays(); drawTimes(); sum(); }; }); }
   function drawTimes(){ if(!sel.d) return; var n=new Date(), isToday=sel.d===ymdOf(n), nm=n.getHours()*60+n.getMinutes()+60;
-    tBox.innerHTML=slots.map(function(s){ var p=s.split(':'), past=isToday&&(+p[0]*60+ +p[1])<nm, tk=taken[sel.d+' '+s]; return '<button class="bk-t num'+(sel.tm===s?' on':'')+'" data-t="'+s+'"'+(past||tk?' disabled':'')+' title="'+(tk?'이미 예약된 시간':'')+'">'+s+'</button>'; }).join('');
+    tBox.innerHTML=slotsFor(sel.d).map(function(s){ var p=s.split(':'), past=isToday&&(+p[0]*60+ +p[1])<nm, tk=taken[sel.d+' '+s]; return '<button class="bk-t num'+(sel.tm===s?' on':'')+'" data-t="'+s+'"'+(past||tk?' disabled':'')+' title="'+(tk?'이미 예약된 시간':'')+'">'+s+'</button>'; }).join('');
     [].forEach.call(tBox.children,function(b){ b.onclick=function(){ sel.tm=b.dataset.t; drawTimes(); sum(); }; }); }
   function sum(){ var e=document.getElementById('bkS'); if(!sel.d||!sel.tm){ e.hidden=true; return; } var d=ymd(sel.d), hh=+sel.tm.split(':')[0], mm=+sel.tm.split(':')[1];
     e.hidden=false; e.textContent=(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DW[d.getDay()]+') '+(hh<12?'오전 ':'오후 ')+((hh%12)||12)+'시'+(mm?' '+mm+'분':'')+'에 뵐게요'; }

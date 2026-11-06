@@ -9299,7 +9299,7 @@ const vsBase=()=>/github\.io$/.test(location.hostname)||location.protocol==='fil
 const VS_PREP=['신분증','국민내일배움카드 (있으시면 · 없어도 상담에서 발급 방법을 안내드려요)','최종학력 · 자격증 등 관련 서류 (있으시면)','궁금한 점 메모'];
 const VS={url:'',t:0};
 function vsOpen(sid){ const s=sid&&D().students[sid];
-  const F=S._vs={sid:sid||'',n:s?s.name.replace(/^예시\s/,''):'',d:addDays(todayStr(),1),tm:'14:00',nt:'',pr:VS_PREP.slice(0,2),task:true,mode:sid?'fix':(S._vsMode||'fix'),a:lsGet('md.bkA')||'10:00',b:lsGet('md.bkB')||'19:00',st:lsGet('md.bkSt')||'30',dd:lsGet('md.bkDd')||'14',x:lsGet('md.bkX')??'0'};
+  const F=S._vs={sid:sid||'',n:s?s.name.replace(/^예시\s/,''):'',d:addDays(todayStr(),1),tm:'14:00',nt:'',pr:VS_PREP.slice(0,2),task:true,mode:sid?'fix':(S._vsMode||'fix'),a:lsGet('md.bkA')||'10:00',b:lsGet('md.bkB2')||'21:00',bw:lsGet('md.bkBw')||'17:00',st:lsGet('md.bkSt')||'30',dd:lsGet('md.bkDd')||'14',x:lsGet('md.bkX')??'0'};
   vsDraw(); vsMake(); }
 function vsDraw(){ const F=S._vs; const m=nlMentorTel();
   const html=`${mHead('상담 예약 안내 링크')}<div class="body hw-form">
@@ -9307,7 +9307,8 @@ function vsDraw(){ const F=S._vs; const m=nlMentorTel();
     <div class="seg" style="margin-bottom:14px"><button class="${F.mode!=='pick'?'on':''}" data-act="vsMode" data-k="fix">날짜 정해서 보내기</button><button class="${F.mode==='pick'?'on':''}" data-act="vsMode" data-k="pick">학생이 시간 고르기</button></div>
     ${F.mode==='pick'?`<p class="rm-hint" style="margin-top:0">학생이 링크에서 <b>편한 날짜 · 시간을 직접 눌러 예약</b>해요. 예약되면 내 <b>업무(상담)</b>에 바로 들어오고 알림이 떠요. 이미 찬 시간은 다른 학생에게 막혀요.${S.mode!=='gas'?' <b style="color:var(--bad)">팀 서버에 로그인해야 쓸 수 있어요.</b>':''}</p>
     <div class="form"><label class="field"><span>상담 가능 시작</span><input class="in" type="time" step="1800" data-vs="a" value="${esc(F.a)}"></label>
-      <label class="field"><span>마지막 시작 시간</span><input class="in" type="time" step="1800" data-vs="b" value="${esc(F.b)}"></label>
+      <label class="field"><span>평일 마지막 상담 시작</span><input class="in" type="time" step="1800" data-vs="b" value="${esc(F.b)}"></label>
+      <label class="field"><span>주말 마지막 상담 시작</span><input class="in" type="time" step="1800" data-vs="bw" value="${esc(F.bw)}"></label>
       <label class="field"><span>간격</span><select class="in" data-vs="st">${[['30','30분'],['60','1시간']].map(([v,l])=>`<option value="${v}" ${F.st===v?'selected':''}>${l}</option>`).join('')}</select></label>
       <label class="field"><span>예약 받는 기간</span><select class="in" data-vs="dd">${[['7','1주'],['14','2주'],['21','3주']].map(([v,l])=>`<option value="${v}" ${F.dd===v?'selected':''}>${l}</option>`).join('')}</select></label></div>
     <div class="field"><span>쉬는 요일</span><div class="ha-sts">${[...DOW].map((d,i)=>`<label class="check"><input type="checkbox" data-vsx="${i}" ${String(F.x).includes(String(i))?'checked':''}>${d}</label>`).join('')}</div></div>`
@@ -9326,8 +9327,8 @@ async function vsBookKey(){ const k='md.bkKey.'+((gas.cfg()||{}).user||''); let 
 async function vsMake(){ const F=S._vs; const m=nlMentorTel();
   if(F.mode==='pick'){ VS.url=''; if(S.mode!=='gas'||!gas.cfg()) return; const mm=String(gas.cfg().url||'').match(/^https:\/\/script\.google\.com\/macros\/s\/([\w-]+)\/exec/); if(!mm) return;
     let key; try{ key=await vsBookKey(); }catch(e){ toast('예약 링크를 만들지 못했어요','팀 서버를 새 버전(v13)으로 바꿨는지 확인해 주세요.'); return; }
-    const o={k:key,s:mm[1],mn:nlMentorName(),a:F.a,b:F.b,st:+F.st,dd:+F.dd,x:String(F.x)}; if(m.hp) o.hp=m.hp; else if(m.tel) o.tel=m.tel; o.p=VS_PREP.map((x,i)=>F.pr.includes(x)?i:'').join('');
-    ['a','b','st','dd','x'].forEach(k=>lsSet('md.bk'+{a:'A',b:'B',st:'St',dd:'Dd',x:'X'}[k],String(F[k])));
+    const o={k:key,s:mm[1],mn:nlMentorName(),a:F.a,b:F.b,bw:F.bw,st:+F.st,dd:+F.dd,x:String(F.x)}; if(m.hp) o.hp=m.hp; else if(m.tel) o.tel=m.tel; o.p=VS_PREP.map((x,i)=>F.pr.includes(x)?i:'').join('');
+    ['a','b','bw','st','dd','x'].forEach(k=>lsSet('md.bk'+{a:'A',b:'B2',bw:'Bw',st:'St',dd:'Dd',x:'X'}[k],String(F[k])));
     VS.url=vsBase()+'#'+await hwZip(o); return; }
   const o={n:F.n,d:F.d,tm:F.tm,mn:nlMentorName()};   // 짧게: 카톡 미리보기가 잘 뜨도록 꼭 필요한 것만
   if(m.hp) o.hp=m.hp; else if(m.tel) o.tel=m.tel; if(F.nt) o.nt=F.nt.slice(0,300); o.p=VS_PREP.map((x,i)=>F.pr.includes(x)?i:'').join('');
@@ -9781,6 +9782,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261106-1513';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261106-1516';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
