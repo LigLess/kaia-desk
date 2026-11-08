@@ -30,7 +30,7 @@ const TEAM_CODE = '여기에-팀-가입코드를-넣으세요';
 const DATA = 'kaia_data';
 const USERS = 'kaia_users';
 const TEAM_OWNER = '_team';
-const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true, qshare: true, inflow: true, inflowsrc: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
+const SHARED = { courses: true, inbox: true, posts: true, comments: true, leads: true, qshare: true, inflow: true, inflowsrc: true, visitbk: true }; // 팀 공용 (meta/team 도 공용 · inbox 진단 수신함 · posts/comments 게시판 · leads DB 배정)
 const MAX_FILE = 31 * 1024 * 1024;
 const HW_MAX_SUB = 15;               // 과제 링크 하나로 올릴 수 있는 파일 수 (다시 제출 포함)
 const BK_OWNER = '_bk';             // 방문 예약 링크(열쇠 · 찬 시간)를 적어 두는 줄의 주인 이름
@@ -439,7 +439,8 @@ function doPost_(e) {
       if (dup) return out_({ error: 'taken' });
       const now = Date.now(), id = 'tb' + Utilities.getUuid().replace(/-/g, '').slice(0, 10);
       const task = { id: id, text: n + ' 방문 상담 · ' + ph + (memo ? ' · ' + memo : ''), due: d, time: tm, cat: '상담', sid: '', done: false, at: now, src: 'book', bn: n, bp: ph };
-      s.getRange(s.getLastRow() + 1, 1, 2, 6).setValues([[u, 'tasks', id, JSON.stringify(task), now, ''], [BK_OWNER, 'bkd', id, JSON.stringify({ k: k, d: d, tm: tm }), now, '']]);
+      const team = { id: id, n: n, p: ph, d: d, tm: tm, memo: memo, by: u, byName: nameOf_(u), at: now, ok: null };   // 팀 → 방문 예약 탭에서 모두가 봐요
+      s.getRange(s.getLastRow() + 1, 1, 3, 6).setValues([[u, 'tasks', id, JSON.stringify(task), now, ''], [BK_OWNER, 'bkd', id, JSON.stringify({ k: k, d: d, tm: tm }), now, ''], [TEAM_OWNER, 'visitbk', id, JSON.stringify(team), now, '']]);
     } finally { lock.releaseLock(); }
     return out_({ ok: true });
   }
@@ -525,7 +526,7 @@ function doPost_(e) {
       const k = owner + '/' + w.col + '/' + w.id;
       // 게시판 · DB 배정: 글쓴이 / 보낸 사람 · 받은 사람만 고칠 수 있어요
       if (w.col === 'inflowsrc') return;   // 시트 연결은 inflowadd · inflowdel로만
-      if (w.col === 'inflow') {            // DB 유입: 앱에서는 "확인" 표시만 바꿀 수 있어요
+      if (w.col === 'inflow' || w.col === 'visitbk') {   // DB 유입 · 방문 예약: 앱에서는 "확인" 표시만 바꿀 수 있어요
         if (w.del || !idx[k] || !w.data) return;
         let old = null; try { old = JSON.parse(vals[idx[k] - 1][3] || 'null'); } catch (err) {} if (!old) return;
         old.ok = w.data.ok ? { by: uid, name: nameOf_(uid), at: Number(w.data.ok.at) || now } : null; w = { col: w.col, id: w.id, data: old };

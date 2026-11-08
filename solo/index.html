@@ -2218,6 +2218,9 @@ body.dark[data-bg="lounge"] .hw-av,body.dark[data-bg="emerald"] .hw-av{color:#1a
 .cal-q{position:relative}.cal-q .in{height:36px;width:200px;padding-right:30px}.cal-qx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;border-radius:50%;background:var(--surface-3);color:var(--muted);cursor:pointer}
 .cal-hits{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 14px;font-size:13px}.cal-hits>span{color:var(--muted);margin-right:4px}.cal-hits em{font-style:normal;color:var(--muted)}
 @media (max-width:760px){.cal-q .in{width:100%}.cal-q{flex:1 1 100%}}
+.vb-h{font-size:13px;color:var(--muted);margin:16px 0 6px;font-weight:600}.vb-h small{margin-left:4px}
+.vb-row{gap:12px}.vb-row.done{opacity:.7}.vb-when{min-width:132px;display:flex;flex-direction:column;gap:2px}.vb-when b{font-size:14px}.vb-when small{font-size:11.5px;color:var(--muted)}.vb-when .chip{align-self:flex-start}
+@media (max-width:700px){.vb-row{flex-wrap:wrap}.vb-when{min-width:0;flex-direction:row;align-items:center;gap:8px;flex-basis:100%}}
 .hc-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
 .hc-box{padding:14px 16px;border-radius:14px;background:var(--surface-2)}
 .hc-bar{display:grid;grid-template-columns:118px minmax(0,1fr) 44px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
@@ -3624,7 +3627,7 @@ function vAlarms(){
   <section class="pane"><h2>예정된 알림 <small>45일 이내 · ${soon.length}건</small></h2>
     ${soon.length?`<div class="list">${soon.map(a=>`<div class="row click" data-act="openCourse" data-id="${a.c.id}"><span class="num" style="width:76px;color:var(--muted);font-size:12.5px">${fmtMD(a.ad)}</span><span class="dbadge ${a.type==='start'?'s':'e'}">${dLabel(a)}</span><div class="grow"><div class="t1">${esc(a.c.name)}</div><div class="t2">${fmtMD(a.date)} ${a.type==='start'?'개강':'종강'}</div></div></div>`).join('')}</div>`:'<div class="empty">예정된 알림이 없어요.</div>'}
   </section>
-  <section class="pane"><h2>휴대폰에서 소리 나는 알림 받기</h2><p style="margin:0 0 10px;color:var(--muted);font-size:13px;line-height:1.7"><b style="color:var(--text)">설정 → 휴대폰 달력 알림</b>을 한 번 켜 두면 앱이 꺼져 있어도 매일 정한 시각(기본 오전 9:40)에 녹화본 전달 · 개강 · 종강 · 할 일 알림이 휴대폰에 떠요. 바뀐 내용도 달력에 알아서 반영돼요.</p><div class="btns" style="margin-bottom:10px"><button class="btn sm pri" data-go="settings">${ic('cal')}휴대폰 달력 알림 설정</button></div><p style="margin:0;color:var(--faint);font-size:12px;line-height:1.7">(예전 방식) 앱을 닫아 둬도 휴대폰이 울리게 하려면 <b style="color:var(--text)">휴대폰 달력으로 보내기</b>를 눌러 받은 .ics 파일을 휴대폰에서 열고 캘린더에 추가하세요. 개강·종강 ${(S.settings.offsets||[]).map(o=>o+'일 전').join('·')} ${esc(S.settings.icsTime)}에 일정 알림이 울려요. 새 시간표를 올린 뒤에는 다시 보내 주세요(같은 일정은 덮어써져요).</p></section>
+  <section class="pane"><h2>휴대폰에서 소리 나는 알림 받기</h2><p style="margin:0 0 12px;color:var(--muted-r,var(--muted));font-size:14px;line-height:1.75"><b style="color:var(--fg);font-weight:700">설정 → 휴대폰 달력 알림</b>을 한 번 켜 두면 앱이 꺼져 있어도 매일 정한 시각(기본 오전 9:40)에 녹화본 전달 · 개강 · 종강 · 할 일 알림이 휴대폰에 떠요. 바뀐 내용도 달력에 알아서 반영돼요.</p><div class="btns" style="margin-bottom:10px"><button class="btn sm pri" data-go="settings">${ic('cal')}휴대폰 달력 알림 설정</button></div><p style="margin:0;color:var(--muted-r,var(--muted));font-size:13px;line-height:1.75;opacity:.85">(예전 방식) 앱을 닫아 둬도 휴대폰이 울리게 하려면 <b style="color:var(--fg);font-weight:700">휴대폰 달력으로 보내기</b>를 눌러 받은 .ics 파일을 휴대폰에서 열고 캘린더에 추가하세요. 개강·종강 ${(S.settings.offsets||[]).map(o=>o+'일 전').join('·')} ${esc(S.settings.icsTime)}에 일정 알림이 울려요. 새 시간표를 올린 뒤에는 다시 보내 주세요(같은 일정은 덮어써져요).</p></section>
   </div>`;
 }
 
@@ -6793,7 +6796,7 @@ document.addEventListener('change',async e=>{
   }catch(err){ console.warn(err); toast('시험지를 읽지 못했어요','KAIA DESK에서 Word로 받은 시험지(.doc) 파일인지 확인해 주세요.','alarm-t'); }
 });
 /* ===== 팀 커뮤니티: 게시판 · 파일 · DB 배정 (팀 서버 로그인 시) ===== */
-const TEAM_COLS=['posts','comments','leads','inflow','inflowsrc'];
+const TEAM_COLS=['posts','comments','leads','inflow','inflowsrc','visitbk'];
 const HIDDEN_CATS=['커리큘럼','특처연락처'];   // 게시판 목록 · 알림에 안 나오는 분류 (각자 탭에서 보여요)
 const POST_CATS=['공지','자유','자료'];
 const LEAD_ST=['배정','연락중','완료'];
@@ -6812,7 +6815,7 @@ function myLeads(){ const u=me().user; return Object.values(teamData().leads).fi
 function unseenLeads(){ return myLeads().filter(l=>!l.seen&&l.status!=='완료'); }
 function seenBoardAt(){ return +lsGet('ks.boardSeen')||0; }
 function newPosts(){ const u=me().user, t=seenBoardAt(); return Object.values(teamData().posts).filter(p=>!HIDDEN_CATS.includes(p.cat)&&p.by!==u&&(p.at||0)>t).length; }
-function teamBadge(){ return S.mode==='gas'?unseenLeads().length+newPosts()+(typeof inflowNew==='function'?inflowNew():0):0; }
+function teamBadge(){ return S.mode==='gas'?unseenLeads().length+newPosts()+(typeof inflowNew==='function'?inflowNew():0)+(typeof vbNew==='function'?vbNew():0):0; }
 
 /* 서버에서 들어온 팀 문서 반영 + 나에게 온 배정 알림 */
 function teamApply(d){
@@ -6858,8 +6861,8 @@ function vTeam(){
   if(!S.members) loadMembers().then(()=>{ if(S.view==='team') scheduleRender(); });
   const old=S.teamOld?`<div class="banner"><p><b>팀 서버 업데이트가 필요해요.</b> 커뮤니티 기능은 새 팀 서버 코드에서 동작해요. 팀 서버를 만든 사람이 Code.gs를 새 버전으로 바꾸고 <b>배포 관리 → 수정 → 새 버전</b>으로 다시 배포해 주세요.</p></div>`:'';
   const tab=S.teamTab||'db'; const nL=unseenLeads().length, nP=newPosts();
-  const tabs=`<div class="seg tm-tabs"><button class="${tab==='db'?'on':''}" data-act="tmTab" data-k="db">DB 배정${nL?` <b class="tm-n">${nL}</b>`:''}</button><button class="${tab==='board'?'on':''}" data-act="tmTab" data-k="board">게시판${nP?` <b class="tm-n">${nP}</b>`:''}</button><button class="${tab==='inflow'?'on':''}" data-act="tmTab" data-k="inflow">DB 유입${inflowNew()?` <b class="tm-n">${inflowNew()}</b>`:''}</button><button class="${tab==='curri'?'on':''}" data-act="tmTab" data-k="curri">커리큘럼</button>${S.myRole==='lead'?`<button class="${tab==='staff'?'on':''}" data-act="tmTab" data-k="staff">팀원 학생</button>`:''}</div>`;
-  return `<div class="view">${head}${old}${tabs}${tab==='db'?leadsPane():tab==='staff'&&S.myRole==='lead'?staffPane():tab==='curri'?curriPane():tab==='inflow'?inflowPane():boardPane()}</div>`;
+  const tabs=`<div class="seg tm-tabs"><button class="${tab==='db'?'on':''}" data-act="tmTab" data-k="db">DB 배정${nL?` <b class="tm-n">${nL}</b>`:''}</button><button class="${tab==='board'?'on':''}" data-act="tmTab" data-k="board">게시판${nP?` <b class="tm-n">${nP}</b>`:''}</button><button class="${tab==='inflow'?'on':''}" data-act="tmTab" data-k="inflow">DB 유입${inflowNew()?` <b class="tm-n">${inflowNew()}</b>`:''}</button><button class="${tab==='visit'?'on':''}" data-act="tmTab" data-k="visit">방문 예약${typeof vbNew==='function'&&vbNew()?` <b class="tm-n">${vbNew()}</b>`:''}</button><button class="${tab==='curri'?'on':''}" data-act="tmTab" data-k="curri">커리큘럼</button>${S.myRole==='lead'?`<button class="${tab==='staff'?'on':''}" data-act="tmTab" data-k="staff">팀원 학생</button>`:''}</div>`;
+  return `<div class="view">${head}${old}${tabs}${tab==='db'?leadsPane():tab==='staff'&&S.myRole==='lead'?staffPane():tab==='curri'?curriPane():tab==='inflow'?inflowPane():tab==='visit'?vbPane():boardPane()}</div>`;
 }
 function boardPane(){
   const cat=S.boardCat||'전체'; const u=me().user, seen=seenBoardAt();
@@ -7153,6 +7156,21 @@ Object.assign(WACT,{
   ifF:el=>{ S.ifF=el.dataset.k; render(); },
 });
 document.addEventListener('change',e=>{ const t=e.target; if(t&&t.dataset&&t.dataset.actChange==='ifSrc'){ S.ifSrc=t.value; render(); } });
+/* ===== 팀 → 방문 예약: 학생이 링크로 직접 고른 방문 상담을 팀 모두가 봐요 =====
+   서버(Code.gs v13)가 예약을 받을 때 담당 멘토 업무 + 이 목록(visitbk)에 같이 적어요. 여기서는 "확인"만 해요. */
+const vbList=()=>Object.values(teamData().visitbk||{});
+function vbNew(){ if(S.mode!=='gas') return 0; const t=todayStr(); return vbList().filter(x=>!x.ok&&x.d>=t).length; }
+function vbPane(){ const t=todayStr(); const L=vbList().sort((a,b)=>(a.d+a.tm).localeCompare(b.d+b.tm));
+  const groups=[['오늘',L.filter(x=>x.d===t)],['다가오는 예약',L.filter(x=>x.d>t)],['지난 예약',L.filter(x=>x.d<t).reverse().slice(0,30)]];
+  const when=x=>{ const d=parseYmd(x.d); return `${d.getMonth()+1}/${d.getDate()}(${DOW[d.getDay()]}) ${x.tm}`; };
+  const row=x=>`<div class="row vb-row${x.ok?' done':''}"><div class="vb-when num"><b>${when(x)}</b>${x.d===t?'<span class="chip warn">오늘</span>':x.d>t?`<small>D-${diffDays(t,x.d)}</small>`:''}</div>
+    <div class="grow"><div class="t1">${esc(x.n)} <span class="if-ph">${esc(x.p)}</span></div><div class="t2">담당 ${esc(x.byName||'')} · ${agoTxt(x.at)} 예약${x.memo?' · '+esc(x.memo):''}</div></div>
+    ${x.p?`<a class="btn ghost sm" href="tel:${esc(String(x.p).replace(/[^\d+]/g,''))}">전화</a>`:''}
+    ${x.ok?`<span class="if-ok">${ic('check')}${esc(x.ok.name||'')}</span><button class="btn ghost sm" data-act="vbOk" data-id="${x.id}" data-k="0">취소</button>`:`<button class="btn pri sm" data-act="vbOk" data-id="${x.id}" data-k="1">${ic('check')}확인</button>`}</div>`;
+  return `<section class="pane"><h2>방문 예약 <small>학생이 링크에서 직접 고른 상담 · 확인 전 ${vbNew()}건</small><span class="grow"></span><button class="btn" data-act="vsOpen">${ic('cal')}예약 링크 보내기</button></h2>
+    ${L.length?groups.filter(g=>g[1].length).map(([h,a])=>`<h3 class="vb-h">${h} <small>${a.length}</small></h3><div class="list">${a.map(row).join('')}</div>`).join('')
+      :`<div class="empty"><b>아직 들어온 방문 예약이 없어요</b>맨 위 <b>상담 예약 → 학생이 시간 고르기</b>로 링크를 보내면, 학생이 고른 일정이 여기와 담당 멘토 업무에 같이 들어와요.</div>`}</section>`; }
+Object.assign(WACT,{ vbOk:el=>{ const x=(teamData().visitbk||{})[el.dataset.id]; if(!x) return; const m=me(); const c=clone(x); c.ok=el.dataset.k==='1'?{by:m.user,name:m.name,at:Date.now()}:null; teamPut('visitbk',c); renderSide&&renderSide(); render(); } });
 /* ===== 커리큘럼 자료실 =====
    팀 게시판(posts)에 분류 '커리큘럼'으로 저장해요 → 팀 서버 코드 수정 없이 팀 모두에게 공유 · 올린 사람만 고치기/지우기.
    파일은 팀 드라이브 폴더에 있고, 한 번 받은 파일은 이 기기에 저장해 두어 다음부터 바로 열리고 인쇄돼요. */
@@ -9811,6 +9829,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261106-1524';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261108-1213';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
