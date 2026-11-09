@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>팀 서버 코드 (Code.gs)</title>
+<style>
+:root{--bg:#0f1218;--card:#161b24;--ln:#262d3a;--fg:#e8ebf1;--mu:#8d96a8;--acc:#ff9d4d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 -apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+header{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;background:rgba(15,18,24,.94);border-bottom:1px solid var(--ln)}
+h1{font-size:16px;margin:0 auto 0 0}h1 small{display:block;font-size:12px;color:var(--mu);font-weight:400}
+button{font:inherit;font-weight:700;border:0;border-radius:12px;padding:10px 16px;cursor:pointer;background:var(--acc);color:#2a1606}button.g{background:var(--card);color:var(--fg);box-shadow:inset 0 0 0 1px var(--ln)}
+.note{margin:12px 14px;padding:12px 14px;border-radius:12px;background:rgba(255,157,77,.12);box-shadow:inset 0 0 0 1px rgba(255,157,77,.35);font-size:14px}
+pre{margin:0 14px 40px;padding:14px;border-radius:12px;background:var(--card);box-shadow:inset 0 0 0 1px var(--ln);overflow:auto;font:12.5px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre;tab-size:2}
+pre.wrap{white-space:pre-wrap;word-break:break-all}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#fff;color:#111;padding:10px 16px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .3s}.toast.on{opacity:1}
+</style></head><body>
+<header><h1>팀 서버 코드 (Code.gs)<small id="meta">불러오는 중…</small></h1><button class="g" id="wrap">줄바꿈</button><button id="copy">전체 복사</button></header>
+<div class="note">붙여 넣은 뒤 맨 위 <b>TEAM_CODE</b> 칸에 원래 쓰던 가입 코드를 꼭 다시 넣어 주세요. 이 페이지에는 가입 코드가 들어 있지 않아요.</div>
+<pre id="code"></pre><div class="toast" id="t"></div>
+<script>
+var T='';fetch('Code.gs?'+Date.now()).then(function(r){return r.text();}).then(function(s){T=s;document.getElementById('code').textContent=s;var v=(s.match(/v:\s*(\d+)\s*\}\);/)||[])[1];document.getElementById('meta').textContent=(v?'버전 v'+v+' · ':'')+s.split('\n').length+'줄';}).catch(function(){document.getElementById('meta').textContent='불러오지 못했어요';});
+function toast(m){var t=document.getElementById('t');t.textContent=m;t.classList.add('on');setTimeout(function(){t.classList.remove('on');},1600);}
+document.getElementById('copy').onclick=function(){ if(!T) return; (navigator.clipboard?navigator.clipboard.writeText(T):Promise.reject()).then(function(){toast('전체 복사했어요');},function(){var a=document.createElement('textarea');a.value=T;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove();toast('전체 복사했어요');}); };
+document.getElementById('wrap').onclick=function(){document.getElementById('code').classList.toggle('wrap');};
+</script></body></html>
