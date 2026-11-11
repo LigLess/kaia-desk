@@ -2203,11 +2203,18 @@ body.dark[data-bg="lounge"] .hw-av,body.dark[data-bg="emerald"] .hw-av{color:#1a
 .qp-it:hover{border-color:var(--accent)}.qp-it b{font-size:14px}.qp-it small{color:var(--muted);font-size:12px;line-height:1.45}.qp-it span{font-size:12.5px}.qp-it s{color:var(--muted)}.qp-it em{font-style:normal;font-weight:700;color:var(--accent)}
 .qp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;margin-bottom:14px;border-radius:14px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))}
 .qp-bar>span{color:var(--muted);font-size:13px;margin-right:auto}
+.qc-up{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px}.qc-up>span{font-size:12.5px;color:var(--muted)}
 .qt-sch{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 2px}
 .qt-sch>span{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);margin-right:2px}.qt-sch>span svg{width:14px;height:14px}
 .qs-c{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);cursor:pointer}
 .qs-c:hover{border-color:var(--accent)}.qs-c.on{background:var(--accent);border-color:var(--accent);color:var(--on-acc,#fff)}.qs-c.more{color:var(--muted);border-style:dashed}
 .qs-row{width:100%;text-align:left;font:inherit;background:none;border:0;border-bottom:1px solid var(--line);color:var(--fg)}
+.cal-q{position:relative}.cal-q .in{height:36px;width:200px;padding-right:30px}.cal-qx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:0;border-radius:50%;background:var(--surface-3);color:var(--muted);cursor:pointer}
+.cal-hits{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 14px;font-size:13px}.cal-hits>span{color:var(--muted);margin-right:4px}.cal-hits em{font-style:normal;color:var(--muted)}
+@media (max-width:760px){.cal-q .in{width:100%}.cal-q{flex:1 1 100%}}
+.vb-h{font-size:13px;color:var(--muted);margin:16px 0 6px;font-weight:600}.vb-h small{margin-left:4px}
+.vb-row{gap:12px}.vb-row.done{opacity:.7}.vb-when{min-width:132px;display:flex;flex-direction:column;gap:2px}.vb-when b{font-size:14px}.vb-when small{font-size:11.5px;color:var(--muted)}.vb-when .chip{align-self:flex-start}
+@media (max-width:700px){.vb-row{flex-wrap:wrap}.vb-when{min-width:0;flex-direction:row;align-items:center;gap:8px;flex-basis:100%}}
 .hc-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
 .hc-box{padding:14px 16px;border-radius:14px;background:var(--surface-2)}
 .hc-bar{display:grid;grid-template-columns:118px minmax(0,1fr) 44px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
@@ -2855,8 +2862,8 @@ addEventListener('resize',()=>{ if(S.view==='quote') qtFit(); });
 
 function qtSavedView(){
   const L=list('quotes').sort((a,b)=>(b.at||0)-(a.at||0));
-  return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row qt-sv"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${x.from?`<span class="chip cyan">${esc(x.from)}님이 보냄</span> `:''}${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
-    <button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm" data-act="rmOpenQuote" data-id="${x.id}">요청메모</button>${typeof qsSendBtn==='function'?qsSendBtn(x.id):''}<button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
+  return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${typeof qcUpBar==='function'?qcUpBar():''}${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row qt-sv"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${typeof qcChip==='function'?qcChip(x):''}${x.from?`<span class="chip cyan">${esc(x.from)}님이 보냄</span> `:''}${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
+    ${typeof qcBtns==='function'?qcBtns(x):''}<button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm" data-act="rmOpenQuote" data-id="${x.id}">요청메모</button>${typeof qsSendBtn==='function'?qsSendBtn(x.id):''}<button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
     :'<div class="empty"><b>저장한 견적이 없어요</b>견적 작성 화면에서 "저장"을 누르면 여기에 모여요.</div>'}</section>`;
 }
 function qtPriceView(){
@@ -2930,7 +2937,7 @@ Object.assign(WACT,{
       h=`<div style="width:${Math.floor(m.W*k)}px"><div style="zoom:${k}">${m.html}</div></div>`; }catch(e){ console.warn(e); h=qtPaper(q,c); }
     pa.innerHTML=h; document.body.classList.add('printing','qt-printing'); const done=()=>{ document.body.classList.remove('printing','qt-printing'); pa.innerHTML=''; };
     addEventListener('afterprint',done,{once:true}); setTimeout(()=>{ try{ window.print(); }catch(e){} setTimeout(()=>{ if(document.body.classList.contains('printing')&&!matchMedia('print').matches) done(); },1500); },80); },
-  qtSave:()=>{ const q=qtDraft(); const c=qtCalc(q); if(!c.paid) return; if(!q.id) q.id=uid('q'); store.put('quotes',{id:q.id,q:clone(q),at:Date.now()});
+  qtSave:()=>{ const q=qtDraft(); const c=qtCalc(q); if(!c.paid) return; if(!q.id) q.id=uid('q'); store.put('quotes',{...(D().quotes&&D().quotes[q.id]||{}),id:q.id,q:clone(q),at:Date.now()});
     if(q.sid&&D().students[q.sid]){ const s=wNorm(clone(D().students[q.sid])); const t=qtRecord(q,c); const ex=s.logs.find(l=>l.qid===q.id); if(ex){ ex.t=t; ex.d=q.date||todayStr(); } else s.logs.push({id:wid('l'),k:'memo',d:q.date||todayStr(),t,qid:q.id,at:Date.now()}); store.put('students',s); toast('저장했어요',`${s.name} 학생 기록에도 남겼어요.`); }
     else toast('저장했어요','저장한 견적 탭에서 다시 열 수 있어요.'); qtKeep(); },
   qtOpen:el=>{ const x=D().quotes[el.dataset.id]; if(!x) return; S.qt=clone(x.q); qtKeep(); S.qtTab='make'; render(); },

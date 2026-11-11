@@ -2210,6 +2210,7 @@ body.dark[data-bg="lounge"] .hw-av,body.dark[data-bg="emerald"] .hw-av{color:#1a
 .qp-it:hover{border-color:var(--accent)}.qp-it b{font-size:14px}.qp-it small{color:var(--muted);font-size:12px;line-height:1.45}.qp-it span{font-size:12.5px}.qp-it s{color:var(--muted)}.qp-it em{font-style:normal;font-weight:700;color:var(--accent)}
 .qp-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px;margin-bottom:14px;border-radius:14px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))}
 .qp-bar>span{color:var(--muted);font-size:13px;margin-right:auto}
+.qc-up{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px}.qc-up>span{font-size:12.5px;color:var(--muted)}
 .qt-sch{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 2px}
 .qt-sch>span{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);margin-right:2px}.qt-sch>span svg{width:14px;height:14px}
 .qs-c{font:inherit;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--fg);cursor:pointer}
@@ -7772,8 +7773,8 @@ addEventListener('resize',()=>{ if(S.view==='quote') qtFit(); });
 
 function qtSavedView(){
   const L=list('quotes').sort((a,b)=>(b.at||0)-(a.at||0));
-  return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row qt-sv"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${x.from?`<span class="chip cyan">${esc(x.from)}님이 보냄</span> `:''}${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
-    <button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm" data-act="rmOpenQuote" data-id="${x.id}">요청메모</button>${typeof qsSendBtn==='function'?qsSendBtn(x.id):''}<button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
+  return `<section class="pane"><h2>저장한 견적 <small>나만 보여요</small></h2>${typeof qcUpBar==='function'?qcUpBar():''}${L.length?`<div class="list">${L.map(x=>{ const c=qtCalc(x.q); return `<div class="row qt-sv"><div class="grow"><div class="t1">${esc(x.q.name||'이름 없음')} · ${qtWon(c.total)}원</div><div class="t2">${typeof qcChip==='function'?qcChip(x):''}${x.from?`<span class="chip cyan">${esc(x.from)}님이 보냄</span> `:''}${esc(x.q.date||'')} · ${c.paid}과목 · ${x.q.tpl==='ai'?'AI':'IT'} 견적서 · ${esc(c.rows.filter(r=>r.n).map(r=>r.n).slice(0,3).join(', '))}${c.paid>3?' 외':''}</div></div>
+    ${typeof qcBtns==='function'?qcBtns(x):''}<button class="btn sm" data-act="qtOpen" data-id="${x.id}">열기</button><button class="btn sm" data-act="qtXlsxSaved" data-id="${x.id}">${ic('dl')}엑셀</button><button class="btn sm" data-act="rmOpenQuote" data-id="${x.id}">요청메모</button>${typeof qsSendBtn==='function'?qsSendBtn(x.id):''}<button class="btn sm ghost" data-act="qtDel" data-id="${x.id}" aria-label="지우기">${ic('trash')}</button></div>`; }).join('')}</div>`
     :'<div class="empty"><b>저장한 견적이 없어요</b>견적 작성 화면에서 "저장"을 누르면 여기에 모여요.</div>'}</section>`;
 }
 function qtPriceView(){
@@ -7847,7 +7848,7 @@ Object.assign(WACT,{
       h=`<div style="width:${Math.floor(m.W*k)}px"><div style="zoom:${k}">${m.html}</div></div>`; }catch(e){ console.warn(e); h=qtPaper(q,c); }
     pa.innerHTML=h; document.body.classList.add('printing','qt-printing'); const done=()=>{ document.body.classList.remove('printing','qt-printing'); pa.innerHTML=''; };
     addEventListener('afterprint',done,{once:true}); setTimeout(()=>{ try{ window.print(); }catch(e){} setTimeout(()=>{ if(document.body.classList.contains('printing')&&!matchMedia('print').matches) done(); },1500); },80); },
-  qtSave:()=>{ const q=qtDraft(); const c=qtCalc(q); if(!c.paid) return; if(!q.id) q.id=uid('q'); store.put('quotes',{id:q.id,q:clone(q),at:Date.now()});
+  qtSave:()=>{ const q=qtDraft(); const c=qtCalc(q); if(!c.paid) return; if(!q.id) q.id=uid('q'); store.put('quotes',{...(D().quotes&&D().quotes[q.id]||{}),id:q.id,q:clone(q),at:Date.now()});
     if(q.sid&&D().students[q.sid]){ const s=wNorm(clone(D().students[q.sid])); const t=qtRecord(q,c); const ex=s.logs.find(l=>l.qid===q.id); if(ex){ ex.t=t; ex.d=q.date||todayStr(); } else s.logs.push({id:wid('l'),k:'memo',d:q.date||todayStr(),t,qid:q.id,at:Date.now()}); store.put('students',s); toast('저장했어요',`${s.name} 학생 기록에도 남겼어요.`); }
     else toast('저장했어요','저장한 견적 탭에서 다시 열 수 있어요.'); qtKeep(); },
   qtOpen:el=>{ const x=D().quotes[el.dataset.id]; if(!x) return; S.qt=clone(x.q); qtKeep(); S.qtTab='make'; render(); },
@@ -8303,6 +8304,77 @@ document.addEventListener('change',e=>{ const el=e.target;
   if(el.classList&&el.classList.contains('mb-who-in')){ MB.sel=+el.value; mbDraw(); return; }
   if(el.classList&&el.classList.contains('mb-pick')){ const p=MB.pick[MB.sel]=MB.pick[MB.sel]||{}; p[+el.dataset.i]=el.value; mbDraw(); }
 });
+/* ===== 저장한 견적 → 학생 등록 전환 · COD 알람 =====
+   - "학생 등록": 견적의 이름 · 과목 · 개강일로 시간표의 반을 찾아 연결한 학생 창을 열어요 (연락처만 넣고 저장)
+   - "견적서 엑셀로 등록": 예전에 만든 견적서 엑셀(같은 양식)을 올리면 저장한 견적에 넣고 바로 학생 등록 창을 열어요
+   - "COD": 누르면 다음 날 오후 12시 "OOO COD 연락" 할 일(알람)이 자동으로 생겨요. 다시 누르면 풀리고 할 일도 지워져요 */
+function qcRec(id){ return D().quotes&&D().quotes[id]; }
+function qcChip(x){ const o=[];
+  if(x.reg){ const s=D().students[x.reg]; o.push(`<span class="chip ok">학생 등록됨${s?' · '+esc(s.name):''}</span> `); }
+  if(x.cod){ const t=D().tasks&&D().tasks[x.cod.tid]; o.push(`<span class="chip warn">COD · ${fmtMD(x.cod.due)} 12:00까지 연락${t&&t.done?' (완료)':''}</span> `); }
+  return o.join(''); }
+function qcBtns(x){ return `<button class="btn sm ${x.cod?'on':''}" data-act="qcCod" data-id="${x.id}" title="COD로 바뀌면 다음 날 오후 12시 연락 알람을 만들어요">${x.cod?ic('check'):''}COD</button><button class="btn sm ${x.reg?'':'pri'}" data-act="qcReg" data-id="${x.id}" title="이 견적의 과목 · 개강일로 학생 등록">${x.reg?'학생 보기':'학생 등록'}</button>`; }
+function qcUpBar(){ return `<div class="qc-up"><button class="btn sm" data-act="qcUpPick">${ic('up')}견적서 엑셀로 학생 등록</button><input id="qcUpFile" type="file" accept=".xlsx,.xlsm" hidden><span>예전에 만든 견적서도 올리면 과목 · 개강일 · 요일을 읽어 학생으로 바꿔요</span></div>`; }
+
+/* 견적 한 줄 → 시간표의 반: 골라 둔 반(cid) → 같은 개강일 + 이름 비슷한 반 → 이름만 맞는 다가오는 반 */
+function qcCourse(r){ const C=D().courses||{};
+  if(r.cid&&C[r.cid]) return C[r.cid];
+  const want=qsNorm(r.n); if(!want) return null;
+  const sc=c=>{ const a=qsNorm(typeof subjectOf==='function'?subjectOf(c):c.name), b=qsNorm(c.name); if(a===want||b===want) return 3; const base=want.replace(/\d+$/,''); if(base.length>=2&&(a.includes(base)||b.includes(base))) return 2; return Math.max(qsDice(want,a),qsDice(want,b)); };
+  if(r.s){ const same=Object.values(C).filter(c=>c&&c.start===r.s).map(c=>({c,v:sc(c)})).filter(o=>o.v>=.45).sort((a,b)=>b.v-a.v); if(same.length) return same[0].c; }
+  if(!r.s) return null; const m=qsMatch(r); return m.length&&m[0].start===r.s?m[0]:null; }
+const qcMD=d=>{ const x=parseYmd(d); return `${x.getMonth()+1}/${x.getDate()}`; };
+function qcLine(r){ return `${r.n}${r.s?' '+(r.pat?qcMD(r.s)+'('+r.pat+')':fmtMD(r.s)):''}${r.e?'~'+qcMD(r.e):''}${r.time?' '+r.time:''}`; }
+
+function qcRegister(id){ const x=qcRec(id); if(!x) return; const q=x.q;
+  if(x.reg&&D().students[x.reg]){ openStudent(x.reg); return; }
+  const rows=(q.rows||[]).filter(r=>r.n&&!r.free); const hit=[], miss=[];
+  rows.forEach(r=>{ const c=qcCourse(r); if(c) hit.push(c.id); else miss.push(r); });
+  const nm=String(q.name||'').trim(); const old=(q.sid&&D().students[q.sid])||list('students').find(s=>nm&&s.name===nm);
+  openStudent(old?old.id:null);
+  const t=todayStr(); const started=hit.some(cid=>{ const c=D().courses[cid]; return c&&c.start<=t; });
+  SM.name=SM.name||nm; SM.courses=[...new Set([...(SM.courses||[]),...hit])];
+  if(!old||['상담중','등록대기',''].includes(SM.status||'')) SM.status=started?'수강중':'등록대기';
+  const line=`견적서로 등록 전환 · ${rows.map(qcLine).join(' / ')}`;
+  if(!(SM.logs||[]).some(l=>l.t===line)) SM.logs=[...(SM.logs||[]),{id:wid('l'),k:'memo',d:t,t:line,at:Date.now()}];
+  SM._fromQ=id; drawStudent();
+  toast(`${hit.length}과목을 시간표 반과 연결했어요`,miss.length?`시간표에서 못 찾은 과목: ${miss.map(r=>r.n).join(', ')} — 상담 기록에 남겨 뒀어요. 연락처 넣고 저장하세요.`:'연락처 넣고 저장하면 끝이에요.'); }
+
+/* 학생 저장이 끝나면 그 견적에 '등록됨' 표시 */
+setTimeout(()=>{ if(typeof ACT==='undefined'||!ACT.saveStudent) return; const orig=ACT.saveStudent; ACT.saveStudent=(...a)=>{ const qid=SM&&SM._fromQ; if(SM) delete SM._fromQ; const before=new Set(list('students').map(s=>s.id)); const nm=$('#sfName')&&$('#sfName').value.trim(); const sid=SM&&SM.id;
+  orig(...a);
+  if(!qid) return; const st=(sid&&D().students[sid])||list('students').find(s=>!before.has(s.id)&&s.name===nm);
+  if(!st){ if(SM) SM._fromQ=qid; return; }
+  const x=qcRec(qid); if(x){ const q={...x.q,sid:st.id}; store.put('quotes',{...x,q,reg:st.id}); render(); } }; },0);
+
+/* COD: 내일 12:00 연락 할 일 */
+function qcCodToggle(id){ const x=qcRec(id); if(!x) return; const nm=x.q.name||'이름 없음';
+  if(x.cod){ if(x.cod.tid&&D().tasks&&D().tasks[x.cod.tid]&&!D().tasks[x.cod.tid].done) store.del('tasks',x.cod.tid); const o={...x}; delete o.cod; store.put('quotes',o); render(); toast('COD를 풀었어요','연락 알람도 지웠어요.'); return; }
+  const due=addDays(todayStr(),1); const subj=(x.q.rows||[]).filter(r=>r.n&&!r.free).map(r=>r.n);
+  const sid=x.reg||x.q.sid||(list('students').find(s=>s.name===String(x.q.name||'').trim())||{}).id||'';
+  const tid=uid('t'); store.put('tasks',{id:tid,text:`${nm} COD 연락 (${subj.slice(0,2).join(', ')}${subj.length>2?' 외':''})`,due,time:'12:00',cat:'콜백',sid,done:false,at:Date.now()});
+  store.put('quotes',{...x,cod:{at:Date.now(),due,tid}}); render();
+  toast('COD로 바꿨어요',`${fmtMD(due)} 오후 12:00 "${nm} COD 연락" 알람을 만들었어요.`); }
+
+/* 예전 견적서 엑셀 → 저장한 견적 + 학생 등록 */
+async function qcUpload(file){
+  try{ const book=await mbReadBook(file); const got=[];
+    for(const sh of book.sheets){ if(sh.hidden) continue; const info=mbParse(await book.read(sh),sh.name); if(info&&!info.empty) got.push({sh,info}); }
+    if(!got.length){ toast('견적서 양식을 못 찾았어요','과목 · 구분 · 개강일 · 종강일 · 수강료 제목줄이 있는 견적서 엑셀이 필요해요.','alarm-t'); return; }
+    const act=book.sheets[book.active]; const pick=got.find(g=>act&&g.sh.name===act.name)||got[0];
+    const save=g=>{ const q=mbToQuote(g.info).q; q.id=uid('q'); store.put('quotes',{id:q.id,q:clone(q),at:Date.now(),file:file.name}); return q.id; };
+    if(got.length===1){ const id=save(got[0]); S.qtTab='saved'; render(); qcRegister(id); return; }
+    openModal(`${mHead('어느 학생 견적서인가요?')}<div class="body"><p style="margin:0 0 10px;font-size:13px;color:var(--muted)">${esc(file.name)} — 견적서 ${got.length}장</p><div class="list">${got.map((g,i)=>`<button class="row click" data-act="qcUpGo" data-i="${i}"><div class="grow"><div class="t1">${esc(g.info.name||'이름 없음')}</div><div class="t2">${esc(g.sh.name)} · ${g.info.items.map(it=>esc(it.n)).slice(0,3).join(', ')}${g.info.items.length>3?' 외':''}</div></div>${g===pick?'<span class="chip">열려 있던 시트</span>':''}</button>`).join('')}</div></div><footer><button class="btn ghost" data-act="close">취소</button></footer>`);
+    modalEl._qc={got,save};
+  }catch(e){ console.warn(e); toast('파일을 읽지 못했어요','엑셀(.xlsx)이 맞는지, 엑셀에서 열려 있지는 않은지 확인해 주세요.','alarm-t'); } }
+
+Object.assign(WACT,{
+  qcReg:el=>qcRegister(el.dataset.id),
+  qcCod:el=>qcCodToggle(el.dataset.id),
+  qcUpPick:()=>{ const i=$('#qcUpFile'); i&&i.click(); },
+  qcUpGo:el=>{ const m=modalEl&&modalEl._qc; if(!m) return; const g=m.got[+el.dataset.i]; closeModal(); const id=m.save(g); S.qtTab='saved'; render(); qcRegister(id); },
+});
+document.addEventListener('change',e=>{ const el=e.target; if(el.id==='qcUpFile'&&el.files&&el.files[0]){ const f=el.files[0]; el.value=''; qcUpload(f); } });
 /* ===== 견적서 공유 (팀 서버 v9) =====
    - 팀원끼리: 견적서를 골라 "보내기" → 받은 사람 화면에 알림 + 견적서 → 받은 견적에 쌓여요 (열기 · 내 견적으로 저장 · 요청메모)
    - 팀장: 팀원이 저장한 견적서 전부 보기(팀원 견적) + 팀 안에서 오간 견적 공유 내역 전부 보기 */
@@ -9405,6 +9477,41 @@ Object.assign(WACT,{
 /* 학생이 링크로 방문 시간을 고르면 서버가 내 업무(상담)에 넣어 줘요 → 받았을 때 알림 */
 function vsBookAlert(x){ const d=parseYmd(x.due); const when=`${d.getMonth()+1}/${d.getDate()}(${DOW[d.getDay()]}) ${x.time||''}`;
   setTimeout(()=>{ alertShow({title:`[방문 예약] ${x.bn||'학생'} · ${when}`,body:`${x.bp||''} · 링크로 직접 예약했어요`,nbody:`${when} · ${x.bp||''}`,tag:'bk-'+x.id,go:'tasks'}); alertSound&&alertSound('방문 예약'); },500); }
+/* ===== KAIA Island 연결 =====
+   윈도우 알약(KAIA Island)이 이 함수 두 개만 불러요. 알약의 기능 · 화면은 웹에서 바뀌므로, 고쳐도 프로그램을 다시 깔 필요가 없어요.
+   - islandProbe(): 알약에 보여 줄 것 (오늘 할 일 · 다가오는 개강 · DB 유입 · 방문 예약 · 새 알림)
+   - islandAct(a): 알약에서 누른 기능 실행 → {msg, copy}  (copy가 있으면 알약 프로그램이 클립보드에 넣어요) */
+const ISLAND_WEB=2;
+window.__isl=null;
+setTimeout(()=>{ if(typeof window.alertShow!=='function') return; const o=window.alertShow;
+  window.alertShow=function(a){ try{ if(window.__isl) __isl.q.push({t:String(a&&a.title||''),b:String(a&&(a.body||a.nbody)||''),go:a&&a.go||'',tab:a&&a.tab||'',tag:a&&a.tag||''}); if(__isl&&__isl.q.length>20) __isl.q.shift(); }catch(e){} return o.apply(this,arguments); }; },0);
+window.islandProbe=function(){ try{ if(typeof S==='undefined'||!S.real) return {ready:false,web:ISLAND_WEB};
+  if(!window.__isl) window.__isl={q:[]};
+  const t=todayStr(), now=new Date(), hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const all=Object.values(S.real.tasks||{}).filter(x=>x&&x.due&&x.due<=t&&(!x.done||(x.doneAt&&Date.now()-x.doneAt<6e5)));
+  const tasks=all.sort((a,b)=>(a.done-b.done)||String(a.due).localeCompare(b.due)||String(a.time||'99').localeCompare(String(b.time||'99')));
+  const open=tasks.filter(x=>!x.done&&x.due===t); const next=open.find(x=>x.time&&x.time>=hm)||open.find(x=>!x.time)||null;
+  return {ready:true,web:ISLAND_WEB,team:S.mode==='gas',today:open.length,
+    next:next?{text:String(next.text||'').slice(0,60),time:next.time||''}:null,
+    list:tasks.slice(0,4).map(x=>({id:x.id,text:String(x.text||'').slice(0,70),time:x.time||'',done:!!x.done,late:x.due<t})),
+    courses:Object.values(D().courses||{}).filter(c=>c&&c.start&&c.start>=addDays(t,-3)&&c.start<=addDays(t,21)).sort((a,b)=>a.start.localeCompare(b.start)).slice(0,6)
+      .map(c=>{ const d=parseYmd(c.start); return {id:c.id,name:String(c.name||'').slice(0,40),when:(d.getMonth()+1)+'/'+d.getDate()+'('+DOW[d.getDay()]+') 개강'}; }),
+    inflow:typeof inflowNew==='function'?inflowNew():0, visit:typeof vbNew==='function'?vbNew():0,
+    q:__isl.q.splice(0)};
+}catch(e){ return {ready:false,web:ISLAND_WEB,err:String(e)}; } };
+window.islandAct=async function(a){ a=a||{};
+  try{
+    if(a.k==='done'){ const k=S.real.tasks[a.id]; if(k){ store.put('tasks',{...k,done:!!a.on,doneAt:a.on?Date.now():null}); render(); } return {msg:a.on?'완료했어요':'되돌렸어요'}; }
+    if(a.k==='add'){ const q=String(a.text||'').slice(0,200); if(!q) return {msg:''}; const tk=(typeof parseTaskCmd==='function'&&parseTaskCmd('할 일 '+q))||{text:q,due:todayStr(),time:'',cat:'기타'};
+      store.put('tasks',{id:uid('t'),...tk,done:false,at:Date.now()}); render(); return {msg:'업무에 넣었어요 · '+(tk.time?tk.time+' ':'')+tk.text}; }
+    if(a.k==='book'){ try{ S._vsMode='pick'; vsOpen(''); S._vs.mode='pick'; await vsMake(); const t=VS.url?vsMsg():''; closeModal(); return t?{msg:'방문 예약 안내를 복사했어요',copy:t}:{msg:'팀 서버 로그인이 필요해요'}; }catch(e){ try{ closeModal(); }catch(_){} return {msg:'팀 서버 로그인이 필요해요'}; } }
+    if(a.k==='notice'){ const c=D().courses[a.id]; if(!c) return {msg:'그 반을 못 찾았어요'};
+      NL.cid=c.id; NL.links={}; NL.short=false; await nlPrepare(); if(typeof nlShorten==='function') await nlShorten();
+      return {msg:'개강안내를 복사했어요 · '+c.name,copy:nlMsg(c,null,NL.links._)}; }
+    if(a.k==='ok'){ const col=a.type==='if'?'inflow':'visitbk'; const x=(teamData()[col]||{})[a.id]; if(x){ const m=me(); teamPut(col,{...x,ok:{by:m.user,name:m.name,at:Date.now()}}); render(); } return {msg:'확인했어요'}; }
+    if(a.k==='go'){ if(a.where==='team-visit'){ S.teamTab='visit'; go('team'); } else if(a.where==='team-inflow'){ S.teamTab='inflow'; go('team'); } else if(a.where) go(a.where); return {msg:''}; }
+  }catch(e){ console.warn(e); return {msg:'만들지 못했어요 · KAIA DESK를 펼쳐서 확인해 주세요'}; }
+  return null; };
 /* ===== 수강료표 쉽게 추가 =====
    인트라넷 강의 카드를 그대로 복사해 붙여넣거나, 시간표에 있는 과정을 고르면
    과목명 · 시간 · 횟수 · 분/월 · 구분을 알아서 채워요. 사람은 수강료만 넣으면 돼요. */
@@ -9829,6 +9936,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261108-1213';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261111-2217';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
