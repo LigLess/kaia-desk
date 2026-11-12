@@ -1,30 +1,34 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8">
+<html lang="ko"><head><meta charset="utf-8"><title>KAIA Island</title>
 <style>
 html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-family:"Segoe UI Variable Text","Segoe UI","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased;user-select:none;color:#f4f2ee}
 #pill{position:absolute;left:50%;top:0;transform:translateX(-50%);width:128px;height:34px;border-radius:17px;background:#0b0b0d;overflow:hidden;
   box-shadow:0 8px 24px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.06);
-  transition:width .5s cubic-bezier(.2,.9,.25,1.08),height .5s cubic-bezier(.2,.9,.25,1.08),border-radius .5s ease}
+  transition:width .5s cubic-bezier(.2,.9,.25,1.08),height .5s cubic-bezier(.2,.9,.25,1.08),border-radius .5s ease,transform .3s cubic-bezier(.2,.9,.25,1),box-shadow .2s}
+body.y0 #pill{top:6px}
+body.tuck #pill:not(.hov):not(.alrt){transform:translate(-50%,-36px);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#pill.near:not(.hov):not(.alrt){box-shadow:0 8px 24px rgba(0,0,0,.3),inset 0 0 0 1.5px rgba(255,157,77,.7)}
 #pill.hov{width:440px;border-radius:26px}
-#pill.alrt{width:460px;height:var(--ah,96px);border-radius:28px}
+#pill.alrt{width:460px;height:var(--ah,96px);border-radius:28px;animation:pop .6s cubic-bezier(.2,.9,.25,1.2)}
+@keyframes pop{0%{transform:translateX(-50%) scale(.96)}60%{transform:translateX(-50%) scale(1.02)}100%{transform:translateX(-50%) scale(1)}}
 .v{position:absolute;left:0;right:0;top:0;opacity:0;transition:opacity .2s ease;pointer-events:none}
 #pill:not(.hov):not(.alrt) .idle,#pill.hov .big,#pill.alrt .al{opacity:1;transition-delay:.16s;pointer-events:auto}
-/* 작은 알약 */
 .idle{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;cursor:pointer}
 .dot{width:7px;height:7px;border-radius:50%;background:#3a3d44}.dot.on{background:#46d17f}
 .mini{font-size:11.5px;font-weight:600;color:#c9c6bf;font-variant-numeric:tabular-nums}
-.bad{min-width:16px;height:16px;padding:0 5px;border-radius:9px;background:#ff9d4d;color:#2a1606;font-size:10.5px;font-weight:800;display:none;align-items:center;justify-content:center}.bad.on{display:inline-flex}
-/* 펼친 판 */
-.big{padding:14px 16px 14px;width:440px;right:auto;box-sizing:border-box}
-.hd{display:flex;align-items:center;gap:14px}
+.bad{min-width:16px;height:16px;padding:0 5px;border-radius:9px;background:#ff9d4d;color:#2a1606;font-size:10.5px;font-weight:800;visibility:hidden;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}.bad.on{visibility:visible}
+/* 펼친 판: 머리 · 기능 화면 · 아이콘 줄 */
+.big{width:440px;right:auto;box-sizing:border-box;padding:14px 16px 10px}
+.hd{display:flex;align-items:center;gap:8px}
 .clock b{display:block;font-size:24px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
 .clock small{font-size:11.5px;color:#9b988f}
 .hd .sp{flex:1}
-.chip{font:inherit;font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:999px;border:0;background:rgba(255,255,255,.08);color:#d9d6cf;cursor:pointer}
-.chip.hot{background:#ff9d4d;color:#2a1606}
+.open{font:inherit;font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:999px;border:0;background:#f4f2ee;color:#0b0b0d;cursor:pointer}
 .quit{font:inherit;font-size:11.5px;font-weight:600;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:transparent;color:rgba(244,242,238,.62);cursor:pointer}.quit:hover{color:#ff8a80;border-color:rgba(255,138,128,.5)}
-.open{font:inherit;font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:999px;border:0;background:#f4f2ee;color:#0b0b0d;cursor:pointer}
-.lab{font-size:11px;color:#8e8b84;letter-spacing:.06em;margin:14px 2px 6px}
+.pn{display:none;padding-top:12px;min-height:150px}.pn.on{display:block;animation:in .22s ease}
+@keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.lab{font-size:11px;color:#8e8b84;letter-spacing:.06em;margin:0 2px 6px}
+.hint{font-size:12.5px;line-height:1.6;color:#a5a29a;margin:0 2px 10px}
 .tk{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:12px;cursor:pointer}
 .tk:hover{background:rgba(255,255,255,.05)}
 .ck{width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.6px #6c6a66;flex:none;display:grid;place-items:center}
@@ -33,16 +37,28 @@ html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-famil
 .tk.done span{color:#7d7a74;text-decoration:line-through}
 .tk em{font-style:normal;font-size:11.5px;color:#9b988f;font-variant-numeric:tabular-nums}.tk em.late{color:#ff8a7a}
 .none{font-size:12.5px;color:#8e8b84;padding:6px 8px}
-.memo{display:flex;gap:8px;margin-top:12px}
-.memo input{flex:1;font:inherit;font-size:13px;color:#f4f2ee;background:rgba(255,255,255,.07);border:0;outline:0;border-radius:12px;padding:10px 12px;user-select:text}
-.memo input::placeholder{color:#7d7a74}
-.memo input:focus{box-shadow:inset 0 0 0 1.5px #ff9d4d}
-.row{display:flex;gap:8px;margin-top:10px}
-.bt{flex:1;font:inherit;font-size:12.5px;font-weight:700;border:0;border-radius:12px;padding:10px 0;background:rgba(255,255,255,.08);color:#f4f2ee;cursor:pointer}
-.bt:hover{background:rgba(255,255,255,.14)}
-#ntList{margin-top:8px;display:flex;flex-direction:column;gap:4px}
-.nt{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.05);cursor:pointer;font-size:13px}
-.nt:hover{background:rgba(255,157,77,.18)}.nt span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nt em{font-style:normal;font-size:11.5px;color:#9b988f;font-variant-numeric:tabular-nums}.bt.acc{background:#ff9d4d;color:#2a1606}
+input{font:inherit;font-size:13px;color:#f4f2ee;background:rgba(255,255,255,.07);border:0;outline:0;border-radius:12px;padding:10px 12px;user-select:text;min-width:0;box-sizing:border-box;color-scheme:dark}
+input::placeholder{color:#7d7a74}input:focus{box-shadow:inset 0 0 0 1.5px #ff9d4d}
+.memo{display:flex;margin-top:10px}.memo input{flex:1}
+.row{display:flex;gap:8px;margin-top:8px}
+.f{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}.f label{font-size:11px;color:#8e8b84;margin-left:2px}.f input{width:100%}
+.qd{display:flex;gap:6px;margin-top:8px}
+.qd button{font:inherit;font-size:11.5px;font-weight:700;border:0;border-radius:999px;padding:6px 11px;background:rgba(255,255,255,.08);color:#d9d6cf;cursor:pointer}.qd button.on{background:#f4f2ee;color:#0b0b0d}
+.bt{flex:1;font:inherit;font-size:12.5px;font-weight:700;border:0;border-radius:12px;padding:11px 0;background:rgba(255,255,255,.08);color:#f4f2ee;cursor:pointer}
+.bt:hover{background:rgba(255,255,255,.14)}.bt.acc{background:#ff9d4d;color:#2a1606}.bt.acc:hover{background:#ffad66}.bt.sm{flex:none;padding:11px 14px}
+.nt{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.05);cursor:pointer;font-size:13px;margin-bottom:4px}
+.nt:hover{background:rgba(255,157,77,.18)}.nt span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nt em{font-style:normal;font-size:11.5px;color:#9b988f;font-variant-numeric:tabular-nums}
+.nt b{font-size:12px;font-weight:800;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:rgba(255,255,255,.1);display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box}.nt b.hot{background:#ff9d4d;color:#2a1606}
+#ntList{max-height:196px;overflow:auto}#ntList::-webkit-scrollbar{width:0}
+/* 아이콘 줄 */
+.dock{display:flex;justify-content:center;gap:4px;margin-top:12px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07)}
+.dk{position:relative;display:flex;align-items:center;gap:0;height:32px;padding:0 9px;border:0;border-radius:999px;background:transparent;color:#8e8b84;cursor:pointer;font:inherit;font-size:11.5px;font-weight:700;transition:background .18s,color .18s}
+.dk svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.dk span{max-width:0;overflow:hidden;white-space:nowrap;opacity:0;transition:max-width .25s ease,opacity .2s,margin .25s}
+.dk:hover{color:#f4f2ee;background:rgba(255,255,255,.06)}
+.dk.on{background:rgba(255,255,255,.1);color:#f4f2ee}.dk.on span{max-width:80px;opacity:1;margin-left:7px}
+.dk i{position:absolute;right:3px;top:2px;min-width:14px;height:14px;padding:0 4px;border-radius:7px;background:#ff9d4d;color:#2a1606;font-style:normal;font-size:9.5px;font-weight:800;display:none;align-items:center;justify-content:center;box-sizing:border-box}.dk i.on{display:inline-flex}
+.dk.on i{position:static;margin-left:6px}
 /* 알림 */
 .al{padding:16px 18px;width:460px;right:auto;box-sizing:border-box}
 .alh{display:flex;align-items:center;gap:14px;cursor:pointer}
@@ -52,25 +68,42 @@ html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-famil
 .al .tx b{display:block;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .al .tx span{display:block;font-size:12.5px;color:#b9b6ae;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .al .row{margin-top:12px}
-#pill.alrt{animation:pop .6s cubic-bezier(.2,.9,.25,1.2)}
-@keyframes pop{0%{transform:translateX(-50%) scale(.96)}60%{transform:translateX(-50%) scale(1.02)}100%{transform:translateX(-50%) scale(1)}}
-.toast{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;font-size:12px;font-weight:700;background:#f4f2ee;color:#0b0b0d;padding:6px 12px;border-radius:999px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.toast{position:absolute;left:50%;transform:translateX(-50%);bottom:54px;font-size:12px;font-weight:700;background:#f4f2ee;color:#0b0b0d;padding:6px 12px;border-radius:999px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:400px;overflow:hidden;text-overflow:ellipsis}
 .toast.on{opacity:1}
-
-/* 새 프로그램은 창이 화면 맨 위에 붙어요(y0). 자동 숨김(tuck)이면 평소엔 얇은 선만 남기고 위로 숨어요 */
-body.y0 #pill{top:6px}
-#pill{transition:width .5s cubic-bezier(.2,.9,.25,1.08),height .5s cubic-bezier(.2,.9,.25,1.08),border-radius .5s ease,transform .3s cubic-bezier(.2,.9,.25,1)}
-body.tuck #pill:not(.hov):not(.alrt){transform:translate(-50%,-36px);box-shadow:0 2px 8px rgba(0,0,0,.25)}
 </style></head><body>
 <div id="pill">
   <div class="v idle" id="idle"><i class="dot" id="dot"></i><span class="mini" id="mini"></span><span class="bad" id="bad"></span></div>
   <div class="v big" id="big">
     <div class="hd"><div class="clock"><b id="hh">--:--</b><small id="dd"></small></div><span class="sp"></span>
-      <button class="chip" id="cIn" data-open="team-inflow">DB 0</button><button class="chip" id="cVi" data-open="team-visit">방문 0</button><button class="open" id="bOpen">펼치기 ⤢</button><button class="quit" id="bQuit" title="KAIA Island 끄기">종료</button></div>
-    <div class="lab" id="lab">오늘 할 일</div><div id="list"></div>
-    <div class="memo"><input id="memo" placeholder="빠른 메모 → 업무 (예: 3시 김민수 콜백)" maxlength="200"></div>
-    <div class="row"><button class="bt acc" id="bBook">방문 예약 링크 복사</button><button class="bt" id="bNt">개강안내 복사 ▾</button></div>
-    <div id="ntList" hidden></div>
+      <button class="open" id="bOpen">펼치기 ⤢</button><button class="quit" id="bQuit" title="KAIA Island 끄기">종료</button></div>
+
+    <div class="pn on" data-p="home"><div class="lab" id="lab">오늘 할 일</div><div id="list"></div>
+      <div class="memo"><input id="memo" placeholder="빠른 메모 → 업무 (예: 3시 홍길동 콜백)" maxlength="200"></div></div>
+
+    <div class="pn" data-p="counsel"><div class="lab">상담 예약 · 날짜를 정했을 때</div>
+      <div class="row" style="margin-top:0"><div class="f" style="flex:.8"><label>이름</label><input id="cN" placeholder="홍길동" maxlength="30"></div><div class="f"><label>날짜</label><input id="cD" type="date"></div><div class="f" style="flex:.9"><label>시간</label><input id="cT" type="time" step="600"></div></div>
+      <div class="qd" id="cQ"><button data-d="0">오늘</button><button data-d="1">내일</button><button data-d="2">모레</button></div>
+      <div class="row" style="margin-top:12px"><button class="bt acc" id="cGo">안내 문구 복사 + 업무에 넣기</button><button class="bt sm" id="cOnly">업무에만</button></div></div>
+
+    <div class="pn" data-p="visit"><div class="lab">방문 예약 · 학생이 직접 시간 고르기</div>
+      <p class="hint">학생이 링크에서 방문 날짜와 시간을 직접 골라요. 약도와 오시는 길이 같이 들어 있어요.</p>
+      <button class="bt acc" id="bBook" style="width:100%">방문 예약 안내 복사</button>
+      <div class="nt" data-open="team-visit" style="margin-top:8px"><span>들어온 방문 예약 보기</span><b id="nVi">0</b></div></div>
+
+    <div class="pn" data-p="notice"><div class="lab">개강안내 · 누르면 문구와 링크를 복사해요</div><div id="ntList"></div></div>
+
+    <div class="pn" data-p="team"><div class="lab">팀 · 확인할 것</div>
+      <div class="nt" data-open="team-inflow"><span>DB 유입</span><b id="nIn">0</b></div>
+      <div class="nt" data-open="team-visit"><span>방문 예약</span><b id="nVi2">0</b></div>
+      <p class="hint" style="margin-top:8px">누르면 KAIA DESK가 그 화면으로 펼쳐져요.</p></div>
+
+    <div class="dock" id="dock">
+      <button class="dk on" data-p="home" title="오늘 할 일"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg><span>오늘</span><i id="kHome"></i></button>
+      <button class="dk" data-p="counsel" title="상담 예약"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M12 13v5M9.5 15.5h5"/></svg><span>상담 예약</span></button>
+      <button class="dk" data-p="visit" title="방문 예약"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.800-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span>방문 예약</span><i id="kVi"></i></button>
+      <button class="dk" data-p="notice" title="개강안내"><svg viewBox="0 0 24 24"><path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/></svg><span>개강안내</span></button>
+      <button class="dk" data-p="team" title="팀"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.300 2.700-5.500 6-5.500s6 2.200 6 5.500M16 5.200a3.200 3.200 0 0 1 0 5.600M21 20c0-2.600-1.500-4.500-3.800-5.200"/></svg><span>팀</span><i id="kIn"></i></button>
+    </div>
   </div>
   <div class="v al" id="al"><div class="alh" id="alh"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></span><div class="tx"><b id="at"></b><span id="ab"></span></div></div>
     <div class="row" id="alb"></div></div>
@@ -79,48 +112,70 @@ body.tuck #pill:not(.hov):not(.alrt){transform:translate(-50%,-36px);box-shadow:
 <script>
 const $=id=>document.getElementById(id), pill=$('pill'); const DW='일월화수목금토';
 const act=a=>window.island?island.act(a):Promise.resolve('');
-let S={}, Q=[], showing=null, hideT=0, hov=false;
+let S={}, Q=[], showing=null, hideT=0, tab='home';
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function toast(m){ if(!m) return; const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('on'),1600); }
-function fit(){ /* 펼친 판 높이를 내용에 맞춰요 */ if(pill.classList.contains('hov')) pill.style.height=($('big').scrollHeight)+'px'; else if(!pill.classList.contains('alrt')) pill.style.height=''; }
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const dayPlus=n=>{ const d=new Date(); d.setDate(d.getDate()+n); return ymd(d); };
+function toast(m){ if(!m) return; const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('on'),2000); }
+function fit(){ if(pill.classList.contains('hov')) pill.style.height=($('big').scrollHeight)+'px'; else if(!pill.classList.contains('alrt')) pill.style.height=''; }
 function clock(){ const n=new Date(); const hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
-  $('hh').textContent=hm; $('dd').textContent=`${n.getMonth()+1}월 ${n.getDate()}일 (${DW[n.getDay()]})`; $('mini').textContent=S.next&&S.next.time?S.next.time:hm; }
+  $('hh').textContent=hm; $('dd').textContent=`${n.getMonth()+1}월 ${n.getDate()}일 (${DW[n.getDay()]})`; $('mini').textContent=S.open?'접기':(S.next&&S.next.time?S.next.time:hm); }
+function badge(id,n){ const e=$(id); e.textContent=n; e.classList.toggle('on',n>0); }
 function paint(){ $('dot').classList.toggle('on',!!S.team);
-  const n=(S.inflow||0)+(S.visit||0); $('bad').textContent=n; $('bad').classList.toggle('on',n>0&&!S.open);
-  $('cIn').textContent='DB '+(S.inflow||0); $('cIn').classList.toggle('hot',S.inflow>0); $('cVi').textContent='방문 '+(S.visit||0); $('cVi').classList.toggle('hot',S.visit>0);
+  const inf=S.inflow||0, vis=S.visit||0, n=inf+vis; $('bad').textContent=n; $('bad').classList.toggle('on',n>0&&!S.open);
+  badge('kHome',S.today||0); badge('kVi',vis); badge('kIn',inf);
+  $('nIn').textContent=inf; $('nIn').classList.toggle('hot',inf>0); ['nVi','nVi2'].forEach(i=>{ $(i).textContent=vis; $(i).classList.toggle('hot',vis>0); });
   $('bOpen').textContent=S.open?'접기 ▲':'펼치기 ⤢';
   $('lab').textContent=!S.ready?'KAIA DESK 연결 중…':!S.team?'로그인이 필요해요 · 펼치기를 눌러 주세요':`오늘 할 일 · ${S.today||0}건 남음`;
   const L=S.list||[]; $('list').innerHTML=L.length?L.map(x=>`<div class="tk${x.done?' done':''}" data-id="${esc(x.id)}" data-on="${x.done?0:1}"><i class="ck"></i><span>${esc(x.text)}</span><em class="${x.late?'late':''}">${x.late?'밀림':esc(x.time||'')}</em></div>`).join(''):'<div class="none">오늘 남은 할 일이 없어요</div>';
   const C=S.courses||[]; $('ntList').innerHTML=C.length?C.map(c=>`<div class="nt" data-id="${esc(c.id)}"><span>${esc(c.name)}</span><em>${esc(c.when)}</em></div>`).join(''):'<div class="none">3주 안에 개강하는 과정이 없어요</div>';
   clock(); fit(); }
+function setTab(p){ tab=p; document.querySelectorAll('.pn').forEach(e=>e.classList.toggle('on',e.dataset.p===p)); document.querySelectorAll('.dk').forEach(e=>e.classList.toggle('on',e.dataset.p===p));
+  if(p==='counsel'){ if(!$('cD').value) setDay(1); if(!$('cT').value) $('cT').value='14:00'; } fit(); setTimeout(fit,260); }
+function setDay(n){ $('cD').value=dayPlus(n); markDay(); }
+function markDay(){ const v=$('cD').value; document.querySelectorAll('#cQ button').forEach(b=>b.classList.toggle('on',dayPlus(+b.dataset.d)===v)); }
+
+/* ---------- 알림 ---------- */
 function nextAlert(){ if(showing||!Q.length) return; showing=Q.shift();
   $('at').textContent=showing.t; $('ab').textContent=showing.b||'눌러서 확인하세요';
   const tag=String(showing.tag||''), m=tag.match(/^(if|bk)-(.+)$/), ph=(String(showing.b)+' '+String(showing.t)).match(/01[016789][-\s]?\d{3,4}[-\s]?\d{4}/);
   showing.ok=m?{type:m[1],id:m[2]}:null; showing.ph=ph?ph[0]:'';
   $('alb').innerHTML=(showing.ok?'<button class="bt acc" data-a="ok">확인</button>':'')+(showing.ph?'<button class="bt" data-a="ph">연락처 복사</button>':'')+'<button class="bt" data-a="open">열기</button>';
   pill.style.setProperty('--ah',(showing.ok||showing.ph?128:96)+'px'); pill.style.height='';
-  pill.classList.remove('hov'); pill.classList.add('alrt'); clearTimeout(hideT); hideT=setTimeout(()=>{ if(!hov) endAlert(); },9000); }
-function endAlert(){ showing=null; pill.classList.remove('alrt'); pill.classList.toggle('hov',hov); fit(); setTimeout(nextAlert,700); }
+  open=false; pill.classList.remove('hov'); pill.classList.add('alrt'); clearTimeout(hideT); hideT=setTimeout(()=>{ if(!over) endAlert(); },9000); }
+function endAlert(){ showing=null; pill.classList.remove('alrt'); if(!over) setCap(false); fit(); setTimeout(nextAlert,700); }
+
+/* ---------- 여닫기 ----------
+   자동 숨김: 화면 맨 위에 마우스를 잠깐(0.15초) 대면 내려와서 펼쳐져요.
+   알약 형태: 마우스를 올려도 그대로, 눌러야 펼쳐져요.  둘 다 마우스가 벗어나면 접혀요(글을 적는 중이면 기다려요). */
+let open=false, cap=false, over=false, dwT=0;
+const typing=()=>{ const a=document.activeElement; return !!a&&a.tagName==='INPUT'; };
+function setCap(on){ if(on===cap) return; cap=on; window.island&&island.hover(on); }
+function setOpen(on){ if(on===open) return; if(!on&&typing()) return; open=on; pill.classList.toggle('hov',on); pill.classList.remove('near'); fit(); }
+function track(x,y){ const r=pill.getBoundingClientRect(); over=x>=r.left-2&&x<=r.right+2&&y>=r.top-8&&y<=r.bottom+6;
+  if(showing){ setCap(over); if(!over){ clearTimeout(hideT); hideT=setTimeout(()=>{ if(!over&&showing) endAlert(); },2500); } return; }
+  if(open){ if(!over) setOpen(false); setCap(open); return; }
+  if(document.body.classList.contains('tuck')){ if(over){ if(!dwT) dwT=setTimeout(()=>{ dwT=0; if(over&&!showing){ setOpen(true); setCap(true); } },150); } else if(dwT){ clearTimeout(dwT); dwT=0; } setCap(false); return; }
+  setCap(over); pill.classList.toggle('near',over); }
+if(window.island&&island.cur) island.cur(p=>track(p.x,p.y));
+else { document.addEventListener('mousemove',e=>track(e.clientX,e.clientY)); document.addEventListener('mouseleave',()=>track(-999,-999)); }
+document.addEventListener('focusout',()=>setTimeout(()=>{ if(open&&!over&&!typing()){ setOpen(false); setCap(false); } },0));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&e.target.tagName==='INPUT'){ e.target.blur(); } });
+$('idle').onclick=()=>{ if(S.open){ act({k:'open'}); return; } setOpen(true); setCap(true); };
+
 window.island&&island.on(s=>{ S=s||{}; document.body.classList.toggle('y0',!!S.y0); document.body.classList.toggle('tuck',!!S.tuck); if(S.q&&S.q.length) Q.push(...S.q); paint(); nextAlert(); });
-/* 마우스가 알약 위에 있을 때만 클릭을 받아요 (나머지 투명한 곳은 뒤 화면으로 통과) */
-function setHov(on){ if(on===hov) return; if(!on&&document.activeElement===$('memo')) return; hov=on; window.island&&island.hover(on); if(!showing){ pill.classList.toggle('hov',on); } else if(!on){ clearTimeout(hideT); hideT=setTimeout(endAlert,2500); } fit(); }
-/* 자동 숨김일 때는 화면 맨 위에 잠깐(0.15초) 머물러야 내려와요 — 탭을 누르려다 스치는 건 무시 */
-let dwT=0;
-document.addEventListener('mousemove',e=>{ const r=pill.getBoundingClientRect(); const inside=e.clientX>=r.left-2&&e.clientX<=r.right+2&&e.clientY>=r.top-8&&e.clientY<=r.bottom+6;
-  if(inside&&!hov&&document.body.classList.contains('tuck')&&!pill.classList.contains('alrt')){ if(!dwT) dwT=setTimeout(()=>{ dwT=0; setHov(true); },150); return; }
-  if(!inside&&dwT){ clearTimeout(dwT); dwT=0; } setHov(inside); });
-document.addEventListener('mouseleave',()=>setHov(false));
-$('memo').addEventListener('blur',()=>setTimeout(()=>{ const r=pill.getBoundingClientRect(); if(!hov) return; },0));
-$('memo').addEventListener('keydown',async e=>{ if(e.key==='Enter'&&e.target.value.trim()){ const v=e.target.value.trim(); e.target.value=''; toast(await act({k:'add',text:v})); }
-  if(e.key==='Escape'){ e.target.value=''; e.target.blur(); setHov(false); } });
-$('idle').onclick=()=>act({k:'open'});
 $('bOpen').onclick=()=>act({k:'open'});
 $('bQuit').onclick=()=>{ const b=$('bQuit'); if(b.dataset.sure){ act({k:'quit'}); return; } b.dataset.sure='1'; b.textContent='끌까요?'; setTimeout(()=>{ delete b.dataset.sure; b.textContent='종료'; },2500); };
-$('cIn').onclick=()=>act({k:'open',where:'team-inflow'}); $('cVi').onclick=()=>act({k:'open',where:'team-visit'});
-$('bBook').onclick=async()=>toast(await act({k:'book'}));
-$('bNt').onclick=()=>{ const L=$('ntList'); L.hidden=!L.hidden; $('bNt').textContent=L.hidden?'개강안내 복사 ▾':'개강안내 복사 ▴'; fit(); };
-$('ntList').addEventListener('click',async e=>{ const r=e.target.closest('.nt'); if(!r) return; toast('만드는 중…'); toast(await act({k:'notice',id:r.dataset.id})); });
+$('dock').addEventListener('click',e=>{ const b=e.target.closest('.dk'); if(b) setTab(b.dataset.p); });
+$('big').addEventListener('click',e=>{ const o=e.target.closest('[data-open]'); if(o) act({k:'open',where:o.dataset.open}); });
+$('memo').addEventListener('keydown',async e=>{ if(e.key==='Enter'&&e.target.value.trim()){ const v=e.target.value.trim(); e.target.value=''; toast(await act({k:'add',text:v})); } });
 $('list').addEventListener('click',async e=>{ const r=e.target.closest('.tk'); if(!r) return; r.classList.toggle('done'); toast(await act({k:'done',id:r.dataset.id,on:r.dataset.on==='1'})); });
+$('cQ').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) setDay(+b.dataset.d); }); $('cD').addEventListener('change',markDay);
+async function counsel(only){ const n=$('cN').value.trim(), d=$('cD').value, tm=$('cT').value; if(!n){ $('cN').focus(); toast('이름을 적어 주세요'); return; } if(!d||!tm){ toast('날짜와 시간을 골라 주세요'); return; }
+  toast('만드는 중…'); const m=await act({k:'counsel',n,d,tm,only:!!only}); toast(m||'KAIA DESK를 새로고침한 뒤 다시 해 주세요'); if(m&&!/못|필요/.test(m)) $('cN').value=''; }
+$('cGo').onclick=()=>counsel(false); $('cOnly').onclick=()=>counsel(true); $('cN').addEventListener('keydown',e=>{ if(e.key==='Enter') counsel(false); });
+$('bBook').onclick=async()=>{ toast('만드는 중…'); toast(await act({k:'book'})); };
+$('ntList').addEventListener('click',async e=>{ const r=e.target.closest('.nt'); if(!r) return; toast('만드는 중…'); toast(await act({k:'notice',id:r.dataset.id})); });
 $('alh').onclick=()=>{ const w=showing?(showing.tab?'team-'+showing.tab:(showing.go||'')):''; endAlert(); act({k:'open',where:w||'home'}); };
 $('alb').addEventListener('click',async e=>{ const b=e.target.closest('[data-a]'); if(!b||!showing) return; const a=b.dataset.a;
   if(a==='ok'){ toast(await act({k:'ok',type:showing.ok.type,id:showing.ok.id})); endAlert(); }
@@ -128,5 +183,6 @@ $('alb').addEventListener('click',async e=>{ const b=e.target.closest('[data-a]'
   else { const w=showing.tab?'team-'+showing.tab:(showing.go||''); endAlert(); act({k:'open',where:w||'home'}); } });
 setInterval(clock,1000); paint();
 if(location.search.includes('demo')){ S={ready:true,team:true,today:3,next:{time:'14:00',text:'홍길동 방문 상담'},inflow:2,visit:1,
-  courses:[{id:'c1',name:'정보처리기사 실기 평일반',when:'11/13(금) 개강'},{id:'c2',name:'Python 1 주말반',when:'11/15(일) 개강'}],list:[{id:'a',text:'홍길동 방문 상담 · 010-0000-1234',time:'14:00'},{id:'b',text:'김민수 콜백 · 국비 서류 안내',time:'16:30'},{id:'c',text:'정보처리기사 실기 개강 문자 보내기',time:''},{id:'d',text:'이서연 견적서 다시 보내기',time:'',late:true}]}; paint(); }
+  courses:[{id:'c1',name:'정보처리기사 실기 평일반',when:'11/13(금) 개강'},{id:'c2',name:'Python 1 주말반',when:'11/15(일) 개강'}],list:[{id:'a',text:'홍길동 방문 상담 · 010-0000-0000',time:'14:00'},{id:'b',text:'홍길동 콜백 · 국비 서류 안내',time:'16:30'},{id:'c',text:'정보처리기사 실기 개강 문자 보내기',time:''}]}; paint();
+  const t=(location.search.match(/tab=(\w+)/)||[])[1]; open=true; pill.classList.add('hov'); if(t) setTab(t); fit(); }
 </script></body></html>
