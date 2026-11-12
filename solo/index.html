@@ -7327,8 +7327,8 @@ function recMark(sid,keys){
 }
 /* 하루 한 번 (오전 9시 이후) 윈도우 알림 + 화면 오른쪽 아래 알림 */
 function recDaily(){
-  try{ if(S.gate||S.demo) return; const t=todayStr(); if(lsGet('ks.recDay')===t||new Date().getHours()<9) return;
-    const items=recItems(); lsSet('ks.recDay',t); if(!items.length) return;
+  try{ if(S.gate||S.demo) return; const t=todayStr(); if(recDaily._d===t||lsGet('ks.recDay')===t||new Date().getHours()<9) return;
+    const items=recItems(); recDaily._d=t; lsSet('ks.recDay',t);   // 저장이 안 되는 기기(저장 공간 가득 등)에서도 1분마다 다시 울리지 않게 메모리에도 기억 if(!items.length) return;
     const body=items.slice(0,3).map(x=>`${x.s.name} - ${x.c.name}`).join(' · ')+(items.length>3?` 외 ${items.length-3}건`:'');
     alertShow({title:`녹화본 전달 ${items.length}건`,body,nbody:body,tag:'rec-'+t,go:'home'}); alertSound('녹화본 전달'); }catch(e){ console.warn(e); }
 }
@@ -9936,6 +9936,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261111-2217';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261112-0937';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
