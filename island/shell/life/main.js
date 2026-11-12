@@ -23,7 +23,8 @@ function makeYtm() {
   ytm.setAlwaysOnTop(true, 'pop-up-menu');
   ytm.webContents.setUserAgent(UA);
   ytm.loadURL('https://music.youtube.com/');
-  ytm.webContents.on('dom-ready', () => ytm.webContents.insertCSS('html{clip-path:inset(0 round 18px)} ytmusic-nav-bar{-webkit-app-region:drag} ytmusic-nav-bar *{-webkit-app-region:no-drag}'));
+  ytm.webContents.on('did-fail-load', (_e, code, _d, _u, main) => { if (main && code !== -3) setTimeout(() => { if (ytm) ytm.loadURL('https://music.youtube.com/'); }, 3000); });
+  ytm.webContents.on('dom-ready', () => ytm.webContents.insertCSS('ytmusic-nav-bar{-webkit-app-region:drag} ytmusic-nav-bar *{-webkit-app-region:no-drag}'));
   ytm.webContents.setWindowOpenHandler(({ url }) => { if (/accounts\.google\.com|music\.youtube\.com|youtube\.com\/signin/.test(url)) { ytm.loadURL(url); } else shell.openExternal(url); return { action: 'deny' }; });
   ytm.on('blur', () => { if (!ytmPin) setTimeout(() => { if (ytm && !ytm.isFocused() && !ytmPin) { ytm.hide(); push(); } }, 120); });
   ytm.on('close', (e) => { if (!app.isQuitting) { e.preventDefault(); ytm.hide(); push(); } });
