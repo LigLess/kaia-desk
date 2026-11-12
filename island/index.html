@@ -56,6 +56,11 @@ html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-famil
 @keyframes pop{0%{transform:translateX(-50%) scale(.96)}60%{transform:translateX(-50%) scale(1.02)}100%{transform:translateX(-50%) scale(1)}}
 .toast{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;font-size:12px;font-weight:700;background:#f4f2ee;color:#0b0b0d;padding:6px 12px;border-radius:999px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1}
+
+/* 새 프로그램은 창이 화면 맨 위에 붙어요(y0). 자동 숨김(tuck)이면 평소엔 얇은 선만 남기고 위로 숨어요 */
+body.y0 #pill{top:6px}
+#pill{transition:width .5s cubic-bezier(.2,.9,.25,1.08),height .5s cubic-bezier(.2,.9,.25,1.08),border-radius .5s ease,transform .3s cubic-bezier(.2,.9,.25,1)}
+body.tuck #pill:not(.hov):not(.alrt){transform:translate(-50%,-36px);box-shadow:0 2px 8px rgba(0,0,0,.25)}
 </style></head><body>
 <div id="pill">
   <div class="v idle" id="idle"><i class="dot" id="dot"></i><span class="mini" id="mini"></span><span class="bad" id="bad"></span></div>
@@ -96,10 +101,14 @@ function nextAlert(){ if(showing||!Q.length) return; showing=Q.shift();
   pill.style.setProperty('--ah',(showing.ok||showing.ph?128:96)+'px'); pill.style.height='';
   pill.classList.remove('hov'); pill.classList.add('alrt'); clearTimeout(hideT); hideT=setTimeout(()=>{ if(!hov) endAlert(); },9000); }
 function endAlert(){ showing=null; pill.classList.remove('alrt'); pill.classList.toggle('hov',hov); fit(); setTimeout(nextAlert,700); }
-window.island&&island.on(s=>{ S=s||{}; if(S.q&&S.q.length) Q.push(...S.q); paint(); nextAlert(); });
+window.island&&island.on(s=>{ S=s||{}; document.body.classList.toggle('y0',!!S.y0); document.body.classList.toggle('tuck',!!S.tuck); if(S.q&&S.q.length) Q.push(...S.q); paint(); nextAlert(); });
 /* 마우스가 알약 위에 있을 때만 클릭을 받아요 (나머지 투명한 곳은 뒤 화면으로 통과) */
 function setHov(on){ if(on===hov) return; if(!on&&document.activeElement===$('memo')) return; hov=on; window.island&&island.hover(on); if(!showing){ pill.classList.toggle('hov',on); } else if(!on){ clearTimeout(hideT); hideT=setTimeout(endAlert,2500); } fit(); }
-document.addEventListener('mousemove',e=>{ const r=pill.getBoundingClientRect(); setHov(e.clientX>=r.left-2&&e.clientX<=r.right+2&&e.clientY>=r.top&&e.clientY<=r.bottom+6); });
+/* 자동 숨김일 때는 화면 맨 위에 잠깐(0.15초) 머물러야 내려와요 — 탭을 누르려다 스치는 건 무시 */
+let dwT=0;
+document.addEventListener('mousemove',e=>{ const r=pill.getBoundingClientRect(); const inside=e.clientX>=r.left-2&&e.clientX<=r.right+2&&e.clientY>=r.top-8&&e.clientY<=r.bottom+6;
+  if(inside&&!hov&&document.body.classList.contains('tuck')&&!pill.classList.contains('alrt')){ if(!dwT) dwT=setTimeout(()=>{ dwT=0; setHov(true); },150); return; }
+  if(!inside&&dwT){ clearTimeout(dwT); dwT=0; } setHov(inside); });
 document.addEventListener('mouseleave',()=>setHov(false));
 $('memo').addEventListener('blur',()=>setTimeout(()=>{ const r=pill.getBoundingClientRect(); if(!hov) return; },0));
 $('memo').addEventListener('keydown',async e=>{ if(e.key==='Enter'&&e.target.value.trim()){ const v=e.target.value.trim(); e.target.value=''; toast(await act({k:'add',text:v})); }
