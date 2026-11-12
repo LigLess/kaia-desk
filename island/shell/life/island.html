@@ -64,12 +64,15 @@ body.y0 #pill{top:6px}
 #pill.near:not(.hov){box-shadow:0 8px 24px rgba(0,0,0,.3),inset 0 0 0 1.5px rgba(244,242,238,.55)}
 .idle{cursor:pointer}
 body.tuck #pill:not(.hov):not(.alrt){transform:translate(-50%,-36px);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.ytb{display:flex;align-items:center;gap:7px;max-width:150px;font:inherit;font-size:11.5px;font-weight:700;color:#d9d6cf;background:rgba(255,255,255,.07);border:0;border-radius:999px;padding:5px 11px 5px 6px;cursor:pointer;margin-right:2px}
+.ytb:hover{background:rgba(255,255,255,.13)}.ytb.on{box-shadow:inset 0 0 0 1.5px #ff0033}.ytb svg{width:20px;height:20px;flex:none}
+.ytb span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style></head><body>
 <div id="pill">
   <div class="v idle" id="idle"><i class="dot"></i><span class="mini" id="mini"></span><span class="bad" id="bad"></span></div>
   <div class="v big" id="big">
     <div class="hd"><div class="clock"><b id="hh">--:--</b><small id="dd"></small></div><span class="sp"></span>
-      <div class="md"><button data-m="prev" title="이전 곡"><svg viewBox="0 0 24 24"><path d="M6 5h2.4v14H6zM20 5.6v12.8L9.8 12z"/></svg></button><button class="pp" data-m="play" title="재생 · 일시정지"><svg viewBox="0 0 24 24"><path d="M5 4.5v15l9-7.5zM15.5 5H18v14h-2.5zM20 5h2.5v14H20z" transform="translate(-1.6 0)"/></svg></button><button data-m="next" title="다음 곡"><svg viewBox="0 0 24 24"><path d="M15.6 5H18v14h-2.4zM4 5.6v12.8L14.2 12z"/></svg></button></div>
+      <button class="ytb" id="bYtm" title="유튜브 뮤직 열기 · 곡 고르기"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ff0033"/><circle cx="12" cy="12" r="5.6" fill="none" stroke="#fff" stroke-width="1.4"/><path d="M10.6 9.6v4.8l4-2.4z" fill="#fff"/></svg><span id="npT">유튜브 뮤직</span></button><div class="md"><button data-m="prev" title="이전 곡"><svg viewBox="0 0 24 24"><path d="M6 5h2.4v14H6zM20 5.6v12.8L9.8 12z"/></svg></button><button class="pp" data-m="play" title="재생 · 일시정지"><svg viewBox="0 0 24 24"><path d="M5 4.5v15l9-7.5zM15.5 5H18v14h-2.5zM20 5h2.5v14H20z" transform="translate(-1.6 0)"/></svg></button><button data-m="next" title="다음 곡"><svg viewBox="0 0 24 24"><path d="M15.6 5H18v14h-2.4zM4 5.6v12.8L14.2 12z"/></svg></button></div>
       <button class="open" id="bOpen" hidden></button><button class="quit" id="bQuit" title="Island 끄기">종료</button></div>
     <div class="lab">바로가기</div><div id="apps"></div>
     <div id="add"><div class="row"><button class="bt" id="bApp">프로그램 · 게임 고르기</button><button class="bt" id="bWeb">웹사이트 주소 넣기</button></div>
@@ -89,6 +92,7 @@ function fit(){ pill.style.height=pill.classList.contains('hov')?($('big').scrol
 function clock(){ const n=new Date(); const hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
   $('hh').textContent=hm; $('dd').textContent=`${n.getMonth()+1}월 ${n.getDate()}일 (${DW[n.getDay()]})`; $('mini').textContent=hm; }
 function paint(){ const A=S.apps||[], T=S.todos||[]; const left=T.filter(x=>!x.done).length;
+  const np=S.np; $('npT').textContent=np?np.t:'유튜브 뮤직'; $('bYtm').title=np?`${np.t}${np.a?' · '+np.a:''} — 눌러서 곡 고르기`:'유튜브 뮤직 열기 · 곡 고르기'; $('bYtm').classList.toggle('on',!!S.ytm);
   $('bad').textContent=left; $('bad').classList.toggle('on',left>0);
   $('bOpen').hidden=!S.web; $('bOpen').textContent=S.open?'접기 ▲':(S.title||'')+' ⤢';
   $('apps').innerHTML=A.map(x=>`<div class="ap" data-id="${esc(x.id)}" title="${esc(x.name)} · 오른쪽 클릭: 순서 바꾸기 · 빼기">${x.icon?`<i class="im"><img src="${esc(x.icon)}" alt=""></i>`:`<i class="im tx">${esc([...String(x.name||'?')][0].toUpperCase())}</i>`}<span>${esc(x.name)}</span><div class="ed"><button data-e="l">◀</button><button class="x" data-e="x">빼기</button><button data-e="r">▶</button></div></div>`).join('')
@@ -116,6 +120,7 @@ document.addEventListener('focusout',()=>setTimeout(()=>{ if(hov&&!over&&!typing
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&e.target.tagName==='INPUT'){ e.target.value=''; e.target.blur(); } });
 $('idle').onclick=()=>{ if(S.web&&S.open){ act({k:'open'}); return; } setHov(true); setCap(true); };
 $('bOpen').onclick=()=>act({k:'open'});
+$('bYtm').onclick=()=>act({k:'ytm'});
 $('bQuit').onclick=()=>{ const b=$('bQuit'); if(b.dataset.sure){ act({k:'quit'}); return; } b.dataset.sure='1'; b.textContent='끌까요?'; setTimeout(()=>{ delete b.dataset.sure; b.textContent='종료'; },2500); };
 document.querySelector('.md').addEventListener('click',async e=>{ const b=e.target.closest('[data-m]'); if(b) toast(await act({k:'media',b:b.dataset.m})); });
 $('apps').addEventListener('click',async e=>{ const ed=e.target.closest('[data-e]'), a=e.target.closest('.ap'); if(!a) return;

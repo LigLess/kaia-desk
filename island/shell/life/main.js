@@ -10,6 +10,33 @@ let fsOn = false, userHide = false, upd = null;
 
 const W = 520, H = 640, PILL = { w: 128, h: 34 };
 let isl, desk, morph, tray, busy = false, dlg = false;
+/* ---------- 유튜브 뮤직 미니 플레이어 ----------
+   알약 아래에 작은 유튜브 뮤직 창을 띄워요. 한 번 로그인하면 기억해요(이 컴퓨터에만).
+   창을 닫아도(바깥을 누르면 숨어요) 음악은 계속 나오고, 알약에 지금 나오는 곡이 보여요. */
+let ytm = null, NP = null, ytmPin = false;
+const YTM_W = 440, YTM_H = 620;
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+function ytmBounds() { const i = islBounds(); return { x: Math.round(i.x + (W - YTM_W) / 2), y: i.y + 50, width: YTM_W, height: YTM_H }; }
+function makeYtm() {
+  ytm = new BrowserWindow({ ...ytmBounds(), frame: false, resizable: false, show: false, skipTaskbar: true, alwaysOnTop: true, roundedCorners: true,
+    backgroundColor: '#030303', webPreferences: { partition: 'persist:ytm', backgroundThrottling: false } });
+  ytm.setAlwaysOnTop(true, 'pop-up-menu');
+  ytm.webContents.setUserAgent(UA);
+  ytm.loadURL('https://music.youtube.com/');
+  ytm.webContents.on('dom-ready', () => ytm.webContents.insertCSS('html{clip-path:inset(0 round 18px)} ytmusic-nav-bar{-webkit-app-region:drag} ytmusic-nav-bar *{-webkit-app-region:no-drag}'));
+  ytm.webContents.setWindowOpenHandler(({ url }) => { if (/accounts\.google\.com|music\.youtube\.com|youtube\.com\/signin/.test(url)) { ytm.loadURL(url); } else shell.openExternal(url); return { action: 'deny' }; });
+  ytm.on('blur', () => { if (!ytmPin) setTimeout(() => { if (ytm && !ytm.isFocused() && !ytmPin) { ytm.hide(); push(); } }, 120); });
+  ytm.on('close', (e) => { if (!app.isQuitting) { e.preventDefault(); ytm.hide(); push(); } });
+}
+function ytmToggle(force) { if (!ytm) makeYtm(); const on = force != null ? force : !ytm.isVisible();
+  if (on) { ytm.setBounds(ytmBounds()); ytm.show(); ytm.focus(); } else ytm.hide(); push(); }
+async function ytmPoll() { if (!ytm) return; try {
+    const r = await ytm.webContents.executeJavaScript(`(()=>{ const m=navigator.mediaSession&&navigator.mediaSession.metadata; const v=document.querySelector('video'); if(!m||!m.title) return null; return {t:m.title,a:m.artist||'',on:!!(v&&!v.paused),art:(m.artwork&&m.artwork.length?m.artwork[m.artwork.length-1].src:'')}; })()`, true);
+    const k = JSON.stringify(r); if (k !== JSON.stringify(NP)) { NP = r; push(); } } catch (e) {} }
+async function ytmCtl(b) { if (!ytm) return false; try {
+    return await ytm.webContents.executeJavaScript(`(()=>{ const v=document.querySelector('video'); const q=s=>document.querySelector(s);
+      if(${JSON.stringify(b)}==='play'){ if(!v) return false; v.paused?v.play():v.pause(); return true; }
+      const btn=${JSON.stringify(b)}==='next'?q('.next-button'):q('.previous-button'); if(btn){ btn.click(); return true; } return false; })()`, true); } catch (e) { return false; } }
 
 if (!app.requestSingleInstanceLock()) { app.quit(); }
 
@@ -19,7 +46,7 @@ let DB = { apps: [], todos: [], tuck: true };
 function load() { try { const d = JSON.parse(fs.readFileSync(FILE(), 'utf8')); DB = { apps: Array.isArray(d.apps) ? d.apps : [], todos: Array.isArray(d.todos) ? d.todos : [], tuck: d.tuck !== false }; } catch (e) {} }
 function save() { try { fs.mkdirSync(path.dirname(FILE()), { recursive: true }); fs.writeFileSync(FILE(), JSON.stringify(DB)); } catch (e) {} }
 const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-const state = () => ({ y0: true, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
+const state = () => ({ np: NP, ytm: !!(ytm && ytm.isVisible()), y0: true, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
 function push() { if (isl) isl.webContents.send('state', state()); }
 
 /* ---------- 창 ---------- */
@@ -88,7 +115,18 @@ function media(vk) {
 const VK = { prev: 177, play: 179, next: 176 };
 
 /* ---------- 바로가기 ---------- */
-async function fileIcon(p) { try { const im = await app.getFileIcon(p, { size: 'large' }); return im.isEmpty() ? '' : im.toDataURL(); } catch (e) { return ''; } }
+async function iconOf(f) { try { if (!f || !fs.existsSync(f)) return '';
+    if (/\.(ico|png|jpe?g|bmp)$/i.test(f)) { const im = nativeImage.createFromPath(f); if (!im.isEmpty()) return im.resize({ width: 64, height: 64, quality: 'best' }).toDataURL(); }
+    const im = await app.getFileIcon(f, { size: 'large' }); return im.isEmpty() ? '' : im.toDataURL(); } catch (e) { return ''; } }
+/* 게임 바로가기는 대부분 .url(스팀 · 에픽 등 인터넷 바로가기)이라 그대로 읽으면 지구본 아이콘이 나와요.
+   .url 안에 적힌 IconFile(게임 아이콘 파일), .lnk 는 가리키는 실제 exe 의 아이콘을 꺼내 써요. */
+async function fileIcon(p) {
+  try {
+    if (/\.url$/i.test(p)) { const t = fs.readFileSync(p, 'utf8'); const m = t.match(/^\s*IconFile\s*=\s*(.+?)\s*$/im); if (m) { const ic = await iconOf(m[1].replace(/^"|"$/g, '')); if (ic) return ic; } }
+    if (/\.lnk$/i.test(p) && process.platform === 'win32') { try { const L = shell.readShortcutLink(p); for (const f of [L.icon, L.target]) { const ic = await iconOf(f); if (ic) return ic; } } catch (e) {} }
+  } catch (e) {}
+  return iconOf(p);
+}
 async function favicon(url) { try { const h = new URL(url).hostname; const r = await net.fetch('https://www.google.com/s2/favicons?sz=64&domain=' + encodeURIComponent(h)); if (!r.ok) return '';
   const buf = Buffer.from(await r.arrayBuffer()); return buf.length > 100 ? 'data:' + (r.headers.get('content-type') || 'image/png') + ';base64,' + buf.toString('base64') : ''; } catch (e) { return ''; } }
 const isWeb = (s) => /^[a-z][a-z0-9+.-]*:\/\//i.test(s);
@@ -98,7 +136,8 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'get') return state();
   if (a.k === 'quit') { app.isQuitting = true; setTimeout(() => app.quit(), 60); return ''; }
   if (a.k === 'open') { if (desk && desk.isVisible()) collapse(); else expand(); return ''; }
-  if (a.k === 'media') return media(VK[a.b]) ? '' : '음악 조작은 윈도우에서만 돼요';
+  if (a.k === 'ytm') { ytmToggle(); return ''; }
+  if (a.k === 'media') { if (NP && await ytmCtl(a.b)) { setTimeout(ytmPoll, 400); return ''; } return media(VK[a.b]) ? '' : '음악 조작은 윈도우에서만 돼요'; }
   if (a.k === 'run') { const x = DB.apps.find(o => o.id === a.id); if (!x) return '';
     if (x.url) { shell.openExternal(x.url); return x.name + ' 열었어요'; }
     if (!fs.existsSync(x.path)) return '파일을 찾지 못했어요 · 옮겨졌거나 지워졌는지 확인해 주세요';
@@ -106,7 +145,7 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'addApp') { dlg = true; let r; try { r = await dialog.showOpenDialog(isl, { title: '바로가기에 넣을 프로그램 · 게임 고르기', defaultPath: app.getPath('desktop'), properties: ['openFile', 'multiSelections'],
       filters: [{ name: '프로그램 · 바로가기', extensions: ['exe', 'lnk', 'url', 'bat', 'cmd'] }, { name: '모든 파일', extensions: ['*'] }] }); } finally { dlg = false; if (isl) isl.setIgnoreMouseEvents(true, { forward: true }); }
     if (!r || r.canceled || !r.filePaths.length) return '';
-    for (const p of r.filePaths.slice(0, 12)) { if (DB.apps.some(o => o.path === p)) continue; DB.apps.push({ id: rid(), name: path.basename(p, path.extname(p)).slice(0, 24), path: p, icon: await fileIcon(p) }); }
+    for (const p of r.filePaths.slice(0, 12)) { if (DB.apps.some(o => o.path === p)) continue; DB.apps.push({ id: rid(), icon2: 1, name: path.basename(p, path.extname(p)).slice(0, 24), path: p, icon: await fileIcon(p) }); }
     save(); push(); return '바로가기에 넣었어요'; }
   if (a.k === 'addUrl') { let u = String(a.url || '').trim(); if (!u) return '주소를 적어 주세요'; if (!isWeb(u)) u = 'https://' + u;
     let host = ''; try { host = new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return '주소를 다시 확인해 주세요'; }
@@ -122,6 +161,7 @@ ipcMain.on('hover', (_e, on) => { if (dlg) return; if (isl) isl.setIgnoreMouseEv
 
 function vis() { if (!isl) return; const want = !userHide && !(fsOn && !DB.tuck); if (want) { if (!isl.isVisible()) isl.showInactive(); } else if (isl.isVisible()) isl.hide(); }
 function common() {
+  setInterval(ytmPoll, 2000);
   SH.watchCursor(() => isl);
   SH.watchFullscreen((on) => { fsOn = on; vis(); });   /* 알약 형태일 때만: 게임 · 영상이 전체화면이면 알약을 숨겨요 */
   upd = SH.autoUpdate({ canRestart: () => !(desk && desk.isVisible()) });
@@ -137,6 +177,7 @@ function makeTray() {
     { type: 'separator' }, { label: '종료', click: () => { app.isQuitting = true; app.quit(); } }]);
   tray.setToolTip('Island'); tray.setContextMenu(menu()); tray.on('right-click', () => tray.setContextMenu(menu()));
 }
-app.whenReady().then(() => { app.setAppUserModelId('app.island.life'); load(); makeIsland(); makeTray(); common(); });
+app.whenReady().then(() => { app.setAppUserModelId('app.island.life'); load(); makeIsland(); makeTray(); common();
+  setTimeout(async () => { let ch = false; for (const x of DB.apps) { if (!x.path || !/\.(url|lnk)$/i.test(x.path) || x.icon2) continue; const ic = await fileIcon(x.path); if (ic) { x.icon = ic; ch = true; } x.icon2 = 1; } if (ch) { save(); push(); } }, 1500); });
 app.on('window-all-closed', (e) => e.preventDefault());
 app.on('before-quit', () => { try { ps && ps.kill(); } catch (e) {} });
