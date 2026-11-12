@@ -8212,7 +8212,9 @@ function mbMatch(n,type){
 }
 function mbDate(v,ref){ /* "11월18일(월수금월수)" · 엑셀 날짜 숫자 → yyyy-mm-dd, 요일 */
   if(typeof v==='number'&&v>20000) return {d:serialToYmd(v),pat:''};
-  const s=String(v||''); const m=s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/); const pat=[...(s.match(/\(([^)]*)\)/)||['',''])[1]].filter(ch=>'월화수목금토일'.includes(ch)).join('');
+  const s=String(v||''); const pat=[...(s.match(/\(([^)]*)\)/)||['',''])[1]].filter(ch=>'월화수목금토일'.includes(ch)).join('');
+  const full=s.match(/(20\d{2})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})/); if(full) return {d:ymd(new Date(+full[1],+full[2]-1,+full[3])),pat};   // 2026-11-18 · 2026.11.18 · 2026년 11월 18일
+  const m=s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/)||s.match(/(?:^|[^\d])(\d{1,2})\s*[/.]\s*(\d{1,2})(?!\d)/);   // 11월18일 · 11/18 · 11.18
   if(!m) return {d:'',pat}; const r=parseYmd(ref||todayStr()); const best=[r.getFullYear()-1,r.getFullYear(),r.getFullYear()+1].map(y=>new Date(y,+m[1]-1,+m[2])).sort((a,b)=>Math.abs(a-r)-Math.abs(b-r))[0];
   return {d:ymd(best),pat};
 }
@@ -8296,7 +8298,7 @@ function qcChip(x){ const o=[];
   if(x.cod){ const t=D().tasks&&D().tasks[x.cod.tid]; o.push(`<span class="chip warn">COD · ${fmtMD(x.cod.due)} 12:00까지 연락${t&&t.done?' (완료)':''}</span> `); }
   return o.join(''); }
 function qcBtns(x){ return `<button class="btn sm ${x.cod?'on':''}" data-act="qcCod" data-id="${x.id}" title="COD로 바뀌면 다음 날 오후 12시 연락 알람을 만들어요">${x.cod?ic('check'):''}COD</button><button class="btn sm ${x.reg?'':'pri'}" data-act="qcReg" data-id="${x.id}" title="이 견적의 과목 · 개강일로 학생 등록">${x.reg?'학생 보기':'학생 등록'}</button>`; }
-function qcUpBar(){ return `<div class="qc-up"><button class="btn sm" data-act="qcUpPick">${ic('up')}견적서 엑셀로 학생 등록</button><input id="qcUpFile" type="file" accept=".xlsx,.xlsm" hidden><span>예전에 만든 견적서도 올리면 과목 · 개강일 · 요일을 읽어 학생으로 바꿔요</span></div>`; }
+function qcUpBar(){ return `<div class="qc-up"><button class="btn sm pri" data-act="qcPaste">엑셀에서 복사해 붙여넣기</button><button class="btn sm" data-act="qcUpPick">${ic('up')}견적서 엑셀 파일 올리기</button><input id="qcUpFile" type="file" accept=".xlsx,.xlsm" hidden><span>예전에 만든 견적서도 과목 · 개강일 · 요일을 읽어 학생으로 바꿔요</span></div>`; }
 
 /* 견적 한 줄 → 시간표의 반: 골라 둔 반(cid) → 같은 개강일 + 이름 비슷한 반 → 이름만 맞는 다가오는 반 */
 function qcCourse(r){ const C=D().courses||{};
@@ -8350,7 +8352,28 @@ async function qcUpload(file){
     modalEl._qc={got,save};
   }catch(e){ console.warn(e); toast('파일을 읽지 못했어요','엑셀(.xlsx)이 맞는지, 엑셀에서 열려 있지는 않은지 확인해 주세요.','alarm-t'); } }
 
+/* 엑셀에서 복사(Ctrl+C)한 견적서를 붙여넣기(Ctrl+V) — 파일로 저장하지 않아도 돼요 */
+const qcCol=i=>{ let s=''; i++; while(i>0){ s=String.fromCharCode(65+(i-1)%26)+s; i=Math.floor((i-1)/26); } return s; };
+const qcCell=v=>{ const t=String(v??'').replace(/ /g,' ').trim(); if(/^-?[\d,]+(\.\d+)?$/.test(t)&&/\d/.test(t)){ const n=+t.replace(/,/g,''); if(!isNaN(n)&&!(n>20000&&n<80000&&!t.includes(','))) return n; } return t; };   // "1,200,000" → 숫자 (날짜 숫자로 착각할 만한 값은 글자 그대로)
+function qcGrid(html,text){ const M={}; const put=(r,c,v)=>{ const x=qcCell(v); if(x==='') return; (M[r+1]=M[r+1]||{})[qcCol(c)]=x; };
+  if(html&&/<table/i.test(html)){ const doc=new DOMParser().parseFromString(html,'text/html'); const tb=doc.querySelector('table'); const used={};
+    [...tb.rows].forEach((tr,r)=>{ let c=0; [...tr.cells].forEach(td=>{ while(used[r+','+c]) c++; const cs=+td.getAttribute('colspan')||1, rs=+td.getAttribute('rowspan')||1;
+      put(r,c,td.innerText!==undefined&&td.innerText!==''?td.innerText:td.textContent); for(let i=0;i<rs;i++) for(let j=0;j<cs;j++) used[(r+i)+','+(c+j)]=1; c+=cs; }); });
+  } else String(text||'').replace(/\r/g,'').split('\n').forEach((line,r)=>line.split('\t').forEach((v,c)=>put(r,c,v)));
+  return M; }
+function qcPasteOpen(){
+  openModal(`${mHead('엑셀 견적서 붙여넣기')}<div class="body"><p style="margin:0 0 10px;font-size:13.5px;line-height:1.7;color:var(--muted)">엑셀에서 견적서를 <b style="color:var(--fg)">성함부터 과목 표 끝까지</b> 드래그해서 <b style="color:var(--fg)">Ctrl+C</b> 한 뒤, 아래 칸을 누르고 <b style="color:var(--fg)">Ctrl+V</b> 하세요. 과목 · 구분 · 개강일 · 종강일 · 수강료 제목줄이 같이 들어 있어야 해요.</p>
+    <textarea class="in" id="qcPasteTa" rows="6" placeholder="여기를 누르고 Ctrl+V" style="width:100%;resize:vertical"></textarea><div id="qcPasteInfo" style="margin-top:8px;font-size:13px;color:var(--muted)"></div></div>
+    <footer><button class="btn ghost" data-act="close">취소</button></footer>`,'');
+  const ta=$('#qcPasteTa'); setTimeout(()=>ta.focus(),50);
+  ta.addEventListener('paste',e=>{ const cd=e.clipboardData; if(!cd) return; e.preventDefault(); const info=mbParse(qcGrid(cd.getData('text/html'),cd.getData('text/plain')),'붙여넣기');
+    const say=m=>{ $('#qcPasteInfo').innerHTML=m; };
+    if(!info){ say('<b style="color:var(--warn,#e0a23a)">제목줄을 못 찾았어요.</b> 과목 · 구분 · 개강일 · 종강일 · 수강료가 적힌 줄까지 포함해서 다시 복사해 주세요.'); return; }
+    if(info.empty){ say('<b style="color:var(--warn,#e0a23a)">과목이 한 줄도 없어요.</b> 제목줄 아래 과목 줄까지 드래그해서 복사해 주세요.'); return; }
+    const q=mbToQuote(info).q; q.id=uid('q'); store.put('quotes',{id:q.id,q:clone(q),at:Date.now(),file:'붙여넣기'}); closeModal(); S.qtTab='saved'; render(); qcRegister(q.id); }); }
+
 Object.assign(WACT,{
+  qcPaste:()=>qcPasteOpen(),
   qcReg:el=>qcRegister(el.dataset.id),
   qcCod:el=>qcCodToggle(el.dataset.id),
   qcUpPick:()=>{ const i=$('#qcUpFile'); i&&i.click(); },
@@ -9918,6 +9941,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261112-0949';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261112-1142';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>

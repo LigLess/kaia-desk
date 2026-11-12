@@ -3385,7 +3385,9 @@ function mbMatch(n,type){
 }
 function mbDate(v,ref){ /* "11월18일(월수금월수)" · 엑셀 날짜 숫자 → yyyy-mm-dd, 요일 */
   if(typeof v==='number'&&v>20000) return {d:serialToYmd(v),pat:''};
-  const s=String(v||''); const m=s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/); const pat=[...(s.match(/\(([^)]*)\)/)||['',''])[1]].filter(ch=>'월화수목금토일'.includes(ch)).join('');
+  const s=String(v||''); const pat=[...(s.match(/\(([^)]*)\)/)||['',''])[1]].filter(ch=>'월화수목금토일'.includes(ch)).join('');
+  const full=s.match(/(20\d{2})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})/); if(full) return {d:ymd(new Date(+full[1],+full[2]-1,+full[3])),pat};   // 2026-11-18 · 2026.11.18 · 2026년 11월 18일
+  const m=s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/)||s.match(/(?:^|[^\d])(\d{1,2})\s*[/.]\s*(\d{1,2})(?!\d)/);   // 11월18일 · 11/18 · 11.18
   if(!m) return {d:'',pat}; const r=parseYmd(ref||todayStr()); const best=[r.getFullYear()-1,r.getFullYear(),r.getFullYear()+1].map(y=>new Date(y,+m[1]-1,+m[2])).sort((a,b)=>Math.abs(a-r)-Math.abs(b-r))[0];
   return {d:ymd(best),pat};
 }
