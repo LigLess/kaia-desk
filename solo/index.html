@@ -3749,7 +3749,7 @@ function vSettings(){
     <div class="full"><button class="btn sm ghost" data-act="tplReset">기본 문구로 되돌리기</button></div></div></section>
   ${syncSection()}${teamSettings()}${inboxSettings()}
   <section class="pane"><h2>데이터</h2><p style="margin:0 0 14px;color:var(--muted);font-size:13px">과정 ${list('courses').length}개 · 학생 ${list('students').length}명 · 할 일 ${list('tasks').length}건${S.demo?' (예시)':''}</p>
-    <div class="btns"><button class="btn" data-act="backup">${ic('dl')}백업 파일 받기</button><button class="btn" data-act="exportStu">${ic('dl')}학생만 내보내기 (다른 프로그램용)</button><label class="btn" for="restoreFile">${ic('up')}백업에서 복원</label><label class="btn" for="stuJson">${ic('users')}이전 프로그램 학생 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><input id="restoreFile" type="file" accept=".json" hidden>
+    <div class="btns"><button class="btn" data-act="backup">${ic('dl')}백업 파일 받기</button><button class="btn" data-act="exportStu">${ic('dl')}학생만 내보내기 (다른 프로그램용)</button><button class="btn" data-act="ixOpen">${ic('copy')}인트라넷 모양으로 복사</button><label class="btn" for="restoreFile">${ic('up')}백업에서 복원</label><label class="btn" for="stuJson">${ic('users')}이전 프로그램 학생 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><input id="restoreFile" type="file" accept=".json" hidden>
     ${S.demo?'':`<button class="btn danger" data-act="wipe">${ic('trash')}모두 지우기</button>`}</div></section>
   </div>`;
 }
@@ -8407,6 +8407,45 @@ Object.assign(WACT,{
   qcUpGo:el=>{ const m=modalEl&&modalEl._qc; if(!m) return; const g=m.got[+el.dataset.i]; closeModal(); const id=m.save(g); S.qtTab='saved'; render(); qcRegister(id); },
 });
 document.addEventListener('change',e=>{ const el=e.target; if(el.id==='qcUpFile'&&el.files&&el.files[0]){ const f=el.files[0]; el.value=''; qcUpload(f); } });
+/* ===== 학생을 "인트라넷 목록 표" 모양으로 복사 =====
+   다른 프로그램의 "인트라넷 복사 → 학생 등록" 붙여넣기에 그대로 넣을 수 있게, 등록된 학생을 표로 복사해요.
+   - 한 줄 = 학생 한 명의 수업 하나 (수업이 3개면 3줄, 이름 · 연락처는 줄마다 같이 적어요)
+   - 표(HTML)와 탭으로 나눈 글자를 둘 다 클립보드에 넣어요. 받는 쪽이 어느 걸 읽어도 되게.
+   - "수강생명" · "수강정보" 글자는 일부러 쓰지 않아요(그 글자가 있으면 학생 한 명의 상세 화면으로 읽혀요) */
+const IX_HEAD=['이름','연락처','상태','과목','반구분','요일','개강일','종강일','강의시간','강의실','국비지원','메모'];
+let IX={st:{'수강중':1,'등록대기':1},n:0};
+function ixRows(){
+  const C=D().courses||{}; const L=list('students').filter(s=>IX.st[s.status||'상담중']).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko'));
+  const pick=IX.n>0?L.slice(0,IX.n):L; const rows=[];
+  pick.forEach(s=>{ const base=[s.name||'',s.phone||'',s.status||''];
+    const cs=(s.courses||[]).map(id=>C[id]).filter(Boolean).sort((a,b)=>String(a.start).localeCompare(String(b.start)));
+    const tail=[s.funding||'',String(s.goal||'').replace(/\s+/g,' ').slice(0,60)];
+    if(!cs.length){ rows.push([...base,'','','','','','','',...tail]); return; }
+    cs.forEach(c=>{ const dd=(c.days&&c.days.length?c.days:defaultDays(c)); const wk=dd.every(d=>d===0||d===6);
+      rows.push([...base,typeof subjectOf==='function'?subjectOf(c):c.name,wk?'주말':'평일',[...dd].sort((x,y)=>((x+6)%7)-((y+6)%7)).map(d=>DOW[d]).join(''),c.start||'',courseEnd(c)||c.end||'',String(c.time||'').replace(/\s*[–\-∼]\s*/g,'~'),c.room||'',...tail]); }); });
+  return {rows,count:pick.length,total:L.length}; }
+async function ixCopy(){ const {rows,count}=ixRows(); if(!rows.length){ toast('복사할 학생이 없어요','위에서 상태를 골라 주세요.'); return; }
+  const cell=v=>String(v).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const html=`<table><thead><tr>${IX_HEAD.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(v=>`<td>${cell(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const text=[IX_HEAD,...rows].map(r=>r.map(v=>String(v).replace(/[\t\n]/g,' ')).join('\t')).join('\n');
+  let ok=false;
+  try{ if(navigator.clipboard&&window.ClipboardItem){ await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([text],{type:'text/plain'})})]); ok=true; } }catch(e){}
+  if(!ok){ try{ const d=document.createElement('div'); d.contentEditable='true'; d.style.cssText='position:fixed;left:-9999px;top:0'; d.innerHTML=html; document.body.appendChild(d); const r=document.createRange(); r.selectNodeContents(d); const s=getSelection(); s.removeAllRanges(); s.addRange(r); ok=document.execCommand('copy'); s.removeAllRanges(); d.remove(); }catch(e){} }
+  if(ok){ closeModal(); toast(`학생 ${count}명 · ${rows.length}줄을 복사했어요`,'새 프로그램의 인트라넷 붙여넣기 칸에 Ctrl+V 하세요.'); } else toast('복사하지 못했어요','브라우저가 클립보드를 막았어요. 다시 한 번 눌러 주세요.'); }
+function ixOpen(){
+  const draw=()=>{ const {rows,count,total}=ixRows(); const b=$('#ixBody'); if(!b) return;
+    b.innerHTML=`<div class="lab" style="margin:0 0 6px">어떤 학생을 옮길까요</div><div class="chips" style="display:flex;flex-wrap:wrap;gap:6px">${STATUSES.map(st=>`<button class="chip ${IX.st[st]?'on':''}" data-act="ixSt" data-v="${st}">${st} ${list('students').filter(s=>(s.status||'상담중')===st).length}</button>`).join('')}</div>
+      <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap"><button class="btn sm ${IX.n===3?'pri':''}" data-act="ixN" data-v="3">시험용 3명만</button><button class="btn sm ${!IX.n?'pri':''}" data-act="ixN" data-v="0">전체 ${total}명</button></div>
+      <p style="margin:12px 0 6px;font-size:13px;color:var(--muted)">학생 <b style="color:var(--fg)">${count}명</b> · 표 <b style="color:var(--fg)">${rows.length}줄</b> (수업 하나에 한 줄) · 상담 기록과 메모는 들어가지 않아요</p>
+      <div style="max-height:38vh;overflow:auto;border:1px solid var(--line);border-radius:10px"><table class="tbl" style="font-size:12px;width:100%"><tr>${IX_HEAD.slice(0,10).map(h=>`<th style="text-align:left;padding:6px 8px;white-space:nowrap">${h}</th>`).join('')}</tr>${rows.slice(0,40).map(r=>`<tr>${r.slice(0,10).map(v=>`<td style="padding:5px 8px;white-space:nowrap;border-top:1px solid var(--line)">${esc(v)}</td>`).join('')}</tr>`).join('')}</table></div>${rows.length>40?`<p style="margin:6px 0 0;font-size:12px;color:var(--faint)">미리보기는 40줄까지만 보여요. 복사는 전부 돼요.</p>`:''}`; };
+  openModal(`${mHead('인트라넷 모양으로 학생 복사')}<div class="body" id="ixBody"></div><footer><button class="btn ghost" data-act="close">닫기</button><button class="btn pri" data-act="ixCopy">${ic('copy')}표로 복사</button></footer>`,'wide');
+  modalEl._ix=draw; draw(); }
+Object.assign(WACT,{
+  ixOpen:()=>ixOpen(),
+  ixSt:el=>{ const v=el.dataset.v; IX.st[v]=!IX.st[v]; modalEl&&modalEl._ix&&modalEl._ix(); },
+  ixN:el=>{ IX.n=+el.dataset.v; modalEl&&modalEl._ix&&modalEl._ix(); },
+  ixCopy:()=>ixCopy(),
+});
 /* ===== 견적서 공유 (팀 서버 v9) =====
    - 팀원끼리: 견적서를 골라 "보내기" → 받은 사람 화면에 알림 + 견적서 → 받은 견적에 쌓여요 (열기 · 내 견적으로 저장 · 요청메모)
    - 팀장: 팀원이 저장한 견적서 전부 보기(팀원 견적) + 팀 안에서 오간 견적 공유 내역 전부 보기 */
@@ -9977,6 +10016,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-solo-261113-1943';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-solo-261113-2003';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
