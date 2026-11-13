@@ -3722,7 +3722,7 @@ function vSettings(){
     <div class="full"><button class="btn sm ghost" data-act="tplReset">기본 문구로 되돌리기</button></div></div></section>
   ${syncSection()}${teamSettings()}${inboxSettings()}
   <section class="pane"><h2>데이터</h2><p style="margin:0 0 14px;color:var(--muted);font-size:13px">과정 ${list('courses').length}개 · 학생 ${list('students').length}명 · 할 일 ${list('tasks').length}건${S.demo?' (예시)':''}</p>
-    <div class="btns"><button class="btn" data-act="backup">${ic('dl')}백업 파일 받기</button><label class="btn" for="restoreFile">${ic('up')}백업에서 복원</label><label class="btn" for="stuJson">${ic('users')}이전 프로그램 학생 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><input id="restoreFile" type="file" accept=".json" hidden>
+    <div class="btns"><button class="btn" data-act="backup">${ic('dl')}백업 파일 받기</button><button class="btn" data-act="exportStu">${ic('dl')}학생만 내보내기 (다른 프로그램용)</button><label class="btn" for="restoreFile">${ic('up')}백업에서 복원</label><label class="btn" for="stuJson">${ic('users')}이전 프로그램 학생 가져오기</label><input id="stuJson" type="file" accept=".json,application/json" hidden><input id="restoreFile" type="file" accept=".json" hidden>
     ${S.demo?'':`<button class="btn danger" data-act="wipe">${ic('trash')}모두 지우기</button>`}</div></section>
   </div>`;
 }
@@ -9772,6 +9772,10 @@ const ACT={
   saveSnip:()=>{ const title=$('#nfTitle').value.trim(), text=$('#nfText').value; if(!title&&!text.trim()){ toast('내용을 적어 주세요',''); return; } store.put('snippets',{...NM,id:NM.id||uid('n'),title:title||'제목 없음',text,at:NM.at||Date.now()}); closeModal(); render(); },
   delSnip:async()=>{ if(await confirmBox('이 문구를 지울까요?',NM.title,'지우기',true)){ store.del('snippets',NM.id); closeModal(); render(); } },
   tplReset:async()=>{ if(await confirmBox('기본 문구로 되돌릴까요?','지금 고친 안내 문구 4개가 기본값으로 바뀌어요.','되돌리기')){ S.settings.tpl=clone(TPL_DEFAULT); store.saveSettings(); render(); } },
+  /* 다른 프로그램으로 옮길 때: 학생을 배열로, 수업은 아이디 대신 이름 · 날짜 · 요일 · 시간으로 풀어서 */
+  exportStu:()=>{ const C=D().courses||{}; const fmt=c=>c?{name:c.name||'',subject:typeof subjectOf==='function'?subjectOf(c):'',start:c.start||'',end:(typeof courseEnd==='function'?courseEnd(c):c.end)||'',days:(c.days&&c.days.length?c.days:defaultDays(c)).map(d=>DOW[d]).join(''),time:c.time||'',room:c.room||''}:null;
+    const students=list('students').map(s=>({...clone(s),courseList:(s.courses||[]).map(id=>fmt(C[id])).filter(Boolean),logList:(s.logs||[]).map(l=>({date:l.d||'',text:l.t||''}))}));
+    saveFile(`KAIA_학생_${todayStr()}.json`,JSON.stringify({app:'kaia-desk-students',v:1,savedAt:new Date().toLocaleString('ko-KR'),count:students.length,students},null,1)); toast(`학생 ${students.length}명을 내보냈어요`,'다른 프로그램의 가져오기에서 이 파일을 고르세요.'); },
   backup:()=>{ const o={app:'kaia-desk',v:1,savedAt:new Date().toLocaleString('ko-KR'),...clone(D()),settings:clone(S.settings)}; saveFile(`KAIA_백업_${todayStr()}.json`,JSON.stringify(o,null,1)); },
   wipe:async()=>{ if(!await confirmBox('모든 데이터를 지울까요?','과정 · 학생 · 할 일 · 문구가 모두 지워져요. 먼저 백업 파일을 받아 두는 걸 권해요.','모두 지우기',true)) return;
     COLS.forEach(c=>Object.keys(S.real[c]).forEach(id=>store.del(c,id))); S.settings={...clone(DEFAULT_SETTINGS),started:true}; store.saveSettings(); toast('모두 지웠어요',''); render(); },
@@ -9946,6 +9950,6 @@ document.addEventListener('focusout',e=>{ const el=e.target; if(isPhoneIn(el)){ 
 document.addEventListener('paste',e=>{ const el=e.target; if(!isPhoneIn(el)) return; setTimeout(()=>{ const f=fmtPhone(el.value); if(f!==el.value) el.value=f; },0); },true);
 
 </script>
-<script>window.APP_VER='kaia-desk-261112-1450';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
+<script>window.APP_VER='kaia-desk-261113-1943';if('serviceWorker' in navigator){addEventListener('load',()=>{const had=!!navigator.serviceWorker.controller;navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{const chk=()=>{try{r&&r.update().catch(()=>{})}catch(e){}};document.addEventListener('visibilitychange',()=>{if(!document.hidden)chk()});addEventListener('focus',chk);setInterval(chk,15*60*1000)}).catch(()=>{});let done=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(done||!had)return;done=true;const busy=document.querySelector('.sheet')||/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||'');if(busy){try{toast('새 버전이 준비됐어요','지금 작업을 마치고 앱을 다시 열면 적용돼요.')}catch(e){}}else location.reload()})})}</script>
 </body>
 </html>
