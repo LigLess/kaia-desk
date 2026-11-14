@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;height:100%;background:transparent;overflow:hidden}
+#r{position:absolute;background:#0b0b0d;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.35);will-change:left,top,width,height,border-radius,opacity}
+</style></head><body><div id="r"></div><script>
+const { ipcRenderer } = require('electron'); const r=document.getElementById('r');
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+ipcRenderer.on('morph',(_e,{from,to,ms})=>{ const t0=performance.now(); r.style.opacity=1;
+  const f=n=>{ const k=Math.min(1,(n-t0)/ms), e=ease(k); const L=v=>from[v]+(to[v]-from[v])*e;
+    r.style.left=L('x')+'px'; r.style.top=L('y')+'px'; r.style.width=L('w')+'px'; r.style.height=L('h')+'px'; r.style.borderRadius=(from.rad+(to.rad-from.rad)*e)+'px';
+    k<1?requestAnimationFrame(f):ipcRenderer.send('morph-done'); }; requestAnimationFrame(f); });
+ipcRenderer.on('fade',()=>{ r.style.transition='opacity .18s'; r.style.opacity=0; setTimeout(()=>{ r.style.transition=''; },200); });
+</script></body></html>

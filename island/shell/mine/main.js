@@ -1,0 +1,353 @@
+/* Island — 화면 맨 위 가운데 알약 (일상용)
+   마우스를 올리면: 시계 · 음악 조작 · 바로가기(프로그램 · 게임 · 웹사이트) · 메모
+   바로가기와 메모는 이 컴퓨터에만 저장돼요 (설정 파일: 사용자 폴더의 island.json).
+   같은 폴더에 desk.json 이 있으면 그 안의 웹앱을 펼쳐 보는 버튼이 하나 더 생겨요. */
+const { app, BrowserWindow, screen, ipcMain, Tray, Menu, nativeImage, shell, dialog, net } = require('electron');
+const path = require('path'), fs = require('fs'), { spawn } = require('child_process');
+let DESK = null; try { DESK = JSON.parse(fs.readFileSync(path.join(global.ISL.boot, 'desk.json'), 'utf8')); } catch (e) {}
+const SH = require('./shell'), ISL = global.ISL;
+let fsOn = false, userHide = false, upd = null;
+
+const W = 680, H = 640, PILL = { w: 136, h: 36 };   /* 나만 쓰는 버전: 펼친 판이 넓어요(640) */
+let isl, desk, morph, tray, busy = false, dlg = false;
+/* ---------- 지금 재생 중인 곡 (윈도우) ----------
+   유튜브 · 유튜브 뮤직 · 스포티파이 · 멜론 등 무엇으로 틀든, 윈도우가 볼륨 팝업에 보여 주는 곡 정보(제목 · 가수 · 썸네일)를 읽어
+   알약의 재생 버튼 옆에 보여 줘요. */
+let NP = null;
+/* 문제 확인용 기록: 사용자 폴더의 island-log.txt (최근 것만 남겨요) */
+function dlog(...a) { try { const f = path.join(app.getPath('userData'), 'island-log.txt'); let t = ''; try { t = fs.readFileSync(f, 'utf8'); } catch (e) {}
+  t = (t + new Date().toISOString() + ' ' + a.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join(' ') + '\n').slice(-20000); fs.writeFileSync(f, t); } catch (e) {} }
+/* ---------- 알약 안에서 음악 찾아 틀기 (집용 · desk.json 이 있을 때만) ----------
+   알약에서 검색하면 유튜브 검색 결과를 보여 주고, 고르면 화면에 안 보이는 창에서 소리만 틀어요.
+   목록 순서대로 다음 곡으로 넘어가고, 광고가 나오면 건너뛰기 버튼이 생기는 대로 눌러요. */
+/* 음악 검색 켜기/끄기: 트레이 메뉴에서 정해요. 정한 적 없으면 집용(desk.json 있음)만 켜져 있어요 */
+const musOn = () => DB.mus !== false;
+/* 유튜브 로그인: 음악 플레이어와 같은 저장 공간(persist:yt)에 로그인해 두면, 프리미엄 계정은 광고 없이 나와요.
+   로그인은 사용자가 직접 창에서 해요(비밀번호는 이 프로그램이 보지도 저장하지도 않아요 — 구글 로그인 화면이 처리). */
+let YLOG = false, ylogWin = null;
+async function ytLoggedIn() { try { const { session } = require('electron'); const c = await session.fromPartition('persist:yt').cookies.get({ domain: '.youtube.com', name: 'LOGIN_INFO' }); YLOG = c.length > 0; } catch (e) {} return YLOG; }
+function ytLogin() {
+  if (ylogWin && !ylogWin.isDestroyed()) { ylogWin.show(); ylogWin.focus(); return; }
+  ylogWin = new BrowserWindow({ width: 480, height: 720, title: '유튜브 로그인', autoHideMenuBar: true, webPreferences: { partition: 'persist:yt' } });
+  ylogWin.webContents.setUserAgent(YUA);
+  ylogWin.loadURL('https://accounts.google.com/ServiceLogin?service=youtube&hl=ko&continue=' + encodeURIComponent('https://www.youtube.com/signin?action_handle_signin=true&next=%2F'));
+  ylogWin.webContents.on('did-navigate', async (_e, url) => { if (/^https:\/\/(www|m)\.youtube\.com\//.test(url) && await ytLoggedIn()) {
+      setTimeout(() => { try { ylogWin.close(); } catch (e) {} }, 800);
+      try { ySrch && !ySrch.isDestroyed() && ySrch.destroy(); } catch (e) {} ySrch = null; yReady = null;
+      if (PL.cur && PL.win && !PL.win.isDestroyed()) PL.win.reload(); push(); } });
+  ylogWin.on('closed', () => { ylogWin = null; ytLoggedIn().then(push); });
+}
+async function ytLogout() { try { const { session } = require('electron'); const ss = session.fromPartition('persist:yt'); await ss.clearStorageData(); } catch (e) {} YLOG = false; ySrch = null; yReady = null; push(); }
+const PL = { win: null, list: [], i: -1, cur: null, on: false, ad: false, t: 0, d: 0, poll: 0 };
+const YUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';  /* 오래된 크롬으로 보이면 유튜브가 결과를 덜 줘요 */
+/* 검색 결과에서 동영상만 뽑기. 유튜브는 화면 구조를 자주 바꿔서 두 가지 모양(videoRenderer · lockupViewModel)을 다 봐요 */
+function ytPick(data) {
+  const out = [], seen = new Set(); const txt = (o) => !o ? '' : o.simpleText || (o.runs || []).map(r => r.text).join('') || o.content || '';
+  const walk = (o) => { if (!o || typeof o !== 'object' || out.length >= 20) return;
+    const v = o.videoRenderer;
+    if (v && v.videoId && !seen.has(v.videoId)) { seen.add(v.videoId);
+      const th = (v.thumbnail && v.thumbnail.thumbnails || []).slice(-1)[0];
+      let len = txt(v.lengthText); if (!len) for (const ov of v.thumbnailOverlays || []) { const t = ov.thumbnailOverlayTimeStatusRenderer; if (t) len = txt(t.text); }
+      const live = /LIVE|실시간/.test(len) || (v.badges || []).some(b => /LIVE/.test(JSON.stringify(b)));
+      if (!live) out.push({ id: v.videoId, t: txt(v.title), a: txt(v.ownerText) || txt(v.longBylineText), len, th: th ? th.url : 'https://i.ytimg.com/vi/' + v.videoId + '/mqdefault.jpg' });
+      return; }
+    const lv = o.lockupViewModel;
+    if (lv && lv.contentId && /VIDEO/.test(lv.contentType || '') && !seen.has(lv.contentId)) { seen.add(lv.contentId);
+      const md = (lv.metadata && lv.metadata.lockupMetadataViewModel) || {}; const s = JSON.stringify(lv); const len = (s.match(/"text":"(\d{1,2}:\d{2}(?::\d{2})?)"/) || [])[1] || '';
+      const rows = JSON.stringify(md.metadata || {}).match(/"content":"([^"]+)"/);
+      out.push({ id: lv.contentId, t: txt(md.title), a: rows ? rows[1] : '', len, th: 'https://i.ytimg.com/vi/' + lv.contentId + '/mqdefault.jpg' }); return; }
+    for (const k in o) walk(o[k]); };
+  walk(data); return out;
+}
+/* 유튜브 검색: 유튜브 앱이 쓰는 검색 주소(youtubei/v1/search)에 바로 물어봐요.
+   로그인 안 한 상태에선 어떤 검색어(예: "아야츠노 유니 삐질게")가 결과 0개로 오는 일이 있어서,
+   0개면 단어를 하나씩 빼 본 검색어로 다시 찾아 합쳐요. */
+let YCV = '2.20261112.10.00';
+async function ytApi(q) {
+  const call = () => net.fetch('https://www.youtube.com/youtubei/v1/search?prettyPrint=false', { method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': YUA, 'Accept-Language': 'ko-KR,ko;q=0.9' },
+    body: JSON.stringify({ context: { client: { clientName: 'WEB', clientVersion: YCV, hl: 'ko', gl: 'KR' } }, query: q, params: 'EgIQAQ%3D%3D' }) });
+  let r = await call();
+  if (!r.ok) { try { const h = await (await net.fetch('https://www.youtube.com/', { headers: { 'User-Agent': YUA } })).text(); const m = h.match(/"INNERTUBE_CLIENT_VERSION":"([\d.]+)"/); if (m) { YCV = m[1]; r = await call(); } } catch (e) {} }
+  if (!r.ok) return [];
+  return ytPick(await r.json());
+}
+/* 검색은 보이지 않는 유튜브 창 안에서 해요(유튜브 사이트가 직접 부르는 것과 똑같이). 실제 집 컴퓨터 브라우저에서 이 방식으로 결과가 나오는 걸 확인했어요 */
+let ySrch = null, yReady = null, YERR = '';
+function ytWin() { if (ySrch && !ySrch.isDestroyed() && yReady) return yReady;
+  ySrch = new BrowserWindow({ show: false, width: 1000, height: 800, webPreferences: { partition: 'persist:yt', backgroundThrottling: false } });
+  ySrch.webContents.setUserAgent(YUA); ySrch.webContents.setAudioMuted(true);
+  yReady = ySrch.loadURL('https://www.youtube.com/').then(() => true).catch(e => { YERR = '유튜브에 연결하지 못했어요 (' + (e.code || e.message || '') + ')'; yReady = null; return false; });
+  return yReady; }
+async function ytApiWin(q) { const ok = await ytWin(); dlog('ytWin', ok, YERR, ySrch && !ySrch.isDestroyed() && ySrch.webContents.getURL()); if (!ok) return null;
+  const code = `(async()=>{ try{ const cv=(window.ytcfg&&ytcfg.get('INNERTUBE_CLIENT_VERSION'))||${JSON.stringify(YCV)};
+    const r=await fetch('/youtubei/v1/search?prettyPrint=false',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:{client:{clientName:'WEB',clientVersion:cv,hl:'ko',gl:'KR'}},query:${JSON.stringify(q)},params:'EgIQAQ%3D%3D'})});
+    return r.ok? await r.text() : 'ERR'+r.status; }catch(e){ return 'ERR'+e; } })()`;
+  const t = await ySrch.webContents.executeJavaScript(code, true);
+  dlog('api', q, typeof t, typeof t === 'string' ? t.slice(0, 120) : t);
+  if (typeof t !== 'string' || t.startsWith('ERR')) { YERR = '유튜브 검색이 막혔어요 (' + String(t).slice(3, 40) + ')'; return null; }
+  const L = ytPick(JSON.parse(t)); if (!L.length) YDBG = `응답 ${t.length}자 · 영상 ${(t.match(/"videoRenderer"/g) || []).length} · 묶음 ${(t.match(/"lockupViewModel"/g) || []).length}`; return L; }
+let YDBG = '';
+async function ytOne(q) { let L = null; try { L = await ytApiWin(q); } catch (e) { YERR = String(e.message || e).slice(0, 60); }
+  if (L === null) { try { L = await ytApi(q); } catch (e) { L = []; } } return L || []; }
+async function ytSearch(q) {
+  q = q.trim(); YERR = ''; YDBG = ''; let L = await ytOne(q);
+  if (L.length) return L;
+  const w = q.split(/\s+/).filter(Boolean); const seen = new Set(); const out = [];
+  if (w.length > 1) for (let k = 0; k < w.length && out.length < 15; k++) { for (const x of await ytOne(w.filter((_, i) => i !== k).join(' '))) if (!seen.has(x.id)) { seen.add(x.id); out.push(x); } }
+  return out.slice(0, 20);
+}
+function plWin() { if (PL.win && !PL.win.isDestroyed()) return PL.win;
+  PL.win = new BrowserWindow({ show: false, width: 640, height: 400, webPreferences: { partition: 'persist:yt', backgroundThrottling: false, autoplayPolicy: 'no-user-gesture-required' } });
+  PL.win.webContents.setUserAgent(YUA); PL.win.webContents.setAudioMuted(false);
+  PL.win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  clearInterval(PL.poll); PL.poll = setInterval(plTick, 1000); return PL.win; }
+const ART = {};
+async function artData(url) { if (!url) return ''; if (ART[url]) return ART[url];
+  try { const r = await net.fetch(url, { headers: { 'User-Agent': YUA } }); if (!r.ok) return ''; const b = Buffer.from(await r.arrayBuffer()); if (b.length > 900000) return '';
+    ART[url] = 'data:' + (r.headers.get('content-type') || 'image/jpeg') + ';base64,' + b.toString('base64'); return ART[url]; } catch (e) { return ''; } }
+function plPlay(i) { const it = PL.list[i]; if (!it) return; PL.i = i; PL.cur = it; PL.art = ''; artData(it.th).then(d => { if (PL.cur === it) { PL.art = d; push(); } }); PL.on = true; PL.ad = false; PL.t = 0; PL.d = 0; PL.ended = false;
+  plWin().loadURL('https://www.youtube.com/watch?v=' + it.id); push(); }
+async function plTick() { if (!PL.win || PL.win.isDestroyed() || !PL.cur) return;
+  try { const r = await PL.win.webContents.executeJavaScript(`(()=>{ const v=document.querySelector('video'); const ad=!!document.querySelector('.ad-showing');
+      const sk=document.querySelector('.ytp-skip-ad-button,.ytp-ad-skip-button,.ytp-ad-skip-button-modern'); if(sk) sk.click();
+      try{ const p=document.getElementById('movie_player'); if(p&&p.setAutonav) p.setAutonav(false); }catch(e){}
+      if(!v) return null; if(window.__islWant===undefined) window.__islWant=true; if(window.__islWant&&v.paused&&!v.ended) v.play().catch(()=>{});
+      return {t:v.currentTime||0,d:v.duration||0,p:v.paused,e:v.ended,ad}; })()`, true);
+    if (!r) return; const was = JSON.stringify([PL.on, PL.ad, Math.floor(PL.t / 5)]);
+    PL.ad = r.ad; PL.t = r.t; PL.d = r.d; PL.on = !r.p;
+    if (!r.ad && (r.e || (r.d > 0 && r.t >= r.d - 0.4))) { if (!PL.ended) { PL.ended = true; if (PL.i + 1 < PL.list.length) plPlay(PL.i + 1); else { PL.on = false; push(); } } return; }
+    if (JSON.stringify([PL.on, PL.ad, Math.floor(PL.t / 5)]) !== was) push(); } catch (e) {} }
+async function plCtl(b) { if (!PL.cur || !PL.win || PL.win.isDestroyed()) return false;
+  if (b === 'next') { if (PL.i + 1 < PL.list.length) plPlay(PL.i + 1); return true; }
+  if (b === 'prev') { if (PL.t > 5 || PL.i <= 0) await PL.win.webContents.executeJavaScript(`(()=>{const v=document.querySelector('video'); if(v) v.currentTime=0;})()`); else plPlay(PL.i - 1); return true; }
+  if (b === 'play') { const on = await PL.win.webContents.executeJavaScript(`(()=>{ const v=document.querySelector('video'); if(!v) return false; window.__islWant=v.paused; if(v.paused) v.play(); else v.pause(); return !v.paused; })()`); PL.on = on; push(); return true; }
+  if (b === 'skip') { await PL.win.webContents.executeJavaScript(`(()=>{ const sk=document.querySelector('.ytp-skip-ad-button,.ytp-ad-skip-button,.ytp-ad-skip-button-modern'); if(sk) sk.click(); })()`); return true; }
+  return false; }
+function plStop() { clearInterval(PL.poll); if (PL.win && !PL.win.isDestroyed()) PL.win.destroy(); PL.win = null; PL.cur = null; PL.on = false; PL.list = []; PL.i = -1; push(); }
+function watchNowPlaying() {
+  if (process.platform !== 'win32') return;
+  const { spawn } = require('child_process'); let ps = null, stop = false;
+  const start = () => { if (stop) return;
+    try { ps = spawn('powershell.exe', ['-NoProfile', '-NoLogo', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', path.join(__dirname, 'np.ps1')], { windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }); } catch (e) { return; }
+    let buf = '';
+    ps.stdout.setEncoding('utf8');
+    ps.stdout.on('data', (d) => { buf += d; const L = buf.split(/\r?\n/); buf = L.pop(); const line = L.filter(x => x.trim()).pop(); if (!line) return;
+      let v = null; try { v = JSON.parse(line); } catch (e) { return; }
+      const k = JSON.stringify(v); if (k !== JSON.stringify(NP)) { NP = v; push(); } });
+    ps.on('error', () => {}); ps.on('exit', () => { ps = null; if (!stop) setTimeout(start, 10000); });
+  };
+  start(); app.on('before-quit', () => { stop = true; try { ps && ps.kill(); } catch (e) {} });
+}
+
+if (!app.requestSingleInstanceLock()) { app.quit(); }
+
+/* ---------- 저장 ---------- */
+const FILE = () => path.join(app.getPath('userData'), 'island.json');
+let DB = { apps: [], todos: [], tuck: true };
+function load() {
+  /* 처음 켤 때: 원래 쓰던 Island 의 바로가기 · 메모 · 위치를 가져와요 */
+  try { if (!fs.existsSync(FILE())) { const old = path.join(app.getPath('appData'), 'Island', 'island.json'); if (fs.existsSync(old)) { fs.mkdirSync(path.dirname(FILE()), { recursive: true }); fs.copyFileSync(old, FILE()); } } } catch (e) {}
+ try { const d = JSON.parse(fs.readFileSync(FILE(), 'utf8')); DB = { apps: Array.isArray(d.apps) ? d.apps : [], todos: Array.isArray(d.todos) ? d.todos : [], tuck: d.tuck !== false, mus: d.mus, edge: d.edge, pos: d.pos, did: d.did }; } catch (e) {} }
+function save() { try { fs.mkdirSync(path.dirname(FILE()), { recursive: true }); fs.writeFileSync(FILE(), JSON.stringify(DB)); } catch (e) {} }
+const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const state = () => ({ ylog: YLOG, mus: musOn(), pl: PL.cur ? { ...PL.cur, on: PL.on, ad: PL.ad, t0: PL.t, d: PL.d } : null, np: PL.cur ? { t: PL.cur.t, a: PL.cur.a, on: PL.on, th: '', img: PL.art || PL.cur.th, mine: 1 } : NP, y0: true, lay: layout().lay, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
+function push() { if (isl) isl.webContents.send('state', state()); }
+
+/* ---------- 창 ---------- */
+/* 알약이 있는 모니터: 마지막으로 놓은 모니터(DB.did). 그 모니터가 빠졌으면 기본 모니터 */
+const disp = () => { const id = DB.did; return (id && screen.getAllDisplays().find(d => d.id === id)) || screen.getPrimaryDisplay(); };
+/* ---------- 알약 위치 ----------
+   DB.edge: 붙어 있는 벽(top · bottom · left · right), DB.pos: 그 벽을 따라 어디쯤(0~1).
+   알약 창(투명)을 벽에 붙이고, 창 안에서 알약이 어디에 있고 어느 쪽으로 펼쳐질지(lay)를 계산해 화면에 알려 줘요. */
+const SIDE_H = 900;
+function layout() {
+  const b = disp().bounds, wa = disp().workArea, e = ['top', 'bottom', 'left', 'right'].includes(DB.edge) ? DB.edge : 'top', pos = Math.min(1, Math.max(0, DB.pos == null ? 0.5 : +DB.pos));
+  const clamp = (v, a, z) => Math.max(a, Math.min(z, v));
+  if (e === 'top' || e === 'bottom') {
+    const cx = b.x + pos * b.width, wx = Math.round(clamp(cx - W / 2, b.x, b.x + b.width - W)), wy = e === 'top' ? b.y : wa.y + wa.height - H;
+    let rel = Math.round(cx - wx); const ax = rel < 326 ? 'l' : rel > W - 326 ? 'r' : 'c';
+    const x = ax === 'c' ? rel : ax === 'l' ? clamp(rel - PILL.w / 2, 6, W - PILL.w - 6) : clamp(W - rel - PILL.w / 2, 6, W - PILL.w - 6);
+    return { edge: e, win: { x: wx, y: wy, width: W, height: H }, lay: { edge: e, ax, x, ay: e === 'top' ? 't' : 'b', y: 6 } };
+  }
+  const h = Math.min(SIDE_H, wa.height), cy = wa.y + pos * wa.height, wy = Math.round(clamp(cy - h / 2, wa.y, wa.y + wa.height - h));
+  const wx = e === 'left' ? wa.x : wa.x + wa.width - W, rel = Math.round(clamp(cy - wy, 23, h - 23));
+  const ay = rel - 18 + 380 <= h ? 't' : 'b';
+  return { edge: e, win: { x: wx, y: wy, width: W, height: h }, lay: { edge: e, ax: e === 'left' ? 'l' : 'r', x: 6, ay, y: ay === 't' ? rel - 17 : h - rel - 17 } };
+}
+function islBounds() { return layout().win; }
+function pillRect() { const L = layout(), w = L.win, l = L.lay;
+  const x = w.x + (l.ax === 'c' ? l.x - PILL.w / 2 : l.ax === 'l' ? l.x : w.width - l.x - PILL.w), y = w.y + (l.ay === 't' ? l.y : w.height - l.y - PILL.h);
+  return { x, y, w: PILL.w, h: PILL.h, rad: 17 }; }
+/* ---------- 끌어서 옮기기 ----------
+   알약을 누른 채 끌면 창이 마우스를 따라오고, 놓으면 가장 가까운 벽(위 · 아래 · 왼쪽 · 오른쪽)에 붙어요. */
+let dragT = 0;
+ipcMain.on('drag', (_e, d) => {
+  if (!isl || !d) return;
+  if (d.k === 'start') { clearInterval(dragT); const gx = +d.gx || 0, gy = +d.gy || 0, t0 = Date.now(), sz = isl.getBounds();
+    isl.setIgnoreMouseEvents(false);
+    dragT = setInterval(() => { const p = screen.getCursorScreenPoint(); isl.setBounds({ x: p.x - gx, y: p.y - gy, width: sz.width, height: sz.height }); if (Date.now() - t0 > 30000) end(); }, 16);
+    return; }
+  if (d.k === 'end') end();
+  function end() { if (!dragT) return; clearInterval(dragT); dragT = 0;
+    const p = screen.getCursorScreenPoint(), D = screen.getDisplayNearestPoint(p); DB.did = D.id; const b = D.bounds, wa = D.workArea;
+    const dist = { top: p.y - b.y, bottom: wa.y + wa.height - p.y, left: p.x - wa.x, right: wa.x + wa.width - p.x };
+    const e = Object.keys(dist).sort((a, z) => dist[a] - dist[z])[0];
+    DB.edge = e; DB.pos = e === 'top' || e === 'bottom' ? (p.x - b.x) / b.width : (p.y - wa.y) / wa.height; save();
+    place(); push(); isl.setIgnoreMouseEvents(true, { forward: true }); }
+});
+function deskRect() { const wa = disp().workArea, b = disp().bounds; const w = Math.min(1480, wa.width - 48), top = b.y + 50;
+  return { x: Math.round(wa.x + (wa.width - w) / 2), y: top, w, h: wa.y + wa.height - top - 14, rad: 18 }; }
+function place() { if (isl) isl.setBounds(islBounds()); if (morph) morph.setBounds(disp().bounds); if (desk && desk.isVisible()) { const d = deskRect(); desk.setBounds({ x: d.x, y: d.y, width: d.w, height: d.h }); } }
+function makeIsland() {
+  isl = new BrowserWindow({ ...islBounds(), frame: false, transparent: true, resizable: false, movable: false, skipTaskbar: true, alwaysOnTop: true,
+    hasShadow: false, show: false, backgroundColor: '#00000000', webPreferences: { preload: path.join(__dirname, 'preload.js'), backgroundThrottling: false } });
+  isl.setAlwaysOnTop(true, 'screen-saver'); isl.setVisibleOnAllWorkspaces(true);
+  isl.setIgnoreMouseEvents(true, { forward: true });
+  isl.loadFile(path.join(__dirname, 'island.html'));
+  isl.once('ready-to-show', () => { place(); isl.showInactive(); push(); });
+  isl.webContents.on('did-finish-load', () => push());
+  ['display-metrics-changed', 'display-added', 'display-removed'].forEach(ev => screen.on(ev, place));
+}
+/* ---------- 웹앱 펼치기 (desk.json 이 있을 때만) ---------- */
+function makeMorph() {
+  morph = new BrowserWindow({ ...disp().bounds, frame: false, transparent: true, resizable: false, movable: false, skipTaskbar: true, alwaysOnTop: true, focusable: false,
+    hasShadow: false, show: false, backgroundColor: '#00000000', webPreferences: { nodeIntegration: true, contextIsolation: false, backgroundThrottling: false } });
+  morph.setAlwaysOnTop(true, 'pop-up-menu'); morph.setIgnoreMouseEvents(true); morph.loadFile(path.join(__dirname, 'morph.html'));
+}
+function makeDesk() {
+  const d = deskRect();
+  desk = new BrowserWindow({ x: d.x, y: d.y, width: d.w, height: d.h, frame: false, transparent: true, hasShadow: false, show: false, icon: path.join(__dirname, 'icon.png'),
+    title: DESK.title || '웹앱', backgroundColor: '#00000000', webPreferences: { backgroundThrottling: false } });
+  /* 펼친 창 모서리를 둥글게: 창은 투명하게 두고 화면 전체를 둥근 모양으로 잘라요 */
+  desk.webContents.on('dom-ready', () => desk.webContents.insertCSS('html{background:linear-gradient(transparent,transparent)!important}body{min-height:100vh;clip-path:inset(0 round 18px)!important}'));
+  desk.loadURL(DESK.url);
+  desk.on('close', (e) => { if (!app.isQuitting) { e.preventDefault(); collapse(); } });
+  desk.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
+}
+const rel = (r) => { const b = disp().bounds; return { x: r.x - b.x, y: r.y - b.y, w: r.w, h: r.h, rad: r.rad }; };
+function runMorph(from, to, ms) { return new Promise(res => { morph.setBounds(disp().bounds); morph.showInactive(); ipcMain.once('morph-done', res); morph.webContents.send('morph', { from: rel(from), to: rel(to), ms }); }); }
+async function expand() {
+  if (!DESK || busy) return; if (!morph) { makeMorph(); await new Promise(r => morph.webContents.once('did-finish-load', r)); } if (!desk) makeDesk();
+  if (desk.isVisible()) { desk.focus(); return; } busy = true;
+  const d = deskRect(); desk.setBounds({ x: d.x, y: d.y, width: d.w, height: d.h });
+  await runMorph(pillRect(), d, 380);
+  desk.show(); desk.focus(); setTimeout(() => { morph.webContents.send('fade'); setTimeout(() => { morph.hide(); busy = false; }, 200); }, 60); push();
+}
+async function collapse() {
+  if (busy || !desk || !desk.isVisible()) return; busy = true;
+  const b = desk.getBounds(); const from = { x: b.x, y: b.y, w: b.width, h: b.height, rad: 18 };
+  morph.setBounds(disp().bounds); morph.showInactive(); desk.hide();
+  await runMorph(from, pillRect(), 340); morph.hide(); busy = false; push();
+}
+app.on('second-instance', () => { if (DESK) expand(); });
+
+/* ---------- 음악 조작: 키보드의 재생 · 이전 · 다음 키를 대신 눌러 줘요 (윈도우) ---------- */
+let ps = null;
+function media(vk) {
+  if (process.platform !== 'win32') return false;
+  try {
+    if (!ps || ps.exitCode !== null || ps.killed) {
+      ps = spawn('powershell.exe', ['-NoProfile', '-NoLogo', '-NonInteractive', '-Command', '-'], { windowsHide: true, stdio: ['pipe', 'ignore', 'ignore'] });
+      ps.on('error', () => { ps = null; });
+      ps.stdin.write("$k=Add-Type -MemberDefinition '[DllImport(\"user32.dll\")] public static extern void keybd_event(byte b,byte s,uint f,System.UIntPtr e);' -Name IslKey -Namespace Isl -PassThru\n");
+    }
+    ps.stdin.write(`$k::keybd_event(${vk},0,1,[UIntPtr]::Zero);$k::keybd_event(${vk},0,3,[UIntPtr]::Zero)\n`); return true;
+  } catch (e) { ps = null; return false; }
+}
+const VK = { prev: 177, play: 179, next: 176 };
+
+/* ---------- 바로가기 ---------- */
+async function iconOf(f) { try { if (!f || !fs.existsSync(f)) return '';
+    if (/\.(ico|png|jpe?g|bmp)$/i.test(f)) { const im = nativeImage.createFromPath(f); if (!im.isEmpty()) return im.resize({ width: 64, height: 64, quality: 'best' }).toDataURL(); }
+    const im = await app.getFileIcon(f, { size: 'large' }); return im.isEmpty() ? '' : im.toDataURL(); } catch (e) { return ''; } }
+/* 게임 바로가기는 대부분 .url(스팀 · 에픽 등 인터넷 바로가기)이라 그대로 읽으면 지구본 아이콘이 나와요.
+   .url 안에 적힌 IconFile(게임 아이콘 파일), .lnk 는 가리키는 실제 exe 의 아이콘을 꺼내 써요. */
+async function fileIcon(p) {
+  try {
+    if (/\.url$/i.test(p)) { const t = fs.readFileSync(p, 'utf8'); const m = t.match(/^\s*IconFile\s*=\s*(.+?)\s*$/im); if (m) { const ic = await iconOf(m[1].replace(/^"|"$/g, '')); if (ic) return ic; } }
+    if (/\.lnk$/i.test(p) && process.platform === 'win32') { try { const L = shell.readShortcutLink(p); for (const f of [L.icon, L.target]) { const ic = await iconOf(f); if (ic) return ic; } } catch (e) {} }
+  } catch (e) {}
+  return iconOf(p);
+}
+async function favicon(url) { try { const h = new URL(url).hostname; const r = await net.fetch('https://www.google.com/s2/favicons?sz=64&domain=' + encodeURIComponent(h)); if (!r.ok) return '';
+  const buf = Buffer.from(await r.arrayBuffer()); return buf.length > 100 ? 'data:' + (r.headers.get('content-type') || 'image/png') + ';base64,' + buf.toString('base64') : ''; } catch (e) { return ''; } }
+const isWeb = (s) => /^[a-z][a-z0-9+.-]*:\/\//i.test(s);
+
+/* 설치된 프로그램 목록: 시작 메뉴에 있는 바로가기(카카오톡 · 디스코드 · 스팀 게임 등)를 읽어요. 한 번 읽으면 기억해 둬요 */
+let APPS = null;
+async function startApps() {
+  if (APPS) return APPS;
+  const roots = [path.join(process.env.ProgramData || 'C:\\ProgramData', 'Microsoft', 'Windows', 'Start Menu', 'Programs'), path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs'), app.getPath('desktop')];
+  const out = [], seen = new Set(), skip = /uninstall|제거|삭제|readme|도움말|help|license|웹 사이트|website|설명서|manual|release notes/i;
+  const walk = (d, depth) => { let L = []; try { L = fs.readdirSync(d, { withFileTypes: true }); } catch (e) { return; }
+    for (const f of L) { const p = path.join(d, f.name);
+      if (f.isDirectory()) { if (depth < 3) walk(p, depth + 1); continue; }
+      if (!/\.(lnk|url)$/i.test(f.name)) continue; const name = f.name.replace(/\.(lnk|url)$/i, '');
+      if (skip.test(name) || seen.has(name.toLowerCase())) continue; seen.add(name.toLowerCase()); out.push({ name, path: p }); } };
+  roots.forEach(r => walk(r, 0));
+  out.sort((x, y) => x.name.localeCompare(y.name, 'ko'));
+  for (const o of out.slice(0, 400)) o.icon = await fileIcon(o.path);
+  APPS = out.slice(0, 400); setTimeout(() => { APPS = null; }, 10 * 60e3); return APPS;
+}
+ipcMain.handle('act', async (_e, a) => {
+  if (!a) return '';
+  if (a.k === 'get') return state();
+  if (a.k === 'quit') { app.isQuitting = true; setTimeout(() => app.quit(), 60); return ''; }
+  if (a.k === 'open') { if (desk && desk.isVisible()) collapse(); else expand(); return ''; }
+  if (a.k === 'msearch') { dlog('msearch', a.q, 'DESK', !!DESK, 'ver', ISL && ISL.ver, 'core', ISL && ISL.core); if (!musOn()) return { items: [], err: '음악 검색이 꺼져 있어요 (트레이 메뉴에서 켜기)', v: ISL.ver }; let items = []; try { items = await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { YERR = String(e.stack || e).slice(0, 300); } dlog('result', items.length, YERR, YDBG); return { items, err: items.length ? '' : (YERR || YDBG || '이유를 못 찾았어요'), v: ISL.ver }; }
+  if (a.k === 'mplay') { if (!musOn() || !Array.isArray(a.list)) return ''; PL.list = a.list.slice(0, 30).map(x => ({ id: String(x.id).replace(/[^\w-]/g, ''), t: String(x.t || '').slice(0, 120), a: String(x.a || '').slice(0, 60), len: String(x.len || ''), th: String(x.th || '').startsWith('https://') ? x.th : '' })); plPlay(Math.max(0, Math.min(PL.list.length - 1, a.i | 0))); return ''; }
+  if (a.k === 'ylogin') { ytLogin(); return ''; }
+  if (a.k === 'mstop') { plStop(); return '음악을 껐어요'; }
+  if (a.k === 'mskip') { await plCtl('skip'); return ''; }
+  if (a.k === 'media') { if (await plCtl(a.b)) return ''; return media(VK[a.b]) ? '' : '음악 조작은 윈도우에서만 돼요'; }
+  if (a.k === 'run') { const x = DB.apps.find(o => o.id === a.id); if (!x) return '';
+    if (x.url) { shell.openExternal(x.url); return x.name + ' 열었어요'; }
+    if (!fs.existsSync(x.path)) return '파일을 찾지 못했어요 · 옮겨졌거나 지워졌는지 확인해 주세요';
+    const err = await shell.openPath(x.path); return err ? '열지 못했어요 · 파일이 옮겨졌는지 확인해 주세요' : x.name + ' 실행했어요'; }
+  if (a.k === 'apps') return await startApps();
+  if (a.k === 'addPath') { const p = String(a.path || ''); if (!p || !fs.existsSync(p)) return '파일을 찾지 못했어요';
+    if (DB.apps.some(o => o.path === p)) return '이미 들어 있어요';
+    DB.apps.push({ id: rid(), icon2: 1, name: String(a.name || path.basename(p, path.extname(p))).slice(0, 24), path: p, icon: await fileIcon(p) }); save(); push(); return '바로가기에 넣었어요'; }
+  if (a.k === 'addApp') { dlg = true; let r; try { r = await dialog.showOpenDialog(isl, { title: '바로가기에 넣을 프로그램 · 게임 고르기', defaultPath: app.getPath('desktop'), properties: ['openFile', 'multiSelections'],
+      filters: [{ name: '프로그램 · 바로가기', extensions: ['exe', 'lnk', 'url', 'bat', 'cmd'] }, { name: '모든 파일', extensions: ['*'] }] }); } finally { dlg = false; if (isl) isl.setIgnoreMouseEvents(true, { forward: true }); }
+    if (!r || r.canceled || !r.filePaths.length) return '';
+    for (const p of r.filePaths.slice(0, 12)) { if (DB.apps.some(o => o.path === p)) continue; DB.apps.push({ id: rid(), icon2: 1, name: path.basename(p, path.extname(p)).slice(0, 24), path: p, icon: await fileIcon(p) }); }
+    save(); push(); return '바로가기에 넣었어요'; }
+  if (a.k === 'addUrl') { let u = String(a.url || '').trim(); if (!u) return '주소를 적어 주세요'; if (!isWeb(u)) u = 'https://' + u;
+    let host = ''; try { host = new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return '주소를 다시 확인해 주세요'; }
+    DB.apps.push({ id: rid(), name: (String(a.name || '').trim() || host).slice(0, 24), url: u, icon: /^https?:/i.test(u) ? await favicon(u) : '' }); save(); push(); return '바로가기에 넣었어요'; }
+  if (a.k === 'del') { DB.apps = DB.apps.filter(o => o.id !== a.id); save(); push(); return '바로가기에서 뺐어요'; }
+  if (a.k === 'move') { const i = DB.apps.findIndex(o => o.id === a.id), j = i + (a.d < 0 ? -1 : 1); if (i < 0 || j < 0 || j >= DB.apps.length) return ''; [DB.apps[i], DB.apps[j]] = [DB.apps[j], DB.apps[i]]; save(); push(); return ''; }
+  if (a.k === 'todoAdd') { const t = String(a.text || '').trim().slice(0, 120); if (!t) return ''; DB.todos.push({ id: rid(), text: t, done: false, at: Date.now() }); save(); push(); return '메모했어요'; }
+  if (a.k === 'todo') { const x = DB.todos.find(o => o.id === a.id); if (x) { x.done = !x.done; save(); push(); } return ''; }
+  if (a.k === 'todoClear') { DB.todos = DB.todos.filter(o => !o.done); save(); push(); return '끝낸 메모를 지웠어요'; }
+  return '';
+});
+ipcMain.on('hover', (_e, on) => { if (dlg || dragT) return; if (isl) isl.setIgnoreMouseEvents(!on, { forward: true }); if (!on && isl && isl.isFocused() && !(desk && desk.isVisible())) isl.blur(); });
+
+function vis() { if (!isl) return; const want = !userHide && !(fsOn && !DB.tuck); if (want) { if (!isl.isVisible()) isl.showInactive(); } else if (isl.isVisible()) isl.hide(); }
+function common() {
+  ytLoggedIn().then(push);
+  watchNowPlaying();
+  SH.watchCursor(() => isl);
+  SH.watchFullscreen((on) => { fsOn = on; vis(); });   /* 알약 형태일 때만: 게임 · 영상이 전체화면이면 알약을 숨겨요 */
+  upd = SH.autoUpdate({ canRestart: () => !(desk && desk.isVisible()) });
+}
+function makeTray() {
+  tray = new Tray(nativeImage.createFromPath(path.join(__dirname, 'icon.png')).resize({ width: 16, height: 16 }));
+  const menu = () => Menu.buildFromTemplate([
+    ...(DESK ? [{ label: (DESK.title || '웹앱') + ' 펼치기', click: () => expand() }] : []),
+    { label: '자동 숨김 (끄면 알약이 항상 보이고, 눌러야 펼쳐져요)', type: 'checkbox', checked: !!DB.tuck, click: (m) => { DB.tuck = m.checked; save(); push(); vis(); } },
+    { label: '알약 위치 처음으로 (화면 위 가운데)', click: () => { DB.edge = 'top'; DB.pos = 0.5; save(); place(); push(); } },
+    { label: YLOG ? '유튜브 로그아웃 (음악)' : '유튜브 로그인 (프리미엄이면 광고 없이)', click: () => { YLOG ? ytLogout() : ytLogin(); } },
+    { label: '알약에서 음악 검색 (유튜브)', type: 'checkbox', checked: musOn(), click: (m) => { DB.mus = m.checked; save(); if (!m.checked) plStop(); push(); } },
+    { label: '아일랜드 보이기', type: 'checkbox', checked: !userHide, click: (m) => { userHide = !m.checked; vis(); } },
+    { label: upd && upd.ready() ? '새 버전 적용 (다시 시작)' : '프로그램 버전 ' + ISL.ver + ' · 업데이트 확인', click: () => { if (upd && upd.ready()) { app.isQuitting = true; app.relaunch(); app.quit(); } else if (upd) upd.check(); } },
+    { label: '윈도우 시작할 때 자동 실행', type: 'checkbox', checked: app.getLoginItemSettings().openAtLogin, click: (m) => app.setLoginItemSettings({ openAtLogin: m.checked }) },
+    { type: 'separator' }, { label: '종료', click: () => { app.isQuitting = true; app.quit(); } }]);
+  tray.setToolTip('Island'); tray.setContextMenu(menu()); tray.on('right-click', () => tray.setContextMenu(menu()));
+}
+app.whenReady().then(() => { app.setAppUserModelId('app.island.mine'); load(); makeIsland(); makeTray(); common();
+  setTimeout(async () => { let ch = false; for (const x of DB.apps) { if (!x.path || !/\.(url|lnk)$/i.test(x.path) || x.icon2) continue; const ic = await fileIcon(x.path); if (ic) { x.icon = ic; ch = true; } x.icon2 = 1; } if (ch) { save(); push(); } }, 1500); });
+app.on('window-all-closed', (e) => e.preventDefault());
+app.on('before-quit', () => { try { ps && ps.kill(); } catch (e) {} try { PL.win && !PL.win.isDestroyed() && PL.win.destroy(); } catch (e) {} try { ySrch && !ySrch.isDestroyed() && ySrch.destroy(); } catch (e) {} });
