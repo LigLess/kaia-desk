@@ -295,7 +295,11 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'quit') { app.isQuitting = true; setTimeout(() => app.quit(), 60); return ''; }
   if (a.k === 'open') { if (desk && desk.isVisible()) collapse(); else expand(); return ''; }
   if (a.k === 'msearch') { dlog('msearch', a.q, 'DESK', !!DESK, 'ver', ISL && ISL.ver, 'core', ISL && ISL.core); if (!musOn()) return { items: [], err: '음악 검색이 꺼져 있어요 (트레이 메뉴에서 켜기)', v: ISL.ver }; let items = []; try { items = await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { YERR = String(e.stack || e).slice(0, 300); } dlog('result', items.length, YERR, YDBG); return { items, err: items.length ? '' : (YERR || YDBG || '이유를 못 찾았어요'), v: ISL.ver }; }
-  if (a.k === 'mplay') { if (!musOn() || !Array.isArray(a.list)) return ''; PL.list = a.list.slice(0, 30).map(x => ({ id: String(x.id).replace(/[^\w-]/g, ''), t: String(x.t || '').slice(0, 120), a: String(x.a || '').slice(0, 60), len: String(x.len || ''), th: String(x.th || '').startsWith('https://') ? x.th : '' })); plPlay(Math.max(0, Math.min(PL.list.length - 1, a.i | 0))); return ''; }
+  if (a.k === 'mplay') { if (!musOn() || !Array.isArray(a.list)) return ''; PL.list = a.list.slice(0, 30).map(x => ({ id: String(x.id).replace(/[^\w-]/g, ''), t: String(x.t || '').slice(0, 120), a: String(x.a || '').slice(0, 60), len: String(x.len || ''), th: String(x.th || '').startsWith('https://') ? x.th : '' })); const it = PL.list[Math.max(0, Math.min(PL.list.length - 1, a.i | 0))]; if (!it || !it.id) return '';
+    /* 고른 곡은 로그인된 브라우저의 유튜브 뮤직에서 틀어요(프리미엄이면 광고 없음). 먼저 나오던 곡은 멈춰서 두 곡이 겹치지 않게 해요 */
+    if (PL.cur) plStop(); PL.list = [];
+    if (NP && NP.on) { media(VK.play); await new Promise(r => setTimeout(r, 450)); }
+    shell.openExternal('https://music.youtube.com/watch?v=' + it.id); return '유튜브 뮤직에서 틀었어요'; }
   if (a.k === 'ylogin') { ytLogin(); return ''; }
   if (a.k === 'mstop') { plStop(); return '음악을 껐어요'; }
   if (a.k === 'mskip') { await plCtl('skip'); return ''; }
