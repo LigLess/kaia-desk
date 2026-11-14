@@ -22,6 +22,22 @@ function dlog(...a) { try { const f = path.join(app.getPath('userData'), 'island
    목록 순서대로 다음 곡으로 넘어가고, 광고가 나오면 건너뛰기 버튼이 생기는 대로 눌러요. */
 /* 음악 검색 켜기/끄기: 트레이 메뉴에서 정해요. 정한 적 없으면 집용(desk.json 있음)만 켜져 있어요 */
 const musOn = () => (DB.mus != null ? !!DB.mus : !!DESK);
+/* 유튜브 로그인: 음악 플레이어와 같은 저장 공간(persist:yt)에 로그인해 두면, 프리미엄 계정은 광고 없이 나와요.
+   로그인은 사용자가 직접 창에서 해요(비밀번호는 이 프로그램이 보지도 저장하지도 않아요 — 구글 로그인 화면이 처리). */
+let YLOG = false, ylogWin = null;
+async function ytLoggedIn() { try { const { session } = require('electron'); const c = await session.fromPartition('persist:yt').cookies.get({ domain: '.youtube.com', name: 'LOGIN_INFO' }); YLOG = c.length > 0; } catch (e) {} return YLOG; }
+function ytLogin() {
+  if (ylogWin && !ylogWin.isDestroyed()) { ylogWin.show(); ylogWin.focus(); return; }
+  ylogWin = new BrowserWindow({ width: 480, height: 720, title: '유튜브 로그인', autoHideMenuBar: true, webPreferences: { partition: 'persist:yt' } });
+  ylogWin.webContents.setUserAgent(YUA);
+  ylogWin.loadURL('https://accounts.google.com/ServiceLogin?service=youtube&hl=ko&continue=' + encodeURIComponent('https://www.youtube.com/signin?action_handle_signin=true&next=%2F'));
+  ylogWin.webContents.on('did-navigate', async (_e, url) => { if (/^https:\/\/(www|m)\.youtube\.com\//.test(url) && await ytLoggedIn()) {
+      setTimeout(() => { try { ylogWin.close(); } catch (e) {} }, 800);
+      try { ySrch && !ySrch.isDestroyed() && ySrch.destroy(); } catch (e) {} ySrch = null; yReady = null;
+      if (PL.cur && PL.win && !PL.win.isDestroyed()) PL.win.reload(); push(); } });
+  ylogWin.on('closed', () => { ylogWin = null; ytLoggedIn().then(push); });
+}
+async function ytLogout() { try { const { session } = require('electron'); const ss = session.fromPartition('persist:yt'); await ss.clearStorageData(); } catch (e) {} YLOG = false; ySrch = null; yReady = null; push(); }
 const PL = { win: null, list: [], i: -1, cur: null, on: false, ad: false, t: 0, d: 0, poll: 0 };
 const YUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';  /* 오래된 크롬으로 보이면 유튜브가 결과를 덜 줘요 */
 /* 검색 결과에서 동영상만 뽑기. 유튜브는 화면 구조를 자주 바꿔서 두 가지 모양(videoRenderer · lockupViewModel)을 다 봐요 */
@@ -127,7 +143,7 @@ let DB = { apps: [], todos: [], tuck: true };
 function load() { try { const d = JSON.parse(fs.readFileSync(FILE(), 'utf8')); DB = { apps: Array.isArray(d.apps) ? d.apps : [], todos: Array.isArray(d.todos) ? d.todos : [], tuck: d.tuck !== false, mus: d.mus, edge: d.edge, pos: d.pos, did: d.did }; } catch (e) {} }
 function save() { try { fs.mkdirSync(path.dirname(FILE()), { recursive: true }); fs.writeFileSync(FILE(), JSON.stringify(DB)); } catch (e) {} }
 const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-const state = () => ({ mus: musOn(), pl: PL.cur ? { ...PL.cur, on: PL.on, ad: PL.ad, t0: PL.t, d: PL.d } : null, np: PL.cur ? { t: PL.cur.t, a: PL.cur.a, on: PL.on, th: '', img: PL.cur.th } : NP, y0: true, lay: layout().lay, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
+const state = () => ({ ylog: YLOG, mus: musOn(), pl: PL.cur ? { ...PL.cur, on: PL.on, ad: PL.ad, t0: PL.t, d: PL.d } : null, np: PL.cur ? { t: PL.cur.t, a: PL.cur.a, on: PL.on, th: '', img: PL.cur.th } : NP, y0: true, lay: layout().lay, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
 function push() { if (isl) isl.webContents.send('state', state()); }
 
 /* ---------- 창 ---------- */
@@ -273,6 +289,7 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'open') { if (desk && desk.isVisible()) collapse(); else expand(); return ''; }
   if (a.k === 'msearch') { dlog('msearch', a.q, 'DESK', !!DESK, 'ver', ISL && ISL.ver, 'core', ISL && ISL.core); if (!musOn()) return { items: [], err: '음악 검색이 꺼져 있어요 (트레이 메뉴에서 켜기)', v: ISL.ver }; let items = []; try { items = await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { YERR = String(e.stack || e).slice(0, 300); } dlog('result', items.length, YERR, YDBG); return { items, err: items.length ? '' : (YERR || YDBG || '이유를 못 찾았어요'), v: ISL.ver }; }
   if (a.k === 'mplay') { if (!musOn() || !Array.isArray(a.list)) return ''; PL.list = a.list.slice(0, 30).map(x => ({ id: String(x.id).replace(/[^\w-]/g, ''), t: String(x.t || '').slice(0, 120), a: String(x.a || '').slice(0, 60), len: String(x.len || ''), th: String(x.th || '').startsWith('https://') ? x.th : '' })); plPlay(Math.max(0, Math.min(PL.list.length - 1, a.i | 0))); return ''; }
+  if (a.k === 'ylogin') { ytLogin(); return ''; }
   if (a.k === 'mstop') { plStop(); return '음악을 껐어요'; }
   if (a.k === 'mskip') { await plCtl('skip'); return ''; }
   if (a.k === 'media') { if (await plCtl(a.b)) return ''; return media(VK[a.b]) ? '' : '음악 조작은 윈도우에서만 돼요'; }
@@ -303,6 +320,7 @@ ipcMain.on('hover', (_e, on) => { if (dlg || dragT) return; if (isl) isl.setIgno
 
 function vis() { if (!isl) return; const want = !userHide && !(fsOn && !DB.tuck); if (want) { if (!isl.isVisible()) isl.showInactive(); } else if (isl.isVisible()) isl.hide(); }
 function common() {
+  ytLoggedIn().then(push);
   watchNowPlaying();
   SH.watchCursor(() => isl);
   SH.watchFullscreen((on) => { fsOn = on; vis(); });   /* 알약 형태일 때만: 게임 · 영상이 전체화면이면 알약을 숨겨요 */
@@ -314,6 +332,7 @@ function makeTray() {
     ...(DESK ? [{ label: (DESK.title || '웹앱') + ' 펼치기', click: () => expand() }] : []),
     { label: '자동 숨김 (끄면 알약이 항상 보이고, 눌러야 펼쳐져요)', type: 'checkbox', checked: !!DB.tuck, click: (m) => { DB.tuck = m.checked; save(); push(); vis(); } },
     { label: '알약 위치 처음으로 (화면 위 가운데)', click: () => { DB.edge = 'top'; DB.pos = 0.5; save(); place(); push(); } },
+    { label: YLOG ? '유튜브 로그아웃 (음악)' : '유튜브 로그인 (프리미엄이면 광고 없이)', click: () => { YLOG ? ytLogout() : ytLogin(); } },
     { label: '알약에서 음악 검색 (유튜브)', type: 'checkbox', checked: musOn(), click: (m) => { DB.mus = m.checked; save(); if (!m.checked) plStop(); push(); } },
     { label: '아일랜드 보이기', type: 'checkbox', checked: !userHide, click: (m) => { userHide = !m.checked; vis(); } },
     { label: upd && upd.ready() ? '새 버전 적용 (다시 시작)' : '프로그램 버전 ' + ISL.ver + ' · 업데이트 확인', click: () => { if (upd && upd.ready()) { app.isQuitting = true; app.relaunch(); app.quit(); } else if (upd) upd.check(); } },

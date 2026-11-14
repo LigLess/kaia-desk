@@ -97,7 +97,7 @@ body.drag #pill{transition:none!important;transform:var(--bx)!important;cursor:g
     <div class="hd"><div class="clock"><b id="hh">--:--</b><small id="dd"></small></div><span class="sp"></span>
       <div class="np" id="np" hidden><i id="npI"></i><div><b id="npT"></b><small id="npA"></small></div></div><button class="msb" id="bMus" title="음악 찾아 틀기" hidden><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></button><div class="md"><button data-m="prev" title="이전 곡"><svg viewBox="0 0 24 24"><path d="M6 5h2.4v14H6zM20 5.6v12.8L9.8 12z"/></svg></button><button class="pp" data-m="play" title="재생 · 일시정지"><svg viewBox="0 0 24 24"><path d="M5 4.5v15l9-7.5zM15.5 5H18v14h-2.5zM20 5h2.5v14H20z" transform="translate(-1.6 0)"/></svg></button><button data-m="next" title="다음 곡"><svg viewBox="0 0 24 24"><path d="M15.6 5H18v14h-2.4zM4 5.6v12.8L14.2 12z"/></svg></button></div>
       <button class="open" id="bOpen" hidden></button><button class="quit" id="bQuit" title="Island 끄기">종료</button></div>
-    <div id="mus" hidden><div class="mrow"><input id="mQ" placeholder="노래 · 가수 검색하고 Enter" maxlength="80"><button class="bt sm" id="mStop" hidden>끄기</button></div>
+    <div id="mus" hidden><div class="mrow"><input id="mQ" placeholder="노래 · 가수 검색하고 Enter" maxlength="80"><button class="bt sm" id="mStop" hidden>끄기</button><button class="bt sm" id="mLog" title="유튜브 프리미엄 계정으로 로그인하면 광고가 안 나와요">로그인</button></div>
       <div id="mAd" hidden>광고 중 <button id="mSkip">건너뛰기</button></div><div class="mbar" id="mBar" hidden><i id="mFill"></i></div><div id="mL"></div></div>
     <div class="lab">바로가기</div><div id="apps"></div>
     <div id="add"><div class="row"><button class="bt" id="bInst">설치된 프로그램</button><button class="bt" id="bApp">파일에서 고르기</button><button class="bt" id="bWeb">웹사이트 주소 넣기</button></div>
@@ -117,7 +117,7 @@ function fit(){ pill.style.height=pill.classList.contains('hov')?($('big').scrol
 function clock(){ const n=new Date(); const hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
   $('hh').textContent=hm; $('dd').textContent=`${n.getMonth()+1}월 ${n.getDate()}일 (${DW[n.getDay()]})`; $('mini').textContent=hm; }
 function paint(){ const A=S.apps||[], T=S.todos||[]; const left=T.filter(x=>!x.done).length;
-  $('bMus').hidden=!S.mus; const pl=S.pl; $('mStop').hidden=!pl; $('mAd').hidden=!(pl&&pl.ad); $('mBar').hidden=!pl||!pl.d; if(pl&&pl.d) $('mFill').style.width=Math.min(100,pl.t0/pl.d*100)+'%';
+  $('bMus').hidden=!S.mus; $('mLog').hidden=!!S.ylog; const pl=S.pl; $('mStop').hidden=!pl; $('mAd').hidden=!(pl&&pl.ad); $('mBar').hidden=!pl||!pl.d; if(pl&&pl.d) $('mFill').style.width=Math.min(100,pl.t0/pl.d*100)+'%';
   document.querySelectorAll('.mi').forEach(e=>e.classList.toggle('on',!!pl&&e.dataset.id===pl.id));
   const np=S.np; $('np').hidden=!np; if(np){ $('npT').textContent=np.t; $('npA').textContent=np.a||''; $('np').title=np.t+(np.a?' · '+np.a:''); $('np').classList.toggle('off',!np.on); $('npI').style.backgroundImage=np.img?`url("${np.img}")`:np.th?`url(data:image/png;base64,${np.th})`:''; }
   $('bad').textContent=left; $('bad').classList.toggle('on',left>0);
@@ -164,6 +164,7 @@ $('bMus').onclick=()=>{ const on=$('mus').hidden; $('mus').hidden=!on; $('bMus')
 $('mQ').addEventListener('keydown',async e=>{ if(e.key!=='Enter') return; const q=e.target.value.trim(); if(!q) return; $('mL').innerHTML='<div class="none">찾는 중…</div>'; fit();
   const R=await act({k:'msearch',q})||{}; ML=Array.isArray(R)?R:(R.items||[]); $('mL').innerHTML=ML.length?ML.map((x,i)=>`<div class="mi" data-i="${i}" data-id="${esc(x.id)}"><img src="${esc(x.th)}" alt=""><div><b>${esc(x.t)}</b><small>${esc(x.a)} · ${esc(x.len)}</small></div></div>`).join(''):`<div class="none">${R.err?esc(R.err):'찾지 못했어요 · 다른 말로 검색해 보세요'} · 프로그램 버전 ${esc(R.v||'')}</div>`; fit(); });
 $('mL').addEventListener('click',e=>{ const r=e.target.closest('.mi'); if(r) act({k:'mplay',list:ML,i:+r.dataset.i}); });
+$('mLog').onclick=()=>act({k:'ylogin'});
 $('mStop').onclick=async()=>toast(await act({k:'mstop'})); $('mSkip').onclick=()=>act({k:'mskip'});
 $('bQuit').onclick=()=>{ const b=$('bQuit'); if(b.dataset.sure){ act({k:'quit'}); return; } b.dataset.sure='1'; b.textContent='끌까요?'; setTimeout(()=>{ delete b.dataset.sure; b.textContent='종료'; },2500); };
 document.querySelector('.md').addEventListener('click',async e=>{ const b=e.target.closest('[data-m]'); if(b) toast(await act({k:'media',b:b.dataset.m})); });
