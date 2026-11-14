@@ -79,13 +79,25 @@ body.drag #pill{transition:none!important;transform:var(--bx)!important;cursor:g
 .np div{min-width:0;line-height:1.3}.np b{display:block;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .np small{display:block;font-size:11px;color:#9b988f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .np.off b,.np.off i{opacity:.55}
+.msb{width:32px;height:32px;border-radius:50%;border:0;background:rgba(255,255,255,.08);cursor:pointer;display:grid;place-items:center;padding:0;margin-right:4px}
+.msb svg{width:15px;height:15px;fill:none;stroke:#f4f2ee;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.msb:hover,.msb.on{background:rgba(255,255,255,.18)}
+#mus{margin-top:12px}.mrow{display:flex;gap:8px}.mrow input{flex:1}
+#mL{max-height:220px;overflow:auto;margin-top:6px}#mL::-webkit-scrollbar{width:0}
+.mi{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;cursor:pointer}.mi:hover{background:rgba(255,255,255,.07)}.mi.on{background:rgba(255,255,255,.1)}
+.mi img{width:52px;height:30px;border-radius:6px;object-fit:cover;flex:none;background:#26262b}
+.mi div{flex:1;min-width:0;line-height:1.3}.mi b{display:block;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mi small{font-size:11px;color:#9b988f}
+.mi.on b{color:#7fe0a5}
+#mAd{font-size:12px;color:#ffb36b;margin-top:8px;display:flex;align-items:center;gap:8px}#mAd[hidden]{display:none}#mAd button{font:inherit;font-size:11.5px;font-weight:700;border:0;border-radius:999px;padding:4px 10px;background:#ffb36b;color:#2a1606;cursor:pointer}
+.mbar{height:3px;border-radius:2px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden}.mbar i{display:block;height:100%;width:0;background:#f4f2ee;transition:width .9s linear}
 </style></head><body>
 <div id="pill">
   <div class="v idle" id="idle"><i class="dot"></i><span class="mini" id="mini"></span><span class="bad" id="bad"></span></div>
   <div class="v big" id="big">
     <div class="hd"><div class="clock"><b id="hh">--:--</b><small id="dd"></small></div><span class="sp"></span>
-      <div class="np" id="np" hidden><i id="npI"></i><div><b id="npT"></b><small id="npA"></small></div></div><div class="md"><button data-m="prev" title="이전 곡"><svg viewBox="0 0 24 24"><path d="M6 5h2.4v14H6zM20 5.6v12.8L9.8 12z"/></svg></button><button class="pp" data-m="play" title="재생 · 일시정지"><svg viewBox="0 0 24 24"><path d="M5 4.5v15l9-7.5zM15.5 5H18v14h-2.5zM20 5h2.5v14H20z" transform="translate(-1.6 0)"/></svg></button><button data-m="next" title="다음 곡"><svg viewBox="0 0 24 24"><path d="M15.6 5H18v14h-2.4zM4 5.6v12.8L14.2 12z"/></svg></button></div>
+      <div class="np" id="np" hidden><i id="npI"></i><div><b id="npT"></b><small id="npA"></small></div></div><button class="msb" id="bMus" title="음악 찾아 틀기" hidden><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg></button><div class="md"><button data-m="prev" title="이전 곡"><svg viewBox="0 0 24 24"><path d="M6 5h2.4v14H6zM20 5.6v12.8L9.8 12z"/></svg></button><button class="pp" data-m="play" title="재생 · 일시정지"><svg viewBox="0 0 24 24"><path d="M5 4.5v15l9-7.5zM15.5 5H18v14h-2.5zM20 5h2.5v14H20z" transform="translate(-1.6 0)"/></svg></button><button data-m="next" title="다음 곡"><svg viewBox="0 0 24 24"><path d="M15.6 5H18v14h-2.4zM4 5.6v12.8L14.2 12z"/></svg></button></div>
       <button class="open" id="bOpen" hidden></button><button class="quit" id="bQuit" title="Island 끄기">종료</button></div>
+    <div id="mus" hidden><div class="mrow"><input id="mQ" placeholder="노래 · 가수 검색하고 Enter" maxlength="80"><button class="bt sm" id="mStop" hidden>끄기</button></div>
+      <div id="mAd" hidden>광고 중 <button id="mSkip">건너뛰기</button></div><div class="mbar" id="mBar" hidden><i id="mFill"></i></div><div id="mL"></div></div>
     <div class="lab">바로가기</div><div id="apps"></div>
     <div id="add"><div class="row"><button class="bt" id="bInst">설치된 프로그램</button><button class="bt" id="bApp">파일에서 고르기</button><button class="bt" id="bWeb">웹사이트 주소 넣기</button></div>
       <div id="inst"><input id="instQ" placeholder="찾기 (예: 카카오톡 · 디스코드 · 스팀)" maxlength="40"><div id="instL"><div class="none">불러오는 중…</div></div></div><div id="web"><input id="wn" placeholder="이름" maxlength="24"><input id="wu" placeholder="주소 (예: youtube.com)" maxlength="400"><button class="bt acc" id="wOk">추가</button></div></div>
@@ -104,7 +116,9 @@ function fit(){ pill.style.height=pill.classList.contains('hov')?($('big').scrol
 function clock(){ const n=new Date(); const hm=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
   $('hh').textContent=hm; $('dd').textContent=`${n.getMonth()+1}월 ${n.getDate()}일 (${DW[n.getDay()]})`; $('mini').textContent=hm; }
 function paint(){ const A=S.apps||[], T=S.todos||[]; const left=T.filter(x=>!x.done).length;
-  const np=S.np; $('np').hidden=!np; if(np){ $('npT').textContent=np.t; $('npA').textContent=np.a||''; $('np').title=np.t+(np.a?' · '+np.a:''); $('np').classList.toggle('off',!np.on); $('npI').style.backgroundImage=np.th?`url(data:image/png;base64,${np.th})`:''; }
+  $('bMus').hidden=!S.mus; const pl=S.pl; $('mStop').hidden=!pl; $('mAd').hidden=!(pl&&pl.ad); $('mBar').hidden=!pl||!pl.d; if(pl&&pl.d) $('mFill').style.width=Math.min(100,pl.t0/pl.d*100)+'%';
+  document.querySelectorAll('.mi').forEach(e=>e.classList.toggle('on',!!pl&&e.dataset.id===pl.id));
+  const np=S.np; $('np').hidden=!np; if(np){ $('npT').textContent=np.t; $('npA').textContent=np.a||''; $('np').title=np.t+(np.a?' · '+np.a:''); $('np').classList.toggle('off',!np.on); $('npI').style.backgroundImage=np.img?`url("${np.img}")`:np.th?`url(data:image/png;base64,${np.th})`:''; }
   $('bad').textContent=left; $('bad').classList.toggle('on',left>0);
   $('bOpen').hidden=!S.web; $('bOpen').textContent=S.open?'접기 ▲':(S.title||'')+' ⤢';
   $('apps').innerHTML=A.map(x=>`<div class="ap" data-id="${esc(x.id)}" title="${esc(x.name)} · 오른쪽 클릭: 순서 바꾸기 · 빼기">${x.icon?`<i class="im"><img src="${esc(x.icon)}" alt=""></i>`:`<i class="im tx">${esc([...String(x.name||'?')][0].toUpperCase())}</i>`}<span>${esc(x.name)}</span><div class="ed"><button data-e="l">◀</button><button class="x" data-e="x">빼기</button><button data-e="r">▶</button></div></div>`).join('')
@@ -144,6 +158,12 @@ document.addEventListener('mouseup',()=>{ if(dragging){ dragging=false; justDrag
 $('idle').addEventListener('mousedown',dragDown); document.querySelector('.clock').addEventListener('mousedown',dragDown);
 $('idle').onclick=()=>{ if(Date.now()-justDragged<300) return; if(S.web&&S.open){ act({k:'open'}); return; } setHov(true); setCap(true); };
 $('bOpen').onclick=()=>act({k:'open'});
+let ML=[];
+$('bMus').onclick=()=>{ const on=$('mus').hidden; $('mus').hidden=!on; $('bMus').classList.toggle('on',on); fit(); if(on) $('mQ').focus(); };
+$('mQ').addEventListener('keydown',async e=>{ if(e.key!=='Enter') return; const q=e.target.value.trim(); if(!q) return; $('mL').innerHTML='<div class="none">찾는 중…</div>'; fit();
+  ML=await act({k:'msearch',q})||[]; $('mL').innerHTML=ML.length?ML.map((x,i)=>`<div class="mi" data-i="${i}" data-id="${esc(x.id)}"><img src="${esc(x.th)}" alt=""><div><b>${esc(x.t)}</b><small>${esc(x.a)} · ${esc(x.len)}</small></div></div>`).join(''):'<div class="none">찾지 못했어요 · 다른 말로 검색해 보세요</div>'; fit(); });
+$('mL').addEventListener('click',e=>{ const r=e.target.closest('.mi'); if(r) act({k:'mplay',list:ML,i:+r.dataset.i}); });
+$('mStop').onclick=async()=>toast(await act({k:'mstop'})); $('mSkip').onclick=()=>act({k:'mskip'});
 $('bQuit').onclick=()=>{ const b=$('bQuit'); if(b.dataset.sure){ act({k:'quit'}); return; } b.dataset.sure='1'; b.textContent='끌까요?'; setTimeout(()=>{ delete b.dataset.sure; b.textContent='종료'; },2500); };
 document.querySelector('.md').addEventListener('click',async e=>{ const b=e.target.closest('[data-m]'); if(b) toast(await act({k:'media',b:b.dataset.m})); });
 $('apps').addEventListener('click',async e=>{ const ed=e.target.closest('[data-e]'), a=e.target.closest('.ap'); if(!a) return;

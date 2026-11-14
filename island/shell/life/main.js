@@ -14,6 +14,44 @@ let isl, desk, morph, tray, busy = false, dlg = false;
    유튜브 · 유튜브 뮤직 · 스포티파이 · 멜론 등 무엇으로 틀든, 윈도우가 볼륨 팝업에 보여 주는 곡 정보(제목 · 가수 · 썸네일)를 읽어
    알약의 재생 버튼 옆에 보여 줘요. */
 let NP = null;
+/* ---------- 알약 안에서 음악 찾아 틀기 (집용 · desk.json 이 있을 때만) ----------
+   알약에서 검색하면 유튜브 검색 결과를 보여 주고, 고르면 화면에 안 보이는 창에서 소리만 틀어요.
+   목록 순서대로 다음 곡으로 넘어가고, 광고가 나오면 건너뛰기 버튼이 생기는 대로 눌러요. */
+const PL = { win: null, list: [], i: -1, cur: null, on: false, ad: false, t: 0, d: 0, poll: 0 };
+const YUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+async function ytSearch(q) {
+  const r = await net.fetch('https://www.youtube.com/results?sp=EgIQAQ%253D%253D&search_query=' + encodeURIComponent(q), { headers: { 'User-Agent': YUA, 'Accept-Language': 'ko-KR,ko;q=0.9' } });
+  const h = await r.text(); const m = h.match(/var ytInitialData\s*=\s*(\{[\s\S]*?\});\s*<\/script>/); if (!m) return [];
+  const out = []; const walk = (o) => { if (!o || typeof o !== 'object' || out.length >= 15) return; if (o.videoRenderer && o.videoRenderer.videoId) { const v = o.videoRenderer;
+      const th = (v.thumbnail && v.thumbnail.thumbnails || []).slice(-1)[0];
+      out.push({ id: v.videoId, t: ((v.title && v.title.runs) || [])[0] ? v.title.runs[0].text : '', a: ((v.ownerText && v.ownerText.runs) || [])[0] ? v.ownerText.runs[0].text : '', len: v.lengthText ? v.lengthText.simpleText : '', th: th ? th.url : '' }); return; }
+    for (const k in o) walk(o[k]); };
+  try { walk(JSON.parse(m[1])); } catch (e) {} return out.filter(x => x.len);
+}
+function plWin() { if (PL.win && !PL.win.isDestroyed()) return PL.win;
+  PL.win = new BrowserWindow({ show: false, width: 640, height: 400, webPreferences: { partition: 'persist:yt', backgroundThrottling: false, autoplayPolicy: 'no-user-gesture-required' } });
+  PL.win.webContents.setUserAgent(YUA); PL.win.webContents.setAudioMuted(false);
+  PL.win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  clearInterval(PL.poll); PL.poll = setInterval(plTick, 1000); return PL.win; }
+function plPlay(i) { const it = PL.list[i]; if (!it) return; PL.i = i; PL.cur = it; PL.on = true; PL.ad = false; PL.t = 0; PL.d = 0; PL.ended = false;
+  plWin().loadURL('https://www.youtube.com/watch?v=' + it.id); push(); }
+async function plTick() { if (!PL.win || PL.win.isDestroyed() || !PL.cur) return;
+  try { const r = await PL.win.webContents.executeJavaScript(`(()=>{ const v=document.querySelector('video'); const ad=!!document.querySelector('.ad-showing');
+      const sk=document.querySelector('.ytp-skip-ad-button,.ytp-ad-skip-button,.ytp-ad-skip-button-modern'); if(sk) sk.click();
+      try{ const p=document.getElementById('movie_player'); if(p&&p.setAutonav) p.setAutonav(false); }catch(e){}
+      if(!v) return null; if(window.__islWant===undefined) window.__islWant=true; if(window.__islWant&&v.paused&&!v.ended) v.play().catch(()=>{});
+      return {t:v.currentTime||0,d:v.duration||0,p:v.paused,e:v.ended,ad}; })()`, true);
+    if (!r) return; const was = JSON.stringify([PL.on, PL.ad, Math.floor(PL.t / 5)]);
+    PL.ad = r.ad; PL.t = r.t; PL.d = r.d; PL.on = !r.p;
+    if (!r.ad && (r.e || (r.d > 0 && r.t >= r.d - 0.4))) { if (!PL.ended) { PL.ended = true; if (PL.i + 1 < PL.list.length) plPlay(PL.i + 1); else { PL.on = false; push(); } } return; }
+    if (JSON.stringify([PL.on, PL.ad, Math.floor(PL.t / 5)]) !== was) push(); } catch (e) {} }
+async function plCtl(b) { if (!PL.cur || !PL.win || PL.win.isDestroyed()) return false;
+  if (b === 'next') { if (PL.i + 1 < PL.list.length) plPlay(PL.i + 1); return true; }
+  if (b === 'prev') { if (PL.t > 5 || PL.i <= 0) await PL.win.webContents.executeJavaScript(`(()=>{const v=document.querySelector('video'); if(v) v.currentTime=0;})()`); else plPlay(PL.i - 1); return true; }
+  if (b === 'play') { const on = await PL.win.webContents.executeJavaScript(`(()=>{ const v=document.querySelector('video'); if(!v) return false; window.__islWant=v.paused; if(v.paused) v.play(); else v.pause(); return !v.paused; })()`); PL.on = on; push(); return true; }
+  if (b === 'skip') { await PL.win.webContents.executeJavaScript(`(()=>{ const sk=document.querySelector('.ytp-skip-ad-button,.ytp-ad-skip-button,.ytp-ad-skip-button-modern'); if(sk) sk.click(); })()`); return true; }
+  return false; }
+function plStop() { clearInterval(PL.poll); if (PL.win && !PL.win.isDestroyed()) PL.win.destroy(); PL.win = null; PL.cur = null; PL.on = false; PL.list = []; PL.i = -1; push(); }
 function watchNowPlaying() {
   if (process.platform !== 'win32') return;
   const { spawn } = require('child_process'); let ps = null, stop = false;
@@ -36,7 +74,7 @@ let DB = { apps: [], todos: [], tuck: true };
 function load() { try { const d = JSON.parse(fs.readFileSync(FILE(), 'utf8')); DB = { apps: Array.isArray(d.apps) ? d.apps : [], todos: Array.isArray(d.todos) ? d.todos : [], tuck: d.tuck !== false, edge: d.edge, pos: d.pos, did: d.did }; } catch (e) {} }
 function save() { try { fs.mkdirSync(path.dirname(FILE()), { recursive: true }); fs.writeFileSync(FILE(), JSON.stringify(DB)); } catch (e) {} }
 const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-const state = () => ({ np: NP, y0: true, lay: layout().lay, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
+const state = () => ({ mus: !!DESK, pl: PL.cur ? { ...PL.cur, on: PL.on, ad: PL.ad, t0: PL.t, d: PL.d } : null, np: PL.cur ? { t: PL.cur.t, a: PL.cur.a, on: PL.on, th: '', img: PL.cur.th } : NP, y0: true, lay: layout().lay, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
 function push() { if (isl) isl.webContents.send('state', state()); }
 
 /* ---------- 창 ---------- */
@@ -180,7 +218,11 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'get') return state();
   if (a.k === 'quit') { app.isQuitting = true; setTimeout(() => app.quit(), 60); return ''; }
   if (a.k === 'open') { if (desk && desk.isVisible()) collapse(); else expand(); return ''; }
-  if (a.k === 'media') return media(VK[a.b]) ? '' : '음악 조작은 윈도우에서만 돼요';
+  if (a.k === 'msearch') { if (!DESK) return []; try { return await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { return []; } }
+  if (a.k === 'mplay') { if (!DESK || !Array.isArray(a.list)) return ''; PL.list = a.list.slice(0, 30).map(x => ({ id: String(x.id).replace(/[^\w-]/g, ''), t: String(x.t || '').slice(0, 120), a: String(x.a || '').slice(0, 60), len: String(x.len || ''), th: String(x.th || '').startsWith('https://') ? x.th : '' })); plPlay(Math.max(0, Math.min(PL.list.length - 1, a.i | 0))); return ''; }
+  if (a.k === 'mstop') { plStop(); return '음악을 껐어요'; }
+  if (a.k === 'mskip') { await plCtl('skip'); return ''; }
+  if (a.k === 'media') { if (await plCtl(a.b)) return ''; return media(VK[a.b]) ? '' : '음악 조작은 윈도우에서만 돼요'; }
   if (a.k === 'run') { const x = DB.apps.find(o => o.id === a.id); if (!x) return '';
     if (x.url) { shell.openExternal(x.url); return x.name + ' 열었어요'; }
     if (!fs.existsSync(x.path)) return '파일을 찾지 못했어요 · 옮겨졌거나 지워졌는지 확인해 주세요';
@@ -228,4 +270,4 @@ function makeTray() {
 app.whenReady().then(() => { app.setAppUserModelId('app.island.life'); load(); makeIsland(); makeTray(); common();
   setTimeout(async () => { let ch = false; for (const x of DB.apps) { if (!x.path || !/\.(url|lnk)$/i.test(x.path) || x.icon2) continue; const ic = await fileIcon(x.path); if (ic) { x.icon = ic; ch = true; } x.icon2 = 1; } if (ch) { save(); push(); } }, 1500); });
 app.on('window-all-closed', (e) => e.preventDefault());
-app.on('before-quit', () => { try { ps && ps.kill(); } catch (e) {} });
+app.on('before-quit', () => { try { ps && ps.kill(); } catch (e) {} try { PL.win && !PL.win.isDestroyed() && PL.win.destroy(); } catch (e) {} });
