@@ -33,16 +33,54 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 /* ---------- 저장 ---------- */
 const FILE = () => path.join(app.getPath('userData'), 'island.json');
 let DB = { apps: [], todos: [], tuck: true };
-function load() { try { const d = JSON.parse(fs.readFileSync(FILE(), 'utf8')); DB = { apps: Array.isArray(d.apps) ? d.apps : [], todos: Array.isArray(d.todos) ? d.todos : [], tuck: d.tuck !== false }; } catch (e) {} }
+function load() { try { const d = JSON.parse(fs.readFileSync(FILE(), 'utf8')); DB = { apps: Array.isArray(d.apps) ? d.apps : [], todos: Array.isArray(d.todos) ? d.todos : [], tuck: d.tuck !== false, edge: d.edge, pos: d.pos, did: d.did }; } catch (e) {} }
 function save() { try { fs.mkdirSync(path.dirname(FILE()), { recursive: true }); fs.writeFileSync(FILE(), JSON.stringify(DB)); } catch (e) {} }
 const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-const state = () => ({ np: NP, y0: true, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
+const state = () => ({ np: NP, y0: true, lay: layout().lay, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
 function push() { if (isl) isl.webContents.send('state', state()); }
 
 /* ---------- 창 ---------- */
-const disp = () => screen.getPrimaryDisplay();
-function islBounds() { const b = disp().bounds; return { x: Math.round(b.x + (b.width - W) / 2), y: b.y, width: W, height: H }; }
-function pillRect() { const i = islBounds(); return { x: i.x + (W - PILL.w) / 2, y: i.y + 6, w: PILL.w, h: PILL.h, rad: 17 }; }
+/* 알약이 있는 모니터: 마지막으로 놓은 모니터(DB.did). 그 모니터가 빠졌으면 기본 모니터 */
+const disp = () => { const id = DB.did; return (id && screen.getAllDisplays().find(d => d.id === id)) || screen.getPrimaryDisplay(); };
+/* ---------- 알약 위치 ----------
+   DB.edge: 붙어 있는 벽(top · bottom · left · right), DB.pos: 그 벽을 따라 어디쯤(0~1).
+   알약 창(투명)을 벽에 붙이고, 창 안에서 알약이 어디에 있고 어느 쪽으로 펼쳐질지(lay)를 계산해 화면에 알려 줘요. */
+const SIDE_H = 900;
+function layout() {
+  const b = disp().bounds, wa = disp().workArea, e = ['top', 'bottom', 'left', 'right'].includes(DB.edge) ? DB.edge : 'top', pos = Math.min(1, Math.max(0, DB.pos == null ? 0.5 : +DB.pos));
+  const clamp = (v, a, z) => Math.max(a, Math.min(z, v));
+  if (e === 'top' || e === 'bottom') {
+    const cx = b.x + pos * b.width, wx = Math.round(clamp(cx - W / 2, b.x, b.x + b.width - W)), wy = e === 'top' ? b.y : wa.y + wa.height - H;
+    let rel = Math.round(cx - wx); const ax = rel < 236 ? 'l' : rel > W - 236 ? 'r' : 'c';
+    const x = ax === 'c' ? rel : ax === 'l' ? clamp(rel - PILL.w / 2, 6, W - PILL.w - 6) : clamp(W - rel - PILL.w / 2, 6, W - PILL.w - 6);
+    return { edge: e, win: { x: wx, y: wy, width: W, height: H }, lay: { edge: e, ax, x, ay: e === 'top' ? 't' : 'b', y: 6 } };
+  }
+  const h = Math.min(SIDE_H, wa.height), cy = wa.y + pos * wa.height, wy = Math.round(clamp(cy - h / 2, wa.y, wa.y + wa.height - h));
+  const wx = e === 'left' ? wa.x : wa.x + wa.width - W, rel = Math.round(clamp(cy - wy, 23, h - 23));
+  const ay = rel - 17 + 470 <= h ? 't' : 'b';
+  return { edge: e, win: { x: wx, y: wy, width: W, height: h }, lay: { edge: e, ax: e === 'left' ? 'l' : 'r', x: 6, ay, y: ay === 't' ? rel - 17 : h - rel - 17 } };
+}
+function islBounds() { return layout().win; }
+function pillRect() { const L = layout(), w = L.win, l = L.lay;
+  const x = w.x + (l.ax === 'c' ? l.x - PILL.w / 2 : l.ax === 'l' ? l.x : w.width - l.x - PILL.w), y = w.y + (l.ay === 't' ? l.y : w.height - l.y - PILL.h);
+  return { x, y, w: PILL.w, h: PILL.h, rad: 17 }; }
+/* ---------- 끌어서 옮기기 ----------
+   알약을 누른 채 끌면 창이 마우스를 따라오고, 놓으면 가장 가까운 벽(위 · 아래 · 왼쪽 · 오른쪽)에 붙어요. */
+let dragT = 0;
+ipcMain.on('drag', (_e, d) => {
+  if (!isl || !d) return;
+  if (d.k === 'start') { clearInterval(dragT); const gx = +d.gx || 0, gy = +d.gy || 0, t0 = Date.now(), sz = isl.getBounds();
+    isl.setIgnoreMouseEvents(false);
+    dragT = setInterval(() => { const p = screen.getCursorScreenPoint(); isl.setBounds({ x: p.x - gx, y: p.y - gy, width: sz.width, height: sz.height }); if (Date.now() - t0 > 30000) end(); }, 16);
+    return; }
+  if (d.k === 'end') end();
+  function end() { if (!dragT) return; clearInterval(dragT); dragT = 0;
+    const p = screen.getCursorScreenPoint(), D = screen.getDisplayNearestPoint(p); DB.did = D.id; const b = D.bounds, wa = D.workArea;
+    const dist = { top: p.y - b.y, bottom: wa.y + wa.height - p.y, left: p.x - wa.x, right: wa.x + wa.width - p.x };
+    const e = Object.keys(dist).sort((a, z) => dist[a] - dist[z])[0];
+    DB.edge = e; DB.pos = e === 'top' || e === 'bottom' ? (p.x - b.x) / b.width : (p.y - wa.y) / wa.height; save();
+    place(); push(); isl.setIgnoreMouseEvents(true, { forward: true }); }
+});
 function deskRect() { const wa = disp().workArea, b = disp().bounds; const w = Math.min(1480, wa.width - 48), top = b.y + 50;
   return { x: Math.round(wa.x + (wa.width - w) / 2), y: top, w, h: wa.y + wa.height - top - 14, rad: 18 }; }
 function place() { if (isl) isl.setBounds(islBounds()); if (morph) morph.setBounds(disp().bounds); if (desk && desk.isVisible()) { const d = deskRect(); desk.setBounds({ x: d.x, y: d.y, width: d.w, height: d.h }); } }
@@ -121,6 +159,22 @@ async function favicon(url) { try { const h = new URL(url).hostname; const r = a
   const buf = Buffer.from(await r.arrayBuffer()); return buf.length > 100 ? 'data:' + (r.headers.get('content-type') || 'image/png') + ';base64,' + buf.toString('base64') : ''; } catch (e) { return ''; } }
 const isWeb = (s) => /^[a-z][a-z0-9+.-]*:\/\//i.test(s);
 
+/* 설치된 프로그램 목록: 시작 메뉴에 있는 바로가기(카카오톡 · 디스코드 · 스팀 게임 등)를 읽어요. 한 번 읽으면 기억해 둬요 */
+let APPS = null;
+async function startApps() {
+  if (APPS) return APPS;
+  const roots = [path.join(process.env.ProgramData || 'C:\\ProgramData', 'Microsoft', 'Windows', 'Start Menu', 'Programs'), path.join(app.getPath('appData'), 'Microsoft', 'Windows', 'Start Menu', 'Programs'), app.getPath('desktop')];
+  const out = [], seen = new Set(), skip = /uninstall|제거|삭제|readme|도움말|help|license|웹 사이트|website|설명서|manual|release notes/i;
+  const walk = (d, depth) => { let L = []; try { L = fs.readdirSync(d, { withFileTypes: true }); } catch (e) { return; }
+    for (const f of L) { const p = path.join(d, f.name);
+      if (f.isDirectory()) { if (depth < 3) walk(p, depth + 1); continue; }
+      if (!/\.(lnk|url)$/i.test(f.name)) continue; const name = f.name.replace(/\.(lnk|url)$/i, '');
+      if (skip.test(name) || seen.has(name.toLowerCase())) continue; seen.add(name.toLowerCase()); out.push({ name, path: p }); } };
+  roots.forEach(r => walk(r, 0));
+  out.sort((x, y) => x.name.localeCompare(y.name, 'ko'));
+  for (const o of out.slice(0, 400)) o.icon = await fileIcon(o.path);
+  APPS = out.slice(0, 400); setTimeout(() => { APPS = null; }, 10 * 60e3); return APPS;
+}
 ipcMain.handle('act', async (_e, a) => {
   if (!a) return '';
   if (a.k === 'get') return state();
@@ -131,6 +185,10 @@ ipcMain.handle('act', async (_e, a) => {
     if (x.url) { shell.openExternal(x.url); return x.name + ' 열었어요'; }
     if (!fs.existsSync(x.path)) return '파일을 찾지 못했어요 · 옮겨졌거나 지워졌는지 확인해 주세요';
     const err = await shell.openPath(x.path); return err ? '열지 못했어요 · 파일이 옮겨졌는지 확인해 주세요' : x.name + ' 실행했어요'; }
+  if (a.k === 'apps') return await startApps();
+  if (a.k === 'addPath') { const p = String(a.path || ''); if (!p || !fs.existsSync(p)) return '파일을 찾지 못했어요';
+    if (DB.apps.some(o => o.path === p)) return '이미 들어 있어요';
+    DB.apps.push({ id: rid(), icon2: 1, name: String(a.name || path.basename(p, path.extname(p))).slice(0, 24), path: p, icon: await fileIcon(p) }); save(); push(); return '바로가기에 넣었어요'; }
   if (a.k === 'addApp') { dlg = true; let r; try { r = await dialog.showOpenDialog(isl, { title: '바로가기에 넣을 프로그램 · 게임 고르기', defaultPath: app.getPath('desktop'), properties: ['openFile', 'multiSelections'],
       filters: [{ name: '프로그램 · 바로가기', extensions: ['exe', 'lnk', 'url', 'bat', 'cmd'] }, { name: '모든 파일', extensions: ['*'] }] }); } finally { dlg = false; if (isl) isl.setIgnoreMouseEvents(true, { forward: true }); }
     if (!r || r.canceled || !r.filePaths.length) return '';
@@ -146,7 +204,7 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'todoClear') { DB.todos = DB.todos.filter(o => !o.done); save(); push(); return '끝낸 메모를 지웠어요'; }
   return '';
 });
-ipcMain.on('hover', (_e, on) => { if (dlg) return; if (isl) isl.setIgnoreMouseEvents(!on, { forward: true }); if (!on && isl && isl.isFocused() && !(desk && desk.isVisible())) isl.blur(); });
+ipcMain.on('hover', (_e, on) => { if (dlg || dragT) return; if (isl) isl.setIgnoreMouseEvents(!on, { forward: true }); if (!on && isl && isl.isFocused() && !(desk && desk.isVisible())) isl.blur(); });
 
 function vis() { if (!isl) return; const want = !userHide && !(fsOn && !DB.tuck); if (want) { if (!isl.isVisible()) isl.showInactive(); } else if (isl.isVisible()) isl.hide(); }
 function common() {
@@ -160,6 +218,7 @@ function makeTray() {
   const menu = () => Menu.buildFromTemplate([
     ...(DESK ? [{ label: (DESK.title || '웹앱') + ' 펼치기', click: () => expand() }] : []),
     { label: '자동 숨김 (끄면 알약이 항상 보이고, 눌러야 펼쳐져요)', type: 'checkbox', checked: !!DB.tuck, click: (m) => { DB.tuck = m.checked; save(); push(); vis(); } },
+    { label: '알약 위치 처음으로 (화면 위 가운데)', click: () => { DB.edge = 'top'; DB.pos = 0.5; save(); place(); push(); } },
     { label: '아일랜드 보이기', type: 'checkbox', checked: !userHide, click: (m) => { userHide = !m.checked; vis(); } },
     { label: upd && upd.ready() ? '새 버전 적용 (다시 시작)' : '프로그램 버전 ' + ISL.ver + ' · 업데이트 확인', click: () => { if (upd && upd.ready()) { app.isQuitting = true; app.relaunch(); app.quit(); } else if (upd) upd.check(); } },
     { label: '윈도우 시작할 때 자동 실행', type: 'checkbox', checked: app.getLoginItemSettings().openAtLogin, click: (m) => app.setLoginItemSettings({ openAtLogin: m.checked }) },
