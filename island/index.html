@@ -158,10 +158,10 @@ let open=false, cap=false, over=false, dwT=0;
 const typing=()=>{ const a=document.activeElement; return !!a&&a.tagName==='INPUT'; };
 function setCap(on){ if(on===cap) return; cap=on; window.island&&island.hover(on); }
 function setOpen(on){ if(on===open) return; if(!on&&typing()) return; open=on; pill.classList.toggle('hov',on); pill.classList.remove('near'); fit(); }
-/* 펼친 판에서 마우스가 잠깐 벗어나도 바로 접지 않아요: 판 둘레 24px까지는 안으로 치고, 벗어나도 1.2초 기다렸다가 접어요(그 사이 돌아오면 그대로) */
+/* 펼친 판 둘레 24px까지는 안으로 쳐요. 그보다 멀리 나가면 바로 접어요 */
 let shutT=0;
 function track(x,y){ if(dragging||dg&&document.body.classList.contains('drag')) return; const r=pill.getBoundingClientRect(); const m=open?24:0; over=x>=r.left-2-m&&x<=r.right+2+m&&y>=r.top-8-m&&y<=r.bottom+6+m;
-  if(open){ if(over){ clearTimeout(shutT); shutT=0; } else if(!shutT) shutT=setTimeout(()=>{ shutT=0; if(!over&&open) setOpen(false); },1200); setCap(over); return; }
+  if(open){ if(!over) setOpen(false); setCap(open&&over); return; }
   if(showing){ setCap(over); if(!over){ clearTimeout(hideT); hideT=setTimeout(()=>{ if(!over&&showing) endAlert(); },2500); } return; }
   if(document.body.classList.contains('tuck')){ if(over){ if(!dwT) dwT=setTimeout(()=>{ dwT=0; if(over&&!showing){ setOpen(true); setCap(true); } },150); } else if(dwT){ clearTimeout(dwT); dwT=0; } setCap(false); return; }
   setCap(over); pill.classList.toggle('near',over); }
