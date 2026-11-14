@@ -19,14 +19,38 @@ let NP = null;
    목록 순서대로 다음 곡으로 넘어가고, 광고가 나오면 건너뛰기 버튼이 생기는 대로 눌러요. */
 const PL = { win: null, list: [], i: -1, cur: null, on: false, ad: false, t: 0, d: 0, poll: 0 };
 const YUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
-async function ytSearch(q) {
-  const r = await net.fetch('https://www.youtube.com/results?sp=EgIQAQ%253D%253D&search_query=' + encodeURIComponent(q), { headers: { 'User-Agent': YUA, 'Accept-Language': 'ko-KR,ko;q=0.9' } });
-  const h = await r.text(); const m = h.match(/var ytInitialData\s*=\s*(\{[\s\S]*?\});\s*<\/script>/); if (!m) return [];
-  const out = []; const walk = (o) => { if (!o || typeof o !== 'object' || out.length >= 15) return; if (o.videoRenderer && o.videoRenderer.videoId) { const v = o.videoRenderer;
+/* 검색 결과에서 동영상만 뽑기. 유튜브는 화면 구조를 자주 바꿔서 두 가지 모양(videoRenderer · lockupViewModel)을 다 봐요 */
+function ytPick(data) {
+  const out = [], seen = new Set(); const txt = (o) => !o ? '' : o.simpleText || (o.runs || []).map(r => r.text).join('') || o.content || '';
+  const walk = (o) => { if (!o || typeof o !== 'object' || out.length >= 20) return;
+    const v = o.videoRenderer;
+    if (v && v.videoId && !seen.has(v.videoId)) { seen.add(v.videoId);
       const th = (v.thumbnail && v.thumbnail.thumbnails || []).slice(-1)[0];
-      out.push({ id: v.videoId, t: ((v.title && v.title.runs) || [])[0] ? v.title.runs[0].text : '', a: ((v.ownerText && v.ownerText.runs) || [])[0] ? v.ownerText.runs[0].text : '', len: v.lengthText ? v.lengthText.simpleText : '', th: th ? th.url : '' }); return; }
+      let len = txt(v.lengthText); if (!len) for (const ov of v.thumbnailOverlays || []) { const t = ov.thumbnailOverlayTimeStatusRenderer; if (t) len = txt(t.text); }
+      const live = /LIVE|실시간/.test(len) || (v.badges || []).some(b => /LIVE/.test(JSON.stringify(b)));
+      if (!live) out.push({ id: v.videoId, t: txt(v.title), a: txt(v.ownerText) || txt(v.longBylineText), len, th: th ? th.url : 'https://i.ytimg.com/vi/' + v.videoId + '/mqdefault.jpg' });
+      return; }
+    const lv = o.lockupViewModel;
+    if (lv && lv.contentId && /VIDEO/.test(lv.contentType || '') && !seen.has(lv.contentId)) { seen.add(lv.contentId);
+      const md = (lv.metadata && lv.metadata.lockupMetadataViewModel) || {}; const s = JSON.stringify(lv); const len = (s.match(/"text":"(\d{1,2}:\d{2}(?::\d{2})?)"/) || [])[1] || '';
+      const rows = JSON.stringify(md.metadata || {}).match(/"content":"([^"]+)"/);
+      out.push({ id: lv.contentId, t: txt(md.title), a: rows ? rows[1] : '', len, th: 'https://i.ytimg.com/vi/' + lv.contentId + '/mqdefault.jpg' }); return; }
     for (const k in o) walk(o[k]); };
-  try { walk(JSON.parse(m[1])); } catch (e) {} return out.filter(x => x.len);
+  walk(data); return out;
+}
+let ySrch = null;
+async function ytSearch(q) {
+  const url = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
+  /* 1) 바로 받아서 읽기 */
+  try { const r = await net.fetch(url + '&sp=EgIQAQ%3D%3D', { headers: { 'User-Agent': YUA, 'Accept-Language': 'ko-KR,ko;q=0.9' } });
+    const h = await r.text(); const m = h.match(/(?:var ytInitialData|window\["ytInitialData"\])\s*=\s*(\{[\s\S]*?\});\s*<\/script>/);
+    if (m) { const L = ytPick(JSON.parse(m[1])); if (L.length) return L; } } catch (e) {}
+  /* 2) 안 되면 보이지 않는 창에서 검색 페이지를 열어 그 안의 데이터를 읽기 (동의 화면 · 로그인 상태도 그대로) */
+  try { if (!ySrch || ySrch.isDestroyed()) { ySrch = new BrowserWindow({ show: false, width: 1000, height: 800, webPreferences: { partition: 'persist:yt', backgroundThrottling: false } }); ySrch.webContents.setUserAgent(YUA); ySrch.webContents.setAudioMuted(true); }
+    await ySrch.loadURL(url);
+    for (let k = 0; k < 10; k++) { const d = await ySrch.webContents.executeJavaScript('window.ytInitialData?JSON.stringify(window.ytInitialData):""', true); if (d) { const L = ytPick(JSON.parse(d)); if (L.length) return L; } await new Promise(r => setTimeout(r, 500)); }
+  } catch (e) {}
+  return [];
 }
 function plWin() { if (PL.win && !PL.win.isDestroyed()) return PL.win;
   PL.win = new BrowserWindow({ show: false, width: 640, height: 400, webPreferences: { partition: 'persist:yt', backgroundThrottling: false, autoplayPolicy: 'no-user-gesture-required' } });

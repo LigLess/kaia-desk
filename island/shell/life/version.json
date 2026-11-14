@@ -1,10 +1,10 @@
 {
- "v": 8,
+ "v": 9,
  "files": {
   "fs.ps1": "c5cd9f2322b63721df8e2eb6207002ba5e70960e13705ef0363d655c181c0eed",
   "icon.png": "8fa245d3e56d611c59566b098bfda864e5e57a564173ffc0f3856a89d351552a",
   "island.html": "dc73994fec81eb04fa6239dfc1a02e6452d212df439e6592035f94739c2398ef",
-  "main.js": "0435bb4c0c0e33ae5ae2a2376eef4abf69bb4bbddb7a71ca57cb6a63104fc572",
+  "main.js": "fdf62d17faa6ef59591a267c7b4c58f153293c081f1d16ea7357382704b62aef",
   "morph.html": "ed1f664320b19ac4a4b46ef244b8ec7d4d8774469d35e75d2c44efb7d1a52f13",
   "np.ps1": "55d88539ed4d9ebc4f5cee0476d2d26d25b1d1422eae0dfcfdbce244cd6520d9",
   "preload.js": "88fe3d00f22ad51c5fcacf2e71db926a03188b9c314513bd224c6798105e5ee8",
