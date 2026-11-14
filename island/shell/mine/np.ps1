@@ -16,8 +16,10 @@ while ($true) {
       $p = Await ($s.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties])
       if ($p -and $p.Title) {
         $key = $p.Title + '|' + $p.Artist
-        if ($key -ne $last) {
-          $last = $key; $thumb = ''
+        if ($key -ne $last) { $last = $key; $thumb = ''; $tries = 0 }
+        # 앱이 앨범사진을 제목보다 늦게 넘겨 주는 경우가 있어서, 사진이 없으면 몇 번 더 다시 읽어요
+        if ($thumb -eq '' -and $tries -lt 6) {
+          $tries++
           if ($p.Thumbnail) {
             $rs = Await ($p.Thumbnail.OpenReadAsync()) ([Windows.Storage.Streams.IRandomAccessStreamWithContentType])
             if ($rs) { $st = [System.IO.WindowsRuntimeStreamExtensions]::AsStreamForRead($rs); $ms = New-Object System.IO.MemoryStream; $st.CopyTo($ms); if ($ms.Length -lt 600000) { $thumb = [Convert]::ToBase64String($ms.ToArray()) } }

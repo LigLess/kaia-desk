@@ -102,6 +102,12 @@ function plWin() { if (PL.win && !PL.win.isDestroyed()) return PL.win;
   PL.win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   clearInterval(PL.poll); PL.poll = setInterval(plTick, 1000); return PL.win; }
 const ART = {};
+/* 재생 중인 앱이 앨범사진을 안 넘겨 주면: 제목 + 가수로 유튜브에서 찾아 그 곡 사진을 대신 써요(곡마다 한 번만 찾아요) */
+const NPART = {};
+function npArt(v) { const key = v.t + '|' + (v.a || ''); if (NPART[key]) { if (NPART[key] !== 1) v.img = NPART[key]; return; }
+  if (!musOn()) return; NPART[key] = 1;
+  (async () => { try { const L = await ytOne((v.t + ' ' + (v.a || '')).trim()); const it = L[0]; if (!it) return;
+    const d = await artData(it.th); if (!d) return; NPART[key] = d; if (NP && NP.t + '|' + (NP.a || '') === key && !NP.th) { NP = { ...NP, img: d }; push(); } } catch (e) { dlog('npArt', e.message); } })(); }
 async function artData(url) { if (!url) return ''; if (ART[url]) return ART[url];
   try { const r = await net.fetch(url, { headers: { 'User-Agent': YUA } }); if (!r.ok) return ''; const b = Buffer.from(await r.arrayBuffer()); if (b.length > 900000) return '';
     ART[url] = 'data:' + (r.headers.get('content-type') || 'image/jpeg') + ';base64,' + b.toString('base64'); return ART[url]; } catch (e) { return ''; } }
@@ -133,6 +139,7 @@ function watchNowPlaying() {
     ps.stdout.setEncoding('utf8');
     ps.stdout.on('data', (d) => { buf += d; const L = buf.split(/\r?\n/); buf = L.pop(); const line = L.filter(x => x.trim()).pop(); if (!line) return;
       let v = null; try { v = JSON.parse(line); } catch (e) { return; }
+      if (v && !v.th) npArt(v);
       const k = JSON.stringify(v); if (k !== JSON.stringify(NP)) { NP = v; push(); } });
     ps.on('error', () => {}); ps.on('exit', () => { ps = null; if (!stop) setTimeout(start, 10000); });
   };
