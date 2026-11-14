@@ -61,7 +61,8 @@ html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-famil
 .mempty svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.6}
 /* 음악 */
 .music{display:flex;gap:16px;height:100%}
-.mart{width:168px;height:168px;flex:none;border-radius:20px;background:#2a2a2e center/cover;box-shadow:0 14px 34px rgba(0,0,0,.4);align-self:center}
+.mart{width:168px;height:168px;flex:none;border-radius:20px;background:#2a2a2e center/cover;box-shadow:0 14px 34px rgba(0,0,0,.4);align-self:center;transition:width .25s,height .25s}
+.mart.vid{width:272px;height:153px;border-radius:12px;background:#000}
 .mside{flex:1;min-width:0;display:flex;flex-direction:column}
 .mrow{display:flex;gap:8px}
 input{font:inherit;font-size:13px;color:#f6f3ee;background:rgba(0,0,0,.25);border:0;outline:0;border-radius:12px;padding:9px 12px;user-select:text;min-width:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
@@ -339,4 +340,11 @@ if(location.search.includes('demo')){ const t=(location.search.match(/tab=(\w+)/
   S={web:true,ylog:false,apps:['Chrome','카카오톡','YouTube','Steam','Discord','넷플릭스','이환'].map((n,i)=>({id:'a'+i,name:n,icon:''})),todos:[{id:'1',text:'택배 반품 접수하기'},{id:'2',text:'치과 예약 전화'},{id:'3',text:'블로그 글 마무리',done:true}],
     np:{t:'삐질게 (BBiJilGe)',a:'아야츠노 유니',on:true,img:'demo-art.png'},pl:{id:'x',t0:84,d:144,ad:false}};
   paint(); pill.classList.add('hov'); hov=true; setTab(t); fit(); }
+/* 미니 유튜브 자리: 음악 화면이 펼쳐져 있을 때만 앨범아트 칸 위에 영상을 붙여요 */
+let vLast='';
+setInterval(()=>{ if(!window.island||!island.vrect) return; const m=$('mArt'); const res=$('mRes');
+  const play=!!S.pl; m.classList.toggle('vid',play);
+  const show=play&&hov&&tab==='music'&&!dragging&&!pill.classList.contains('alrt')&&!(res&&res.classList.contains('on'));
+  let r={x:0,y:0,w:0,h:0}; if(show){ const b=m.getBoundingClientRect(); if(b.width>40&&b.top>=0) r={x:b.left,y:b.top,w:b.width,h:b.height}; }
+  const k=JSON.stringify(r); if(k!==vLast){ vLast=k; island.vrect(r); } },200);
 </script></body></html>

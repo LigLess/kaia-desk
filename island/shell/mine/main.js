@@ -96,11 +96,30 @@ async function ytSearch(q) {
   if (w.length > 1) for (let k = 0; k < w.length && out.length < 15; k++) { for (const x of await ytOne(w.filter((_, i) => i !== k).join(' '))) if (!seen.has(x.id)) { seen.add(x.id); out.push(x); } }
   return out.slice(0, 20);
 }
+/* 미니 유튜브: 플레이어를 알약 창 안의 작은 화면(WebContentsView)으로 붙여요.
+   음악 화면이 열려 있으면 앨범아트 자리에 영상이 보이고, 접혀 있으면 크기 0으로 숨긴 채 소리만 나와요. */
+const MINI_CSS = `html,body{background:#000!important;overflow:hidden!important}
+#masthead-container,ytd-masthead,#secondary,#below,#comments,ytd-watch-metadata,#related,tp-yt-app-drawer,ytd-mini-guide-renderer{display:none!important}
+#movie_player,.html5-video-player{position:fixed!important;left:0!important;top:0!important;width:100vw!important;height:100vh!important;z-index:2147483646!important;background:#000!important}
+.html5-video-container,video.html5-main-video{width:100vw!important;height:100vh!important;left:0!important;top:0!important;object-fit:contain!important}
+.ytp-chrome-top,.ytp-paid-content-overlay,.ytp-ce-element,.ytp-pause-overlay,.ytp-endscreen-content{display:none!important}`;
+let VRECT = null;
 function plWin() { if (PL.win && !PL.win.isDestroyed()) return PL.win;
-  PL.win = new BrowserWindow({ show: false, width: 640, height: 400, webPreferences: { partition: 'persist:yt', backgroundThrottling: false, autoplayPolicy: 'no-user-gesture-required' } });
-  PL.win.webContents.setUserAgent(YUA); PL.win.webContents.setAudioMuted(false);
-  PL.win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  const { WebContentsView } = require('electron');
+  const view = new WebContentsView({ webPreferences: { partition: 'persist:yt', backgroundThrottling: false, autoplayPolicy: 'no-user-gesture-required' } });
+  const wc = view.webContents; wc.setUserAgent(YUA); wc.setAudioMuted(false); wc.setWindowOpenHandler(() => ({ action: 'deny' }));
+  wc.on('dom-ready', () => { wc.insertCSS(MINI_CSS).catch(() => {}); setTimeout(() => wc.executeJavaScript('dispatchEvent(new Event("resize"))').catch(() => {}), 600); });
+  try { isl.contentView.addChildView(view); } catch (e) {}
+  view.setBounds({ x: 0, y: 0, width: 0, height: 0 });
+  PL.view = view;
+  PL.win = { webContents: wc, loadURL: (u) => wc.loadURL(u), isDestroyed: () => wc.isDestroyed(), reload: () => wc.reload(),
+    destroy: () => { try { isl.contentView.removeChildView(view); } catch (e) {} try { wc.close(); } catch (e) {} } };
+  plRect(VRECT);
   clearInterval(PL.poll); PL.poll = setInterval(plTick, 1000); return PL.win; }
+function plRect(r) { VRECT = r; if (!PL.view || PL.view.webContents.isDestroyed()) return;
+  const ok = r && r.w > 20 && r.h > 20; const b = ok ? { x: Math.round(r.x), y: Math.round(r.y), width: Math.round(r.w), height: Math.round(r.h) } : { x: 0, y: 0, width: 0, height: 0 };
+  PL.view.setBounds(b); if (ok) PL.view.webContents.executeJavaScript('dispatchEvent(new Event("resize"))').catch(() => {}); }
+ipcMain.on('vrect', (_e, r) => plRect(r));
 const ART = {};
 async function artData(url) { if (!url) return ''; if (ART[url]) return ART[url];
   try { const r = await net.fetch(url, { headers: { 'User-Agent': YUA } }); if (!r.ok) return ''; const b = Buffer.from(await r.arrayBuffer()); if (b.length > 900000) return '';
@@ -123,7 +142,7 @@ async function plCtl(b) { if (!PL.cur || !PL.win || PL.win.isDestroyed()) return
   if (b === 'play') { const on = await PL.win.webContents.executeJavaScript(`(()=>{ const v=document.querySelector('video'); if(!v) return false; window.__islWant=v.paused; if(v.paused) v.play(); else v.pause(); return !v.paused; })()`); PL.on = on; push(); return true; }
   if (b === 'skip') { await PL.win.webContents.executeJavaScript(`(()=>{ const sk=document.querySelector('.ytp-skip-ad-button,.ytp-ad-skip-button,.ytp-ad-skip-button-modern'); if(sk) sk.click(); })()`); return true; }
   return false; }
-function plStop() { clearInterval(PL.poll); if (PL.win && !PL.win.isDestroyed()) PL.win.destroy(); PL.win = null; PL.cur = null; PL.on = false; PL.list = []; PL.i = -1; push(); }
+function plStop() { clearInterval(PL.poll); if (PL.win && !PL.win.isDestroyed()) PL.win.destroy(); PL.win = null; PL.view = null; PL.cur = null; PL.on = false; PL.list = []; PL.i = -1; push(); }
 function watchNowPlaying() {
   if (process.platform !== 'win32') return;
   const { spawn } = require('child_process'); let ps = null, stop = false;

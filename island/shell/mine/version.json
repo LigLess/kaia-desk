@@ -1,13 +1,13 @@
 {
- "v": 1,
+ "v": 2,
  "files": {
   "fs.ps1": "c5cd9f2322b63721df8e2eb6207002ba5e70960e13705ef0363d655c181c0eed",
   "icon.png": "8fa245d3e56d611c59566b098bfda864e5e57a564173ffc0f3856a89d351552a",
-  "island.html": "f95b1cc2f79f8cfc3afd4e761de475e810ccbadd8dd3116da21f5d4eb4068df7",
-  "main.js": "e60b7ace8e2c32d8ed0df38fbccaf85f2a0e01d7b489b0d93add895dc6bbcd5b",
+  "island.html": "f45c96695652472a1d70fbb3b6c65930ade8d3ec662ac36b58728a25d8fdb392",
+  "main.js": "e3fdb87843e53e26eed987e368e48ca8fa767a7c7f03427e208e7bcffa98e79d",
   "morph.html": "ed1f664320b19ac4a4b46ef244b8ec7d4d8774469d35e75d2c44efb7d1a52f13",
   "np.ps1": "a5b53953a9e3c98dacf8f89b79cab313bee5c8e7837a37bcc5c0be076303a3ee",
-  "preload.js": "88fe3d00f22ad51c5fcacf2e71db926a03188b9c314513bd224c6798105e5ee8",
+  "preload.js": "9bd48fa600b04dbfb7bf73969cffc553b163d5089e7a410b552577e767dd3fd4",
   "shell.js": "4d188213ac0fec9cbb147a2bd754f80163d12ba4393e07a31298f1022258d265"
  }
 }
