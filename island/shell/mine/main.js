@@ -255,6 +255,14 @@ function media(vk) {
   } catch (e) { ps = null; return false; }
 }
 const VK = { prev: 177, play: 179, next: 176 };
+/* 바로가기(APPS)에 넣어 둔 'YouTube Music' 앱(크롬으로 설치한 앱)이 있으면, 고른 곡을 그 앱 창으로 열어요 */
+function ytmApp(url) { if (process.platform !== 'win32') return false;
+  for (const x of DB.apps || []) { if (!x.path || !/\.lnk$/i.test(x.path) || !/youtube\s*music/i.test(x.name + ' ' + x.path)) continue;
+    try { const L = shell.readShortcutLink(x.path); const id = (String(L.args || '').match(/--app-id=([a-z]+)/) || [])[1]; if (!id || !L.target) continue;
+      const prof = (String(L.args || '').match(/--profile-directory=("[^"]+"|\S+)/) || [])[1];
+      const args = []; if (prof) args.push('--profile-directory=' + prof.replace(/"/g, '')); args.push('--app-id=' + id, '--app-launch-url-for-shortcuts-menu-item=' + url);
+      spawn(L.target, args, { detached: true, stdio: 'ignore', windowsHide: false }).unref(); return true; } catch (e) { dlog('ytmApp', e.message); } }
+  return false; }
 
 /* ---------- 바로가기 ---------- */
 async function iconOf(f) { try { if (!f || !fs.existsSync(f)) return '';
@@ -299,7 +307,9 @@ ipcMain.handle('act', async (_e, a) => {
     /* 고른 곡은 로그인된 브라우저의 유튜브 뮤직에서 틀어요(프리미엄이면 광고 없음). 먼저 나오던 곡은 멈춰서 두 곡이 겹치지 않게 해요 */
     if (PL.cur) plStop(); PL.list = [];
     if (NP && NP.on) { media(VK.play); await new Promise(r => setTimeout(r, 450)); }
-    shell.openExternal('https://music.youtube.com/watch?v=' + it.id); return '유튜브 뮤직에서 틀었어요'; }
+    const url = 'https://music.youtube.com/watch?v=' + it.id;
+    if (ytmApp(url)) return 'YouTube Music 앱에서 틀었어요';
+    shell.openExternal(url); return '유튜브 뮤직에서 틀었어요'; }
   if (a.k === 'ylogin') { ytLogin(); return ''; }
   if (a.k === 'mstop') { plStop(); return '음악을 껐어요'; }
   if (a.k === 'mskip') { await plCtl('skip'); return ''; }
