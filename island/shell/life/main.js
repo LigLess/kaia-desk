@@ -14,6 +14,9 @@ let isl, desk, morph, tray, busy = false, dlg = false;
    유튜브 · 유튜브 뮤직 · 스포티파이 · 멜론 등 무엇으로 틀든, 윈도우가 볼륨 팝업에 보여 주는 곡 정보(제목 · 가수 · 썸네일)를 읽어
    알약의 재생 버튼 옆에 보여 줘요. */
 let NP = null;
+/* 문제 확인용 기록: 사용자 폴더의 island-log.txt (최근 것만 남겨요) */
+function dlog(...a) { try { const f = path.join(app.getPath('userData'), 'island-log.txt'); let t = ''; try { t = fs.readFileSync(f, 'utf8'); } catch (e) {}
+  t = (t + new Date().toISOString() + ' ' + a.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join(' ') + '\n').slice(-20000); fs.writeFileSync(f, t); } catch (e) {} }
 /* ---------- 알약 안에서 음악 찾아 틀기 (집용 · desk.json 이 있을 때만) ----------
    알약에서 검색하면 유튜브 검색 결과를 보여 주고, 고르면 화면에 안 보이는 창에서 소리만 틀어요.
    목록 순서대로 다음 곡으로 넘어가고, 광고가 나오면 건너뛰기 버튼이 생기는 대로 눌러요. */
@@ -57,11 +60,12 @@ function ytWin() { if (ySrch && !ySrch.isDestroyed() && yReady) return yReady;
   ySrch.webContents.setUserAgent(YUA); ySrch.webContents.setAudioMuted(true);
   yReady = ySrch.loadURL('https://www.youtube.com/').then(() => true).catch(e => { YERR = '유튜브에 연결하지 못했어요 (' + (e.code || e.message || '') + ')'; yReady = null; return false; });
   return yReady; }
-async function ytApiWin(q) { if (!(await ytWin())) return null;
+async function ytApiWin(q) { const ok = await ytWin(); dlog('ytWin', ok, YERR, ySrch && !ySrch.isDestroyed() && ySrch.webContents.getURL()); if (!ok) return null;
   const code = `(async()=>{ try{ const cv=(window.ytcfg&&ytcfg.get('INNERTUBE_CLIENT_VERSION'))||${JSON.stringify(YCV)};
     const r=await fetch('/youtubei/v1/search?prettyPrint=false',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:{client:{clientName:'WEB',clientVersion:cv,hl:'ko',gl:'KR'}},query:${JSON.stringify(q)},params:'EgIQAQ%3D%3D'})});
     return r.ok? await r.text() : 'ERR'+r.status; }catch(e){ return 'ERR'+e; } })()`;
   const t = await ySrch.webContents.executeJavaScript(code, true);
+  dlog('api', q, typeof t, typeof t === 'string' ? t.slice(0, 120) : t);
   if (typeof t !== 'string' || t.startsWith('ERR')) { YERR = '유튜브 검색이 막혔어요 (' + String(t).slice(3, 40) + ')'; return null; }
   const L = ytPick(JSON.parse(t)); if (!L.length) YDBG = `응답 ${t.length}자 · 영상 ${(t.match(/"videoRenderer"/g) || []).length} · 묶음 ${(t.match(/"lockupViewModel"/g) || []).length}`; return L; }
 let YDBG = '';
@@ -265,7 +269,7 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'get') return state();
   if (a.k === 'quit') { app.isQuitting = true; setTimeout(() => app.quit(), 60); return ''; }
   if (a.k === 'open') { if (desk && desk.isVisible()) collapse(); else expand(); return ''; }
-  if (a.k === 'msearch') { if (!DESK) return { items: [], err: '' }; let items = []; try { items = await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { YERR = String(e.message || e).slice(0, 60); } return { items, err: items.length ? '' : (YERR || YDBG), v: ISL.ver }; }
+  if (a.k === 'msearch') { dlog('msearch', a.q, 'DESK', !!DESK, 'ver', ISL && ISL.ver, 'core', ISL && ISL.core); if (!DESK) return { items: [], err: 'desk.json 없음', v: ISL.ver }; let items = []; try { items = await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { YERR = String(e.stack || e).slice(0, 300); } dlog('result', items.length, YERR, YDBG); return { items, err: items.length ? '' : (YERR || YDBG || '이유를 못 찾았어요'), v: ISL.ver }; }
   if (a.k === 'mplay') { if (!DESK || !Array.isArray(a.list)) return ''; PL.list = a.list.slice(0, 30).map(x => ({ id: String(x.id).replace(/[^\w-]/g, ''), t: String(x.t || '').slice(0, 120), a: String(x.a || '').slice(0, 60), len: String(x.len || ''), th: String(x.th || '').startsWith('https://') ? x.th : '' })); plPlay(Math.max(0, Math.min(PL.list.length - 1, a.i | 0))); return ''; }
   if (a.k === 'mstop') { plStop(); return '음악을 껐어요'; }
   if (a.k === 'mskip') { await plCtl('skip'); return ''; }
