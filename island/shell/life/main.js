@@ -20,6 +20,8 @@ function dlog(...a) { try { const f = path.join(app.getPath('userData'), 'island
 /* ---------- 알약 안에서 음악 찾아 틀기 (집용 · desk.json 이 있을 때만) ----------
    알약에서 검색하면 유튜브 검색 결과를 보여 주고, 고르면 화면에 안 보이는 창에서 소리만 틀어요.
    목록 순서대로 다음 곡으로 넘어가고, 광고가 나오면 건너뛰기 버튼이 생기는 대로 눌러요. */
+/* 음악 검색 켜기/끄기: 트레이 메뉴에서 정해요. 정한 적 없으면 집용(desk.json 있음)만 켜져 있어요 */
+const musOn = () => (DB.mus != null ? !!DB.mus : !!DESK);
 const PL = { win: null, list: [], i: -1, cur: null, on: false, ad: false, t: 0, d: 0, poll: 0 };
 const YUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';  /* 오래된 크롬으로 보이면 유튜브가 결과를 덜 줘요 */
 /* 검색 결과에서 동영상만 뽑기. 유튜브는 화면 구조를 자주 바꿔서 두 가지 모양(videoRenderer · lockupViewModel)을 다 봐요 */
@@ -122,10 +124,10 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 /* ---------- 저장 ---------- */
 const FILE = () => path.join(app.getPath('userData'), 'island.json');
 let DB = { apps: [], todos: [], tuck: true };
-function load() { try { const d = JSON.parse(fs.readFileSync(FILE(), 'utf8')); DB = { apps: Array.isArray(d.apps) ? d.apps : [], todos: Array.isArray(d.todos) ? d.todos : [], tuck: d.tuck !== false, edge: d.edge, pos: d.pos, did: d.did }; } catch (e) {} }
+function load() { try { const d = JSON.parse(fs.readFileSync(FILE(), 'utf8')); DB = { apps: Array.isArray(d.apps) ? d.apps : [], todos: Array.isArray(d.todos) ? d.todos : [], tuck: d.tuck !== false, mus: d.mus, edge: d.edge, pos: d.pos, did: d.did }; } catch (e) {} }
 function save() { try { fs.mkdirSync(path.dirname(FILE()), { recursive: true }); fs.writeFileSync(FILE(), JSON.stringify(DB)); } catch (e) {} }
 const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-const state = () => ({ mus: !!DESK, pl: PL.cur ? { ...PL.cur, on: PL.on, ad: PL.ad, t0: PL.t, d: PL.d } : null, np: PL.cur ? { t: PL.cur.t, a: PL.cur.a, on: PL.on, th: '', img: PL.cur.th } : NP, y0: true, lay: layout().lay, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
+const state = () => ({ mus: musOn(), pl: PL.cur ? { ...PL.cur, on: PL.on, ad: PL.ad, t0: PL.t, d: PL.d } : null, np: PL.cur ? { t: PL.cur.t, a: PL.cur.a, on: PL.on, th: '', img: PL.cur.th } : NP, y0: true, lay: layout().lay, tuck: !!DB.tuck && !(desk && desk.isVisible()), apps: DB.apps, todos: DB.todos, web: !!DESK, title: DESK ? (DESK.title || '웹앱') : '', open: !!(desk && desk.isVisible()) });
 function push() { if (isl) isl.webContents.send('state', state()); }
 
 /* ---------- 창 ---------- */
@@ -269,8 +271,8 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'get') return state();
   if (a.k === 'quit') { app.isQuitting = true; setTimeout(() => app.quit(), 60); return ''; }
   if (a.k === 'open') { if (desk && desk.isVisible()) collapse(); else expand(); return ''; }
-  if (a.k === 'msearch') { dlog('msearch', a.q, 'DESK', !!DESK, 'ver', ISL && ISL.ver, 'core', ISL && ISL.core); if (!DESK) return { items: [], err: 'desk.json 없음', v: ISL.ver }; let items = []; try { items = await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { YERR = String(e.stack || e).slice(0, 300); } dlog('result', items.length, YERR, YDBG); return { items, err: items.length ? '' : (YERR || YDBG || '이유를 못 찾았어요'), v: ISL.ver }; }
-  if (a.k === 'mplay') { if (!DESK || !Array.isArray(a.list)) return ''; PL.list = a.list.slice(0, 30).map(x => ({ id: String(x.id).replace(/[^\w-]/g, ''), t: String(x.t || '').slice(0, 120), a: String(x.a || '').slice(0, 60), len: String(x.len || ''), th: String(x.th || '').startsWith('https://') ? x.th : '' })); plPlay(Math.max(0, Math.min(PL.list.length - 1, a.i | 0))); return ''; }
+  if (a.k === 'msearch') { dlog('msearch', a.q, 'DESK', !!DESK, 'ver', ISL && ISL.ver, 'core', ISL && ISL.core); if (!musOn()) return { items: [], err: '음악 검색이 꺼져 있어요 (트레이 메뉴에서 켜기)', v: ISL.ver }; let items = []; try { items = await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { YERR = String(e.stack || e).slice(0, 300); } dlog('result', items.length, YERR, YDBG); return { items, err: items.length ? '' : (YERR || YDBG || '이유를 못 찾았어요'), v: ISL.ver }; }
+  if (a.k === 'mplay') { if (!musOn() || !Array.isArray(a.list)) return ''; PL.list = a.list.slice(0, 30).map(x => ({ id: String(x.id).replace(/[^\w-]/g, ''), t: String(x.t || '').slice(0, 120), a: String(x.a || '').slice(0, 60), len: String(x.len || ''), th: String(x.th || '').startsWith('https://') ? x.th : '' })); plPlay(Math.max(0, Math.min(PL.list.length - 1, a.i | 0))); return ''; }
   if (a.k === 'mstop') { plStop(); return '음악을 껐어요'; }
   if (a.k === 'mskip') { await plCtl('skip'); return ''; }
   if (a.k === 'media') { if (await plCtl(a.b)) return ''; return media(VK[a.b]) ? '' : '음악 조작은 윈도우에서만 돼요'; }
@@ -312,6 +314,7 @@ function makeTray() {
     ...(DESK ? [{ label: (DESK.title || '웹앱') + ' 펼치기', click: () => expand() }] : []),
     { label: '자동 숨김 (끄면 알약이 항상 보이고, 눌러야 펼쳐져요)', type: 'checkbox', checked: !!DB.tuck, click: (m) => { DB.tuck = m.checked; save(); push(); vis(); } },
     { label: '알약 위치 처음으로 (화면 위 가운데)', click: () => { DB.edge = 'top'; DB.pos = 0.5; save(); place(); push(); } },
+    { label: '알약에서 음악 검색 (유튜브)', type: 'checkbox', checked: musOn(), click: (m) => { DB.mus = m.checked; save(); if (!m.checked) plStop(); push(); } },
     { label: '아일랜드 보이기', type: 'checkbox', checked: !userHide, click: (m) => { userHide = !m.checked; vis(); } },
     { label: upd && upd.ready() ? '새 버전 적용 (다시 시작)' : '프로그램 버전 ' + ISL.ver + ' · 업데이트 확인', click: () => { if (upd && upd.ready()) { app.isQuitting = true; app.relaunch(); app.quit(); } else if (upd) upd.check(); } },
     { label: '윈도우 시작할 때 자동 실행', type: 'checkbox', checked: app.getLoginItemSettings().openAtLogin, click: (m) => app.setLoginItemSettings({ openAtLogin: m.checked }) },
