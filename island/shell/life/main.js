@@ -18,7 +18,7 @@ let NP = null;
    알약에서 검색하면 유튜브 검색 결과를 보여 주고, 고르면 화면에 안 보이는 창에서 소리만 틀어요.
    목록 순서대로 다음 곡으로 넘어가고, 광고가 나오면 건너뛰기 버튼이 생기는 대로 눌러요. */
 const PL = { win: null, list: [], i: -1, cur: null, on: false, ad: false, t: 0, d: 0, poll: 0 };
-const YUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+const YUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';  /* 오래된 크롬으로 보이면 유튜브가 결과를 덜 줘요 */
 /* 검색 결과에서 동영상만 뽑기. 유튜브는 화면 구조를 자주 바꿔서 두 가지 모양(videoRenderer · lockupViewModel)을 다 봐요 */
 function ytPick(data) {
   const out = [], seen = new Set(); const txt = (o) => !o ? '' : o.simpleText || (o.runs || []).map(r => r.text).join('') || o.content || '';
@@ -63,11 +63,12 @@ async function ytApiWin(q) { if (!(await ytWin())) return null;
     return r.ok? await r.text() : 'ERR'+r.status; }catch(e){ return 'ERR'+e; } })()`;
   const t = await ySrch.webContents.executeJavaScript(code, true);
   if (typeof t !== 'string' || t.startsWith('ERR')) { YERR = '유튜브 검색이 막혔어요 (' + String(t).slice(3, 40) + ')'; return null; }
-  return ytPick(JSON.parse(t)); }
+  const L = ytPick(JSON.parse(t)); if (!L.length) YDBG = `응답 ${t.length}자 · 영상 ${(t.match(/"videoRenderer"/g) || []).length} · 묶음 ${(t.match(/"lockupViewModel"/g) || []).length}`; return L; }
+let YDBG = '';
 async function ytOne(q) { let L = null; try { L = await ytApiWin(q); } catch (e) { YERR = String(e.message || e).slice(0, 60); }
   if (L === null) { try { L = await ytApi(q); } catch (e) { L = []; } } return L || []; }
 async function ytSearch(q) {
-  q = q.trim(); YERR = ''; let L = await ytOne(q);
+  q = q.trim(); YERR = ''; YDBG = ''; let L = await ytOne(q);
   if (L.length) return L;
   const w = q.split(/\s+/).filter(Boolean); const seen = new Set(); const out = [];
   if (w.length > 1) for (let k = 0; k < w.length && out.length < 15; k++) { for (const x of await ytOne(w.filter((_, i) => i !== k).join(' '))) if (!seen.has(x.id)) { seen.add(x.id); out.push(x); } }
@@ -103,6 +104,7 @@ function watchNowPlaying() {
   const start = () => { if (stop) return;
     try { ps = spawn('powershell.exe', ['-NoProfile', '-NoLogo', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', path.join(__dirname, 'np.ps1')], { windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }); } catch (e) { return; }
     let buf = '';
+    ps.stdout.setEncoding('utf8');
     ps.stdout.on('data', (d) => { buf += d; const L = buf.split(/\r?\n/); buf = L.pop(); const line = L.filter(x => x.trim()).pop(); if (!line) return;
       let v = null; try { v = JSON.parse(line); } catch (e) { return; }
       const k = JSON.stringify(v); if (k !== JSON.stringify(NP)) { NP = v; push(); } });
@@ -263,7 +265,7 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'get') return state();
   if (a.k === 'quit') { app.isQuitting = true; setTimeout(() => app.quit(), 60); return ''; }
   if (a.k === 'open') { if (desk && desk.isVisible()) collapse(); else expand(); return ''; }
-  if (a.k === 'msearch') { if (!DESK) return { items: [], err: '' }; let items = []; try { items = await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { YERR = String(e.message || e).slice(0, 60); } return { items, err: items.length ? '' : YERR, v: ISL.ver }; }
+  if (a.k === 'msearch') { if (!DESK) return { items: [], err: '' }; let items = []; try { items = await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { YERR = String(e.message || e).slice(0, 60); } return { items, err: items.length ? '' : (YERR || YDBG), v: ISL.ver }; }
   if (a.k === 'mplay') { if (!DESK || !Array.isArray(a.list)) return ''; PL.list = a.list.slice(0, 30).map(x => ({ id: String(x.id).replace(/[^\w-]/g, ''), t: String(x.t || '').slice(0, 120), a: String(x.a || '').slice(0, 60), len: String(x.len || ''), th: String(x.th || '').startsWith('https://') ? x.th : '' })); plPlay(Math.max(0, Math.min(PL.list.length - 1, a.i | 0))); return ''; }
   if (a.k === 'mstop') { plStop(); return '음악을 껐어요'; }
   if (a.k === 'mskip') { await plCtl('skip'); return ''; }
