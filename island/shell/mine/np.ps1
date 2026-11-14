@@ -24,7 +24,12 @@ while ($true) {
           }
         }
         $on = [string]$s.GetPlaybackInfo().PlaybackStatus -eq 'Playing'
-        $o = @{ t = $p.Title; a = $p.Artist; on = $on; th = $thumb; app = $s.SourceAppUserModelId }
+        # 재생 위치/전체 길이(초): 앱은 위치를 가끔만 알려 줘서, 마지막으로 알려 준 뒤 흐른 시간을 더해요
+        $pos = 0; $dur = 0
+        try { $tl = $s.GetTimelineProperties(); $dur = [math]::Round($tl.EndTime.TotalSeconds); $pos = $tl.Position.TotalSeconds
+          if ($on -and $tl.LastUpdatedTime.Year -gt 2000) { $pos += ([DateTimeOffset]::Now - $tl.LastUpdatedTime).TotalSeconds }
+          if ($dur -gt 0 -and $pos -gt $dur) { $pos = $dur }; $pos = [math]::Max(0, [math]::Round($pos)) } catch {}
+        $o = @{ t = $p.Title; a = $p.Artist; on = $on; th = $thumb; app = $s.SourceAppUserModelId; pos = $pos; dur = $dur }
       }
     }
   } catch {}
