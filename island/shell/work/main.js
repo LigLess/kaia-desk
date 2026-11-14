@@ -16,7 +16,8 @@ let isl, desk, morph, tray, busy = false;
 if (!app.requestSingleInstanceLock()) { app.quit(); }
 app.on('second-instance', () => expand());
 
-const disp = () => screen.getPrimaryDisplay();
+/* 알약이 있는 모니터: 마지막으로 놓은 모니터(CFG.did). 그 모니터가 빠졌으면 기본 모니터 */
+const disp = () => { const id = typeof CFG !== 'undefined' && CFG.did; return (id && screen.getAllDisplays().find(d => d.id === id)) || screen.getPrimaryDisplay(); };
 /* ---------- 알약 위치 ----------
    CFG.edge: 붙어 있는 벽(top · bottom · left · right), CFG.pos: 그 벽을 따라 어디쯤(0~1).
    알약 창(투명)을 벽에 붙이고, 창 안에서 알약이 어디에 있고 어느 쪽으로 펼쳐질지(lay)를 계산해 화면에 알려 줘요. */
@@ -50,7 +51,7 @@ ipcMain.on('drag', (_e, d) => {
     return; }
   if (d.k === 'end') end();
   function end() { if (!dragT) return; clearInterval(dragT); dragT = 0;
-    const p = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()) && screen.getCursorScreenPoint(), b = disp().bounds, wa = disp().workArea;
+    const p = screen.getCursorScreenPoint(), D = screen.getDisplayNearestPoint(p); CFG.did = D.id; const b = D.bounds, wa = D.workArea;
     const dist = { top: p.y - b.y, bottom: wa.y + wa.height - p.y, left: p.x - wa.x, right: wa.x + wa.width - p.x };
     const e = Object.keys(dist).sort((a, z) => dist[a] - dist[z])[0];
     CFG.edge = e; CFG.pos = e === 'top' || e === 'bottom' ? (p.x - b.x) / b.width : (p.y - wa.y) / wa.height; cfgSave();
