@@ -17,8 +17,45 @@ if (!app.requestSingleInstanceLock()) { app.quit(); }
 app.on('second-instance', () => expand());
 
 const disp = () => screen.getPrimaryDisplay();
-function islBounds() { const b = disp().bounds; return { x: Math.round(b.x + (b.width - W) / 2), y: b.y, width: W, height: H }; }
-function pillRect() { const i = islBounds(); return { x: i.x + (W - PILL.w) / 2, y: i.y + 6, w: PILL.w, h: PILL.h, rad: 17 }; }
+/* ---------- 알약 위치 ----------
+   CFG.edge: 붙어 있는 벽(top · bottom · left · right), CFG.pos: 그 벽을 따라 어디쯤(0~1).
+   알약 창(투명)을 벽에 붙이고, 창 안에서 알약이 어디에 있고 어느 쪽으로 펼쳐질지(lay)를 계산해 화면에 알려 줘요. */
+const SIDE_H = 900;
+function layout() {
+  const b = disp().bounds, wa = disp().workArea, e = ['top', 'bottom', 'left', 'right'].includes(CFG.edge) ? CFG.edge : 'top', pos = Math.min(1, Math.max(0, CFG.pos == null ? 0.5 : +CFG.pos));
+  const clamp = (v, a, z) => Math.max(a, Math.min(z, v));
+  if (e === 'top' || e === 'bottom') {
+    const cx = b.x + pos * b.width, wx = Math.round(clamp(cx - W / 2, b.x, b.x + b.width - W)), wy = e === 'top' ? b.y : wa.y + wa.height - H;
+    let rel = Math.round(cx - wx); const ax = rel < 236 ? 'l' : rel > W - 236 ? 'r' : 'c';
+    const x = ax === 'c' ? rel : ax === 'l' ? clamp(rel - PILL.w / 2, 6, W - PILL.w - 6) : clamp(W - rel - PILL.w / 2, 6, W - PILL.w - 6);
+    return { edge: e, win: { x: wx, y: wy, width: W, height: H }, lay: { edge: e, ax, x, ay: e === 'top' ? 't' : 'b', y: 6 } };
+  }
+  const h = Math.min(SIDE_H, wa.height), cy = wa.y + pos * wa.height, wy = Math.round(clamp(cy - h / 2, wa.y, wa.y + wa.height - h));
+  const wx = e === 'left' ? wa.x : wa.x + wa.width - W, rel = Math.round(clamp(cy - wy, 23, h - 23));
+  const ay = rel - 17 + 470 <= h ? 't' : 'b';
+  return { edge: e, win: { x: wx, y: wy, width: W, height: h }, lay: { edge: e, ax: e === 'left' ? 'l' : 'r', x: 6, ay, y: ay === 't' ? rel - 17 : h - rel - 17 } };
+}
+function islBounds() { return layout().win; }
+function pillRect() { const L = layout(), w = L.win, l = L.lay;
+  const x = w.x + (l.ax === 'c' ? l.x - PILL.w / 2 : l.ax === 'l' ? l.x : w.width - l.x - PILL.w), y = w.y + (l.ay === 't' ? l.y : w.height - l.y - PILL.h);
+  return { x, y, w: PILL.w, h: PILL.h, rad: 17 }; }
+/* ---------- 끌어서 옮기기 ----------
+   알약을 누른 채 끌면 창이 마우스를 따라오고, 놓으면 가장 가까운 벽(위 · 아래 · 왼쪽 · 오른쪽)에 붙어요. */
+let dragT = 0;
+ipcMain.on('drag', (_e, d) => {
+  if (!isl || !d) return;
+  if (d.k === 'start') { clearInterval(dragT); const gx = +d.gx || 0, gy = +d.gy || 0, t0 = Date.now(), sz = isl.getBounds();
+    isl.setIgnoreMouseEvents(false);
+    dragT = setInterval(() => { const p = screen.getCursorScreenPoint(); isl.setBounds({ x: p.x - gx, y: p.y - gy, width: sz.width, height: sz.height }); if (Date.now() - t0 > 30000) end(); }, 16);
+    return; }
+  if (d.k === 'end') end();
+  function end() { if (!dragT) return; clearInterval(dragT); dragT = 0;
+    const p = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()) && screen.getCursorScreenPoint(), b = disp().bounds, wa = disp().workArea;
+    const dist = { top: p.y - b.y, bottom: wa.y + wa.height - p.y, left: p.x - wa.x, right: wa.x + wa.width - p.x };
+    const e = Object.keys(dist).sort((a, z) => dist[a] - dist[z])[0];
+    CFG.edge = e; CFG.pos = e === 'top' || e === 'bottom' ? (p.x - b.x) / b.width : (p.y - wa.y) / wa.height; cfgSave();
+    place(); push(); isl.setIgnoreMouseEvents(true, { forward: true }); }
+});
 function deskRect() { const wa = disp().workArea, b = disp().bounds; const w = Math.min(1480, wa.width - 48), top = b.y + 50;
   return { x: Math.round(wa.x + (wa.width - w) / 2), y: top, w, h: wa.y + wa.height - top - 14, rad: 18 }; }
 function place() { if (isl) isl.setBounds(islBounds()); if (morph) morph.setBounds(disp().bounds); if (desk && desk.isVisible()) { const d = deskRect(); desk.setBounds({ x: d.x, y: d.y, width: d.w, height: d.h }); } }
@@ -90,7 +127,7 @@ const state = { open: false }; let last = {};
 const CFGF = () => path.join(app.getPath('userData'), 'shell.json'); let CFG = { tuck: true };
 function cfgLoad() { try { CFG = { tuck: true, ...JSON.parse(fs.readFileSync(CFGF(), 'utf8')) }; } catch (e) {} }
 function cfgSave() { try { fs.writeFileSync(CFGF(), JSON.stringify(CFG)); } catch (e) {} }
-function push() { if (isl) isl.webContents.send('state', { ...last, open: state.open, y0: true, tuck: !!CFG.tuck && !state.open }); }
+function push() { if (isl) isl.webContents.send('state', { ...last, open: state.open, y0: true, lay: layout().lay, tuck: !!CFG.tuck && !state.open }); }
 async function tick() { if (!desk || !isl) return; try { last = (await desk.webContents.executeJavaScript('window.islandProbe?islandProbe():' + PROBE, true)) || {}; push(); last.q = []; } catch (e) {} }
 const js = (code) => desk.webContents.executeJavaScript(code, true).catch(() => null);
 /* 알약에서 누른 기능 실행 */
@@ -116,7 +153,7 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'open') { if (desk.isVisible() && !a.where) collapse(); else expand(a.where); return ''; }
   return '';
 });
-ipcMain.on('hover', (_e, on) => { if (isl) isl.setIgnoreMouseEvents(!on, { forward: true }); if (!on && isl && isl.isFocused() && desk && !desk.isVisible()) isl.blur(); });
+ipcMain.on('hover', (_e, on) => { if (dragT) return; if (isl) isl.setIgnoreMouseEvents(!on, { forward: true }); if (!on && isl && isl.isFocused() && desk && !desk.isVisible()) isl.blur(); });
 
 function vis() { if (!isl) return; const want = !userHide && !(fsOn && !CFG.tuck); if (want) { if (!isl.isVisible()) isl.showInactive(); } else if (isl.isVisible()) isl.hide(); }
 function common() {
@@ -132,6 +169,7 @@ function makeTray() {
     { label: '새로 불러오기', click: () => reloadAll() },
     { label: upd && upd.ready() ? '새 버전 적용 (다시 시작)' : '프로그램 버전 ' + ISL.ver + ' · 업데이트 확인', click: () => { if (upd && upd.ready()) { app.isQuitting = true; app.relaunch(); app.quit(); } else if (upd) upd.check(); } },
     { label: '자동 숨김 (끄면 알약이 항상 보이고, 눌러야 펼쳐져요)', type: 'checkbox', checked: !!CFG.tuck, click: (m) => { CFG.tuck = m.checked; cfgSave(); push(); vis(); } },
+    { label: '알약 위치 처음으로 (화면 위 가운데)', click: () => { CFG.edge = 'top'; CFG.pos = 0.5; cfgSave(); place(); push(); } },
     { label: '아일랜드 보이기', type: 'checkbox', checked: !userHide, click: (m) => { userHide = !m.checked; vis(); } },
     { label: '윈도우 시작할 때 자동 실행', type: 'checkbox', checked: app.getLoginItemSettings().openAtLogin, click: (m) => app.setLoginItemSettings({ openAtLogin: m.checked }) },
     { type: 'separator' }, { label: '종료', click: () => { app.isQuitting = true; app.quit(); } } ]);

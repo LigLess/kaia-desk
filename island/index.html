@@ -1,16 +1,22 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><title>KAIA Island</title>
 <style>
+:root{--bx:translateX(-50%)}
 html,body{margin:0;height:100%;background:transparent;overflow:hidden;font-family:"Segoe UI Variable Text","Segoe UI","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased;user-select:none;color:#f4f2ee}
 #pill{position:absolute;left:50%;top:0;transform:translateX(-50%);width:128px;height:34px;border-radius:17px;background:#0b0b0d;overflow:hidden;
   box-shadow:0 8px 24px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.06);
   transition:width .5s cubic-bezier(.2,.9,.25,1.08),height .5s cubic-bezier(.2,.9,.25,1.08),border-radius .5s ease,transform .3s cubic-bezier(.2,.9,.25,1),box-shadow .2s}
 body.y0 #pill{top:6px}
 body.tuck #pill:not(.hov):not(.alrt){transform:translate(-50%,-36px);box-shadow:0 2px 8px rgba(0,0,0,.25)}
+/* 위치를 옮긴 경우(lay): 어느 벽 · 어느 쪽으로 펼칠지는 스크립트가 --bx(기본 위치) · --tk(숨을 때 밀어낼 방향)로 정해요 */
+body.lay #pill{transform:var(--bx)}
+body.lay.tuck #pill:not(.hov):not(.alrt){transform:var(--bx) var(--tk)}
+body.drag #pill{transition:none!important;transform:var(--bx)!important;cursor:grabbing;box-shadow:0 14px 34px rgba(0,0,0,.45),inset 0 0 0 1.5px rgba(255,157,77,.8)}
+.idle{touch-action:none}
 #pill.near:not(.hov):not(.alrt){box-shadow:0 8px 24px rgba(0,0,0,.3),inset 0 0 0 1.5px rgba(255,157,77,.7)}
 #pill.hov{width:440px;border-radius:26px}
 #pill.alrt{width:460px;height:var(--ah,96px);border-radius:28px;animation:pop .6s cubic-bezier(.2,.9,.25,1.2)}
-@keyframes pop{0%{transform:translateX(-50%) scale(.96)}60%{transform:translateX(-50%) scale(1.02)}100%{transform:translateX(-50%) scale(1)}}
+@keyframes pop{0%{transform:var(--bx,translateX(-50%)) scale(.96)}60%{transform:var(--bx,translateX(-50%)) scale(1.02)}100%{transform:var(--bx,translateX(-50%)) scale(1)}}
 .v{position:absolute;left:0;right:0;top:0;opacity:0;transition:opacity .2s ease;pointer-events:none}
 #pill:not(.hov):not(.alrt) .idle,#pill.hov .big,#pill.alrt .al{opacity:1;transition-delay:.16s;pointer-events:auto}
 .idle{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;cursor:pointer}
@@ -152,7 +158,7 @@ let open=false, cap=false, over=false, dwT=0;
 const typing=()=>{ const a=document.activeElement; return !!a&&a.tagName==='INPUT'; };
 function setCap(on){ if(on===cap) return; cap=on; window.island&&island.hover(on); }
 function setOpen(on){ if(on===open) return; if(!on&&typing()) return; open=on; pill.classList.toggle('hov',on); pill.classList.remove('near'); fit(); }
-function track(x,y){ const r=pill.getBoundingClientRect(); over=x>=r.left-2&&x<=r.right+2&&y>=r.top-8&&y<=r.bottom+6;
+function track(x,y){ if(dragging||dg&&document.body.classList.contains('drag')) return; const r=pill.getBoundingClientRect(); over=x>=r.left-2&&x<=r.right+2&&y>=r.top-8&&y<=r.bottom+6;
   if(showing){ setCap(over); if(!over){ clearTimeout(hideT); hideT=setTimeout(()=>{ if(!over&&showing) endAlert(); },2500); } return; }
   if(open){ if(!over) setOpen(false); setCap(open); return; }
   if(document.body.classList.contains('tuck')){ if(over){ if(!dwT) dwT=setTimeout(()=>{ dwT=0; if(over&&!showing){ setOpen(true); setCap(true); } },150); } else if(dwT){ clearTimeout(dwT); dwT=0; } setCap(false); return; }
@@ -161,9 +167,22 @@ if(window.island&&island.cur) island.cur(p=>track(p.x,p.y));
 else { document.addEventListener('mousemove',e=>track(e.clientX,e.clientY)); document.addEventListener('mouseleave',()=>track(-999,-999)); }
 document.addEventListener('focusout',()=>setTimeout(()=>{ if(open&&!over&&!typing()){ setOpen(false); setCap(false); } },0));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&e.target.tagName==='INPUT'){ e.target.blur(); } });
-$('idle').onclick=()=>{ if(S.open){ act({k:'open'}); return; } setOpen(true); setCap(true); };
+/* 끌어서 옮기기: 알약(또는 펼친 판의 시계 부분)을 누른 채 5px 넘게 움직이면 끌기 시작 */
+let dg=null, dragging=false, justDragged=0;
+function dragDown(e){ if(e.button!==0||!window.island||!island.drag) return; dg={x:e.clientX,y:e.clientY}; }
+document.addEventListener('mousemove',e=>{ if(!dg||dragging) return; if(Math.hypot(e.clientX-dg.x,e.clientY-dg.y)<5) return;
+  dragging=true; if(open){ open=false; pill.classList.remove('hov'); fit(); } const r=pill.getBoundingClientRect();
+  document.body.classList.add('drag'); island.drag({k:'start',gx:dg.x,gy:dg.y}); });
+document.addEventListener('mouseup',()=>{ if(dragging){ dragging=false; justDragged=Date.now(); document.body.classList.remove('drag'); cap=false; island.drag({k:'end'}); } dg=null; });
+$('idle').addEventListener('mousedown',dragDown); document.querySelector('.clock').addEventListener('mousedown',dragDown); document.querySelector('.clock').style.cursor='grab';
+$('idle').onclick=()=>{ if(Date.now()-justDragged<300) return; if(S.open){ act({k:'open'}); return; } setOpen(true); setCap(true); };
 
-window.island&&island.on(s=>{ S=s||{}; document.body.classList.toggle('y0',!!S.y0); document.body.classList.toggle('tuck',!!S.tuck); if(S.q&&S.q.length) Q.push(...S.q); paint(); nextAlert(); });
+function placePill(L){ const st=pill.style; document.body.classList.toggle('lay',!!L); if(!L){ ['left','right','top','bottom'].forEach(k=>st[k]=''); document.documentElement.style.setProperty('--bx','translateX(-50%)'); return; }
+  st.left=L.ax==='c'?L.x+'px':L.ax==='l'?L.x+'px':'auto'; st.right=L.ax==='r'?L.x+'px':'auto';
+  st.top=L.ay==='t'?L.y+'px':'auto'; st.bottom=L.ay==='b'?L.y+'px':'auto';
+  const R=document.documentElement.style; R.setProperty('--bx',L.ax==='c'?'translateX(-50%)':'translateX(0)');
+  R.setProperty('--tk',{top:'translateY(-36px)',bottom:'translateY(36px)',left:'translateX(-130px)',right:'translateX(130px)'}[L.edge]||'translateY(-36px)'); }
+window.island&&island.on(s=>{ S=s||{}; placePill(S.lay); document.body.classList.toggle('y0',!!S.y0&&!S.lay); document.body.classList.toggle('tuck',!!S.tuck); if(S.q&&S.q.length) Q.push(...S.q); paint(); nextAlert(); });
 $('bOpen').onclick=()=>act({k:'open'});
 $('bQuit').onclick=()=>{ const b=$('bQuit'); if(b.dataset.sure){ act({k:'quit'}); return; } b.dataset.sure='1'; b.textContent='끌까요?'; setTimeout(()=>{ delete b.dataset.sure; b.textContent='종료'; },2500); };
 $('dock').addEventListener('click',e=>{ const b=e.target.closest('.dk'); if(b) setTab(b.dataset.p); });
