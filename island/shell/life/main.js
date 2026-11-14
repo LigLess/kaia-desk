@@ -38,19 +38,25 @@ function ytPick(data) {
     for (const k in o) walk(o[k]); };
   walk(data); return out;
 }
-let ySrch = null;
+/* 유튜브 검색: 유튜브 앱이 쓰는 검색 주소(youtubei/v1/search)에 바로 물어봐요.
+   로그인 안 한 상태에선 어떤 검색어(예: "아야츠노 유니 삐질게")가 결과 0개로 오는 일이 있어서,
+   0개면 단어를 하나씩 빼 본 검색어로 다시 찾아 합쳐요. */
+let YCV = '2.20261112.10.00';
+async function ytApi(q) {
+  const call = () => net.fetch('https://www.youtube.com/youtubei/v1/search?prettyPrint=false', { method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': YUA, 'Accept-Language': 'ko-KR,ko;q=0.9' },
+    body: JSON.stringify({ context: { client: { clientName: 'WEB', clientVersion: YCV, hl: 'ko', gl: 'KR' } }, query: q, params: 'EgIQAQ%3D%3D' }) });
+  let r = await call();
+  if (!r.ok) { try { const h = await (await net.fetch('https://www.youtube.com/', { headers: { 'User-Agent': YUA } })).text(); const m = h.match(/"INNERTUBE_CLIENT_VERSION":"([\d.]+)"/); if (m) { YCV = m[1]; r = await call(); } } catch (e) {} }
+  if (!r.ok) return [];
+  return ytPick(await r.json());
+}
 async function ytSearch(q) {
-  const url = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
-  /* 1) 바로 받아서 읽기 */
-  try { const r = await net.fetch(url + '&sp=EgIQAQ%3D%3D', { headers: { 'User-Agent': YUA, 'Accept-Language': 'ko-KR,ko;q=0.9' } });
-    const h = await r.text(); const m = h.match(/(?:var ytInitialData|window\["ytInitialData"\])\s*=\s*(\{[\s\S]*?\});\s*<\/script>/);
-    if (m) { const L = ytPick(JSON.parse(m[1])); if (L.length) return L; } } catch (e) {}
-  /* 2) 안 되면 보이지 않는 창에서 검색 페이지를 열어 그 안의 데이터를 읽기 (동의 화면 · 로그인 상태도 그대로) */
-  try { if (!ySrch || ySrch.isDestroyed()) { ySrch = new BrowserWindow({ show: false, width: 1000, height: 800, webPreferences: { partition: 'persist:yt', backgroundThrottling: false } }); ySrch.webContents.setUserAgent(YUA); ySrch.webContents.setAudioMuted(true); }
-    await ySrch.loadURL(url);
-    for (let k = 0; k < 10; k++) { const d = await ySrch.webContents.executeJavaScript('window.ytInitialData?JSON.stringify(window.ytInitialData):""', true); if (d) { const L = ytPick(JSON.parse(d)); if (L.length) return L; } await new Promise(r => setTimeout(r, 500)); }
-  } catch (e) {}
-  return [];
+  q = q.trim(); let L = []; try { L = await ytApi(q); } catch (e) {}
+  if (L.length) return L;
+  const w = q.split(/\s+/).filter(Boolean); const seen = new Set(); const out = [];
+  if (w.length > 1) for (let k = 0; k < w.length && out.length < 15; k++) { const sub = w.filter((_, i) => i !== k).join(' ');
+    try { for (const x of await ytApi(sub)) if (!seen.has(x.id)) { seen.add(x.id); out.push(x); } } catch (e) {} }
+  return out.slice(0, 20);
 }
 function plWin() { if (PL.win && !PL.win.isDestroyed()) return PL.win;
   PL.win = new BrowserWindow({ show: false, width: 640, height: 400, webPreferences: { partition: 'persist:yt', backgroundThrottling: false, autoplayPolicy: 'no-user-gesture-required' } });
