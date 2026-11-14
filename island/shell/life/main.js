@@ -50,12 +50,27 @@ async function ytApi(q) {
   if (!r.ok) return [];
   return ytPick(await r.json());
 }
+/* 검색은 보이지 않는 유튜브 창 안에서 해요(유튜브 사이트가 직접 부르는 것과 똑같이). 실제 집 컴퓨터 브라우저에서 이 방식으로 결과가 나오는 걸 확인했어요 */
+let ySrch = null, yReady = null, YERR = '';
+function ytWin() { if (ySrch && !ySrch.isDestroyed() && yReady) return yReady;
+  ySrch = new BrowserWindow({ show: false, width: 1000, height: 800, webPreferences: { partition: 'persist:yt', backgroundThrottling: false } });
+  ySrch.webContents.setUserAgent(YUA); ySrch.webContents.setAudioMuted(true);
+  yReady = ySrch.loadURL('https://www.youtube.com/').then(() => true).catch(e => { YERR = '유튜브에 연결하지 못했어요 (' + (e.code || e.message || '') + ')'; yReady = null; return false; });
+  return yReady; }
+async function ytApiWin(q) { if (!(await ytWin())) return null;
+  const code = `(async()=>{ try{ const cv=(window.ytcfg&&ytcfg.get('INNERTUBE_CLIENT_VERSION'))||${JSON.stringify(YCV)};
+    const r=await fetch('/youtubei/v1/search?prettyPrint=false',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context:{client:{clientName:'WEB',clientVersion:cv,hl:'ko',gl:'KR'}},query:${JSON.stringify(q)},params:'EgIQAQ%3D%3D'})});
+    return r.ok? await r.text() : 'ERR'+r.status; }catch(e){ return 'ERR'+e; } })()`;
+  const t = await ySrch.webContents.executeJavaScript(code, true);
+  if (typeof t !== 'string' || t.startsWith('ERR')) { YERR = '유튜브 검색이 막혔어요 (' + String(t).slice(3, 40) + ')'; return null; }
+  return ytPick(JSON.parse(t)); }
+async function ytOne(q) { let L = null; try { L = await ytApiWin(q); } catch (e) { YERR = String(e.message || e).slice(0, 60); }
+  if (L === null) { try { L = await ytApi(q); } catch (e) { L = []; } } return L || []; }
 async function ytSearch(q) {
-  q = q.trim(); let L = []; try { L = await ytApi(q); } catch (e) {}
+  q = q.trim(); YERR = ''; let L = await ytOne(q);
   if (L.length) return L;
   const w = q.split(/\s+/).filter(Boolean); const seen = new Set(); const out = [];
-  if (w.length > 1) for (let k = 0; k < w.length && out.length < 15; k++) { const sub = w.filter((_, i) => i !== k).join(' ');
-    try { for (const x of await ytApi(sub)) if (!seen.has(x.id)) { seen.add(x.id); out.push(x); } } catch (e) {} }
+  if (w.length > 1) for (let k = 0; k < w.length && out.length < 15; k++) { for (const x of await ytOne(w.filter((_, i) => i !== k).join(' '))) if (!seen.has(x.id)) { seen.add(x.id); out.push(x); } }
   return out.slice(0, 20);
 }
 function plWin() { if (PL.win && !PL.win.isDestroyed()) return PL.win;
@@ -248,7 +263,7 @@ ipcMain.handle('act', async (_e, a) => {
   if (a.k === 'get') return state();
   if (a.k === 'quit') { app.isQuitting = true; setTimeout(() => app.quit(), 60); return ''; }
   if (a.k === 'open') { if (desk && desk.isVisible()) collapse(); else expand(); return ''; }
-  if (a.k === 'msearch') { if (!DESK) return []; try { return await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { return []; } }
+  if (a.k === 'msearch') { if (!DESK) return { items: [], err: '' }; let items = []; try { items = await ytSearch(String(a.q || '').slice(0, 80)); } catch (e) { YERR = String(e.message || e).slice(0, 60); } return { items, err: items.length ? '' : YERR, v: ISL.ver }; }
   if (a.k === 'mplay') { if (!DESK || !Array.isArray(a.list)) return ''; PL.list = a.list.slice(0, 30).map(x => ({ id: String(x.id).replace(/[^\w-]/g, ''), t: String(x.t || '').slice(0, 120), a: String(x.a || '').slice(0, 60), len: String(x.len || ''), th: String(x.th || '').startsWith('https://') ? x.th : '' })); plPlay(Math.max(0, Math.min(PL.list.length - 1, a.i | 0))); return ''; }
   if (a.k === 'mstop') { plStop(); return '음악을 껐어요'; }
   if (a.k === 'mskip') { await plCtl('skip'); return ''; }
@@ -300,4 +315,4 @@ function makeTray() {
 app.whenReady().then(() => { app.setAppUserModelId('app.island.life'); load(); makeIsland(); makeTray(); common();
   setTimeout(async () => { let ch = false; for (const x of DB.apps) { if (!x.path || !/\.(url|lnk)$/i.test(x.path) || x.icon2) continue; const ic = await fileIcon(x.path); if (ic) { x.icon = ic; ch = true; } x.icon2 = 1; } if (ch) { save(); push(); } }, 1500); });
 app.on('window-all-closed', (e) => e.preventDefault());
-app.on('before-quit', () => { try { ps && ps.kill(); } catch (e) {} try { PL.win && !PL.win.isDestroyed() && PL.win.destroy(); } catch (e) {} });
+app.on('before-quit', () => { try { ps && ps.kill(); } catch (e) {} try { PL.win && !PL.win.isDestroyed() && PL.win.destroy(); } catch (e) {} try { ySrch && !ySrch.isDestroyed() && ySrch.destroy(); } catch (e) {} });

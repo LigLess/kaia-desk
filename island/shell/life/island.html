@@ -161,7 +161,7 @@ $('bOpen').onclick=()=>act({k:'open'});
 let ML=[];
 $('bMus').onclick=()=>{ const on=$('mus').hidden; $('mus').hidden=!on; $('bMus').classList.toggle('on',on); fit(); if(on) $('mQ').focus(); };
 $('mQ').addEventListener('keydown',async e=>{ if(e.key!=='Enter') return; const q=e.target.value.trim(); if(!q) return; $('mL').innerHTML='<div class="none">찾는 중…</div>'; fit();
-  ML=await act({k:'msearch',q})||[]; $('mL').innerHTML=ML.length?ML.map((x,i)=>`<div class="mi" data-i="${i}" data-id="${esc(x.id)}"><img src="${esc(x.th)}" alt=""><div><b>${esc(x.t)}</b><small>${esc(x.a)} · ${esc(x.len)}</small></div></div>`).join(''):'<div class="none">찾지 못했어요 · 다른 말로 검색해 보세요</div>'; fit(); });
+  const R=await act({k:'msearch',q})||{}; ML=Array.isArray(R)?R:(R.items||[]); $('mL').innerHTML=ML.length?ML.map((x,i)=>`<div class="mi" data-i="${i}" data-id="${esc(x.id)}"><img src="${esc(x.th)}" alt=""><div><b>${esc(x.t)}</b><small>${esc(x.a)} · ${esc(x.len)}</small></div></div>`).join(''):`<div class="none">${R.err?esc(R.err):'찾지 못했어요 · 다른 말로 검색해 보세요'} · 프로그램 버전 ${esc(R.v||'')}</div>`; fit(); });
 $('mL').addEventListener('click',e=>{ const r=e.target.closest('.mi'); if(r) act({k:'mplay',list:ML,i:+r.dataset.i}); });
 $('mStop').onclick=async()=>toast(await act({k:'mstop'})); $('mSkip').onclick=()=>act({k:'mskip'});
 $('bQuit').onclick=()=>{ const b=$('bQuit'); if(b.dataset.sure){ act({k:'quit'}); return; } b.dataset.sure='1'; b.textContent='끌까요?'; setTimeout(()=>{ delete b.dataset.sure; b.textContent='종료'; },2500); };
