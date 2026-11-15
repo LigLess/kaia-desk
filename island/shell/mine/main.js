@@ -346,12 +346,12 @@ ipcMain.handle('act', async (_e, a) => {
 });
 ipcMain.on('hover', (_e, on) => { if (dlg || dragT) return; if (isl) isl.setIgnoreMouseEvents(!on, { forward: true }); if (!on && isl && isl.isFocused() && !(desk && desk.isVisible())) isl.blur(); });
 
-function vis() { if (!isl) return; const want = !userHide && !(fsOn && !DB.tuck); if (want) { if (!isl.isVisible()) isl.showInactive(); } else if (isl.isVisible()) isl.hide(); }
+function vis() { if (!isl) return; const want = !userHide && !fsOn; if (want) { if (!isl.isVisible()) isl.showInactive(); } else if (isl.isVisible()) isl.hide(); }
 function common() {
   ytLoggedIn().then(push);
   watchNowPlaying();
   SH.watchCursor(() => isl);
-  SH.watchFullscreen((on) => { fsOn = on; vis(); });   /* 알약 형태일 때만: 게임 · 영상이 전체화면이면 알약을 숨겨요 */
+  SH.watchFullscreen((on) => { fsOn = on; vis(); });   /* 게임 · 영상이 전체화면이면 자동숨김/알약 형태 상관없이 알약을 완전히 숨겨요(마우스를 대도 안 열려요) */
   upd = SH.autoUpdate({ canRestart: () => !(desk && desk.isVisible()) });
 }
 function makeTray() {
